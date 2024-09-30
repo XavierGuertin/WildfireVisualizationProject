@@ -14,7 +14,7 @@ The Wildfire Visualization Platform is an innovative tool designed to provide re
 | Name                     | Student ID        | GitHub ID   | Email Address                  |
 |--------------------------|-------------------|-------------|-------------------------------|
 | **Wong, Samuel**          | 40209013          | [GitHub Link](#) | samuel.wong60@gmail.com        |
-| Dubois, Gabriel           | 40209252          | [GitHub Link](#) | gabrieldubois.eng@gmail.com    |
+| Dubois, Gabriel           | 40209252          | [Adissuu](https://github.com/Adissuu) | gabrieldubois.eng@gmail.com    |
 | Hilout, Yasmine           | 40214158          | [yasminehilout](https://github.com/yasminehilout) | yasminehilout@gmail.com        |
 | Fetanat, Ali              | 40158208          | [GitHub Link](#) | fetyali7@gmail.com             |
 | Frattolillo, Philip       | 40192245          | [PFratt](https://github.com/PFratt) | phil.fratt@gmail.com           |
