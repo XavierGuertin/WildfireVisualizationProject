@@ -1,0 +1,39 @@
+{
+  "name": "backend",
+  "root": "apps/backend",
+  "sourceRoot": "apps/backend/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean install",
+        "cwd": "apps/backend"
+      },
+      "outputs": ["{workspaceRoot}/apps/backend/target"]
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run",
+        "cwd": "apps/backend",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn test",
+        "cwd": "apps/backend"
+      },
+      "outputs": ["{workspaceRoot}/apps/backend/target/surefire-reports"]
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'No linting setup for backend Java code'"
+      }
+    }
+  },
+  "tags": []
+}
