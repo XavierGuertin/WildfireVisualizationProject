@@ -1,0 +1,155 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+dist
+tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.nx/cache
+.nx/workspace-data
+
+# Next.js
+.next
+out
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs
+*.log
+logs/**/*
+
+# Nx
+dist/
+tmp/
+.cache/
+out/
+
+# Next.js specific
+.next/
+build/
+
+# Cypress and E2E tests
+cypress/screenshots/
+cypress/videos/
+cypress/report/
+cypress/reports/
+coverage/
+reports/
+**/*.cy.*
+
+# Jest
+coverage/
+jest-cache/
+jest-test-results.json
+
+# MacOS files
+.DS_Store
+
+# IDE-specific files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs and Temporary Files
+*.log
+*.tmp
+*.temp
+
+# Operating System files
+Thumbs.db
+Desktop.ini
+
+# Env variables
+.env
+.env.local
+.env.*.local
+
+# Miscellaneous
+**/*.bak
+**/*.swp
+
+# Generated files (new)
+generated*
+generated/**/*
+
+# Build outputs
+build/
+coverage/
+*.log
+.eslintcache
+.pnp.*
+.cache/
+
+# Nx cloud workspace cache
+nxdeps.json
+
+# Dependency directories
+node_modules/
+.pnp/
+.pnp.js
+yarn.lock
+
+# Git specific files
+.gitattributes
+.gitmodules
+.gitconfig
+
+# Ignore storybook static builds
+.storybook-out/
+storybook-static/
+
+# Ignore lockfiles (based on your package manager)
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# Geoserver artifacts (if applicable)
+geoserver-data/
+geoserver-cache/
+
+# Custom - Ignore generated files (starts with "generated")
+generated*
+
+.nyc_output/
