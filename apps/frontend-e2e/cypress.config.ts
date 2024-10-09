@@ -6,8 +6,8 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'npx nx run frontend:serve' },
-      ciWebServerCommand: 'npx nx run frontend:serve-static',
+      webServerCommands: { default: 'npx nx run frontend:build --configuration=coverage && nx run frontend:serve' },  // Build with coverage instrumentation
+      ciWebServerCommand: 'npx nx run frontend:build --configuration=coverage && nx run frontend:serve-static',
       ciBaseUrl: 'http://localhost:3000',
     }),
     baseUrl: 'http://127.0.0.1:3000',

@@ -8,18 +8,18 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/frontend"
+      },
+      "configurations": {
+        "coverage": {
+          "command": "nyc --reporter=html --reporter=text npx nx build frontend"
+        }
       }
     },
     "serve": {
       "executor": "@nx/next:server",
       "options": {
-        "buildTarget": "frontend:build"
-      }
-    },
-    "dev": {
-      "executor": "@nx/next:dev-server",
-      "options": {
-        "buildTarget": "frontend:build"
+        "buildTarget": "frontend:build",
+        "port": 3000
       }
     },
     "test": {
