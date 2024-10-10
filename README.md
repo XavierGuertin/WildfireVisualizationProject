@@ -18,7 +18,7 @@ The Wildfire Visualization Platform is an innovative tool designed to provide re
 | Hilout, Yasmine           | 40214158          | [yasminehilout](https://github.com/yasminehilout) | yasminehilout@gmail.com        |
 | Fetanat, Ali              | 40158208          | [Fetyali7](https://github.com/Fetyali7) | fetyali7@gmail.com             |
 | Frattolillo, Philip       | 40192245          | [PFratt](https://github.com/PFratt) | phil.fratt@gmail.com           |
-| Villemure, Louis          | 40210315          | [GitHub Link](#) | louis.villemure@gmail.com      |
+| Villemure, Louis          | 40210315          | [lo-vil](https://github.com/lo-vil) | louis.villemure@gmail.com      |
 | Daigle, Liam              | 40207583          | [GitHub Link](#) | liam.daigle@gmail.com          |
 | Keating, Kade             | 40166656          | [Kadestery](https://github.com/Kadestery) | kadekeating@gmail.com          |
 | Cheng, Justin             | 40210279          | [GitHub Link](#) | chengjustin2002@gmail.com      |
