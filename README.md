@@ -13,7 +13,7 @@ The Wildfire Visualization Platform is an innovative tool designed to provide re
 
 | Name                     | Student ID        | GitHub ID   | Email Address                  |
 |--------------------------|-------------------|-------------|-------------------------------|
-| **Wong, Samuel**          | 40209013          | [GitHub Link](#) | samuel.wong60@gmail.com        |
+| **Wong, Samuel**          | 40209013          | [im-samwong](https://github.com/im-samwong) | samuel.wong60@gmail.com        |
 | Dubois, Gabriel           | 40209252          | [Adissuu](https://github.com/Adissuu) | gabrieldubois.eng@gmail.com    |
 | Hilout, Yasmine           | 40214158          | [yasminehilout](https://github.com/yasminehilout) | yasminehilout@gmail.com        |
 | Fetanat, Ali              | 40158208          | [Fetyali7](https://github.com/Fetyali7) | fetyali7@gmail.com             |
@@ -42,31 +42,27 @@ The project utilizes the following technologies:
 
 ### Frontend:
 - **Framework**: NextJS
-- **Mapping Library**: TBD
+- **Mapping Library**: OpenLayers
 - **CSS Framework**: Tailwind CSS
 - **Testing**: Karma for unit testing, Cypress for end-to-end testing
 
 ### Backend:
 - **Framework**: Spring Boot (Java)
-- **Database**: TBD
+- **Database**: PostgreSQL
 - **API Development**: RESTful APIs with Spring Boot
-- **Testing**: JUnit for unit testing, Spring Test for integration testing
+- **Testing**: JUnit for unit testing, Cypress for e2e testing
 
 ### DevOps & Infrastructure:
-- **CI/CD**: Jenkins for automated builds and deployments
+- **CI/CD**: Github Actions for automated builds and deployments
 - **Containerization**: Docker for managing containers and deployments
 - **Code Quality**: SonarQube for static code analysis
 - **Version Control**: GitHub for repository management
 
 ---
 
-## Wiki Table of Contents
-
-The project’s documentation is organized as follows:
-
-TODO
-
----
+## Wiki
 
 For more details, please visit the [Wiki](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki).
+---
+
 
