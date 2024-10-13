@@ -41,9 +41,9 @@ To get started as a developer on this project:
 The project utilizes the following technologies:
 
 ### Frontend:
-- **Framework**: Angular
+- **Framework**: NextJS
 - **Mapping Library**: TBD
-- **CSS Framework**: Bootstrap or Tailwind CSS
+- **CSS Framework**: Tailwind CSS
 - **Testing**: Karma for unit testing, Cypress for end-to-end testing
 
 ### Backend:
