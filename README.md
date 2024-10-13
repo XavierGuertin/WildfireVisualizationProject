@@ -1,82 +1,66 @@
-# WildfireVisualizationProject
+# Wildfire Visualization Platform
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+<CI Information - Include Github Actions build badges here>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+---
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Project Summary
+The Wildfire Visualization Platform is an innovative tool designed to provide historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
 
-## Finish your CI setup
+---
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/ePDt4gTWjQ)
+## Team Members
 
+| Name                     | Student ID        | GitHub ID   | Email Address                  |
+|--------------------------|-------------------|-------------|-------------------------------|
+| **Wong, Samuel**          | 40209013          | [im-samwong](https://github.com/im-samwong) | samuel.wong60@gmail.com        |
+| Dubois, Gabriel           | 40209252          | [Adissuu](https://github.com/Adissuu) | gabrieldubois.eng@gmail.com    |
+| Hilout, Yasmine           | 40214158          | [yasminehilout](https://github.com/yasminehilout) | yasminehilout@gmail.com        |
+| Fetanat, Ali              | 40158208          | [Fetyali7](https://github.com/Fetyali7) | fetyali7@gmail.com             |
+| Frattolillo, Philip       | 40192245          | [PFratt](https://github.com/PFratt) | phil.fratt@gmail.com           |
+| Villemure, Louis          | 40210315          | [lo-vil](https://github.com/lo-vil) | louis.villemure@gmail.com      |
+| Daigle, Liam              | 40207583          | [LiamDaigle](https://github.com/LiamDaigle) | liam.daigle@gmail.com          |
+| Keating, Kade             | 40166656          | [Kadestery](https://github.com/Kadestery) | kadekeating@gmail.com          |
+| Cheng, Justin             | 40210279          | [justncheng](https://github.com/justncheng) | chengjustin2002@gmail.com      |
+| Guertin, Xavier           | 40213525          | [XavierGuertin](https://github.com/XavierGuertin) | xavierguertin@gmail.com        |
 
-## Run tasks
+---
 
-To run the dev server for your app, use:
+## Developer Getting Started Guide
 
-```sh
-npx nx dev frontend
-```
+To get started as a developer on this project:
 
-To create a production bundle:
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/your-repo/wildfire-visualization-platform.git
 
-```sh
-npx nx build frontend
-```
+---
 
-To see all available targets to run for a project, run:
+## Tech Stack
 
-```sh
-npx nx show project frontend
-```
+The project utilizes the following technologies:
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Frontend:
+- **Framework**: NextJS
+- **Mapping Library**: OpenLayers
+- **CSS Framework**: Tailwind CSS
+- **Testing**: Karma for unit testing, Cypress for end-to-end testing
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Backend:
+- **Framework**: Spring Boot (Java)
+- **Database**: PostgreSQL
+- **API Development**: RESTful APIs with Spring Boot
+- **Testing**: JUnit for unit testing, Cypress for e2e testing
 
-## Add new projects
+### DevOps & Infrastructure:
+- **CI/CD**: Github Actions for automated builds and deployments
+- **Containerization**: Docker for managing containers and deployments
+- **Code Quality**: SonarQube for static code analysis
+- **Version Control**: GitHub for repository management
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+---
 
-Use the plugin's generator to create new projects.
+## Wiki
 
-To generate a new application, use:
-
-```sh
-npx nx g @nx/next:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/react:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+For more details, please visit the [Wiki](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki).
+---
