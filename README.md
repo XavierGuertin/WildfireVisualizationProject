@@ -1,11 +1,11 @@
 # Wildfire Visualization Platform
 
-<CI Information - Include Jenkins build badges here>
+<CI Information - Include Github Actions build badges here>
 
 ---
 
 ## Project Summary
-The Wildfire Visualization Platform is an innovative tool designed to provide real-time and historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
+The Wildfire Visualization Platform is an innovative tool designed to provide historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
 
 ---
 
@@ -64,5 +64,3 @@ The project utilizes the following technologies:
 
 For more details, please visit the [Wiki](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki).
 ---
-
-
