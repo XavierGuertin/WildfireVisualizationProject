@@ -22,7 +22,7 @@ The Wildfire Visualization Platform is an innovative tool designed to provide re
 | Daigle, Liam              | 40207583          | [GitHub Link](#) | liam.daigle@gmail.com          |
 | Keating, Kade             | 40166656          | [Kadestery](https://github.com/Kadestery) | kadekeating@gmail.com          |
 | Cheng, Justin             | 40210279          | [GitHub Link](#) | chengjustin2002@gmail.com      |
-| Guertin, Xavier           | 40213525          | [GitHub Link](#) | xavierguertin@gmail.com        |
+| Guertin, Xavier           | 40213525          | [XavierGuertin](https://github.com/XavierGuertin) | xavierguertin@gmail.com        |
 
 ---
 
