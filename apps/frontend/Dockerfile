@@ -1,24 +1,27 @@
-# Use Node.js base image
+# Use Node.js as base image
 FROM node:18-alpine
 
-# Set the working directory in the container
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy and install dependencies
 COPY package*.json ./
 RUN npm install
-
-# Copy the tsconfig.base.json file from the root of the project
-COPY tsconfig.base.json ./tsconfig.base.json
 
 # Copy the rest of the application code
 COPY . .
 
-# Build the React/Next.js app
-RUN npm run build
+# Change ownership of the app folder
+RUN chown -R appuser:appgroup /app
 
-# Expose the frontend port
+# Switch to the non-root user
+USER appuser
+
+# Expose the port
 EXPOSE 3000
 
-# Start the Next.js app
+# Start the application
 CMD ["npm", "start"]
