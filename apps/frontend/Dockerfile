@@ -8,6 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# Copy the tsconfig.base.json file from the root of the project
+COPY tsconfig.base.json ./tsconfig.base.json
+
 # Copy the rest of the application code
 COPY . .
 
