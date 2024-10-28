@@ -1,6 +1,15 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "main",
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["e2e/**/*"],
+      "options": {
+        "targetName": "test"
+      }
+    }
+  ],
   "projects": {
     "frontend": {
       "root": "apps/frontend",
@@ -17,5 +26,6 @@
       "sourceRoot": "apps/frontend-e2e/src",
       "projectType": "application"
     }
-  }
+  },
+  "nxCloudId": "671dcd86405c667d52145b56"
 }

@@ -1,10 +1,12 @@
-export default {
+module.exports = {
   displayName: 'frontend',
-  preset: '../../jest.preset.js',
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom', // Use jsdom for React components
   transform: {
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest', // Use babel-jest to support JSX and TypeScript
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
+  roots: ['<rootDir>/__tests__'],
+  testMatch: ["**/*.(spec|test).[jt]s?(x)"],
 };
