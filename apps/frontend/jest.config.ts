@@ -1,9 +1,9 @@
 module.exports = {
   displayName: 'frontend',
   preset: 'ts-jest',
-  testEnvironment: 'jsdom', // Use jsdom for React components
+  testEnvironment: 'jsdom', 
   transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest', // Use babel-jest to support JSX and TypeScript
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest', 
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
