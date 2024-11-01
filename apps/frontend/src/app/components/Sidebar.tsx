@@ -22,8 +22,8 @@ const SidebarContainer = styled.div`
   overflow-y: auto;
   cursor: move;
   z-index: 1000;
-  border: 2px solid black;
-  border-radius: 15px;
+  border: 1px solid black;
+  border-radius: 8px;
   margin-left: 20px;
 `;
 

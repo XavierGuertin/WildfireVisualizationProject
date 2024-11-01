@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 interface ToolbarProps {
@@ -13,15 +13,19 @@ interface ToolbarProps {
 
 const ToolbarContainer = styled.div`
   position: fixed;
-  top: 20px;
+  top: 50%;
   right: 20px;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 10px;
   background: #fff;
+  border: 1px solid black;
   padding: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  cursor: move;
+  z-index: 1000;
 `;
 
 const ToolbarButton = styled.button`
@@ -60,8 +64,43 @@ const DirectionButton = styled.button`
 `;
 
 const Toolbar: React.FC<ToolbarProps> = ({ resetView, zoomIn, zoomOut, pan, toggleFullscreen }) => {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (toolbarRef.current) {
+      isDragging.current = true;
+      const rect = toolbarRef.current.getBoundingClientRect();
+      offset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging.current && toolbarRef.current) {
+      toolbarRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      toolbarRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   return (
-    <ToolbarContainer>
+    <ToolbarContainer ref={toolbarRef} onMouseDown={handleMouseDown}>
       <ToolbarButton onClick={zoomIn}>Zoom In</ToolbarButton>
       <ToolbarButton onClick={zoomOut}>Zoom Out</ToolbarButton>
       <ToolbarButton onClick={resetView}>Reset View</ToolbarButton>
