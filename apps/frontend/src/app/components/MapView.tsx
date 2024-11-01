@@ -139,7 +139,6 @@ const MapView = () => {
         pan={pan}
         toggleFullscreen={toggleFullscreen}
       />
-      <Sidebar updateWildfireLayer={updateWildfireLayer} />
     </>
   );
 };

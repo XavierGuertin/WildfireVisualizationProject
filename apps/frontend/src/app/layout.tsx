@@ -1,12 +1,13 @@
 import React from 'react';
+import Navbar from './components/Navbar';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <html lang="en">
     <body>
     <div className="layout-container">
-      <header className="app-header">
-        <h1>Wildfire Visualization Platform</h1>
+      <header>
+        <Navbar />
       </header>
       <main className="app-main">{children}</main>
       <footer className="app-footer">
