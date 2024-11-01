@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
@@ -10,7 +10,6 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import Toolbar from './Toolbar';
-import Sidebar from './Sidebar';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
@@ -25,13 +24,13 @@ const MapView = () => {
         target: mapElement.current as unknown as HTMLElement,
         layers: [
           new TileLayer({
-            source: new OSM(),
-          }),
+            source: new OSM()
+          })
         ],
         view: new View({
           center: fromLonLat([-75.6972, 45.4215]), // Centered at Ottawa for example
-          zoom: 5,
-        }),
+          zoom: 5
+        })
       });
     }
 
@@ -39,17 +38,17 @@ const MapView = () => {
     const wildfireLayer = new VectorLayer({
       source: new VectorSource({
         url: '', // Initially empty, can be updated later when data becomes available
-        format: new GeoJSON(),
+        format: new GeoJSON()
       }),
       style: new Style({
         stroke: new Stroke({
           color: 'red',
-          width: 2,
+          width: 2
         }),
         fill: new Fill({
-          color: 'rgba(255, 0, 0, 0.1)',
-        }),
-      }),
+          color: 'rgba(255, 0, 0, 0.1)'
+        })
+      })
     });
 
     if (mapRef.current) {

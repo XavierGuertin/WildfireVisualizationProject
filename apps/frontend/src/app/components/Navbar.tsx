@@ -1,7 +1,12 @@
-"use client";
+'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
+import Sidebar from './Sidebar';
+
+interface NavbarProps {
+  updateWildfireLayer: (layerName: string) => void;
+}
 
 // Styled components for styling the navbar
 const NavbarContainer = styled.nav`
@@ -19,8 +24,8 @@ const LogoContainer = styled.div`
 `;
 
 const Logo = styled.img`
-  height: 45px;
-  width: 45px;
+  height: 50px;
+  width: 50px;
 `;
 
 const ProjectTitle = styled.span`
@@ -58,40 +63,53 @@ const NavButton = styled.button`
   color: white;
 
   img {
-    height: 25px;
-    width: 25px;
+    height: 30px;
+    width: 30px;
     margin-right: 5px;
   }
 `;
 
-const Navbar: React.FC = () => {
+const Navbar: React.FC<NavbarProps> = ({ updateWildfireLayer }) => {
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!isSidebarVisible);
+  };
+
+  const closeSidebar = () => {
+    setSidebarVisible(false);
+  };
+
   return (
-    <NavbarContainer>
-      <LogoContainer>
-        <Logo src="/assets/WildFireLogo.png" alt="Logo" />
-        <ProjectTitle>Wildfire Visualization Project</ProjectTitle>
-      </LogoContainer>
-      <NavSection>
-        <SearchBar type="text" placeholder="Search for a location..." />
-        <NavButton>
-          <img src="/assets/location_white.png" alt="Locate Me" />
-        </NavButton>
-      </NavSection>
-      <NavSection>
-        <NavButton>
-          <img src="/assets/layers_white.png" alt="Layers" />
-          Layers
-        </NavButton>
-        <NavButton>
-          <img src="/assets/filter_white.png" alt="Filter" />
-          Filter
-        </NavButton>
-        <NavButton>
-          <img src="/assets/user_white.png" alt="Account" />
-          Account
-        </NavButton>
-      </NavSection>
-    </NavbarContainer>
+    <>
+      <NavbarContainer>
+        <LogoContainer>
+          <Logo src="/assets/WildFireLogo.png" alt="Logo" />
+          <ProjectTitle>Wildfire Visualization Project</ProjectTitle>
+        </LogoContainer>
+        <NavSection>
+          <SearchBar type="text" placeholder="Search for a location..." />
+          <NavButton>
+            <img src="/assets/location_white.png" alt="Locate Me" />
+          </NavButton>
+        </NavSection>
+        <NavSection>
+          <NavButton onClick={toggleSidebar}>
+            <img src="/assets/layers_white.png" alt="Layers" />
+            Layers
+          </NavButton>
+          <NavButton>
+            <img src="/assets/filter_white.png" alt="Filter" />
+            Filter
+          </NavButton>
+          <NavButton>
+            <img src="/assets/user_white.png" alt="Account" />
+            Account
+          </NavButton>
+        </NavSection>
+      </NavbarContainer>
+      {isSidebarVisible && <Sidebar updateWildfireLayer={updateWildfireLayer} onClose={closeSidebar} />}
+    </>
   );
 };
 
