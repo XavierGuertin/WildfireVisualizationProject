@@ -12,6 +12,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Java Setup
+      uses: actions/setup-java@v2
+      with:
+          java-version: '22'
+          distribution: 'adopt'
+
+    - name: Build Backend
+      run: mvn clean package
+
     - name: Docker Compose Installation
       run: |
         sudo apt-get update
