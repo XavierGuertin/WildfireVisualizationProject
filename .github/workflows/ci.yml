@@ -5,6 +5,7 @@ on:
     branches:
       - master
   pull_request:
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -35,4 +36,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build e2e-ci --base=origin/dev --head=HEAD
+      - name: Nx Repair to verify file integrity
+        run: npx nx repair
+      - name: Run linted tests for e2e
+        run: npx nx affected -t lint test build e2e-ci --base=origin/dev --head=HEAD
