@@ -12,6 +12,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Docker Installation
+      run: docker/setup-buildx-action@v1
+
+    - name: Docker Compose Installation
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
     - name: Build the Docker image
       run: docker-compose up --build -d
 
