@@ -63,8 +63,7 @@ const DefinitionParameterValue = styled.p`
 `;
 const MapMetaData = ({city = '', name = '', description = '', format = '', processes = '', datasetSource = '' }) => {
 
-    return <>
-    <MetaDataComponentDiv className="metadata-component-div">    
+    return <MetaDataComponentDiv className="metadata-component-div">    
         <CityDiv className="city-div">
             <CityHeader id="city-name">{city}</CityHeader>
         </CityDiv>
@@ -91,8 +90,6 @@ const MapMetaData = ({city = '', name = '', description = '', format = '', proce
             </DefinitionParameterDiv>
         </DefinitionDiv>
     </MetaDataComponentDiv>
-
-    </>
 }
 
 export default MapMetaData;
