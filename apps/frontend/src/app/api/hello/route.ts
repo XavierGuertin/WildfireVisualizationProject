@@ -1,3 +1,1 @@
-export async function GET(request: Request) {
-  return new Response('Hello, from API!');
-}
+// This could eventually serve as an API endpoint for wildfire data fetching.
