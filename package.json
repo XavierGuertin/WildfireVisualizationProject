@@ -3,13 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
-  "scripts": {
-    "dev": "nx serve frontend",
-    "build": "nx build frontend",
-    "start": "nx serve frontend",
-    "lint": "nx lint frontend",
-    "test": "nx test frontend"
-  },
+  "scripts": {},
   "dependencies": {
     "@types/styled-components": "^5.1.34",
     "axios": "^1.7.7",
