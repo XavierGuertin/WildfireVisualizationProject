@@ -19,7 +19,7 @@ jobs:
           distribution: 'adopt'
 
     - name: Build Backend
-      run: mvn clean package -f apps\backend
+      run: mvn clean package -f apps/backend
 
     - name: Docker Compose Installation
       run: |
