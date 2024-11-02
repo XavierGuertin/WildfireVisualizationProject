@@ -1,15 +1,12 @@
-"use client";
+// app/page.tsx
+
+'use client';
 
 import React from 'react';
-import Layout from './layout';
 import MapView from './components/MapView';
 
 const IndexPage = () => {
-  return (
-    <Layout>
-      <MapView />
-    </Layout>
-  );
+  return <MapView />;
 };
 
 export default IndexPage;
