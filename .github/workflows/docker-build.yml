@@ -1,0 +1,34 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Java Setup
+      uses: actions/setup-java@v2
+      with:
+          java-version: '22'
+          distribution: 'adopt'
+
+    - name: Build Backend
+      run: mvn clean package -f apps/backend
+
+    - name: Docker Compose Installation
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
+    - name: Build the Docker image
+      run: docker-compose up --build -d
+
+    - name: Tear Down the Docker-Compose
+      if: always()
+      run: docker-compose down
