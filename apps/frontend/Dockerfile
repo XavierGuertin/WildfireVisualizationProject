@@ -14,6 +14,9 @@ RUN npm install --ignore-scripts
 # Copy the rest of the application code
 COPY . .
 
+# Build the Next.js application
+RUN npm run build
+
 # Change ownership of the app folder
 RUN chown -R appuser:appgroup /app
 
