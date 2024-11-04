@@ -9,18 +9,22 @@ interface Dataset {
   date: string;
   latestAdded: string;
   latestUpdated: string;
+  city: string;
+  description: string;
+  format: string;
+  processes: string;
+  datasetSource: string;
 }
 
 interface AvailableDatasetsProps {
-  onDatasetClick: (dataset: string) => void;
+  onDatasetClick: (dataset: Dataset) => void;
 }
 
 const DatasetsContainer = styled.div`
   font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  width: 550px; /* Increase width for more space */
+  width: 550px;
   background: #ffffff;
-  padding: 20px;
   position: fixed;
   right: 20px;
   top: 50%;
@@ -30,20 +34,33 @@ const DatasetsContainer = styled.div`
   border-radius: 8px;
   z-index: 1000;
   box-sizing: border-box;
+  overflow: hidden; /* Prevent overflow */
+`;
+
+const TopBar = styled.div`
+  background: #00447E;
+  color: white;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 `;
 
 const SidebarTitle = styled.h2`
-  font-size: 1.4em;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 1.2em;
+  margin: 0;
+  color: white;
 `;
 
 const FilterContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 15px;
-  flex-wrap: wrap; /* Wrap filters if they exceed width */
+  margin: 10px 0 15px; /* Add vertical space below TopBar */
+  padding: 0 20px; /* Add horizontal padding */
+  flex-wrap: wrap;
 `;
 
 const FilterIcon = styled.div`
@@ -58,7 +75,7 @@ const FilterIcon = styled.div`
 
 const FilterButton = styled.button<{ isActive: boolean }>`
   flex: 1;
-  min-width: 80px; /* Ensure each filter button has a minimum width */
+  min-width: 80px;
   padding: 8px;
   background: ${({ isActive }) => (isActive ? '#00447E' : '#ddd')};
   color: ${({ isActive }) => (isActive ? 'white' : '#333')};
@@ -76,8 +93,8 @@ const FilterButton = styled.button<{ isActive: boolean }>`
 `;
 
 const DatasetButton = styled.button<{ isSelected: boolean }>`
-  width: 100%;
-  padding: 10px;
+  width: 100%; /* Make it 100% of the container width */
+  padding: 10px 10px 10px 20px; /* Add left padding */
   margin-bottom: 10px;
   background: ${({ isSelected }) => (isSelected ? '#00447E' : '#ffffff')};
   color: ${({ isSelected }) => (isSelected ? '#ffffff' : '#00447E')};
@@ -102,10 +119,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   useEffect(() => {
     // Mock data for testing purposes
     const mockData: Dataset[] = [
-      { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01' },
-      { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05' },
-      { name: 'Dataset C', date: '2023-03-10', latestAdded: '2023-03-15', latestUpdated: '2023-04-01' },
-      { name: 'Dataset D', date: '2023-01-25', latestAdded: '2023-02-10', latestUpdated: '2023-02-28' },
+      { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', city: 'City A', description: 'Description for Dataset A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
+      { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', city: 'City B', description: 'Description for Dataset B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' },
+      { name: 'Dataset C', date: '2023-03-10', latestAdded: '2023-03-15', latestUpdated: '2023-04-01', city: 'City C', description: 'Description for Dataset C', format: 'GeoJSON', processes: 'Mapping', datasetSource: 'Source C' },
+      { name: 'Dataset D', date: '2023-01-25', latestAdded: '2023-02-10', latestUpdated: '2023-02-28', city: 'City D', description: 'Description for Dataset D', format: 'CSV', processes: 'Data processing', datasetSource: 'Source D' },
     ];
 
     setDatasets(mockData);
@@ -145,39 +162,35 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     setDatasets(sortedDatasets);
   };
 
-  const handleDatasetClick = (datasetName: string) => {
-    setSelectedDataset(datasetName);
-    onDatasetClick(datasetName);
+  const handleDatasetClick = (dataset: Dataset) => {
+    setSelectedDataset(dataset.name);
+    onDatasetClick(dataset);
   };
 
   return (
     <DatasetsContainer>
-      <SidebarTitle>Available Datasets</SidebarTitle>
+      <TopBar>
+        <SidebarTitle>Available Datasets</SidebarTitle>
+      </TopBar>
       <FilterContainer>
         <FilterIcon>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z"
-              fill="currentColor"
-            />
+            <path d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z" fill="currentColor" />
           </svg>
         </FilterIcon>
         {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
-          <FilterButton
-            key={filter}
-            isActive={activeFilter === filter}
-            onClick={() => sortDatasets(filter)}
-          >
+          <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
             {filter}
           </FilterButton>
         ))}
       </FilterContainer>
       {datasets.length > 0 ? (
         datasets.map((dataset, index) => (
-          <DatasetButton 
-                key={index}
-                isSelected={selectedDataset === dataset.name} 
-                onClick={() => handleDatasetClick(dataset.name)}>
+          <DatasetButton
+            key={index}
+            isSelected={selectedDataset === dataset.name}
+            onClick={() => handleDatasetClick(dataset)}
+          >
             {dataset.name}
           </DatasetButton>
         ))

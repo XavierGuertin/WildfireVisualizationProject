@@ -1,95 +1,81 @@
 import React from "react";
 import styled from "styled-components";
 
-const MetaDataComponentDiv = styled.div`
-    display:flex;
-    flex-direction:column;
-    outline: 2px solid black;
-    border-radius: 10px;
-    width: 300px;
+const MetaDataContainer = styled.div`
+  font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  width: 400px; /* Increased width */
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 20px;
+  top: 10%; /* Adjust positioning as needed */
+  z-index: 1000;
 `;
 
-const CityDiv = styled.div`
-    display:flex;
-    flex-direction:column;
-    flex-wrap: wrap;
-    height:auto;
-    align-items:flex-start;
-    padding-left: 10px;
-    border-bottom-style: solid;
-    border-bottom-width: 2px;
-    background-color:yellow;
+const Header = styled.div`
+  background-color: #00447E;
+  color: #ffffff;
+  padding: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 `;
 
-const CityHeader = styled.p`
-    width:100%;
-    font-size: 20px;
-    font-weight:bold;
-    margin-top:9px;
-    white-space:normal;
-    flex-shrink:1;
-    overflow-wrap: break-word;
+const Content = styled.div`
+  padding: 12px;
 `;
 
-const DefinitionDiv = styled.div`
-    display: flex;
-    flex-direction: column;
-    padding-left: 10px;
-    padding-bottom:5px;
-
+const DataRow = styled.div`
+  display: grid;
+  grid-template-columns: 120px 1fr; /* Fixed width for labels, flexible width for values */
+  align-items: start;
+  gap: 8px;
+  margin-bottom: 8px;
 `;
 
-const DefinitionParameterDiv = styled.div`
-    display:grid;
-    grid-template-columns: 120px auto;
-    height:auto;
+const Label = styled.span`
+  font-weight: bold;
+  color: #333;
+  text-align: left;
 `;
 
-const DefinitionParameterHeader = styled.p`
-    margin-top:2px;
-    margin-bottom:2px;
-    font-size: 15px;
-    font-weight: bold;
-    width:120px;
-    overflow-wrap: break-word;
+const Value = styled.span`
+  color: #666;
+  text-align: left;
 `;
 
-const DefinitionParameterValue = styled.p`
-    margin-top:2px;
-    margin-bottom:2px;
-    font-size: 15px;
-    width:120px;
-    overflow-wrap: break-word;
-`;
-const MapMetaData = ({city = '', name = '', description = '', format = '', processes = '', datasetSource = '' }) => {
-
-    return <MetaDataComponentDiv className="metadata-component-div">    
-        <CityDiv className="city-div">
-            <CityHeader id="city-name">{city}</CityHeader>
-        </CityDiv>
-        <DefinitionDiv className="definition-div">
-            <DefinitionParameterDiv className="definition-name">
-                <DefinitionParameterHeader id="definition-name-descriptor">Name:</DefinitionParameterHeader>
-                <DefinitionParameterValue id="definition-name-value">{name}</DefinitionParameterValue>
-            </DefinitionParameterDiv>
-            <DefinitionParameterDiv className="definition-description">
-                <DefinitionParameterHeader id="definition-description-descriptor">Description:</DefinitionParameterHeader>
-                <DefinitionParameterValue id="definition-description-value">{description}</DefinitionParameterValue>
-            </DefinitionParameterDiv>
-            <DefinitionParameterDiv className="definition-format">
-                <DefinitionParameterHeader id="definition-format-descriptor">Format:</DefinitionParameterHeader>
-                <DefinitionParameterValue id="definition-format-value">{format}</DefinitionParameterValue>
-            </DefinitionParameterDiv>
-            <DefinitionParameterDiv className="definition-processes">
-                <DefinitionParameterHeader id="definition-processes-descriptor">Processes:</DefinitionParameterHeader>
-                <DefinitionParameterValue id="definition-processes-value">{processes}</DefinitionParameterValue>
-            </DefinitionParameterDiv>
-            <DefinitionParameterDiv className="definition-datasetSource">
-                <DefinitionParameterHeader id="definition-datasetSource-descriptor">Dataset Source:</DefinitionParameterHeader>
-                <DefinitionParameterValue id="definition-datasetSource-value">{datasetSource}</DefinitionParameterValue>
-            </DefinitionParameterDiv>
-        </DefinitionDiv>
-    </MetaDataComponentDiv>
-}
+const MapMetaData = ({ city = '', name = '', description = '', format = '', processes = '', datasetSource = '' }) => {
+  return (
+    <MetaDataContainer>
+      <Header>{city}</Header>
+      <Content>
+        <DataRow>
+          <Label>Name:</Label>
+          <Value>{name}</Value>
+        </DataRow>
+        <DataRow>
+          <Label>Description:</Label>
+          <Value>{description}</Value>
+        </DataRow>
+        <DataRow>
+          <Label>Format:</Label>
+          <Value>{format}</Value>
+        </DataRow>
+        <DataRow>
+          <Label>Processes:</Label>
+          <Value>{processes}</Value>
+        </DataRow>
+        <DataRow>
+          <Label>Dataset Source:</Label>
+          <Value>{datasetSource}</Value>
+        </DataRow>
+      </Content>
+    </MetaDataContainer>
+  );
+};
 
 export default MapMetaData;
