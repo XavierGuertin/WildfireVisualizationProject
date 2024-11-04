@@ -6,12 +6,8 @@ import React, { useState } from 'react';
 // import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
-import { LayerContext } from './components/MapContext';
+import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
-
-export interface Layer{
-  name: string;
-}
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -33,13 +29,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     //   });
     // }, 300);
   };
-
-  const [layer] = useState<Layer>({
-    name: "default",
-  });
-
+  
   return (
-    <LayerContext.Provider value = {layer}>
+    <MapLayerProvider>
+      
       <html lang="en">
       <body>
       <div className="layout-container relative">
@@ -55,9 +48,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
       </body>
       </html>
-    </LayerContext.Provider>
-
-
+      </MapLayerProvider>
   );
 };
 
