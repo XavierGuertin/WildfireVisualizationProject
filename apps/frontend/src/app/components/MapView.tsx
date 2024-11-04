@@ -3,17 +3,16 @@
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
 import "../styles/map.css"
-import { Map, View } from 'ol';
+import { Map, View, Feature} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
-import { FullScreen, Control, defaults as defaultControls} from 'ol/control.js';
+import { FullScreen, defaults as defaultControls} from 'ol/control.js';
 import {useGeographic} from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
-import { Feature } from 'ol';
 import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
 
@@ -50,7 +49,7 @@ const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
   const mapRef = useRef<Map | null>(null);
-  const {layer, setLayer} = useMapLayerContext();
+  const {layer} = useMapLayerContext();
   
   const getLayer = () => {
     if(layer === "satellite"){
@@ -65,8 +64,6 @@ const MapView = () => {
   }
   
   useEffect(() => {
-    console.log(layer);
-    console.log(getLayer());
 
     if (!mapRef.current) {
       mapRef.current = new Map({
@@ -125,9 +122,7 @@ const MapView = () => {
   };
 
   return (
-    <>
       <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}></div>
-    </>
   );
 };
 

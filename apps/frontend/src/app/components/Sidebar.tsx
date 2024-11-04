@@ -27,7 +27,7 @@ const SidebarContainer = styled.div`
   align-items: center;
 
   &.collapsed {
-    width: 60px;
+    width: 100px;
     padding: 10px;
   }
 
@@ -65,7 +65,7 @@ const LayerImage = styled.img`
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const {layer, setLayer} = useMapLayerContext();
+  const {setLayer} = useMapLayerContext();
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => !prev);
@@ -110,3 +110,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+
