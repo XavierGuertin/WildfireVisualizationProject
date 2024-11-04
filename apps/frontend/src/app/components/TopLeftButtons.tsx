@@ -1,6 +1,6 @@
 // components/TopLeftButtons.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const ButtonContainer = styled.div`
@@ -48,7 +48,8 @@ const DropdownContent = styled.div<{ $show: boolean }>`
   min-width: 150px;
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   padding: 5px 0;
-  border-radius: 4px;
+  margin-top: 5px;
+  border-radius: 10px;
   z-index: 1;
 
   & > button {
@@ -69,7 +70,15 @@ const DropdownContent = styled.div<{ $show: boolean }>`
 const TopLeftButtons: React.FC = () => {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [resetDropdownOpen, setResetDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
+  //Settings Button Click
+  const handleSettingsClick = () => {
+    setLanguageDropdownOpen(false); // Close language dropdown if open
+    setResetDropdownOpen(false); // Close reset dropdown if open
+  };
+
+  //Language Button Click
   const handleLanguageClick = () => {
     setLanguageDropdownOpen(!languageDropdownOpen);
     setResetDropdownOpen(false); // Close other dropdown if open
@@ -85,6 +94,7 @@ const TopLeftButtons: React.FC = () => {
     setLanguageDropdownOpen(false);
   };
 
+  //Reset Button Click
   const handleResetClick = () => {
     setResetDropdownOpen(!resetDropdownOpen);
     setLanguageDropdownOpen(false); // Close other dropdown if open
@@ -100,9 +110,29 @@ const TopLeftButtons: React.FC = () => {
     setResetDropdownOpen(false);
   };
 
+  // Close dropdowns if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLanguageDropdownOpen(false);
+        setResetDropdownOpen(false);
+      }
+    };
+
+    if (languageDropdownOpen || resetDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [languageDropdownOpen, resetDropdownOpen]);
+
   return (
-    <ButtonContainer>
-      <Button>
+    <ButtonContainer ref={dropdownRef}>
+      <Button onClick={handleSettingsClick}>
         <img src="/assets/settings-white-outline-icon-removebg-preview.png" alt="Settings" />
       </Button>
       <DropdownButton>
