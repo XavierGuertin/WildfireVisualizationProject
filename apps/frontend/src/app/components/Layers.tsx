@@ -9,12 +9,12 @@ interface LayersProps {
 
 const LayersContainer = styled.div`
   width: 200px;
-  height: 300px;
+  height: 200px;
   background: #f8f9fa;
   padding: 5px 20px 20px 20px;
   position: fixed;
   left: 0;
-  top: 50%;
+  top: 70%;
   transform: translateY(-50%);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;

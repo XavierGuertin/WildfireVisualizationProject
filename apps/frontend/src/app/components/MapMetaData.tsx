@@ -11,7 +11,7 @@ const MetaDataContainer = styled.div`
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   position: fixed;
   left: 20px;
-  top: 10%; /* Adjust positioning as needed */
+  top: 20%;
   z-index: 1000;
 `;
 

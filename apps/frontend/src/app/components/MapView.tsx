@@ -9,7 +9,6 @@ import { fromLonLat } from 'ol/proj';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import Toolbar from './Toolbar';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
@@ -131,13 +130,6 @@ const MapView = () => {
   return (
     <>
       <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}></div>
-      <Toolbar
-        zoomIn={zoomIn}
-        zoomOut={zoomOut}
-        resetView={resetView}
-        pan={pan}
-        toggleFullscreen={toggleFullscreen}
-      />
     </>
   );
 };
