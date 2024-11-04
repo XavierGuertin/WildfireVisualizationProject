@@ -42,3 +42,8 @@ jobs:
       # Push images to Docker Hub
       - name: Push Docker images
         run: docker-compose push
+
+      # Tear down the services
+      - name: Tear Down the Docker-Compose
+        if: always()
+        run: docker-compose down
