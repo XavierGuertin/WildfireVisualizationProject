@@ -20,7 +20,6 @@ const SidebarContainer = styled.div`
   transform: translateY(-50%);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-  cursor: move;
   z-index: 1000;
   border: 1px solid black;
   border-radius: 8px;
@@ -71,9 +70,6 @@ const DatasetButton = styled.button`
 
 const Sidebar: React.FC<SidebarProps> = ({ updateWildfireLayer, onClose }) => {
   const [datasets, setDatasets] = useState<string[]>([]);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const fetchDatasets = async () => {
@@ -88,43 +84,12 @@ const Sidebar: React.FC<SidebarProps> = ({ updateWildfireLayer, onClose }) => {
     fetchDatasets();
   }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (sidebarRef.current) {
-      isDragging.current = true;
-      const rect = sidebarRef.current.getBoundingClientRect();
-      offset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging.current && sidebarRef.current) {
-      sidebarRef.current.style.left = `${e.clientX - offset.current.x}px`;
-      sidebarRef.current.style.top = `${e.clientY - offset.current.y}px`;
-    }
-  };
-
-  const handleMouseUp = () => {
-    isDragging.current = false;
-  };
-
-  useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
-
   const handleLayerToggle = (layerName: string) => {
     updateWildfireLayer(layerName);
   };
 
   return (
-    <SidebarContainer ref={sidebarRef} onMouseDown={handleMouseDown}>
+    <SidebarContainer>
       <Header>
         <SidebarTitle>Layers</SidebarTitle>
         <CloseButton onClick={onClose}>&times;</CloseButton>
