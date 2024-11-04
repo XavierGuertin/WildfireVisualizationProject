@@ -3,8 +3,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
+import Layers from './components/Layers';
+import AvailableDatasets from './components/AvailableDatasets';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -32,9 +33,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <body>
     <div className="layout-container relative">
       <LoadingOverlay progress={progress} isVisible={loading} />
-      <header>
-        <Navbar updateWildfireLayer={updateWildfireLayer} />
-      </header>
+
+        <Layers updateWildfireLayer={updateWildfireLayer} />
+        <AvailableDatasets onDatasetClick={(dataset) => updateWildfireLayer(dataset)} />
+
       <main className="app-main">{children}</main>
       <footer className="app-footer">
         <p>&copy; 2024 Wildfire Visualization Project</p>
