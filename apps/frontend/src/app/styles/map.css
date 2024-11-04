@@ -1,0 +1,20 @@
+/*+/- zoom control*/
+.ol-zoom {
+    top: auto;
+    left: auto;
+    right: 8px;
+    top: 38px;
+ }
+
+ /*fullscreen control*/
+ /* .ol-full-screen{
+ } */
+
+ /*Custom controls*/
+ .satelliteLayer{
+    top: 32px;
+ }
+
+ .topographicLayer{
+   top: 64px;
+ }

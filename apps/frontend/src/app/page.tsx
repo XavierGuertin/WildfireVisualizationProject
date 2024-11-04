@@ -4,9 +4,16 @@
 
 import React from 'react';
 import MapView from './components/MapView';
+// import { MapContext } from './components/MapContext';
 
 const IndexPage = () => {
-  return <MapView />;
+  return;
+  
+  // (
+  //     <MapContext.Provider value = {undefined}>
+  //       <MapView />
+  //     </MapContext.Provider>
+  // );
 };
 
 export default IndexPage;
