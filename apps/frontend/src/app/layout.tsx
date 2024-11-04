@@ -49,7 +49,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </header>
         <main className="app-main">{children}</main>
         <MapView />
-        {/* <Sidebar /> */}
+        <Sidebar />
         <footer className="app-footer">
         </footer>
       </div>

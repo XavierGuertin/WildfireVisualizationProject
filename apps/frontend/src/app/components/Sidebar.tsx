@@ -226,7 +226,7 @@ const DatasetButton = styled.button`
   }
 `;
 
-const Sidebar: React.FC<SidebarProps> = () => {
+const Sidebar = () => {
   const [datasets, setDatasets] = useState<string[]>([]);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);

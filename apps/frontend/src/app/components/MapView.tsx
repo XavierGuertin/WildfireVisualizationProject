@@ -55,6 +55,7 @@ const topographicLayer = new TileLayer({
   })
 })
 
+//Map component
 const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
