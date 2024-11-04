@@ -75,28 +75,29 @@ const FilterButton = styled.button<{ isActive: boolean }>`
   }
 `;
 
-const DatasetButton = styled.button`
+const DatasetButton = styled.button<{ isSelected: boolean }>`
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  background: #ffffff;
-  color: #00447E;
+  background: ${({ isSelected }) => (isSelected ? '#00447E' : '#ffffff')};
+  color: ${({ isSelected }) => (isSelected ? '#ffffff' : '#00447E')};
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1em;
   font-family: inherit;
-  text-align: left; /* Align text to the left */
+  text-align: left;
   box-sizing: border-box;
 
   &:hover {
-    background: #f1f1f1;
+    background: ${({ isSelected }) => (isSelected ? '#003355' : '#f1f1f1')};
   }
 `;
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick }) => {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('Name');
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   useEffect(() => {
     // Mock data for testing purposes
@@ -144,6 +145,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     setDatasets(sortedDatasets);
   };
 
+  const handleDatasetClick = (datasetName: string) => {
+    setSelectedDataset(datasetName);
+    onDatasetClick(datasetName);
+  };
+
   return (
     <DatasetsContainer>
       <SidebarTitle>Available Datasets</SidebarTitle>
@@ -168,7 +174,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
       </FilterContainer>
       {datasets.length > 0 ? (
         datasets.map((dataset, index) => (
-          <DatasetButton key={index} onClick={() => onDatasetClick(dataset.name)}>
+          <DatasetButton 
+                key={index}
+                isSelected={selectedDataset === dataset.name} 
+                onClick={() => handleDatasetClick(dataset.name)}>
             {dataset.name}
           </DatasetButton>
         ))
