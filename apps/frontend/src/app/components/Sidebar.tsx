@@ -2,20 +2,21 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-const viewsIcon= './assets/layers_white.png'; // Replace with the actual path to your Views icon
-const satelliteImage = './assets/Satellite_layer.png'; // Replace with the path to your satellite layer image
-const defaultImage = './assets/Default_layer.png'; // Replace with the path to your meteorological layer image
-const terrainImage = './assets/Terrain_layer.png'; // Replace with the path to your topographical layer image
 import { useMapLayerContext } from './MapContext';
 
-const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
-  width: ${({ isCollapsed }) => (isCollapsed ? '100px' : '100px')};
+const viewsIcon = './assets/layers_white.png';
+const satelliteImage = './assets/Satellite_layer.png';
+const defaultImage = './assets/Default_layer.png';
+const terrainImage = './assets/Terrain_layer.png';
+
+const SidebarContainer = styled.div`
+  width: 100px;
   background: #005ea6;
   color: white;
   position: fixed;
   bottom: 10px;
   left: 25px;
-  padding: ${({ isCollapsed }) => (isCollapsed ? '10px' : '5px 20px 20px 20px')};
+  padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   z-index: 1000;
@@ -24,6 +25,16 @@ const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  &.collapsed {
+    width: 60px;
+    padding: 10px;
+  }
+
+  &.expanded {
+    width: 100px;
+    padding: 5px 20px 20px 20px;
+  }
 `;
 
 const ToggleButton = styled.button`
@@ -65,7 +76,7 @@ const Sidebar = () => {
   };
 
   return (
-    <SidebarContainer isCollapsed={isCollapsed}>
+    <SidebarContainer className={isCollapsed ? 'collapsed' : 'expanded'}>
       {isCollapsed ? (
         <ToggleButton onClick={toggleCollapse}>
           <Icon src={viewsIcon} alt="Views" />
@@ -99,4 +110,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
