@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main  # Triggers on merging PRs to main branch
+      - dev  # Triggers on merging PRs to main branch
 
 jobs:
   build-and-push:
