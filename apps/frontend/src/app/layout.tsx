@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
+import TopLeftButtons from './components/TopLeftButtons';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <html lang="en">
     <body>
+    <TopLeftButtons />
     <div className="layout-container relative">
       <LoadingOverlay progress={progress} isVisible={loading} />
       <header>
