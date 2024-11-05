@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useMapLayerContext } from './MapContext';
 
-const viewsIcon = './assets/layers_white.png';
-const satelliteImage = './assets/Satellite_layer.png';
-const defaultImage = './assets/Default_layer.png';
-const terrainImage = './assets/Terrain_layer.png';
+const viewsIcon = '/assets/layers_white.png';
+const satelliteImage = '/assets/Satellite_layer.png';
+const defaultImage = '/assets/Default_layer.png';
+const terrainImage = '/assets/Terrain_layer.png';
 
 const SidebarContainer = styled.div`
   width: 100px;
