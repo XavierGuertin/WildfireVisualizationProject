@@ -33,14 +33,6 @@ services:
       - "5432:5432"
     networks:
       - app-network
-  
-  geoserver:
-    image: kartoza/geoserver
-    ports:
-      - "8090:8080"
-    environment:
-      GEOSERVER_ADMIN_USER: geoserver
-      GEOSERVER_ADMIN_PASSWORD: password
 
 networks:
   app-network:

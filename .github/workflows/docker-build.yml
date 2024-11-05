@@ -38,8 +38,6 @@ jobs:
       # Build and start the services in detached mode
       - name: Build and start services
         run: docker-compose up --build -d
-        env:
-          MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
 
       # Push images to Docker Hub
       - name: Push Docker images

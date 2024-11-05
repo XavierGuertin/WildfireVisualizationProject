@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
 
-// interface NavbarProps {
-//   updateWildfireLayer: (layerName: string) => void;
-// }
+interface NavbarProps {
+  updateWildfireLayer: (layerName: string) => void;
+}
 
 // Styled components for styling the navbar
 const NavbarContainer = styled.nav`
@@ -69,16 +69,16 @@ const NavButton = styled.button`
   }
 `;
 
-const Navbar = () => {
+const Navbar: React.FC<NavbarProps> = ({ updateWildfireLayer }) => {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarVisible(!isSidebarVisible);
   };
 
-//   const closeSidebar = () => {
-//     setSidebarVisible(false);
-//   };
+  const closeSidebar = () => {
+    setSidebarVisible(false);
+  };
 
   return (
     <>
@@ -89,23 +89,26 @@ const Navbar = () => {
         </LogoContainer>
         <NavSection>
           <SearchBar type="text" placeholder="Search for a location..." />
-           <NavButton>
+          <NavButton>
             <img src="/assets/location_white.png" alt="Locate Me" />
-          </NavButton> 
+          </NavButton>
         </NavSection>
         <NavSection>
           <NavButton onClick={toggleSidebar}>
-            <img src="/assets/layers_white.png" alt="Layers" />Layers
+            <img src="/assets/layers_white.png" alt="Layers" />
+            Layers
           </NavButton>
           <NavButton>
-            <img src="/assets/filter_white.png" alt="Filter" />Filter
+            <img src="/assets/filter_white.png" alt="Filter" />
+            Filter
           </NavButton>
           <NavButton>
-            <img src="/assets/user_white.png" alt="Account" />Account
+            <img src="/assets/user_white.png" alt="Account" />
+            Account
           </NavButton>
         </NavSection>
       </NavbarContainer>
-      {isSidebarVisible && <Sidebar />}
+      {isSidebarVisible && <Sidebar updateWildfireLayer={updateWildfireLayer} onClose={closeSidebar} />}
     </>
   );
 };
