@@ -50,7 +50,7 @@ const MapView = () => {
   const mapElement = useRef(null);
   const mapRef = useRef<Map | null>(null);
   const {layer} = useMapLayerContext();
-  
+
   const getLayer = () => {
     if(layer === "satellite"){
       return satelliteLayer;
@@ -62,52 +62,70 @@ const MapView = () => {
 
     return defaultLayer;
   }
-  
-  useEffect(() => {
 
+  useEffect(() => {
     if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
         layers: [getLayer()],
         view: new View({
-          center: [-75.6972, 45.4215], // Centered at Ottawa for example
+          center: [-75.6972, 45.4215], // Centered at Ottawa
           zoom: 5
         })
       });
-    }
-
-    else{
+    } else {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
 
-    //create polygon
-    const coordinates = [[-128, 60.5], [-129, 61], [-130, 60], [-129, 59.5]];
-    const polygonFeature = new Feature({
-      geometry: new Polygon([coordinates])
-    });
-
-    // Adding the wildfire layer (initially empty)
-    const wildfireLayer = new VectorLayer({
-      source: new VectorSource({
-        // url: '', // Initially empty, can be updated later when data becomes available
-        // format: new GeoJSON()
-        features: [polygonFeature]
-      }),
-      style: new Style({
-        stroke: new Stroke({
-          color: 'red',
-          width: 2
-        }),
-        fill: new Fill({
-          color: 'rgba(255, 0, 0, 0.1)'
-        })
+    // Fetch the JSON data from the endpoint and add it to the map
+    fetch('http://localhost:8080/api/data')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
       })
-    });
-    if (mapRef.current) {
-      mapRef.current.addLayer(wildfireLayer);
-    }
+      .then((data) => {
+        const features = data.items.map((item: any) => {
+          const coordinates = item.geometry.coordinates[0].map((coord: number[]) => coord);
+          const feature = new Feature({
+            geometry: new Polygon([coordinates])
+          });
+          feature.setStyle(
+            new Style({
+              stroke: new Stroke({
+                color: 'red',
+                width: 2
+              }),
+              fill: new Fill({
+                color: 'rgba(255, 0, 0, 0.1)'
+              })
+            })
+          );
+          return feature;
+        });
+
+        const vectorSource = new VectorSource({
+          features: features,
+        });
+
+        const vectorLayer = new VectorLayer({
+          source: vectorSource,
+        });
+
+        if (mapRef.current) {
+          mapRef.current.addLayer(vectorLayer);
+          // Ensure the map is centered on Ottawa
+          const view = mapRef.current.getView();
+          view.setCenter([-75.6972, 45.4215]);
+          view.setZoom(5);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
   }, [layer]);
 
   //functions
@@ -122,9 +140,8 @@ const MapView = () => {
   };
 
   return (
-      <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}></div>
+    <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}></div>
   );
 };
-
 
 export default MapView;
