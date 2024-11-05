@@ -5,6 +5,8 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
+import Footer from './components/Footer';
+import SimulationControls from './components/SimulationControls';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <header>
         <Navbar updateWildfireLayer={updateWildfireLayer} />
       </header>
-      <main className="app-main">{children}</main>
+      <main className="app-main">
+        <SimulationControls />
+      <Footer />{children}
+      <p>Louis Louis</p>
+      </main>
       <footer className="app-footer">
         <p>&copy; 2024 Wildfire Visualization Project</p>
       </footer>
