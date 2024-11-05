@@ -94,6 +94,7 @@ const TopLeftButtons: React.FC = () => {
   const [activeButton, setActiveButton] = useState(""); // Track active button
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  //Settings button clicked
   const handleSettingsClick = () => {
     if (activeButton === "settings") {
       setActiveButton(""); // Deactivate if already active
@@ -104,6 +105,7 @@ const TopLeftButtons: React.FC = () => {
     setResetDropdownOpen(false);
   };
 
+  //Language button clicked
   const handleLanguageClick = () => {
     if (activeButton === "language") {
       setActiveButton(""); // Deactivate if already active
@@ -114,6 +116,7 @@ const TopLeftButtons: React.FC = () => {
     setResetDropdownOpen(false);
   };
 
+  //LANGUAGE DROPDOWN BUTTON CLICKED
   const handleLanguageSelect = (language: string) => {
     alert(`Set Language to ${language}`);
     setSelectedLanguage(language);
@@ -121,6 +124,7 @@ const TopLeftButtons: React.FC = () => {
     setActiveButton("");
   };
 
+  //Reset button clicked
   const handleResetClick = () => {
     // Check if the reset button is already active
     if (activeButton === "reset") {
@@ -132,12 +136,14 @@ const TopLeftButtons: React.FC = () => {
     setLanguageDropdownOpen(false);
   };
 
+  //SOFT RESET DROPDOWN BUTTON CLICKED
   const handleReset = () => {
     alert("Reset initiated");
     setResetDropdownOpen(false);
     setActiveButton("");
   };
 
+  //FACTORY RESET DROPDOWN BUTTON CLICKED
   const handleFactoryReset = () => {
     alert("Factory Reset initiated");
     setResetDropdownOpen(false);
