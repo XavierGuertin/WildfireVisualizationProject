@@ -1,10 +1,21 @@
-export default {
+module.exports = {
   displayName: 'frontend',
-  preset: '../../jest.preset.js',
+  testEnvironment: 'jsdom',
   transform: {
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+  collectCoverage: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
+  collectCoverageFrom: [
+    '<rootDir>/src/**/*.{js,jsx,ts,tsx}',
+  ],
+  coverageReporters: ['json', 'lcov', 'text', 'clover'],
+  roots: ['<rootDir>/__tests__'],
+  testMatch: ["**/*.(spec|test).[jt]s?(x)"],
+
+  // Add moduleNameMapper to mock CSS files
+  moduleNameMapper: {
+    '\\.(css|scss)$': '<rootDir>/__mocks__/styleMock.js',
+  },
 };

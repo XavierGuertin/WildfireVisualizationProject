@@ -22,20 +22,20 @@
         "port": 3000
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["coverage/apps/frontend"],
-      "options": {
-        "jestConfig": "apps/frontend/jest.config.js",
-        "passWithNoTests": true
-      }
-    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["apps/frontend/**/*.{ts,tsx,js,jsx}"]
       }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/frontend/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
+
   "tags": []
 }
