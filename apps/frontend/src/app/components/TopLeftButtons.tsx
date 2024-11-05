@@ -10,7 +10,7 @@ const ButtonContainer = styled.div`
   z-index: 1000;
 `;
 
-const Button = styled.button<{ active?: boolean }>`
+const Button = styled.button<{ $active?: boolean }>`
   width: 50px;
   height: 50px;
   background-color: #00447E;
@@ -23,7 +23,7 @@ const Button = styled.button<{ active?: boolean }>`
   align-items: center;
   justify-content: center;
   outline: none;
-  border: ${({ active }) => (active ? '2px solid white' : 'none')};
+  border: ${({ $active }) => ($active ? '2px solid white' : 'none')};
 
   &:hover {
     background-color: #0056b3;
@@ -94,29 +94,21 @@ const TopLeftButtons: React.FC = () => {
   const [activeButton, setActiveButton] = useState(""); // Track active button
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  //Settings button clicked
+  // Settings button clicked
   const handleSettingsClick = () => {
-    if (activeButton === "settings") {
-      setActiveButton(""); // Deactivate if already active
-    } else {
-      setActiveButton("settings"); // Set active button to settings
-    }
+    setActiveButton(activeButton === "settings" ? "" : "settings");
     setLanguageDropdownOpen(false);
     setResetDropdownOpen(false);
   };
 
-  //Language button clicked
+  // Language button clicked
   const handleLanguageClick = () => {
-    if (activeButton === "language") {
-      setActiveButton(""); // Deactivate if already active
-    } else {
-      setActiveButton("language"); // Set active button to language
-    }
+    setActiveButton(activeButton === "language" ? "" : "language");
     setLanguageDropdownOpen(!languageDropdownOpen);
     setResetDropdownOpen(false);
   };
 
-  //LANGUAGE DROPDOWN BUTTON CLICKED
+  // Language dropdown button clicked
   const handleLanguageSelect = (language: string) => {
     alert(`Set Language to ${language}`);
     setSelectedLanguage(language);
@@ -124,26 +116,21 @@ const TopLeftButtons: React.FC = () => {
     setActiveButton("");
   };
 
-  //Reset button clicked
+  // Reset button clicked
   const handleResetClick = () => {
-    // Check if the reset button is already active
-    if (activeButton === "reset") {
-      setActiveButton(""); // Deactivate if already active
-    } else {
-      setActiveButton("reset"); // Set active button to reset
-    }
+    setActiveButton(activeButton === "reset" ? "" : "reset");
     setResetDropdownOpen(!resetDropdownOpen);
     setLanguageDropdownOpen(false);
   };
 
-  //SOFT RESET DROPDOWN BUTTON CLICKED
+  // Soft reset dropdown button clicked
   const handleReset = () => {
     alert("Reset initiated");
     setResetDropdownOpen(false);
     setActiveButton("");
   };
 
-  //FACTORY RESET DROPDOWN BUTTON CLICKED
+  // Factory reset dropdown button clicked
   const handleFactoryReset = () => {
     alert("Factory Reset initiated");
     setResetDropdownOpen(false);
@@ -172,11 +159,11 @@ const TopLeftButtons: React.FC = () => {
 
   return (
     <ButtonContainer ref={dropdownRef}>
-      <Button onClick={handleSettingsClick} active={activeButton === "settings"}>
+      <Button onClick={handleSettingsClick} $active={activeButton === "settings"}>
         <img src="/assets/settings-white-outline-icon-removebg-preview.png" alt="Settings" />
       </Button>
       <DropdownButton>
-        <Button onClick={handleLanguageClick} active={activeButton === "language"}>
+        <Button onClick={handleLanguageClick} $active={activeButton === "language"}>
           <img src="/assets/Language-Logo.png" alt="Language" />
         </Button>
         <DropdownContent $show={languageDropdownOpen}>
@@ -193,7 +180,7 @@ const TopLeftButtons: React.FC = () => {
         </DropdownContent>
       </DropdownButton>
       <DropdownButton>
-        <Button onClick={handleResetClick} active={activeButton === "reset"}>
+        <Button onClick={handleResetClick} $active={activeButton === "reset"}>
           <img src="/assets/Reset-Logo.png" alt="Reset" />
         </Button>
         <DropdownContent $show={resetDropdownOpen}>
