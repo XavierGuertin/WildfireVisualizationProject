@@ -14,7 +14,7 @@ const SidebarContainer = styled.div`
   background: #005ea6;
   color: white;
   position: fixed;
-  bottom: 10px;
+  bottom: 50%;
   left: 25px;
   padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
