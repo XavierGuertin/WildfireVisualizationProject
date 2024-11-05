@@ -175,10 +175,14 @@ const TopLeftButtons: React.FC = () => {
         </Button>
         <DropdownContent $show={languageDropdownOpen}>
           <button onClick={() => handleLanguageSelect("English")}>
-            {selectedLanguage === "English" && <img src="/assets/checkmark.png" alt="Tick" />} English
+            {selectedLanguage === "English" && <img src="/assets/checkmark.png" alt="Tick" />}
+            {selectedLanguage !== "English" && <img src="/assets/Mini-Reset Arrow.png" style={{opacity: 0}} alt="Nothing/Spacer" />}
+            English
           </button>
           <button onClick={() => handleLanguageSelect("French")}>
-            {selectedLanguage === "French" && <img src="/assets/checkmark.png" alt="Tick" />} French
+            {selectedLanguage === "French" && <img src="/assets/checkmark.png" alt="Tick" />}
+            {selectedLanguage !== "French" && <img src="/assets/Mini-Reset Arrow.png" style={{opacity: 0}} alt="Nothing/Spacer" />}
+            Français
           </button>
         </DropdownContent>
       </DropdownButton>
