@@ -17,7 +17,7 @@ import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
 
 //Maptiler API key and attributions
-const apiKey = "kbDhTzqy5lUtiESSNyqp";
+const apiKey = process.env.MAPTILER_API_KEY;
 const attributions =
   '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
