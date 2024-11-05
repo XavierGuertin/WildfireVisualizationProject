@@ -1,5 +1,3 @@
-// components/TopLeftButtons.tsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
@@ -12,12 +10,11 @@ const ButtonContainer = styled.div`
   z-index: 1000;
 `;
 
-const Button = styled.button`
+const Button = styled.button<{ active?: boolean }>`
   width: 50px;
   height: 50px;
   background-color: #00447E;
   color: white;
-  border: none;
   padding: 10px;
   border-radius: 5px;
   cursor: pointer;
@@ -25,6 +22,8 @@ const Button = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  outline: none;
+  border: ${({ active }) => (active ? '2px solid white' : 'none')};
 
   &:hover {
     background-color: #0056b3;
@@ -48,21 +47,42 @@ const DropdownContent = styled.div<{ $show: boolean }>`
   min-width: 150px;
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   padding: 5px 0;
-  margin-top: 5px;
   border-radius: 10px;
   z-index: 1;
+  margin-top: 3px;
 
   & > button {
     background: none;
     color: black;
     border: none;
-    padding: 10px;
+    padding: 5px;
     text-align: left;
     width: 100%;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    position: relative;
 
-    &:hover {
+    &:hover::before {
+      content: "";
+      position: absolute;
+      left: 3%;
+      width: 94%;
+      height: 100%;
       background-color: #f1f1f1;
+      z-index: -1;
+      border-radius: 10px;
+    }
+
+    img {
+      width: 25px;
+      height: 25px;
+      margin-right: 10px;
+    }
+
+    span {
+      flex: 1;
+      text-align: center;
     }
   }
 `;
@@ -70,52 +90,66 @@ const DropdownContent = styled.div<{ $show: boolean }>`
 const TopLeftButtons: React.FC = () => {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [resetDropdownOpen, setResetDropdownOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [activeButton, setActiveButton] = useState(""); // Track active button
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  //Settings Button Click
   const handleSettingsClick = () => {
-    setLanguageDropdownOpen(false); // Close language dropdown if open
-    setResetDropdownOpen(false); // Close reset dropdown if open
+    if (activeButton === "settings") {
+      setActiveButton(""); // Deactivate if already active
+    } else {
+      setActiveButton("settings"); // Set active button to settings
+    }
+    setLanguageDropdownOpen(false);
+    setResetDropdownOpen(false);
   };
 
-  //Language Button Click
   const handleLanguageClick = () => {
+    if (activeButton === "language") {
+      setActiveButton(""); // Deactivate if already active
+    } else {
+      setActiveButton("language"); // Set active button to language
+    }
     setLanguageDropdownOpen(!languageDropdownOpen);
-    setResetDropdownOpen(false); // Close other dropdown if open
+    setResetDropdownOpen(false);
   };
 
-  const handleEnglish = () => {
-    alert("Set Language to English");
+  const handleLanguageSelect = (language: string) => {
+    alert(`Set Language to ${language}`);
+    setSelectedLanguage(language);
     setLanguageDropdownOpen(false);
+    setActiveButton("");
   };
 
-  const handleFrench = () => {
-    alert("Set Language to French");
-    setLanguageDropdownOpen(false);
-  };
-
-  //Reset Button Click
   const handleResetClick = () => {
+    // Check if the reset button is already active
+    if (activeButton === "reset") {
+      setActiveButton(""); // Deactivate if already active
+    } else {
+      setActiveButton("reset"); // Set active button to reset
+    }
     setResetDropdownOpen(!resetDropdownOpen);
-    setLanguageDropdownOpen(false); // Close other dropdown if open
+    setLanguageDropdownOpen(false);
+  };
+
+  const handleReset = () => {
+    alert("Reset initiated");
+    setResetDropdownOpen(false);
+    setActiveButton("");
   };
 
   const handleFactoryReset = () => {
     alert("Factory Reset initiated");
     setResetDropdownOpen(false);
+    setActiveButton("");
   };
 
-  const handleHardReset = () => {
-    alert("Hard Reset initiated");
-    setResetDropdownOpen(false);
-  };
-
-  // Close dropdowns if clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setLanguageDropdownOpen(false);
         setResetDropdownOpen(false);
+        setActiveButton(""); // Reset active button
       }
     };
 
@@ -132,25 +166,35 @@ const TopLeftButtons: React.FC = () => {
 
   return (
     <ButtonContainer ref={dropdownRef}>
-      <Button onClick={handleSettingsClick}>
+      <Button onClick={handleSettingsClick} active={activeButton === "settings"}>
         <img src="/assets/settings-white-outline-icon-removebg-preview.png" alt="Settings" />
       </Button>
       <DropdownButton>
-        <Button onClick={handleLanguageClick}>
+        <Button onClick={handleLanguageClick} active={activeButton === "language"}>
           <img src="/assets/Language-Logo.png" alt="Language" />
         </Button>
         <DropdownContent $show={languageDropdownOpen}>
-          <button onClick={handleEnglish}>English</button>
-          <button onClick={handleFrench}>French</button>
+          <button onClick={() => handleLanguageSelect("English")}>
+            {selectedLanguage === "English" && <img src="/assets/checkmark.png" alt="Tick" />} English
+          </button>
+          <button onClick={() => handleLanguageSelect("French")}>
+            {selectedLanguage === "French" && <img src="/assets/checkmark.png" alt="Tick" />} French
+          </button>
         </DropdownContent>
       </DropdownButton>
       <DropdownButton>
-        <Button onClick={handleResetClick}>
+        <Button onClick={handleResetClick} active={activeButton === "reset"}>
           <img src="/assets/Reset-Logo.png" alt="Reset" />
         </Button>
         <DropdownContent $show={resetDropdownOpen}>
-          <button onClick={handleFactoryReset}>Factory Reset</button>
-          <button onClick={handleHardReset}>Hard Reset</button>
+          <button onClick={handleReset}>
+            <img src="/assets/Mini-Reset Arrow.png" alt="Reset" />
+            Reset
+          </button>
+          <button onClick={handleFactoryReset} style={{ color: '#dc143c' }}>
+            <img src="/assets/garbage_logo-removebg-preview.png" alt="Factory Reset" />
+            Factory Reset
+          </button>
         </DropdownContent>
       </DropdownButton>
     </ButtonContainer>
