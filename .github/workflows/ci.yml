@@ -74,7 +74,7 @@ jobs:
 
       # Enforce Quality Gate
       - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarcloud-quality-gate-action@master
+        uses: SonarSource/sonarqube-quality-gate-action@master
         with:
           sonar_token: '9b48e7ee9628e35278f48d2951ea3e82db0be2f6'
 
@@ -126,6 +126,6 @@ jobs:
             -Dsonar.branch.name=$BRANCH_NAME
 
       - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarcloud-quality-gate-action@master
+        uses: SonarSource/sonarqube-quality-gate-action@master
         with:
           sonar_token: ${{ secrets.SONAR_TOKEN }}
