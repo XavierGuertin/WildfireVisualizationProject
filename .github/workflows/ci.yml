@@ -35,8 +35,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      # Cache Cypress binary to avoid re-downloading
+      - name: Cache Cypress
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+
       # Install Node.js dependencies
       - run: npm install --legacy-peer-deps
+
+      # Install Cypress binary explicitly to ensure it's available
+      - name: Install Cypress Binary
+        run: npx cypress install
 
       # Set up Java
       - name: Set up Java
@@ -74,4 +87,3 @@ jobs:
             -Dsonar.organization=$SONAR_ORGANIZATION_KEY \
             -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.branch.name=$BRANCH_NAME
-
