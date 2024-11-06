@@ -1,0 +1,28 @@
+.footerConatiner {
+    width: 90%;
+    background: 'white';
+    color: '#005ea6';
+    position: 'fixed';
+    bottom: '0';
+    left: '4%';
+    padding: '20px';
+    box-shadow: '2px 0 5px rgba(0, 0, 0, 0.1)';
+    display: 'flex';
+    flex-direction: 'row';
+    align-items: 'center';
+}
+
+.sliderContainer {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+}
+
+.simulationSlider {
+    width: 80%;
+    margin-top: 10px;
+}
+
+.controlSpeedContainer {
+    width: 100%;
+}
