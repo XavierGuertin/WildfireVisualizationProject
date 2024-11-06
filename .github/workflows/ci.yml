@@ -76,13 +76,18 @@ jobs:
 
       # SonarCloud Analysis for Frontend
       - name: SonarCloud Scan Frontend
+        env:
+          SONAR_TOKEN_FRONTEND: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          SONAR_PROJECT_KEY_FRONTEND: ${{ secrets.SONAR_PROJECT_KEY_FRONTEND }}
+          SONAR_ORGANIZATION_KEY_FRONTEND: ${{ secrets.SONAR_ORGANIZATION_KEY_FRONTEND }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
           npx sonar-scanner -X \
             -Dproject.settings=sonar-project-frontend.properties \
-            -Dsonar.projectKey="wildfirefrontendscanner_wildfirefrontendscanner" \
-            -Dsonar.organization="wildfirefrontendscanner" \
-            -Dsonar.login="9b48e7ee9628e35278f48d2951ea3e82db0be2f6" \
-            -Dsonar.branch.name="${{ github.ref_name }}" \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY_FRONTEND \
+            -Dsonar.organization=$SONAR_ORGANIZATION_KEY_FRONTEND \
+            -Dsonar.login=$SONAR_TOKEN_FRONTEND \
+            -Dsonar.branch.name=$BRANCH_NAME \
             -Dsonar.qualitygate.wait=true
 
   backend_ci:
