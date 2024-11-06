@@ -4,6 +4,7 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+  rootDir:"./",
   collectCoverage: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
