@@ -91,6 +91,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
           npx sonar-scanner -X \
+            -Dproject.settings=sonar-project-backend.properties \
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.organization=$SONAR_ORGANIZATION_KEY \
             -Dsonar.login=$SONAR_TOKEN \
