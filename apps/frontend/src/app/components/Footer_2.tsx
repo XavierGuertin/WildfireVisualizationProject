@@ -1,59 +1,89 @@
 // 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/footer.css';
-import { FaPlayCircle, FaPauseCircle, FaStopCircle } from "react-icons/fa";
+import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 
 const footer_2 = () => {
-
     const [sliderValue, setSliderValue] = useState(0);
-    const [play, setPlay] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speed, setSpeed] = useState(1);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handlePlayPause = () => {
+        setIsPlaying(!isPlaying);
+    };
+
+    const handleSpeedChange = (newSpeed: number) => {
+        setSpeed(newSpeed);
+    };
+
+    useEffect(() => {
+        if (isPlaying) {
+            intervalRef.current = setInterval(() => {
+                setSliderValue((prev) => (prev < 100 ? prev + 1 : 0));
+            }, 1000 / speed);
+        } else if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+        }
+        return () => clearInterval(intervalRef.current!);
+    }, [isPlaying, speed]);
 
     const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSliderValue(Number(event.target.value));
     };
 
     const handlePlayPress = () => {
-        setPlay(true);
+        setIsPlaying(true);
     };
 
     const handlePausePress = () => {
-        setPlay(false);
+        setIsPlaying(false);
     };
 
     const handleStopPress = () => {
-        setPlay(false);
+        setIsPlaying(false);
         setSliderValue(0);
     };
 
     return (
         <>
-        <div className="footerContainer" >
-            <div className="sliderContainer">
-                <input
-                    className='simulationSlider'
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={sliderValue}
-                    onChange={handleSliderChange}
-                />
-                <button className="iconButton" onClick={handlePlayPress}><FaPlayCircle className="controlIcon" size={25} /></button>
-                <button className="iconButton" onClick={handlePausePress}><FaPauseCircle className="controlIcon" size={25} /></button>
-                <button className="iconButton" onClick={handleStopPress}><FaStopCircle className="controlIcon" size={25} /></button>
+            <div className="footerContainer">
+                <div className="sliderContainer">
+                    <input
+                        className="simulationSlider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={sliderValue}
+                        onChange={handleSliderChange}
+                    />
+                    <button className="iconButton" onClick={handlePlayPause}>
+                        {!isPlaying ? (
+                            <FaPlayCircle className="controlIcon" size={25} />
+                        ) : (
+                            <FaPauseCircle className="controlIcon" size={25} />
+                        )}
+                    </button>
+                    <button className="iconButton" onClick={handleStopPress}>
+                        <FaStopCircle className="controlIcon" size={25} />
+                    </button>
+                </div>
+                <div className="speedContainer">
+                    {[0.5, 1, 1.5, 2, 4].map((s) => (
+                        <button
+                            className="speedButton"
+                            key={s}
+                            onClick={() => handleSpeedChange(s)}
+                            style={{ borderColor: speed === s ? '#005ea6' : 'white' }}
+                        >
+                            {s}x
+                        </button>
+                    ))}
+                </div>
             </div>
-            <div className="speedContainer">
-                <p>Speed:</p>
-                <p>0.25x</p>
-                <p>0.5x</p>
-                <p>1x</p>
-                <p>1.25x</p>
-                <p>1.5x</p>
-                <p>2x</p>
-            </div>
-        </div>
         </>
     );
-}
+};
 
 export default footer_2;
