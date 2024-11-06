@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+// import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
-import Layers from './components/Layers';
+import MapView from './components/MapView';
+import { MapLayerProvider } from './components/MapContext';
+import Sidebar from './components/Sidebar';
+import TopLeftButtons from './components/TopLeftButtons';
 import AvailableDatasets from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
 
@@ -24,38 +28,43 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
 
   const updateWildfireLayer = (layerName: string) => {
-    setLoading(true);
-    setProgress(0); // Reset progress when starting a new load
+    // setLoading(true);
+    // setProgress(0); // Reset progress when starting a new load
 
-    // Mock loading progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoading(false); // Hide loading overlay after loading completes
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
+    // // Mock loading progress
+    // const interval = setInterval(() => {
+    //   setProgress((prev) => {
+    //     if (prev >= 100) {
+    //       clearInterval(interval);
+    //       setLoading(false); // Hide loading overlay after loading completes
+    //       return 100;
+    //     }
+    //     return prev + 10;
+    //   });
+    // }, 300);
   };
 
   const handleDatasetClick = (dataset: Dataset) => {
     // Mock data for demonstration. We can replace this with actual data based on the dataset name.
     setSelectedDataset(dataset);
   };
-
+  
   return (
-    <html lang="en">
+    <MapLayerProvider>
+      
+      <html lang="en">
       <body>
-        <div className="layout-container relative">
-          <LoadingOverlay progress={progress} isVisible={loading} />
-          <header>
-            <Layers updateWildfireLayer={updateWildfireLayer} />
-            <AvailableDatasets onDatasetClick={handleDatasetClick} />
-          </header>
-          <main className="app-main">{children}</main>
-          {selectedDataset && (
+      <TopLeftButtons />
+    <div className="layout-container relative">
+        <LoadingOverlay progress={progress} isVisible={loading} />
+        <header>
+          {/* <Navbar /> */}
+        </header>
+        <main className="app-main">{children}</main>
+        <AvailableDatasets onDatasetClick={handleDatasetClick} />
+        <MapView />
+        <Sidebar />
+        {selectedDataset && (
             <MapMetaData
               city={selectedDataset.city}
               name={selectedDataset.name}
@@ -65,12 +74,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               datasetSource={selectedDataset.datasetSource}
             />
           )}
-          <footer className="app-footer">
-            <p>&copy; 2024 Wildfire Visualization Project</p>
-          </footer>
-        </div>
+        <footer className="app-footer">
+        </footer>
+      </div>
       </body>
-    </html>
+      </html>
+      </MapLayerProvider>
   );
 };
 

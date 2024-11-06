@@ -1,121 +1,113 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import axios from 'axios';
+import { useMapLayerContext } from './MapContext';
 
-interface SidebarProps {
-  updateWildfireLayer: (layerName: string) => void;
-  onClose: () => void;
-}
+const viewsIcon = '/assets/layers_white.png';
+const satelliteImage = '/assets/Satellite_layer.png';
+const defaultImage = '/assets/Default_layer.png';
+const terrainImage = '/assets/Terrain_layer.png';
 
 const SidebarContainer = styled.div`
-  width: 200px;
-  height: 300px;
-  background: #f8f9fa;
-  padding: 5px 20px 20px 20px;
+  width: 100px;
+  background: #005ea6;
+  color: white;
   position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 10px;
+  left: 25px;
+  padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   z-index: 1000;
-  border: 1px solid black;
   border-radius: 8px;
-  margin-left: 20px;
-`;
-
-const Header = styled.div`
+  transition: width 0.3s ease, height 0.3s ease;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-`;
 
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.2em;
-  cursor: pointer;
-`;
+  &.collapsed {
+    width: 100px;
+    padding: 10px;
+  }
 
-const SidebarTitle = styled.h2`
-  font-size: 1.4em;
-  color: #333;
-`;
-
-const CheckboxLabel = styled.label`
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-  cursor: pointer;
-  font-size: 1.1em;
-`;
-
-const DatasetButton = styled.button`
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.1em;
-
-  &:hover {
-    background: #0056b3;
+  &.expanded {
+    width: 100px;
+    padding: 5px 20px 20px 20px;
   }
 `;
 
-const Sidebar: React.FC<SidebarProps> = ({ updateWildfireLayer, onClose }) => {
-  const [datasets, setDatasets] = useState<string[]>([]);
+const ToggleButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  outline: none;
+`;
 
-  useEffect(() => {
-    const fetchDatasets = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/datasets');
-        setDatasets(response.data);
-      } catch (error) {
-        console.error('Error fetching datasets:', error);
-        setDatasets([]); // Load an empty list if no data is available
-      }
-    };
-    fetchDatasets();
-  }, []);
+const Icon = styled.img`
+  width: 30px;
+  height: 30px;
+`;
 
-  const handleLayerToggle = (layerName: string) => {
-    updateWildfireLayer(layerName);
+const LayerImage = styled.img`
+  width: 100%;
+  height: auto;
+  max-width: 150px;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const {setLayer} = useMapLayerContext();
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => !prev);
+  };
+
+  const handleLayerChange = (layerName: string) => {
+    setLayer(layerName);
   };
 
   return (
-    <SidebarContainer>
-      <Header>
-        <SidebarTitle>Layers</SidebarTitle>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-      </Header>
-      <CheckboxLabel>
-        <input type="checkbox" onChange={() => handleLayerToggle('satellite')} /> Satellite
-      </CheckboxLabel>
-      <CheckboxLabel>
-        <input type="checkbox" onChange={() => handleLayerToggle('meteorological')} /> Meteorological
-      </CheckboxLabel>
-      <CheckboxLabel>
-        <input type="checkbox" onChange={() => handleLayerToggle('topographical')} /> Topographical
-      </CheckboxLabel>
-
-      <SidebarTitle>Available Datasets</SidebarTitle>
-      {datasets.length > 0 ? (
-        datasets.map((dataset, index) => (
-          <DatasetButton key={index} onClick={() => handleLayerToggle(dataset)}>
-            {dataset}
-          </DatasetButton>
-        ))
+    <SidebarContainer className={isCollapsed ? 'collapsed' : 'expanded'}>
+      {isCollapsed ? (
+        <ToggleButton onClick={toggleCollapse}>
+          <Icon src={viewsIcon} alt="Views" />
+          <span style={{ marginLeft: '5px', color: 'white' }}>Views</span>
+        </ToggleButton>
       ) : (
-        <p>No datasets available.</p>
+        <>
+          <ToggleButton onClick={toggleCollapse}>
+            <Icon src={viewsIcon} alt="Collapse" />
+          </ToggleButton>
+
+          <LayerImage
+            src={defaultImage}
+            alt="Default Layer"
+            onClick={() => handleLayerChange('default')}
+          />
+          <LayerImage
+            src={terrainImage}
+            alt="Topographical Layer"
+            onClick={() => handleLayerChange('topographical')}
+          />
+          <LayerImage
+            src={satelliteImage}
+            alt="Satellite Layer"
+            onClick={() => handleLayerChange('satellite')}
+          />
+        </>
       )}
     </SidebarContainer>
   );
 };
 
 export default Sidebar;
+

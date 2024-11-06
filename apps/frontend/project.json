@@ -4,36 +4,41 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/apps/frontend"
+        "cwd": "apps/frontend",
+        "command": "npx next build"
       },
       "configurations": {
         "coverage": {
-          "command": "nyc --reporter=html --reporter=text npx nx build frontend"
+          "command": "nyc --reporter=html --reporter=text npx nx run frontend:build"
         }
       }
     },
     "serve": {
-      "executor": "@nx/next:server",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "frontend:build",
-        "port": 3000
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["coverage/apps/frontend"],
-      "options": {
-        "jestConfig": "apps/frontend/jest.config.js",
-        "passWithNoTests": true
+        "cwd": "apps/frontend",
+        "command": "npx next dev -p 3000"
+      },
+      "configurations": {
+        "build": {
+          "command": "npx nx run frontend:build && npx nx run frontend:serve"
+        }
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["apps/frontend/**/*.{ts,tsx,js,jsx}"]
+        "cwd": "apps/frontend",
+        "command": "npm run lint"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/frontend",
+        "command": "npx jest --config ./jest.config.ts"
       }
     }
   },
