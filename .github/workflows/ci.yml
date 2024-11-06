@@ -53,15 +53,15 @@ jobs:
 
       # Lint Frontend Projects
       - name: Lint Frontend Projects
-        run: npx nx run frontend --target=lint
+        run: npx nx lint frontend
 
       # Build Frontend
       - name: Build Frontend
-        run: npx nx run frontend --target=build
+        run: npx nx build frontend
 
       # Test Frontend
       - name: Test Frontend
-        run: npx nx run frontend --target=test
+        run: npx nx test frontend
 
       # End-to-End Tests
       - name: End-to-End Tests
@@ -99,15 +99,15 @@ jobs:
 
       # Lint Backend Projects
       - name: Lint Backend Projects
-        run: npx nx run backend --target=lint
+        run: npx nx lint backend
 
       # Build Backend
       - name: Build Backend
-        run: npx nx run backend --target=build
+        run: npx nx build backend
 
       # Test Backend
       - name: Test Backend
-        run: npx nx run backend --target=test
+        run: npx nx test backend
 
       # Verify Backend Coverage Files
       - name: List Backend Coverage Files
