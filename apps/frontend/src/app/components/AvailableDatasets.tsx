@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import LoadingOverlay from './LoadingOverlay';
 
-interface Dataset {
+export interface Dataset {
   name: string;
   date: string;
   latestAdded: string;
@@ -230,24 +230,33 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   };
 
   const handleDatasetClick = (dataset: Dataset) => {
-    setSelectedDataset(dataset.name);
-    onDatasetClick(dataset);
-
     // Mock loading progress
     setIsLoading(true);
     setProgress(0);
 
-    // Simulate loading progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsLoading(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
+    setSelectedDataset(dataset.name);
+    console.log(`Selected dataset: ${dataset.name}`);
+
+    setProgress(50);
+    console.log('Loading dataset...');
+
+    onDatasetClick(dataset);
+    console.log('Dataset loaded successfully.');
+
+    setProgress(100);
+    setIsLoading(false);
+
+  //   // Simulate loading progress
+  //   const interval = setInterval(() => {
+  //     setProgress((prev) => {
+  //       if (prev >= 100) {
+  //         clearInterval(interval);
+  //         setIsLoading(false);
+  //         return 100;
+  //       }
+  //       return prev + 10;
+  //     });
+  //   }, 300);
   };
 
   const toggleCollapse = () => {

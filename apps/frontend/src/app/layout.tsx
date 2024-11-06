@@ -7,20 +7,8 @@ import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
 import TopLeftButtons from './components/TopLeftButtons';
-import AvailableDatasets from './components/AvailableDatasets';
+import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
-
-interface Dataset {
-  name: string;
-  date: string;
-  latestAdded: string;
-  latestUpdated: string;
-  city: string;
-  description: string;
-  format: string;
-  processes: string;
-  datasetSource: string;
-}
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
