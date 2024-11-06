@@ -21,12 +21,12 @@ interface AvailableDatasetsProps {
   onDatasetClick: (dataset: Dataset) => void;
 }
 
-const DatasetsContainer = styled.div<{ isCollapsed: boolean }>`
+const DatasetsContainer = styled.div<{ $isCollapsed: boolean }>`
   font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  width: ${({ isCollapsed }) => (isCollapsed ? '75px' : '550px')};
-  height: ${({ isCollapsed }) => (isCollapsed ? '75px' : '350px')};
-  background: ${({ isCollapsed }) => (isCollapsed ? '#00447E' : '#ffffff')};
+  width: ${({ $isCollapsed }) => ($isCollapsed ? '75px' : '550px')};
+  height: ${({ $isCollapsed }) => ($isCollapsed ? '75px' : '350px')};
+  background: ${({ $isCollapsed }) => ($isCollapsed ? '#00447E' : '#ffffff')};
   position: fixed;
   right: 20px;
   top: 50%;
@@ -37,7 +37,7 @@ const DatasetsContainer = styled.div<{ isCollapsed: boolean }>`
   z-index: 1000;
   overflow: visible;
   transition: width 0.3s ease;
-  display: ${({ isCollapsed }) => (isCollapsed ? 'flex' : 'block')};
+  display: ${({ $isCollapsed }) => ($isCollapsed ? 'flex' : 'block')};
   justify-content: center;
   align-items: center;
 `;
@@ -88,14 +88,14 @@ const ToggleButton = styled.div`
   }
 `;
 
-const CollapseButton = styled.button<{ isCollapsed: boolean }>`
+const CollapseButton = styled.button<{ $isCollapsed: boolean }>`
   border: none;
   cursor: pointer;
   color: white;
   font-size: 1.2em;
   position: absolute;
   left: -15px;
-  top: ${({ isCollapsed }) => (isCollapsed ? '50%' : '13%')};
+  top: ${({ $isCollapsed }) => ($isCollapsed ? '50%' : '13%')};
   transform: translateY(-50%);
   display: flex;
   align-items: center;
@@ -125,12 +125,12 @@ const FilterIcon = styled.div`
   flex-shrink: 0;
 `;
 
-const FilterButton = styled.button<{ isActive: boolean }>`
+const FilterButton = styled.button<{ $isActive: boolean }>`
   flex: 1;
   min-width: 80px;
   padding: 8px;
-  background: ${({ isActive }) => (isActive ? '#00447E' : '#ddd')};
-  color: ${({ isActive }) => (isActive ? 'white' : '#333')};
+  background: ${({ $isActive }) => ($isActive ? '#00447E' : '#ddd')};
+  color: ${({ $isActive }) => ($isActive ? 'white' : '#333')};
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -140,7 +140,7 @@ const FilterButton = styled.button<{ isActive: boolean }>`
   white-space: nowrap;
 
   &:hover {
-    background: ${({ isActive }) => (isActive ? '#003355' : '#ccc')};
+    background: ${({ $isActive }) => ($isActive ? '#003355' : '#ccc')};
   }
 `;
 
@@ -151,12 +151,12 @@ const ButtonsContainer = styled.div`
   width: 100%;
 `;
 
-const DatasetButton = styled.button<{ isSelected: boolean }>`
+const DatasetButton = styled.button<{ $isSelected: boolean }>`
   width: calc(100% - 40px);
   padding: 10px;
   margin: 0 auto 10px; /* Center align and spacing between buttons */
-  background: ${({ isSelected }) => (isSelected ? '#00447E' : '#ffffff')};
-  color: ${({ isSelected }) => (isSelected ? '#ffffff' : '#00447E')};
+  background: ${({ $isSelected }) => ($isSelected ? '#00447E' : '#ffffff')};
+  color: ${({ $isSelected }) => ($isSelected ? '#ffffff' : '#00447E')};
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
@@ -166,7 +166,7 @@ const DatasetButton = styled.button<{ isSelected: boolean }>`
   box-sizing: border-box;
 
   &:hover {
-    background: ${({ isSelected }) => (isSelected ? '#003355' : '#f1f1f1')};
+    background: ${({ $isSelected }) => ($isSelected ? '#003355' : '#f1f1f1')};
   }
 `;
 
@@ -270,8 +270,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   return (
     <>
       <LoadingOverlay progress={progress} isVisible={isLoading} />
-      <DatasetsContainer isCollapsed={isCollapsed}>
-        <CollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse}>
+      <DatasetsContainer $isCollapsed={isCollapsed}>
+        <CollapseButton $isCollapsed={isCollapsed} onClick={toggleCollapse}>
           {isCollapsed ? (
             <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M16.6757 19L26 28.9667L23.1622 32L11 19L23.1622 6L26 9.03333L16.6757 19Z" fill="#00447E" />
@@ -305,7 +305,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
                     </svg>
                   </FilterIcon>
                   {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
-                    <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
+                    <FilterButton key={filter} $isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
                       {filter}
                     </FilterButton>
                   ))}
@@ -315,7 +315,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
                     datasets.map((dataset, index) => (
                       <DatasetButton
                         key={index}
-                        isSelected={selectedDataset === dataset.name}
+                        $isSelected={selectedDataset === dataset.name}
                         onClick={() => handleDatasetClick(dataset)}
                       >
                         {dataset.name}
