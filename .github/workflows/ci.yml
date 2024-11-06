@@ -74,6 +74,14 @@ jobs:
       - name: End-to-End Tests
         run: npx nx e2e frontend-e2e
 
+      # Verify coverage files exist
+      - name: List coverage files
+        run: |
+          echo "Listing frontend coverage files"
+          ls -R coverage/apps/frontend/
+          echo "Listing backend coverage files"
+          ls -R apps/backend/target/site/jacoco/
+
       # SonarCloud Analysis
       - name: SonarCloud Scan
         env:
@@ -82,7 +90,7 @@ jobs:
           SONAR_ORGANIZATION_KEY: ${{ secrets.SONAR_ORGANIZATION_KEY }}
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          npx sonar-scanner \
+          npx sonar-scanner -X \
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.organization=$SONAR_ORGANIZATION_KEY \
             -Dsonar.login=$SONAR_TOKEN \
