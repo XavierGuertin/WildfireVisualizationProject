@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import LoadingOverlay from './LoadingOverlay';
 
 interface Dataset {
   name: string;
@@ -175,6 +176,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
     // Mock data for testing purposes
@@ -229,6 +232,22 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   const handleDatasetClick = (dataset: Dataset) => {
     setSelectedDataset(dataset.name);
     onDatasetClick(dataset);
+
+    // Mock loading progress
+    setIsLoading(true);
+    setProgress(0);
+
+    // Simulate loading progress
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsLoading(false);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 300);
   };
 
   const toggleCollapse = () => {
@@ -240,66 +259,69 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   };
 
   return (
-    <DatasetsContainer isCollapsed={isCollapsed}>
-      <CollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse}>
+    <>
+      <LoadingOverlay progress={progress} isVisible={isLoading} />
+      <DatasetsContainer isCollapsed={isCollapsed}>
+        <CollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse}>
+          {isCollapsed ? (
+            <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.6757 19L26 28.9667L23.1622 32L11 19L23.1622 6L26 9.03333L16.6757 19Z" fill="#00447E" />
+            </svg>
+          ) : (
+            <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="39" height="38" rx="2" />
+              <path d="M22.3243 19L13 9.03333L15.8378 6L28 19L15.8378 32L13 28.9667L22.3243 19Z" fill="#00447E" />
+            </svg>
+          )}
+        </CollapseButton>
         {isCollapsed ? (
-          <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16.6757 19L26 28.9667L23.1622 32L11 19L23.1622 6L26 9.03333L16.6757 19Z" fill="#00447E" />
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M42 10C42 13.3137 33.9411 16 24 16C14.0589 16 6 13.3137 6 10M42 10C42 6.68629 33.9411 4 24 4C14.0589 4 6 6.68629 6 10M42 10V38C42 41.32 34 44 24 44C14 44 6 41.32 6 38V10M42 24C42 27.32 34 30 24 30C14 30 6 27.32 6 24" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         ) : (
-          <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="39" height="38" rx="2" />
-            <path d="M22.3243 19L13 9.03333L15.8378 6L28 19L15.8378 32L13 28.9667L22.3243 19Z" fill="#00447E" />
-          </svg>
+          <>
+            <TopBar>
+              <SidebarTitle>Available Datasets</SidebarTitle>
+              <label style={{ display: 'flex', alignItems: 'center' }}>
+                <input type="checkbox" checked={isToggled} onChange={handleToggle} style={{ display: 'none' }} />
+                <ToggleButton />
+              </label>
+            </TopBar>
+            {!isCollapsed && (
+              <>
+                <FilterContainer>
+                  <FilterIcon>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z" fill="currentColor" />
+                    </svg>
+                  </FilterIcon>
+                  {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
+                    <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
+                      {filter}
+                    </FilterButton>
+                  ))}
+                </FilterContainer>
+                <ButtonsContainer>
+                  {datasets.length > 0 ? (
+                    datasets.map((dataset, index) => (
+                      <DatasetButton
+                        key={index}
+                        isSelected={selectedDataset === dataset.name}
+                        onClick={() => handleDatasetClick(dataset)}
+                      >
+                        {dataset.name}
+                      </DatasetButton>
+                    ))
+                  ) : (
+                    <p style={{ fontFamily: 'inherit', color: '#333', textAlign: 'center' }}>No datasets available.</p>
+                  )}
+                </ButtonsContainer>
+              </>
+            )}
+          </>
         )}
-      </CollapseButton>
-      {isCollapsed ? (
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M42 10C42 13.3137 33.9411 16 24 16C14.0589 16 6 13.3137 6 10M42 10C42 6.68629 33.9411 4 24 4C14.0589 4 6 6.68629 6 10M42 10V38C42 41.32 34 44 24 44C14 44 6 41.32 6 38V10M42 24C42 27.32 34 30 24 30C14 30 6 27.32 6 24" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      ) : (
-        <>
-          <TopBar>
-            <SidebarTitle>Available Datasets</SidebarTitle>
-            <label style={{ display: 'flex', alignItems: 'center' }}>
-              <input type="checkbox" checked={isToggled} onChange={handleToggle} style={{ display: 'none' }} />
-              <ToggleButton />
-            </label>
-          </TopBar>
-          {!isCollapsed && (
-            <>
-              <FilterContainer>
-                <FilterIcon>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z" fill="currentColor" />
-                  </svg>
-                </FilterIcon>
-                {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
-                  <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
-                    {filter}
-                  </FilterButton>
-                ))}
-              </FilterContainer>
-              <ButtonsContainer>
-                {datasets.length > 0 ? (
-                  datasets.map((dataset, index) => (
-                    <DatasetButton
-                      key={index}
-                      isSelected={selectedDataset === dataset.name}
-                      onClick={() => handleDatasetClick(dataset)}
-                    >
-                      {dataset.name}
-                    </DatasetButton>
-                  ))
-                ) : (
-                  <p style={{ fontFamily: 'inherit', color: '#333', textAlign: 'center' }}>No datasets available.</p>
-                )}
-              </ButtonsContainer>
-            </>
-          )}
-        </>
-      )}
-    </DatasetsContainer>
+      </DatasetsContainer>
+    </>
   );
 };
 
