@@ -59,6 +59,34 @@ const SidebarTitle = styled.h2`
   display: 'block';
 `;
 
+const ToggleButton = styled.div`
+  position: relative;
+  width: 40px; /* Increased width */
+  height: 22px; /* Increased height */
+  background: white;
+  border-radius: 11px;
+  border: 2px solid #00447E;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background 0.3s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #00447E;
+    border-radius: 50%;
+    top: 2.4px;
+    left: 1px;
+    transition: 0.3s;
+  }
+
+  input:checked + &::after {
+    left: 20px; /* Adjusted for the new size */
+  }
+`;
+
 const CollapseButton = styled.button<{ isCollapsed: boolean }>`
   border: none;
   cursor: pointer;
@@ -146,6 +174,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
   const [activeFilter, setActiveFilter] = useState<string>('Name');
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [isToggled, setIsToggled] = useState<boolean>(false);
 
   useEffect(() => {
     // Mock data for testing purposes
@@ -157,6 +186,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     ];
 
     setDatasets(mockData);
+
+    const handleToggle = () => {
+      setIsToggled(!isToggled);
+    };
 
     // Fetch datasets from the API (commented out to use mock data)
     const fetchDatasets = async () => {
@@ -202,6 +235,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     setIsCollapsed(!isCollapsed);
   };
 
+  const handleToggle = () => {
+    setIsToggled(!isToggled);
+  };
+
   return (
     <DatasetsContainer isCollapsed={isCollapsed}>
       <CollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse}>
@@ -224,6 +261,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
         <>
           <TopBar>
             <SidebarTitle>Available Datasets</SidebarTitle>
+            <label style={{ display: 'flex', alignItems: 'center' }}>
+              <input type="checkbox" checked={isToggled} onChange={handleToggle} style={{ display: 'none' }} />
+              <ToggleButton />
+            </label>
           </TopBar>
           {!isCollapsed && (
             <>
