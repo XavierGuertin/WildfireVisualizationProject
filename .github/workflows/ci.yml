@@ -97,6 +97,16 @@ jobs:
           distribution: 'temurin'
           java-version: '22'
 
+      # Install Node.js and dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # Install Node.js dependencies (including Nx) for backend
+      - name: Install Node.js Dependencies
+        run: npm install --legacy-peer-deps
+
       # Lint Backend Projects
       - name: Lint Backend Projects
         run: npx nx lint backend
