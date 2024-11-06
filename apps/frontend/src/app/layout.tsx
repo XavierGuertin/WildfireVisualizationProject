@@ -8,6 +8,7 @@ import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
+import TopLeftButtons from './components/TopLeftButtons';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       
       <html lang="en">
       <body>
-      <div className="layout-container relative">
+      <TopLeftButtons />
+    <div className="layout-container relative">
         <LoadingOverlay progress={progress} isVisible={loading} />
         <header>
           {/* <Navbar /> */}
