@@ -67,6 +67,13 @@ jobs:
       - name: End-to-End Tests
         run: npx nx e2e frontend-e2e
 
+      # Set up Java 17 for SonarCloud compatibility
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       # SonarCloud Analysis for Frontend
       - name: SonarCloud Scan Frontend
         run: |
