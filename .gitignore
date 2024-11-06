@@ -5,6 +5,8 @@ dist
 tmp
 /out-tsc
 
+
+
 # dependencies
 node_modules
 
@@ -105,6 +107,7 @@ Desktop.ini
 apps/frontend/.env
 .env.local
 .env.*.local
+.env
 
 # Miscellaneous
 **/*.bak
