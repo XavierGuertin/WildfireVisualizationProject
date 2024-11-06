@@ -1,15 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "main",
-  "plugins": [
-    {
-      "plugin": "@nx/jest/plugin",
-      "exclude": ["e2e/**/*"],
-      "options": {
-        "targetName": "test"
-      }
-    }
-  ],
   "projects": {
     "frontend": {
       "root": "apps/frontend",

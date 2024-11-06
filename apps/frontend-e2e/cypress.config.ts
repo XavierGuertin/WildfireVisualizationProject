@@ -1,21 +1,18 @@
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-const coverageTask = require('@cypress/code-coverage/task'); // Use require instead of import
+const coverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      webServerCommands: { default: 'npx nx run frontend:build --configuration=coverage && nx run frontend:serve' },  // Build with coverage instrumentation
-      ciWebServerCommand: 'npx nx run frontend:build --configuration=coverage && nx run frontend:serve-static',
-      ciBaseUrl: 'http://localhost:3000',
+      cypressDir: 'apps/frontend-e2e/src',
     }),
-    baseUrl: 'http://127.0.0.1:3000',
+    baseUrl: 'http://127.0.0.1:3000', // Set only if NX doesn’t set it automatically
     setupNodeEvents(on, config) {
       coverageTask(on, config); // Enable code coverage tasks
       return config;
     },
-    reporter: 'spec', // Show test statistics in the terminal
+    reporter: 'spec', // Optional: show test stats in the terminal
     reporterOptions: {
       mochaFile: 'cypress/results/test-output-[hash].xml',
     },
