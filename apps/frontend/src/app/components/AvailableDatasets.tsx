@@ -25,18 +25,20 @@ const DatasetsContainer = styled.div<{ isCollapsed: boolean }>`
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   width: ${({ isCollapsed }) => (isCollapsed ? '75px' : '550px')};
   height: ${({ isCollapsed }) => (isCollapsed ? '75px' : '350px')};
-  background: #ffffff;
+  background: ${({ isCollapsed }) => (isCollapsed ? '#00447E' : '#ffffff')};
   position: fixed;
   right: 20px;
   top: 50%;
   transform: translateY(-50%);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   border: 1px solid #ddd;
   border-radius: 8px;
   z-index: 1000;
-  box-sizing: border-box;
-  overflow: hidden; /* Prevent overflow */
+  overflow: visible;
   transition: width 0.3s ease;
+  display: ${({ isCollapsed }) => (isCollapsed ? 'flex' : 'block')};
+  justify-content: center;
+  align-items: center;
 `;
 
 const TopBar = styled.div`
@@ -50,31 +52,29 @@ const TopBar = styled.div`
   border-top-right-radius: 8px;
 `;
 
-const SidebarTitle = styled.h2<{ isCollapsed: boolean }>`
+const SidebarTitle = styled.h2`
   font-size: 1.2em;
   margin: 0;
   color: white;
-  display: ${({ isCollapsed }) => (isCollapsed ? 'none' : 'block')};
+  display: 'block';
 `;
 
 const CollapseButton = styled.button<{ isCollapsed: boolean }>`
-  background: none;
   border: none;
   cursor: pointer;
   color: white;
   font-size: 1.2em;
   position: absolute;
-  left: -25px; /* Position it outside the container */
-  top: 50%;
+  left: -15px;
+  top: ${({ isCollapsed }) => (isCollapsed ? '50%' : '13%')};
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  background: #00447E;
-  border-radius: 50%;
+  width: 25px;
+  height: 25px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1100;
 `;
 
 const FilterContainer = styled.div`
@@ -123,7 +123,7 @@ const ButtonsContainer = styled.div`
 `;
 
 const DatasetButton = styled.button<{ isSelected: boolean }>`
-  width: calc(100% - 40px); /* Adjust width to fit within container */
+  width: calc(100% - 40px);
   padding: 10px;
   margin: 0 auto 10px; /* Center align and spacing between buttons */
   background: ${({ isSelected }) => (isSelected ? '#00447E' : '#ffffff')};
@@ -204,43 +204,58 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
 
   return (
     <DatasetsContainer isCollapsed={isCollapsed}>
-      <TopBar>
-        <SidebarTitle isCollapsed={isCollapsed}>Available Datasets</SidebarTitle>
-      </TopBar>
       <CollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor" />
-        </svg>
+        {isCollapsed ? (
+          <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.6757 19L26 28.9667L23.1622 32L11 19L23.1622 6L26 9.03333L16.6757 19Z" fill="#00447E" />
+          </svg>
+        ) : (
+          <svg width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="39" height="38" rx="2" />
+            <path d="M22.3243 19L13 9.03333L15.8378 6L28 19L15.8378 32L13 28.9667L22.3243 19Z" fill="#00447E" />
+          </svg>
+        )}
       </CollapseButton>
-      {!isCollapsed && (
+      {isCollapsed ? (
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M42 10C42 13.3137 33.9411 16 24 16C14.0589 16 6 13.3137 6 10M42 10C42 6.68629 33.9411 4 24 4C14.0589 4 6 6.68629 6 10M42 10V38C42 41.32 34 44 24 44C14 44 6 41.32 6 38V10M42 24C42 27.32 34 30 24 30C14 30 6 27.32 6 24" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      ) : (
         <>
-          <FilterContainer>
-            <FilterIcon>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z" fill="currentColor" />
-              </svg>
-            </FilterIcon>
-            {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
-              <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
-                {filter}
-              </FilterButton>
-            ))}
-          </FilterContainer>
-          <ButtonsContainer>
-            {datasets.length > 0 ? (
-              datasets.map((dataset, index) => (
-                <DatasetButton
-                  key={index}
-                  isSelected={selectedDataset === dataset.name}
-                  onClick={() => handleDatasetClick(dataset)}
-                >
-                  {dataset.name}
-                </DatasetButton>
-              ))
-            ) : (
-              <p style={{ fontFamily: 'inherit', color: '#333', textAlign: 'center' }}>No datasets available.</p>
-            )}
-          </ButtonsContainer>
+          <TopBar>
+            <SidebarTitle>Available Datasets</SidebarTitle>
+          </TopBar>
+          {!isCollapsed && (
+            <>
+              <FilterContainer>
+                <FilterIcon>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z" fill="currentColor" />
+                  </svg>
+                </FilterIcon>
+                {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
+                  <FilterButton key={filter} isActive={activeFilter === filter} onClick={() => sortDatasets(filter)}>
+                    {filter}
+                  </FilterButton>
+                ))}
+              </FilterContainer>
+              <ButtonsContainer>
+                {datasets.length > 0 ? (
+                  datasets.map((dataset, index) => (
+                    <DatasetButton
+                      key={index}
+                      isSelected={selectedDataset === dataset.name}
+                      onClick={() => handleDatasetClick(dataset)}
+                    >
+                      {dataset.name}
+                    </DatasetButton>
+                  ))
+                ) : (
+                  <p style={{ fontFamily: 'inherit', color: '#333', textAlign: 'center' }}>No datasets available.</p>
+                )}
+              </ButtonsContainer>
+            </>
+          )}
         </>
       )}
     </DatasetsContainer>
