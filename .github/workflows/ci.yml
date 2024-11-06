@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  frontend_ci:
     runs-on: ubuntu-latest
     steps:
       # Checkout the code
@@ -51,6 +51,45 @@ jobs:
       - name: Install Cypress Binary
         run: npx cypress install
 
+      # Lint Frontend Projects
+      - name: Lint Frontend Projects
+        run: npx nx run frontend --target=lint
+
+      # Build Frontend
+      - name: Build Frontend
+        run: npx nx run frontend --target=build
+
+      # Test Frontend
+      - name: Test Frontend
+        run: npx nx run frontend --target=test
+
+      # End-to-End Tests
+      - name: End-to-End Tests
+        run: npx nx e2e frontend-e2e
+
+      # SonarCloud Analysis for Frontend
+      - name: SonarCloud Scan Frontend
+        env:
+          SONAR_TOKEN_FRONTEND: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          SONAR_PROJECT_KEY_FRONTEND: ${{ secrets.SONAR_PROJECT_KEY_FRONTEND }}
+          SONAR_ORGANIZATION_KEY_FRONTEND: ${{ secrets.SONAR_ORGANIZATION_KEY_FRONTEND }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          npx sonar-scanner -X \
+            -Dproject.settings=sonar-project-frontend.properties \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY_FRONTEND \
+            -Dsonar.organization=$SONAR_ORGANIZATION_KEY_FRONTEND \
+            -Dsonar.login=$SONAR_TOKEN_FRONTEND \
+            -Dsonar.branch.name=$BRANCH_NAME
+
+  backend_ci:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       # Set up Java
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -58,32 +97,24 @@ jobs:
           distribution: 'temurin'
           java-version: '22'
 
-      # Lint Selected Projects (exclude frontend if necessary)
-      - name: Lint Selected Projects
-        run: npx nx run-many --target=lint --all
+      # Lint Backend Projects
+      - name: Lint Backend Projects
+        run: npx nx run backend --target=lint
 
-      # Build All Projects
-      - name: Build All Projects
-        run: npx nx run-many --target=build --all
+      # Build Backend
+      - name: Build Backend
+        run: npx nx run backend --target=build
 
-      # Test All Projects
-      - name: Test All Projects
-        run: npx nx run-many --target=test --all
+      # Test Backend
+      - name: Test Backend
+        run: npx nx run backend --target=test
 
-      # End-to-End Tests
-      - name: End-to-End Tests
-        run: npx nx e2e frontend-e2e
+      # Verify Backend Coverage Files
+      - name: List Backend Coverage Files
+        run: ls -R apps/backend/target/site/jacoco/
 
-      # Verify coverage files exist
-      - name: List coverage files
-        run: |
-          echo "Listing frontend coverage files"
-          ls -R coverage/apps/frontend/
-          echo "Listing backend coverage files"
-          ls -R apps/backend/target/site/jacoco/
-
-      # SonarCloud Analysis
-      - name: SonarCloud Scan
+      # SonarCloud Analysis for Backend
+      - name: SonarCloud Scan Backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
