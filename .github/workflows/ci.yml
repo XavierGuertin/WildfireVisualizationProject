@@ -82,12 +82,8 @@ jobs:
             -Dsonar.projectKey="wildfirefrontendscanner_wildfirefrontendscanner" \
             -Dsonar.organization="wildfirefrontendscanner" \
             -Dsonar.login="9b48e7ee9628e35278f48d2951ea3e82db0be2f6" \
-            -Dsonar.branch.name="${{ github.ref_name }}"
-
-      - name: Check SonarCloud Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        with:
-          sonar_token: '9b48e7ee9628e35278f48d2951ea3e82db0be2f6'
+            -Dsonar.branch.name="${{ github.ref_name }}" \
+            -Dsonar.qualitygate.wait=true
 
   backend_ci:
     runs-on: ubuntu-latest
@@ -143,9 +139,5 @@ jobs:
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.organization=$SONAR_ORGANIZATION_KEY \
             -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.branch.name=$BRANCH_NAME
-
-      - name: Check SonarCloud Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        with:
-          sonar_token: ${{ secrets.SONAR_TOKEN }}
+            -Dsonar.branch.name=$BRANCH_NAME \
+            -Dsonar.qualitygate.wait=true
