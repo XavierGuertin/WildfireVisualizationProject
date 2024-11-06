@@ -15,18 +15,15 @@ jobs:
   frontend_ci:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the code
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Set up Node.js
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # Cache node_modules
       - name: Cache node_modules
         uses: actions/cache@v3
         with:
@@ -35,7 +32,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Cache Cypress binary to avoid re-downloading
       - name: Cache Cypress
         uses: actions/cache@v3
         with:
@@ -44,37 +40,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cypress-
 
-      # Install Node.js dependencies
       - run: npm install --legacy-peer-deps
 
-      # Install Cypress binary explicitly to ensure it's available
       - name: Install Cypress Binary
         run: npx cypress install
 
-      # Lint Frontend Projects
       - name: Lint Frontend Projects
         run: npx nx lint frontend
 
-      # Build Frontend
       - name: Build Frontend
         run: npx nx build frontend
 
-      # Test Frontend
       - name: Test Frontend
-        run: npx nx test frontend
+        run: npx nx test frontend --code-coverage  # Ensure code coverage reporting
 
-      # End-to-End Tests
       - name: End-to-End Tests
         run: npx nx e2e frontend-e2e
 
-      # Set up Java 17 for SonarCloud compatibility
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # SonarCloud Analysis for Frontend
       - name: SonarCloud Scan Frontend
         run: |
           npx sonar-scanner -X \
@@ -84,48 +72,45 @@ jobs:
             -Dsonar.login="9b48e7ee9628e35278f48d2951ea3e82db0be2f6" \
             -Dsonar.branch.name="${{ github.ref_name }}"
 
+      # Enforce Quality Gate
+      - name: Check SonarCloud Quality Gate
+        uses: sonarsource/sonarcloud-quality-gate-action@master
+        with:
+          sonar_token: '9b48e7ee9628e35278f48d2951ea3e82db0be2f6'
+
   backend_ci:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the code
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Set up Java
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '22'
 
-      # Install Node.js and dependencies
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # Install Node.js dependencies (including Nx) for backend
       - name: Install Node.js Dependencies
         run: npm install --legacy-peer-deps
 
-      # Lint Backend Projects
       - name: Lint Backend Projects
         run: npx nx lint backend
 
-      # Build Backend
       - name: Build Backend
         run: npx nx build backend
 
-      # Test Backend
       - name: Test Backend
-        run: npx nx test backend
+        run: npx nx test backend --code-coverage
 
-      # Verify Backend Coverage Files
       - name: List Backend Coverage Files
         run: ls -R apps/backend/target/site/jacoco/
 
-      # SonarCloud Analysis for Backend
       - name: SonarCloud Scan Backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -139,3 +124,8 @@ jobs:
             -Dsonar.organization=$SONAR_ORGANIZATION_KEY \
             -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.branch.name=$BRANCH_NAME
+
+      - name: Check SonarCloud Quality Gate
+        uses: sonarsource/sonarcloud-quality-gate-action@master
+        with:
+          sonar_token: ${{ secrets.SONAR_TOKEN }}
