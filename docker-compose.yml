@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./apps/backend
+      context: .
       dockerfile: Dockerfile
     image: xavierguertin/wildfirevisualization-backend:latest
     ports:
@@ -15,7 +15,7 @@ services:
 
   frontend:
     build:
-      context: ./apps/frontend
+      context: .
       dockerfile: Dockerfile
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
