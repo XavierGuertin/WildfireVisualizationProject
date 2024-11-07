@@ -1,4 +1,4 @@
-# Use OpenJDK as the base image
+# Use OpenJDK as base image
 FROM openjdk:22-jdk-slim
 
 # Install Node.js for nx command usage
@@ -10,21 +10,27 @@ RUN apt-get update && \
 # Set up a non-root user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-# Set the working directory to the root of the monorepo
-WORKDIR /workspace
+# Set the working directory
+WORKDIR /app
 
-# Copy the root package.json and install dependencies
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Copy the entire monorepo codebase
+# Copy the rest of the codebase
 COPY . .
+
+# Remove unnecessary folders to keep only the backend app
+RUN rm -rf apps/frontend apps/frontend-e2e
+
+# Install Nx globally to ensure it's available
+RUN npm install -g nx
 
 # Build the backend app using the nx target
 RUN npx nx run backend:build
 
 # Change ownership of the workspace directory
-RUN chown -R appuser:appgroup /workspace
+RUN chown -R appuser:appgroup /app
 
 # Switch to the non-root user
 USER appuser
