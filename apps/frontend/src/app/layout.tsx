@@ -1,5 +1,3 @@
-// layout.tsx
-
 'use client';
 
 import React, { useState } from 'react';
@@ -9,10 +7,13 @@ import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
 import TopLeftButtons from './components/TopLeftButtons';
+import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
+import MapMetaData from './components/MapMetaData';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
 
   // Placeholder code for SonarCloud analysis
   const [placeholderValue, setPlaceholderValue] = useState(5); // Unused state
@@ -45,6 +46,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }, 300);
   };
 
+  const handleDatasetClick = (dataset: Dataset) => {
+    // Mock data for demonstration. We can replace this with actual data based on the dataset name.
+    setSelectedDataset(dataset);
+  };
+
   // Additional condition to test SonarCloud rules
   if (placeholderValue > 10) {
     console.log("Placeholder value exceeded 10");
@@ -61,8 +67,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {/* <Navbar /> */}
         </header>
         <main className="app-main">{children}</main>
+        <AvailableDatasets onDatasetClick={handleDatasetClick} />
         <MapView />
         <Sidebar />
+        {selectedDataset && (
+            <MapMetaData
+              city={selectedDataset.city}
+              name={selectedDataset.name}
+              description={selectedDataset.description}
+              format={selectedDataset.format}
+              processes={selectedDataset.processes}
+              datasetSource={selectedDataset.datasetSource}
+            />
+          )}
         <footer className="app-footer"></footer>
       </div>
       </body>
