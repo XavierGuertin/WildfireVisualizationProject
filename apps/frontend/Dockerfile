@@ -1,28 +1,23 @@
-# Use Node.js as base image
+# Use a Node.js image
 FROM node:18-alpine
 
-# Create a non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Set the working directory to the root of the workspace
+WORKDIR /workspace
 
-# Set the working directory
-WORKDIR /app
-
-# Copy and install dependencies
+# Copy package files from the root
 COPY package*.json ./
-RUN npm install --ignore-scripts
 
-# Copy the rest of the application code
+# Install all dependencies at the root level
+RUN npm install
+
+# Copy the entire workspace to retain access to the NX configuration and apps
 COPY . .
 
-# Build the Next.js application and Change ownership of the app folder
-RUN npm run build &&\
-    chown -R appuser:appgroup /app
+# Build the frontend app using NX (targeting the frontend app within the workspace)
+RUN npx nx run frontend:build
 
-# Switch to the non-root user
-USER appuser
-
-# Expose the port
+# Expose the frontend port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Serve the frontend app using the custom NX target
+CMD ["npx", "nx", "serve", "frontend"]

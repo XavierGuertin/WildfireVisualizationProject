@@ -1,23 +1,17 @@
-# Use OpenJDK as base image
-FROM openjdk:22-jdk-slim
+# Use an OpenJDK image for Java Spring Boot
+FROM openjdk:22-jdk
 
-# Create a non-root user
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# Set the working directory to the root of the workspace
+WORKDIR /workspace
 
-# Set the working directory
-WORKDIR /app
+# Copy the entire workspace, including dependencies and NX setup
+COPY . .
 
-# Copy the jar file into the container
-COPY target/*.jar app.jar
-
-# Change ownership to the non-root user
-RUN chown -R appuser:appgroup /app
-
-# Switch to the non-root user
-USER appuser
+# Build the backend app using the NX target
+RUN npx nx run backend:build
 
 # Expose the backend port
 EXPOSE 8080
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the backend server using the NX serve command
+CMD ["npx", "nx", "serve", "backend"]
