@@ -1,15 +1,16 @@
 .footerContainer {
     width: 100%;
-    background: white;
+    background: transparent;
     color: #00467E;
     position: fixed;
     bottom: 0;
-    /* left: 4%; */
-    padding: 10px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    z-index: 1000;
+    margin-bottom: 5px;
 }
 
 .sliderContainer {
@@ -20,32 +21,28 @@
 }
 
 .simulationSlider {
-    width: 80%;
-    /* margin-top: 10px; */
+    width: 90%;
     accent-color: #00467E;
     vertical-align: middle;
 }
 
 .iconButton {
     border: none;
-    background: none;
     padding: none;
     margin: none;
     cursor: pointer;
     color: #00467E;
+    background: none;
 }
 
 .controlIcon {
     padding-left: 10px;
-    /* padding-right: 10px; */
     vertical-align: middle;
 }
 
 .speedContainer {
     display: flex;
     flex-direction: row;
-    /* margin: 0;
-    padding: 0; */
     width: 100%;
     text-align: center;
     vertical-align: middle;
@@ -59,6 +56,7 @@
     color: #00467E;
     background-color: white;
     box-shadow: white;
+    margin-left: 10px;
     cursor: pointer;
     border-style: solid;
 }

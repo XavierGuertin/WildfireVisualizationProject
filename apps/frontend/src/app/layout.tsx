@@ -5,9 +5,6 @@
 import React, { useState } from 'react';
 // import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
-import Footer from './components/Footer';
-import Footer_2 from './components/Footer_2';
-import SimulationControls from './components/SimulationControls';
 import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
@@ -45,11 +42,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </header>
         <main className="app-main">{children}</main>
         <MapView />
-        <p>Louis</p>
         <Sidebar />
-        <p>Louis</p>
-        <Footer_2 />
-        {/* <Footer /> */}
         <footer className="app-footer">
         </footer>
       </div>
