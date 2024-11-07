@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./apps/backend/Dockerfile
     image: xavierguertin/wildfirevisualization-backend:latest
     ports:
       - "8080:8080"
@@ -16,7 +16,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./apps/frontend/Dockerfile
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
       - "3000:3000"
