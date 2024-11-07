@@ -15,6 +15,7 @@ import {useGeographic} from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
 import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
+import Footer from './Footer';
 
 //Maptiler API key and attributions
 const apiKey = process.env.MAPTILER_API_KEY;
@@ -140,7 +141,9 @@ const MapView = () => {
   };
 
   return (
-    <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}></div>
+      <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}>
+        <Footer />
+      </div>
   );
 };
 
