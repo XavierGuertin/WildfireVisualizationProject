@@ -4,14 +4,14 @@ FROM node:18-alpine
 # Set up a non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Set the working directory
+# Set the working directory to the root of the monorepo
 WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Copy the entire codebase to allow Nx commands to access everything
+# Copy the entire codebase
 COPY . .
 
 # Remove unnecessary folders to keep only the frontend app
@@ -19,6 +19,9 @@ RUN rm -rf apps/backend apps/frontend-e2e
 
 # Install Nx globally to ensure it's available
 RUN npm install -g nx
+
+# Debug: Verify Node.js and Nx installation
+RUN node -v && npm -v && nx --version
 
 # Build the frontend app using the nx target
 RUN npx nx run frontend:build
