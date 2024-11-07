@@ -1,9 +1,9 @@
 # Use OpenJDK as base image
 FROM openjdk:22-jdk-slim
 
-# Install Node.js for nx command usage
+# Install Node.js and Maven for nx and build commands
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl maven && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
@@ -17,28 +17,19 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Debug: List all files after installing dependencies
-RUN echo "Files after npm install:" && ls -la
-
 # Copy the entire codebase
 COPY . .
-
-# Debug: List all files after copying the codebase
-RUN echo "Files after copying codebase:" && ls -la
 
 # Remove unnecessary folders to keep only the backend app
 RUN rm -rf apps/frontend apps/frontend-e2e
 
-# Debug: List all files after removing unnecessary folders
-RUN echo "Files after removing unneeded apps:" && ls -la apps/
-
 # Install Nx globally to ensure it's available
 RUN npm install -g nx
 
-# Debug: List all files before running Nx commands
-RUN echo "Files before running nx build:" && ls -la
+# Debug: Check if Maven and Node.js are available
+RUN mvn -version && node -v && npm -v && nx --version
 
-# Build the backend app using the nx target
+# Build the backend app using the nx target (with Maven)
 RUN npx nx run backend:build
 
 # Change ownership of the workspace directory
