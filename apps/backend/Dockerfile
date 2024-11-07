@@ -17,14 +17,26 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Copy the rest of the codebase
+# Debug: List all files after installing dependencies
+RUN echo "Files after npm install:" && ls -la
+
+# Copy the entire codebase
 COPY . .
+
+# Debug: List all files after copying the codebase
+RUN echo "Files after copying codebase:" && ls -la
 
 # Remove unnecessary folders to keep only the backend app
 RUN rm -rf apps/frontend apps/frontend-e2e
 
+# Debug: List all files after removing unnecessary folders
+RUN echo "Files after removing unneeded apps:" && ls -la apps/
+
 # Install Nx globally to ensure it's available
 RUN npm install -g nx
+
+# Debug: List all files before running Nx commands
+RUN echo "Files before running nx build:" && ls -la
 
 # Build the backend app using the nx target
 RUN npx nx run backend:build
