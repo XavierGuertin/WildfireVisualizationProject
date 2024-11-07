@@ -69,7 +69,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     setProgress(0);
     setSelectedDataset(dataset.name);
   
-    let progressInterval = setInterval(() => {
+    const progressInterval = setInterval(() => {
       setProgress((prevProgress) => {
         if (prevProgress >= 100) {
           clearInterval(progressInterval);
