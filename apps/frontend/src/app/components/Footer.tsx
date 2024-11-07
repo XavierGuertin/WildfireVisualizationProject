@@ -1,56 +1,77 @@
-'use client';
-
-import React from "react";
-import styled from "styled-components";
-import SimulationControls from "./SimulationControls";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-// import { config } from "@fortawesome/fontawesome-svg-core";
-// import '@fortawesome/fontawesome-svg-core/styles.css'
-// config.autoAddCss = false;
-
-const playIcon = './assets/play.png';
-const pauseIcon = './assets/pause.png';
-
-const FooterContainer = styled.div`
-    width: 90%;
-    background: white;
-    color: #005ea6;
-    position: fixed;
-    bottom: 0;
-    left: 4%;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    // overflow-y: auto;
-    z-index: 1000;
-    // border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-`;
-
-const Icon = styled.img`
-  width: 30px;
-  height: 30px;
-`;
-
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  //display: flex;
-  align-items: center;
-  outline: none;
-`;
+import React, { useState, useEffect, useRef } from 'react';
+import '../styles/footer.css';
+import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 
 const Footer = () => {
+    const [sliderValue, setSliderValue] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speed, setSpeed] = useState(1);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handlePlayPause = () => {
+        setIsPlaying(!isPlaying);
+    };
+
+    const handleSpeedChange = (newSpeed: number) => {
+        setSpeed(newSpeed);
+    };
+
+    useEffect(() => {
+        if (isPlaying) {
+            intervalRef.current = setInterval(() => {
+                setSliderValue((prev) => (prev < 100 ? prev + 1 : 0));
+            }, 1000 / speed);
+        } else if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+        }
+        return () => clearInterval(intervalRef.current!);
+    }, [isPlaying, speed]);
+
+    const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSliderValue(Number(event.target.value));
+    };
+
+    const handleStopPress = () => {
+        setIsPlaying(false);
+        setSliderValue(0);
+    };
+
     return (
-        <>
-            <FooterContainer className="louis">
-                <SimulationControls />
-            </FooterContainer>
-        </>
+            <div className="footerContainer">
+                <div className="speedContainer">
+                    {[0.5, 1, 1.5, 2, 4].map((s) => (
+                        <button
+                            className="speedButton"
+                            key={s}
+                            onClick={() => handleSpeedChange(s)}
+                            style={{ borderColor: speed === s ? '#00467E' : 'white' }}
+                        >
+                            {s}x
+                        </button>
+                    ))}
+                </div>
+                <div className="sliderContainer">
+                    <input
+                        className="simulationSlider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={sliderValue}
+                        onChange={handleSliderChange}
+                    />
+                    <button className="iconButton" onClick={handlePlayPause}>
+                        {!isPlaying ? (
+                            <FaPlayCircle className="controlIcon" size={25} />
+                        ) : (
+                            <FaPauseCircle className="controlIcon" size={25} />
+                        )}
+                    </button>
+                    <button className="iconButton" onClick={handleStopPress}>
+                        <FaStopCircle className="controlIcon" size={25} />
+                    </button>
+                </div>
+            </div>
     );
-}
+};
 
 export default Footer;
