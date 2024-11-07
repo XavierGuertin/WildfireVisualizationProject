@@ -5,15 +5,10 @@
   "projectType": "application",
   "targets": {
     "e2e": {
-      "executor": "@nx/cypress:cypress",
+      "executor": "nx:run-commands",
       "options": {
-        "cypressConfig": "apps/frontend-e2e/cypress.config.ts",
-        "devServerTarget": "frontend:serve"
-      },
-      "configurations": {
-        "production": {
-          "devServerTarget": "frontend:serve:production"
-        }
+        "cwd": "./",
+        "command": "concurrently -k -s first \"npx nx serve frontend --configuration=coverage\" \"npx wait-on http://localhost:3000 && npx cypress run --config-file apps/frontend-e2e/cypress.config.ts\""
       }
     }
   },

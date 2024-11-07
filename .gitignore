@@ -5,6 +5,8 @@ dist
 tmp
 /out-tsc
 
+
+
 # dependencies
 node_modules
 
@@ -102,9 +104,10 @@ Thumbs.db
 Desktop.ini
 
 # Env variables
-.env
+apps/frontend/.env
 .env.local
 .env.*.local
+.env
 
 # Miscellaneous
 **/*.bak
