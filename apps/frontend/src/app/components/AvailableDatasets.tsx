@@ -64,14 +64,32 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     setDatasets(sortedDatasets);
   };
 
-  const handleDatasetClick = (dataset: Dataset) => {
+  const handleDatasetClick = async (dataset: Dataset) => {
     setIsLoading(true);
     setProgress(0);
     setSelectedDataset(dataset.name);
-    onDatasetClick(dataset);
-    setProgress(100);
-    setIsLoading(false);
+  
+    let progressInterval = setInterval(() => {
+      setProgress((prevProgress) => {
+        if (prevProgress >= 100) {
+          clearInterval(progressInterval);
+          return prevProgress;
+        }
+        return prevProgress + 10;
+      });
+    }, 300);
+  
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // Replace with actual data fetching logic if needed
+      onDatasetClick(dataset);
+    } catch (error) {
+      console.error('Error loading dataset:', error);
+    } finally {
+      setProgress(100);
+      setIsLoading(false);
+    }
   };
+  
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
