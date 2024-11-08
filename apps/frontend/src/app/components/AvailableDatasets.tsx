@@ -46,7 +46,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
         const response = await axios.get(`${backendUrl}/api/datasets`);
         setDatasets(response.data);
       } catch (error) {
-        console.error('Error fetching datasets:', error);
+        console.log('Error fetching datasets:', error);
       }
     };
     fetchDatasets();
