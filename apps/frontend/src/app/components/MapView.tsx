@@ -19,6 +19,7 @@ import Footer from './Footer';
 
 //Maptiler API key and attributions
 const apiKey = process.env.MAPTILER_API_KEY;
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 const attributions =
   '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -81,7 +82,7 @@ const MapView = () => {
     }
 
     // Fetch the JSON data from the endpoint and add it to the map
-    fetch('http://localhost:8080/api/data')
+    fetch(`${backendUrl}/api/data`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

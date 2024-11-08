@@ -7,17 +7,14 @@ RUN apt-get update && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
-# Set up a non-root user
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# Set up a non-root user with a home directory
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup --home /home/appuser appuser
 
 # Set the working directory
 WORKDIR /app
 
-# Create a writable Maven repository directory
-RUN mkdir -p /app/.m2 && chown -R appuser:appgroup /app/.m2
-
-# Set Maven to use this directory as the local repository
-ENV MAVEN_CONFIG=/app/.m2
+# Create a writable Maven repository directory for the user
+RUN mkdir -p /home/appuser/.m2 && chown -R appuser:appgroup /home/appuser/.m2
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -47,5 +44,5 @@ USER appuser
 # Expose the backend port
 EXPOSE 8080
 
-# Start the backend app using the nx serve command
-CMD ["npx", "nx", "serve", "backend"]
+# Start the backend app, specifying the local Maven repository path
+CMD ["npx", "nx", "run", "backend:serve", "--", "-Dmaven.repo.local=/home/appuser/.m2/repository"]
