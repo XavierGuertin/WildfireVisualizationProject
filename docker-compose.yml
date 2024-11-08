@@ -18,8 +18,8 @@ services:
       context: .
       dockerfile: ./apps/frontend/Dockerfile
     environment:
-      - REACT_APP_BACKEND_URL
-      - MAPTILER_API_KEY
+      - REACT_APP_BACKEND_URL=http://backend:8080  
+      - MAPTILER_API_KEY=${MAPTILER_API_KEY}       
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
       - "3000:3000"
