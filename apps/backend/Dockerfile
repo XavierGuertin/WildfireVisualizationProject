@@ -13,6 +13,12 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 # Set the working directory
 WORKDIR /app
 
+# Create a writable Maven repository directory
+RUN mkdir -p /app/.m2 && chown -R appuser:appgroup /app/.m2
+
+# Set Maven to use this directory as the local repository
+ENV MAVEN_CONFIG=/app/.m2
+
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install --ignore-scripts
