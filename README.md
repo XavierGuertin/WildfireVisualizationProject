@@ -30,10 +30,14 @@ The Wildfire Visualization Platform is an innovative tool designed to provide hi
 
 To get started as a developer on this project:
 
-1. **Clone the Repository**:
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/your-repo/wildfire-visualization-platform.git
-
+2. **Open the project with an IDE**<br>
+   ex. Visual Studio Code<br><br>
+3. **Launch the front end**
+   ```bash
+   nx serve frontend
 ---
 
 ## Tech Stack
