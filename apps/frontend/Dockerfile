@@ -1,28 +1,45 @@
-# Use Node.js as base image
+# Use Node.js as the base image
 FROM node:18-alpine
 
-# Create a non-root user
+# Set up a non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Set the working directory
+# Set the working directory to the root of the monorepo
 WORKDIR /app
 
-# Copy and install dependencies
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Copy the rest of the application code
+# Copy the entire codebase
 COPY . .
 
-# Build the Next.js application and Change ownership of the app folder
-RUN npm run build &&\
-    chown -R appuser:appgroup /app
+# Remove unnecessary folders to keep only the frontend app
+RUN rm -rf apps/backend apps/frontend-e2e
+
+# Install Nx globally to ensure it's available
+RUN npm install -g nx
+
+# Debug: Verify Node.js and Nx installation
+RUN node -v && npm -v && nx --version
+
+# Accept REACT_APP_BACKEND_URL as a build argument
+ARG REACT_APP_BACKEND_URL
+
+# Set the environment variable to make it available during build
+ENV REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+
+# Build the frontend app using the nx target, which now has access to REACT_APP_BACKEND_URL
+RUN npx nx run frontend:build
+
+# Change ownership of the workspace directory
+RUN chown -R appuser:appgroup /app
 
 # Switch to the non-root user
 USER appuser
 
-# Expose the port
+# Expose the frontend port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start the frontend app using the nx serve command
+CMD ["npx", "nx", "serve", "frontend"]
