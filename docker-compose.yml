@@ -3,8 +3,9 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    image: xavierguertin/wildfirevisualization-backend:latest
     ports:
       - "8080:8080"
     networks:
@@ -14,8 +15,14 @@ services:
 
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/frontend/Dockerfile
+      args:
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL}
+    environment:
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+      - MAPTILER_API_KEY=${MAPTILER_API_KEY}
+    image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
       - "3000:3000"
     networks:
@@ -33,9 +40,9 @@ services:
       - "5432:5432"
     networks:
       - app-network
-  
+
   geoserver:
-    image: kartoza/geoserver
+    image: kartoza/geoserver:latest
     ports:
       - "8090:8080"
     environment:

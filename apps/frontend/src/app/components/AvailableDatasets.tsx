@@ -39,12 +39,16 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
     ];
     setDatasets(mockData);
 
+    const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
+    console.log(`Backend URL: ${backendUrl}`);
+
     const fetchDatasets = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/datasets');
+        const response = await axios.get(`${backendUrl}/api/datasets`);
         setDatasets(response.data);
       } catch (error) {
-        console.error('Error fetching datasets:', error);
+        console.log('Error fetching datasets:', error);
       }
     };
     fetchDatasets();
