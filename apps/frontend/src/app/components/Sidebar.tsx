@@ -11,10 +11,10 @@ const terrainImage = '/assets/Terrain_layer.png';
 
 const SidebarContainer = styled.div`
   width: 100px;
-  background: #005ea6;
+  background: #00447E;
   color: white;
   position: fixed;
-  bottom: 15vh;
+  bottom: 10vh;
   left: 25px;
   padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
