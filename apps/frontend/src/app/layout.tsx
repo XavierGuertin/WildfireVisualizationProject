@@ -9,7 +9,7 @@ import Sidebar from './components/Sidebar';
 import TopLeftButtons from './components/TopLeftButtons';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
-
+import "./layout.css";
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
