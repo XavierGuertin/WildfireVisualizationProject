@@ -39,8 +39,9 @@ jobs:
       - name: Build and start services
         run: docker-compose up --build -d
         env:
+          REACT_APP_BACKEND_URL: http://backend:8080
           MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
-          
+
       # Push images to Docker Hub
       - name: Push Docker images
         run: docker-compose push
