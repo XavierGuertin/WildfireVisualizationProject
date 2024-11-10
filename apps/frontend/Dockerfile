@@ -23,7 +23,13 @@ RUN npm install -g nx
 # Debug: Verify Node.js and Nx installation
 RUN node -v && npm -v && nx --version
 
-# Build the frontend app using the nx target
+# Accept REACT_APP_BACKEND_URL as a build argument
+ARG REACT_APP_BACKEND_URL
+
+# Set the environment variable to make it available during build
+ENV REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+
+# Build the frontend app using the nx target, which now has access to REACT_APP_BACKEND_URL
 RUN npx nx run frontend:build
 
 # Change ownership of the workspace directory

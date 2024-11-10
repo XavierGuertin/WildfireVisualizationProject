@@ -81,6 +81,9 @@ const MapView = () => {
       mapRef.current?.addLayer(getLayer());
     }
 
+    console.log(`Backend URL: ${backendUrl}`);
+
+
     // Fetch the JSON data from the endpoint and add it to the map
     fetch(`${backendUrl}/api/data`)
       .then((response) => {

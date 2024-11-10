@@ -41,6 +41,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick })
 
     const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
+    console.log(`Backend URL: ${backendUrl}`);
+
     const fetchDatasets = async () => {
       try {
         const response = await axios.get(`${backendUrl}/api/datasets`);
