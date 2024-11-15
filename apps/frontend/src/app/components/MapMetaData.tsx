@@ -1,80 +1,49 @@
-import React from "react";
-import styled from "styled-components";
-
-const MetaDataContainer = styled.div`
-  font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  width: 400px; /* Increased width */
-  background: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  left: 20px;
-  top: 20%;
-  z-index: 1000;
-`;
-
-const Header = styled.div`
-  background-color: #00447E;
-  color: #ffffff;
-  padding: 10px;
-  font-size: 1.2em;
-  font-weight: bold;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-`;
-
-const Content = styled.div`
-  padding: 12px;
-`;
-
-const DataRow = styled.div`
-  display: grid;
-  grid-template-columns: 120px 1fr; /* Fixed width for labels, flexible width for values */
-  align-items: start;
-  gap: 8px;
-  margin-bottom: 8px;
-`;
-
-const Label = styled.span`
-  font-weight: bold;
-  color: #333;
-  text-align: left;
-`;
-
-const Value = styled.span`
-  color: #666;
-  text-align: left;
-`;
+import React, { useState } from "react";
+import "../styles/MapMetaData.css"
 
 const MapMetaData = ({ city = '', name = '', description = '', format = '', processes = '', datasetSource = '' }) => {
+  
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const nonCollapsedMetaData = 
+    <div className="metadata-container">
+      <div className="header" onClick={() => setIsCollapsed(!isCollapsed)} data-testid="city-div">{city}</div >
+      <div className="content">
+        <div className="data-row">
+          <div className="label">Name:</div>
+          <div className="value" data-testid="dataset-name">{name}</div>
+        </div>
+        <div className="data-row">
+          <div className="label">Description:</div>
+          <div className="value" data-testid="dataset-description">{description}</div>
+        </div>
+        <div className="data-row">
+          <div className="label">Format:</div>
+          <div className="value" data-testid="dataset-format">{format}</div>
+        </div>
+        <div className="data-row">
+          <div className="label">Processes:</div>
+          <div className="value" data-testid="dataset-processes">{processes}</div>
+        </div>
+        <div className="data-row">
+          <div className="label">Dataset Source:</div>
+          <div className="value" data-testid="dataset-datasource">{datasetSource}</div>
+        </div>
+      </div>
+    </div>  
+
+  const collapsedMetaData = 
+      <div data-testid="collapsedMetaData" className="metadata-container-collapsed" onClick={() => setIsCollapsed(!isCollapsed)}>
+              <svg className="collapsed-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+              {/* <!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--> */}
+              <path fill="white" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>
+              <span className="collapsed-name">Metadata</span>
+      </div>
+      
   return (
-    <MetaDataContainer>
-      <Header>{city}</Header>
-      <Content>
-        <DataRow>
-          <Label>Name:</Label>
-          <Value>{name}</Value>
-        </DataRow>
-        <DataRow>
-          <Label>Description:</Label>
-          <Value>{description}</Value>
-        </DataRow>
-        <DataRow>
-          <Label>Format:</Label>
-          <Value>{format}</Value>
-        </DataRow>
-        <DataRow>
-          <Label>Processes:</Label>
-          <Value>{processes}</Value>
-        </DataRow>
-        <DataRow>
-          <Label>Dataset Source:</Label>
-          <Value>{datasetSource}</Value>
-        </DataRow>
-      </Content>
-    </MetaDataContainer>
+  <>
+    {isCollapsed ? collapsedMetaData: nonCollapsedMetaData}
+  </>
   );
 };
 
