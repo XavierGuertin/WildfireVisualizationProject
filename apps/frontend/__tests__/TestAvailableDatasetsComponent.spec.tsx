@@ -1,0 +1,105 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import AvailableDatasets, { Dataset } from '../src/app/components/AvailableDatasets';
+import axios from 'axios';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+const mockDatasets: Dataset[] = [
+  { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', city: 'City A', description: 'Description A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
+  { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', city: 'City B', description: 'Description B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' }
+];
+
+describe('Test AvailableDatasets component', () => {
+  let mockOnDatasetClick: jest.Mock;
+
+  beforeEach(() => {
+    mockOnDatasetClick = jest.fn();
+    jest.clearAllMocks();
+  });
+
+// Mocking the setInterval and setTimeout for predictable behavior
+  jest.useFakeTimers();
+
+  it('should call onDatasetClick and show loading overlay on dataset click', async () => {
+    const mockDatasets = [
+      {
+        name: 'Dataset A',
+        date: '2023-01-01',
+        latestAdded: '2023-02-01',
+        latestUpdated: '2023-03-01',
+        city: 'City A',
+        description: 'Description for Dataset A',
+        format: 'GeoJSON',
+        processes: 'Data analysis',
+        datasetSource: 'Source A'
+      },
+    ];
+
+    // Mock the axios GET request
+    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+
+    // Render component with mock function
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+
+    // Wait for the dataset button to appear after data is loaded
+    await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
+
+    // Click the dataset button to trigger loading
+    const datasetButton = screen.getByTestId('dataset-button-0');
+    fireEvent.click(datasetButton);
+
+    // Check loading overlay text
+    expect(screen.getByText('Loading Dataset...')).toBeInTheDocument();
+
+    // Fast-forward time to allow the loading progress to reach 100%
+    jest.advanceTimersByTime(4000);
+
+    // Check if onDatasetClick is called after loading completes
+    await waitFor(() => {
+      expect(mockOnDatasetClick).toHaveBeenCalledWith(mockDatasets[0]);
+    });
+
+    // Clear any remaining timers after test execution
+    jest.clearAllTimers();
+  });
+
+
+  it('should display sorted datasets when sorting is applied', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+
+    await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Date'));
+    const datasetButtons = screen.getAllByTestId(/dataset-button-/);
+    expect(datasetButtons[0]).toHaveTextContent('Dataset A'); // Validate sort order
+  });
+
+  it('should collapse and expand the component on button click', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+
+    const collapseButton = await waitFor(() => screen.getByTestId('collapse-button'));
+    fireEvent.click(collapseButton); // Collapse
+
+    expect(screen.getByTestId('datasets-container')).toHaveClass('collapsed');
+
+    fireEvent.click(collapseButton); // Expand
+    expect(screen.getByTestId('datasets-container')).not.toHaveClass('collapsed');
+  });
+
+  it('should toggle isToggled state when switch is clicked', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+    const toggleCheckbox = await waitFor(() => screen.getByTestId('toggle-checkbox'));
+
+    fireEvent.click(toggleCheckbox);
+    expect(toggleCheckbox).toBeChecked();
+
+    fireEvent.click(toggleCheckbox);
+    expect(toggleCheckbox).not.toBeChecked();
+  });
+});

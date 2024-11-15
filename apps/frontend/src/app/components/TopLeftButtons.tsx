@@ -75,13 +75,13 @@ const TopLeftButtons: React.FC = () => {
   return (
     <div className="button-container" ref={dropdownRef}>
       {/* Settings button */}
-      <button className={`button ${activeButton === "settings" ? "active" : ""}`} onClick={handleSettingsClick}>
+      <button data-testid="settings-button" className={`button ${activeButton === "settings" ? "active" : ""}`} onClick={handleSettingsClick}>
         <img src="/assets/settings-white-outline-icon-removebg-preview.png" alt="Settings" />
       </button>
 
       {/* Language dropdown button */}
       <div className="dropdown-button">
-        <button className={`button ${activeButton === "language" ? "active" : ""}`} onClick={handleLanguageClick}>
+        <button data-testid="language-button" className={`button ${activeButton === "language" ? "active" : ""}`} onClick={handleLanguageClick}>
           <img src="/assets/Language-Logo.png" alt="Language" />
         </button>
         <div className={`dropdown-content ${languageDropdownOpen ? "show" : ""}`}>
@@ -100,7 +100,7 @@ const TopLeftButtons: React.FC = () => {
 
       {/* Reset dropdown button */}
       <div className="dropdown-button">
-        <button className={`button ${activeButton === "reset" ? "active" : ""}`} onClick={handleResetClick}>
+        <button data-testid="reset-button" className={`button ${activeButton === "reset" ? "active" : ""}`} onClick={handleResetClick}>
           <img src="/assets/Reset-Logo.png" alt="Reset" />
         </button>
         <div className={`dropdown-content ${resetDropdownOpen ? "show" : ""}`}>
