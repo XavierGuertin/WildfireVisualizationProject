@@ -6,6 +6,33 @@
 
 ---
 
+## Release Demos
+
+[Release 1](https://drive.google.com/file/d/1JsXKsDaoS1fAFSvkUBiOB_QMhBAMq9s_/view?usp=sharing)
+
+---
+
+## Most Important Files and Tests
+
+| File path with clickable GitHub link | Purpose |
+| ------------------------------------ | ------- |
+| [layout.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/layout.tsx) | Foundation for our UI, source of all components. |
+| [MapView.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/MapView.tsx) | Component for rendering the map, serves as the background of our app. |
+| [AvailableDatasets.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/AvailableDatasets.tsx) | Adding filters to sort by name, date, recently added, and recently updated. |
+| [Sidebar.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/Sidebar.tsx) | Alternate between map layers (default, topographical, satellite) |
+| [Footer.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/Footer.tsx) | Wildfire visualization controls to change speed of event display progression. |
+
+| Test file path with clickable GitHub link | Purpose |
+| ----------------------------------------- | ------- |
+| [app.cy.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend-e2e/src/e2e/app.cy.ts) | Example of an e2e test for “Views” |
+| Fetching Data |  |
+| Parsing Data in DTO |  |
+| Displaying Metadata |  |
+| Event Control Test |  |
+
+
+---
+
 ## Project Summary
 The Wildfire Visualization Platform is an innovative tool designed to provide historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
 
