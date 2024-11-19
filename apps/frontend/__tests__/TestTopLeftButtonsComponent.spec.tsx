@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TopLeftButtons from '../src/app/components/TopLeftButtons';
+import SettingsPanel from '../src/app/components/SettingsPanel';
 
-describe('Test TopLeftButtons component', () => {
+describe('Test SettingsPanel component', () => {
   // Mock alert function to avoid JSDOM error
   beforeAll(() => {
     window.alert = jest.fn();
@@ -14,7 +14,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should open and close the settings dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const settingsButton = screen.getByTestId('settings-button');
     fireEvent.click(settingsButton); // Open settings dropdown
@@ -25,7 +25,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should open and close the language dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown
@@ -41,7 +41,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should select English and French in the language dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown
@@ -55,7 +55,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should open and close the reset dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton); // Open reset dropdown
@@ -71,7 +71,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should trigger alert on reset and factory reset clicks', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton); // Open reset dropdown
@@ -85,7 +85,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should close dropdowns when clicking outside', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown

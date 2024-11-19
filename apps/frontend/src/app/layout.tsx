@@ -6,7 +6,7 @@ import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
-import TopLeftButtons from './components/TopLeftButtons';
+import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
 import "./layout.css";
@@ -60,7 +60,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <MapLayerProvider>
       <html lang="en">
       <body>
-      <TopLeftButtons />
+      <SettingsPanel />
       <div className="layout-container relative">
         <LoadingOverlay progress={progress} isVisible={loading} />
         <header>
