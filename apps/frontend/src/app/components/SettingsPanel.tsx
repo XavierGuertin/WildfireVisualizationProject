@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../styles/topleftbuttons.css'; // Import the CSS file
+import '../styles/SettingsPanel.css'; // Import the CSS file
 
 const SettingsPanel: React.FC = () => {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);

@@ -1,5 +1,3 @@
-// components/LoadingOverlay.tsx
-
 import React from 'react';
 import '../styles/LoadingOverlay.css';
 
