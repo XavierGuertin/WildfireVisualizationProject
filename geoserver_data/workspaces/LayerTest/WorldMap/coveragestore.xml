@@ -1,0 +1,14 @@
+<coverageStore>
+  <id>CoverageStoreInfoImpl--401e2819:1934bba3b8d:-7ff4</id>
+  <name>WorldMap</name>
+  <description>World map</description>
+  <type>WorldImage</type>
+  <enabled>true</enabled>
+  <workspace>
+    <id>WorkspaceInfoImpl--401e2819:1934bba3b8d:-7ff6</id>
+  </workspace>
+  <__default>false</__default>
+  <dateCreated>2024-11-20 22:43:07.520 UTC</dateCreated>
+  <disableOnConnFailure>false</disableOnConnFailure>
+  <url>file:HYP_HR_SR_OB_DR.tif</url>
+</coverageStore>
