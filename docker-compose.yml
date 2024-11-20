@@ -49,7 +49,7 @@ services:
       GEOSERVER_ADMIN_USER: geoserver
       GEOSERVER_ADMIN_PASSWORD: password
     volumes:
-      - ./data_dir:/var/local/geoserver/data_dir
+      - wildfirevisualizationproject-geoserver-1:/opt/geoserver/data_dir/
       
 networks:
   app-network:
