@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
+import Image from 'next/image';
 
 // interface NavbarProps {
 //   updateWildfireLayer: (layerName: string) => void;
@@ -70,29 +71,30 @@ const NavButton = styled.button`
 `;
 
 const Navbar = () => {
-  const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarVisible(!isSidebarVisible);
-  };
-
-//   const closeSidebar = () => {
-//     setSidebarVisible(false);
-//   };
+  const toggleSidebar = () => setIsSidebarVisible((prev) => !prev);
 
   return (
     <>
-      <NavbarContainer>
-        <LogoContainer>
-          <Logo src="/assets/WildFireLogo.png" alt="Logo" />
-          <ProjectTitle>Wildfire Visualization Project</ProjectTitle>
-        </LogoContainer>
-        <NavSection>
-          <SearchBar type="text" placeholder="Search for a location..." />
-           <NavButton>
+      <nav className="flex items-center justify-between px-4 py-2 bg-[#030303] shadow-md">
+        <div className="flex items-center">
+          <Image src="/assets/WildFireLogo.png" alt="Logo" />
+          <span className="ml-3 text-white text-lg">
+            Wildfire Visualization Project
+          </span>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="text"
+            placeholder="Search for a location..."
+            className="px-2 py-1 w-[300px] border border-gray-300 rounded-md bg-transparent text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+           <button className="ml-2 flex items-center text-white">
             <img src="/assets/location_white.png" alt="Locate Me" />
-          </NavButton> 
-        </NavSection>
+          </button> 
+        </div>
         <NavSection>
           <NavButton onClick={toggleSidebar}>
             <img src="/assets/layers_white.png" alt="Layers" />Layers
@@ -104,7 +106,7 @@ const Navbar = () => {
             <img src="/assets/user_white.png" alt="Account" />Account
           </NavButton>
         </NavSection>
-      </NavbarContainer>
+      </nav>
       {isSidebarVisible && <Sidebar />}
     </>
   );
