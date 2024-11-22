@@ -5,6 +5,7 @@ import Layout from '../src/app/layout';
 import AvailableDatasets from '../src/app/components/AvailableDatasets';
 import MapMetaData from '../src/app/components/MapMetaData';
 
+// Mock AvailableDatasets and MapMetaData
 jest.mock('../src/app/components/AvailableDatasets', () => ({
   __esModule: true,
   default: jest.fn(),
@@ -17,6 +18,8 @@ jest.mock('../src/app/components/MapMetaData', () => ({
 
 describe('Layout Component', () => {
   beforeEach(() => {
+    jest.spyOn(React, 'useState').mockImplementation(() => [false, jest.fn()]);
+
     (AvailableDatasets as jest.Mock).mockImplementation(({ onDatasetClick }) => (
       <div>
         <button
