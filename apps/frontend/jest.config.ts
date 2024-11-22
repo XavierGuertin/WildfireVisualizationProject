@@ -19,4 +19,9 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|scss)$': '<rootDir>/__mocks__/styleMock.js',
   },
+  
+  // Add transformIgnorePatterns to allow ES Module packages in node_modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(ol)/)', // Transform 'ol' and its dependencies
+  ],
 };
