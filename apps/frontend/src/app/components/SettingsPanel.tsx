@@ -94,7 +94,7 @@ const SettingsPanel: React.FC = () => {
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
         >
-          <img src="/assets/Reset-Logo.png" alt="Reset" />
+          <PiArrowClockwiseFill size={32}/>
         </button>
         {dropdownState.activeButton === 'reset' && (
           <div className="dropdown-content show">
