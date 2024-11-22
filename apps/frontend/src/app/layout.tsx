@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-// import Navbar from './components/Navbar';
 import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
@@ -45,9 +44,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <SettingsPanel />
       <div className="layout-container relative">
         <LoadingOverlay progress={progress} isVisible={loading} />
-        <header>
-          {/* <Navbar /> */}
-        </header>
         <main className="app-main">{children}</main>
         <AvailableDatasets onDatasetClick={handleDatasetClick} />
         <MapView />
