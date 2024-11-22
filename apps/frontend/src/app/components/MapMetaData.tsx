@@ -1,8 +1,25 @@
 import React, { useState } from "react";
 import "../styles/MapMetaData.css"
 
-const MapMetaData = ({ city = '', name = '', description = '', format = '', processes = '', datasetSource = '' }) => {
-  
+interface MapMetaDataProps {
+  city: string;
+  name: string;
+  description: string;
+  format: string;
+  processes: string;
+  datasetSource: string;
+  onLoadDataset: () => void;
+}
+
+const MapMetaData: React.FC<MapMetaDataProps> = ({
+  city,
+  name,
+  description,
+  format,
+  processes,
+  datasetSource,
+  onLoadDataset,
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const nonCollapsedMetaData = 
@@ -29,6 +46,9 @@ const MapMetaData = ({ city = '', name = '', description = '', format = '', proc
           <div className="label">Dataset Source:</div>
           <div className="value" data-testid="dataset-datasource">{datasetSource}</div>
         </div>
+        <button 
+        className="load-dataset-button" onClick={onLoadDataset} data-testid="load-dataset-button"> Load Dataset
+        </button>
       </div>
     </div>  
 
