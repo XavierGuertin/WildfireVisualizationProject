@@ -2,112 +2,53 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Layout from '../src/app/layout';
-import AvailableDatasets, { Dataset } from '../src/app/components/AvailableDatasets';
+import { Dataset } from '../src/app/components/AvailableDatasets';
 
-jest.mock('../src/app/components/AvailableDatasets', () => ({
-  __esModule: true,
-  default: ({ onDatasetClick }: { onDatasetClick: jest.Mock }) => (
-    <div data-testid="available-datasets">
-      <button
-        data-testid="dataset-button-0"
-        onClick={() => onDatasetClick(mockDataset)}
-      >
-        Dataset A
-      </button>
-    </div>
-  ),
-}));
+describe('Layout Component - Load Dataset Button Tests', () => {
+  // Mock window.alert to prevent errors
+  beforeAll(() => {
+    window.alert = jest.fn();
+  });
 
-jest.mock('../src/app/components/MapMetaData', () => ({
-  __esModule: true,
-  default: ({
-    onLoadDataset,
-  }: {
-    onLoadDataset: jest.Mock;
-  }) => (
-    <div data-testid="map-metadata">
-      <button data-testid="load-dataset-button" onClick={onLoadDataset}>
-        Load Dataset
-      </button>
-    </div>
-  ),
-}));
-
-const mockDataset: Dataset = {
-  name: 'Dataset A',
-  date: '2023-01-01',
-  latestAdded: '2023-02-01',
-  latestUpdated: '2023-03-01',
-  city: 'City A',
-  description: 'Description A',
-  format: 'GeoJSON',
-  processes: 'Data analysis',
-  datasetSource: 'Source A',
-};
-
-describe('Layout Component', () => {
-  let mockOnDatasetClick: jest.Mock;
-  let mockOnLoadDataset: jest.Mock;
-  let useStateSpy: jest.SpyInstance;
-
+  // Clear all mocks before each test
   beforeEach(() => {
-    mockOnDatasetClick = jest.fn();
-    mockOnLoadDataset = jest.fn();
-
-    // Mock useState
-    useStateSpy = jest.spyOn(React, 'useState');
-    useStateSpy
-      .mockImplementationOnce(() => [false, jest.fn()]) // Mock for loading
-      .mockImplementationOnce(() => [0, jest.fn()]) // Mock for progress
-      .mockImplementationOnce(() => [null, jest.fn()]); // Mock for selectedDataset
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
-    useStateSpy.mockRestore(); // Restore original useState implementation
   });
 
-  it('renders Layout and displays AvailableDatasets component', async () => {
-    render(<Layout>{null}</Layout>);
+  const mockDataset: Dataset = {
+    city: 'Mock City',
+    date: '2023-01-01',
+    datasetSource: 'Mock Source',
+    description: 'Mock description',
+    format: 'GeoJSON',
+    latestAdded: '2023-02-01',
+    latestUpdated: '2023-03-01',
+    name: 'Mock Dataset',
+    processes: 'Mock process',
+  };
 
-    // Ensure the AvailableDatasets component is rendered
-    const availableDatasets = screen.getByTestId('available-datasets');
-    expect(availableDatasets).toBeInTheDocument();
-  });
+  it('shows the loading bar on clicking "Load Dataset" and hides it after reaching 100%', async () => {
+    render(
+      <Layout>
+        <div data-testid="test-content">Test Content</div>
+      </Layout>
+    );
 
-  it('handles dataset selection and triggers MapMetaData display', async () => {
-    render(<Layout>{null}</Layout>);
-
-    // Simulate dataset selection
-    const datasetButton = screen.getByTestId('dataset-button-0');
+    // Simulate selecting a dataset
+    const datasetButton = screen.getByText('Dataset A'); // Ensure this dataset is present
     fireEvent.click(datasetButton);
 
-    // Check that MapMetaData is displayed
-    const mapMetadata = await waitFor(() =>
-      screen.getByTestId('map-metadata')
-    );
-    expect(mapMetadata).toBeInTheDocument();
-  });
-
-  it('handles dataset loading with progress simulation', async () => {
-    render(<Layout>{null}</Layout>);
-
-    // Simulate dataset selection
-    const datasetButton = screen.getByTestId('dataset-button-0');
-    fireEvent.click(datasetButton);
-
-    // Simulate loading dataset
-    const loadButton = await waitFor(() =>
-      screen.getByTestId('load-dataset-button')
-    );
+    // Simulate clicking the "Load Dataset" button
+    const loadButton = screen.getByTestId('load-dataset-button');
     fireEvent.click(loadButton);
 
-    // Ensure progress simulation starts
-    await waitFor(() =>
-      expect(screen.getByText('Loading...')).toBeInTheDocument()
-    );
+    // Check that the loading overlay appears
+    const loadingOverlay = screen.getByTestId('loading-overlay');
+    expect(loadingOverlay).toBeInTheDocument();
 
-    // Wait for loading to finish
-    await waitFor(() => expect(screen.queryByText('Loading...')).toBeNull());
+    // Wait for the loading bar to disappear
+    await waitFor(() => {
+      expect(loadingOverlay).not.toBeInTheDocument();
+    }, { timeout: 5000 }); // Adjust timeout if necessary
   });
 });

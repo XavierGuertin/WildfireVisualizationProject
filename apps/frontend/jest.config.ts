@@ -4,24 +4,15 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
-  rootDir:"./",
+  transformIgnorePatterns: ['node_modules/(?!(ol|another-esm-library)/)'],
+  rootDir: './',
   collectCoverage: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/apps/frontend',
-  collectCoverageFrom: [
-    '<rootDir>/src/**/*.{js,jsx,ts,tsx}',
-  ],
-  coverageReporters: ['json', 'lcov', 'text', 'clover'],
+  coverageDirectory: '<rootDir>/coverage/apps/frontend',
+  collectCoverageFrom: ['<rootDir>/src/**/*.{js,jsx,ts,tsx}'],
   roots: ['<rootDir>/__tests__'],
-  testMatch: ["**/*.(spec|test).[jt]s?(x)"],
-
-  // Add moduleNameMapper to mock CSS files
+  testMatch: ['**/*.(spec|test).[jt]s?(x)'],
   moduleNameMapper: {
     '\\.(css|scss)$': '<rootDir>/__mocks__/styleMock.js',
   },
-  
-  // Add transformIgnorePatterns to allow ES Module packages in node_modules
-  transformIgnorePatterns: [
-    'node_modules/(?!(ol)/)', // Transform 'ol' and its dependencies
-  ],
 };
