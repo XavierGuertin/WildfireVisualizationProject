@@ -75,11 +75,11 @@ const SettingsPanel: React.FC = () => {
       {dropdownState.activeButton === 'language' && (
         <div className="dropdown-content show">
           <button onClick={() => handleLanguageSelect('English')}>
-            {selectedLanguage === 'English' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='black'/>}
+            {selectedLanguage === 'English' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='none'/>}
             English
           </button>
           <button onClick={() => handleLanguageSelect('French')}>
-            {selectedLanguage === 'French' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='black'/>}
+            {selectedLanguage === 'French' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='none'/>}
             Français
           </button>
         </div>
