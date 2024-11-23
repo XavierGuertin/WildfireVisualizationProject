@@ -4,16 +4,21 @@ import '@testing-library/jest-dom';
 import Layout from '../src/app/layout';
 import { Dataset } from '../src/app/components/AvailableDatasets';
 
-describe('Layout Component - Load Dataset Button Tests', () => {
-  // Mock window.alert to prevent errors
-  beforeAll(() => {
-    window.alert = jest.fn();
-  });
+jest.mock('react', ()=>({
+  ...jest.requireActual('react'),
+  useState: jest.fn()
+}));
 
-  // Clear all mocks before each test
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+describe('Layout Component - Load Dataset Button Tests', () => {
+
+
+  beforeEach(()=>{
+    jest.spyOn(React, 'useState').mockImplementation(() => [false, jest.fn()])
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
 
   const mockDataset: Dataset = {
     city: 'Mock City',
