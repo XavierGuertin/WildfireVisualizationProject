@@ -44,6 +44,17 @@ const topographicLayer = new TileLayer({
   })
 })
 
+const dataLayer = new TileLayer({
+  source: new TileWMS({
+    url:'http://localhost:8090/geoserver/Default/wms',
+    params: {
+      'LAYERS': 'Default:MODIS_C6_1_Canada_24h',
+      'TILED': true,
+    },
+    serverType: 'geoserver',
+  }),
+});
+
 //Map component
 const MapView = () => {
   useGeographic();
@@ -78,21 +89,7 @@ const MapView = () => {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
-
-    //add a data layer via GeoServer
-    const dataLayer = new TileLayer({
-      source: new TileWMS({
-        url:'http://localhost:8090/geoserver/Default/wms',
-        params: {
-          'LAYERS': 'Default:MODIS_C6_1_Canada_24h',
-          'TILED': true,
-        },
-        serverType: 'geoserver',
-      }),
-    });
-
-    mapRef.current?.addLayer(dataLayer);
-
+    
     console.log(`Backend URL: ${backendUrl}`);
 
     // Fetch the JSON data from the endpoint and add it to the map
