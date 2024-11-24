@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 // import Navbar from './components/Navbar';
-import LoadingOverlay from './components/LoadingOverlay';
+import LoadingModule from './components/LoadingModule';
 import MapView from './components/MapView';
 import { MapLayerProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
@@ -14,6 +14,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Placeholder code for SonarCloud analysis
   const [placeholderValue, setPlaceholderValue] = useState(5); // Unused state
@@ -22,28 +23,34 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Extra function to simulate code changes
   const calculateProgress = (step: number): number => {
     let result = 0;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
       result += step * i;
     }
     return result;
   };
 
   const updateWildfireLayer = (layerName: string) => {
-    // Placeholder: set loading states
-    // setLoading(true);
-    // setProgress(0); // Reset progress when starting a new load
+    setLoading(true);
+    setErrorMessage(""); // Clear previous errors
+    setProgress(0);
 
-    // Mock loading progress
+    // THIS WILL NEED TO BE CHANGED WHEN WE GET REAL DATA
     const interval = setInterval(() => {
       setProgress((prev) => {
+        if (prev >= 50) {
+          clearInterval(interval);
+          setLoading(false);
+          setErrorMessage("Failed to load dataset. Please try again.");
+          return 0; // Reset progress
+        }
         if (prev >= 100) {
           clearInterval(interval);
-          setLoading(false); // Hide loading overlay after loading completes
+          setLoading(false); // Hide loading overlay after success
           return 100;
         }
-        return prev + 10;
+        return prev + 1;
       });
-    }, 300);
+    }, 50);
   };
 
   const handleDatasetClick = (dataset: Dataset) => {
@@ -62,7 +69,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <body>
       <TopLeftButtons />
       <div className="layout-container relative">
-        <LoadingOverlay progress={progress} isVisible={loading} />
         <header>
           {/* <Navbar /> */}
         </header>
@@ -70,6 +76,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <AvailableDatasets onDatasetClick={handleDatasetClick} />
         <MapView />
         <Sidebar />
+        <LoadingModule datasetBeingLoaded={selectedDataset?.name || " "} progress={progress} isVisible={loading} />
         {selectedDataset && (
             <MapMetaData
               city={selectedDataset.city}
@@ -89,3 +96,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 export default Layout;
+
+/*
+    // Placeholder: set loading states
+    // setLoading(true);
+    // setProgress(0); // Reset progress when starting a new load
+
+    // Mock loading progress
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoading(false); // Hide loading overlay after loading completes
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 50);
+*/

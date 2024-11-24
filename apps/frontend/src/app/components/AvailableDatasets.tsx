@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import LoadingOverlay from './LoadingOverlay';
+import LoadingModule from './LoadingModule';
 import '../styles/AvailableDatasets.css';
 
 export interface Dataset {
@@ -158,7 +158,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
   return (
     <>
-      <LoadingOverlay progress={progress} isVisible={isLoading} />
+      <LoadingModule datasetBeingLoaded={selectedDataset} progress={progress} isVisible={isLoading} />
       <div
         className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
         data-testid="datasets-container"

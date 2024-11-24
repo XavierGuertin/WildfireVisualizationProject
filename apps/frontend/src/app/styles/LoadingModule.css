@@ -1,0 +1,54 @@
+/* components/LoadingOverlay.css */
+
+.loading-bar-container {
+  background: #f3f3f3;
+  width: 530px;
+  height: 50px;
+  position: fixed;
+  top: 70%;
+  right: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 1000;
+  overflow: visible;
+  display: block;
+  padding: 10px;
+  text-align: center;
+}
+
+.progress-bar-background {
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #3b82f6; /* Blue color for progress */
+  transition: width 0.5s ease; /* Smooth width transition */
+}
+
+.progress-text {
+  font-size: 0.9em;
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.error-container {
+  background-color: #f3f3f3;
+  border: 1px solid #f44336;
+  border-radius: 5px;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.error-text {
+  color: #f44336;
+  font-size: 0.9em;
+  font-weight: bold;
+}
