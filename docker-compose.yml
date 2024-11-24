@@ -51,7 +51,7 @@ services:
       - GEOSERVER_DATA_DIR=/var/geoserver/data_dir
       - RUN_AS_ROOT=TRUE
     volumes:
-      - ./geoserver_data:/var/geoserver/data_dir
+      - ./apps/geoserver_data:/var/geoserver/data_dir
       
 networks:
   app-network:
