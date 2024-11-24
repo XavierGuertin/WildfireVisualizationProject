@@ -16,6 +16,7 @@ import { useMapLayerContext } from './MapContext';
 import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
+import {TileWMS} from 'ol/source';
 
 //Attributions
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
@@ -71,7 +72,6 @@ const MapView = () => {
         view: new View({
           center: [-75.6972, 45.4215], // Centered at Ottawa
           zoom: 1,
-          // projection: 'EPSG:4326'
         })
       });
     } else {
@@ -79,8 +79,21 @@ const MapView = () => {
       mapRef.current?.addLayer(getLayer());
     }
 
-    console.log(`Backend URL: ${backendUrl}`);
+    //add a data layer via GeoServer
+    const dataLayer = new TileLayer({
+      source: new TileWMS({
+        url:'http://localhost:8090/geoserver/Default/wms',
+        params: {
+          'LAYERS': 'Default:MODIS_C6_1_Canada_24h',
+          'TILED': true,
+        },
+        serverType: 'geoserver',
+      }),
+    });
 
+    mapRef.current?.addLayer(dataLayer);
+
+    console.log(`Backend URL: ${backendUrl}`);
 
     // Fetch the JSON data from the endpoint and add it to the map
     fetch(`${backendUrl}/api/data`)
