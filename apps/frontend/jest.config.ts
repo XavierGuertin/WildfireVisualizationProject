@@ -9,7 +9,7 @@ module.exports = {
   collectCoverage: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '<rootDir>/coverage/apps/frontend',
-  collectCoverageFrom: ['<rootDir>/src/**/*.{js,jsx,ts,tsx}'],
+  collectCoverageFrom: ['<rootDir>/src/**/*.{js,jsx,ts,tsx}', '!<rootDir>/src/app/components/layout.tsx'],
   roots: ['<rootDir>/__tests__'],
   testMatch: ['**/*.(spec|test).[jt]s?(x)'],
   moduleNameMapper: {
