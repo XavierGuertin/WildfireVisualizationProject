@@ -3,18 +3,13 @@ import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 
 const Footer = () => {
-  const [sliderValue, setSliderValue] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [sliderValue, setSliderValue] = useState(0);
   const [speed, setSpeed] = useState(1);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleSpeedChange = (newSpeed: number) => {
-    setSpeed(newSpeed);
-  };
+  const handlePlayPause = () => setIsPlaying((prev) => !prev);
+  const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
 
   useEffect(() => {
     if (isPlaying) {
@@ -27,30 +22,44 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed]);
 
-  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) =>
     setSliderValue(Number(event.target.value));
-  };
 
   const handleStopPress = () => {
     setIsPlaying(false);
     setSliderValue(0);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        handlePlayPause();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  
   return (
     <div className="footerContainer" data-testid="footer-container">
+      {/* Speed controls */}
       <div className="speedContainer">
         {[0.5, 1, 1.5, 2, 4].map((s) => (
           <button
-            className="speedButton"
+            className={`speedButton {speed === s ? 'border-[#00467E]' : 'border-white'}`}
             key={s}
             onClick={() => handleSpeedChange(s)}
-            style={{ borderColor: speed === s ? '#00467E' : 'white' }}
             data-testid={`speed-button-${s}`}
+            aria-label={`Set speed to ${s}x`}
           >
             {s}x
           </button>
         ))}
       </div>
+      {/* Playback controls */}
       <div className="sliderContainer">
         <input
           className="simulationSlider"
@@ -65,6 +74,7 @@ const Footer = () => {
           className="iconButton"
           onClick={handlePlayPause}
           data-testid="play-pause-button"
+          aria-label={isPlaying ? 'Pause simulation' : 'Play simulation'}
         >
           {!isPlaying ? (
             <FaPlayCircle

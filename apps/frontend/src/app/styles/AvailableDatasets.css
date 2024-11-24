@@ -83,9 +83,14 @@ body {
   /* Collapse button */
   .collapse-button {
     border: none;
+    outline: none;
     cursor: pointer;
+    background-color: #00447E;
+    background-size: 0;
+    border-radius: 100%;
+    padding: 0;
+    margin: 0;
     color: white;
-    font-size: 1.2em;
     position: absolute;
     left: -15px;
     top: 13%;
@@ -93,10 +98,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 25px;
-    height: 25px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 26px;
+    height: 26px;
     z-index: 1100;
+    box-shadow: none;
   }
   
   .collapse-button.collapsed {
