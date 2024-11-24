@@ -1,5 +1,3 @@
-// app/page.tsx
-
 'use client';
 
 const IndexPage = () => {

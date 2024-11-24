@@ -5,13 +5,13 @@ interface MapLayerContextValue{
     setLayer: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const MapLayerContext = createContext<MapLayerContextValue | undefined> (undefined);
+const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
 
 export const MapLayerProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
-
+ 
     return (
-        <MapLayerContext.Provider value = {{layer, setLayer}}>
+        <MapLayerContext.Provider value = {{ layer, setLayer }}>
             {children}
         </MapLayerContext.Provider>
     )
@@ -19,7 +19,7 @@ export const MapLayerProvider: React.FC<PropsWithChildren> = ({children}) => {
 
 export const useMapLayerContext = () => {
     const mapLayerContext = useContext(MapLayerContext);
-    if (mapLayerContext === undefined) {
+    if (!mapLayerContext) {
       throw new Error('useMapLayerContext must be inside a MapLayerProvider');
     }
     return mapLayerContext;

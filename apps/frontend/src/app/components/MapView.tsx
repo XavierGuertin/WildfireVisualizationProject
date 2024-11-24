@@ -19,6 +19,17 @@ import Footer from './Footer';
 import {TileWMS} from 'ol/source';
 
 //Attributions
+interface GeoJSONFeature {
+  geometry: {
+    coordinates: number[][][];
+  };
+}
+
+interface GeoJSONResponse {
+  items: GeoJSONFeature[];
+}
+
+//Maptiler API key and attributions
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
@@ -75,6 +86,7 @@ const MapView = () => {
   }
 
   useEffect(() => {
+    // Initialize map on first render
     if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
@@ -85,7 +97,8 @@ const MapView = () => {
           zoom: 1,
         })
       });
-    } else {
+    }
+    else {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
@@ -98,7 +111,7 @@ const MapView = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        return response.json() as Promise<GeoJSONResponse>;
       })
       .then((data) => {
         const features = data.items.map((item: any) => {
@@ -144,16 +157,16 @@ const MapView = () => {
   //functions
   const resetView = () => {
     if (mapRef.current) {
-      const view = mapRef.current.getView();
-      if (view) {
-        view.setCenter([-75.6972, 45.4215]);
-        view.setZoom(5);
-      }
+      mapRef.current.getView().animate({
+        center: [-75.6972, 45.4215],
+        zoom: 5,
+        duration: 1000,
+      });
     }
   };
 
   return (
-      <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}>
+      <div id="map-container" ref={mapElement}>
         <Footer />
       </div>
   );
