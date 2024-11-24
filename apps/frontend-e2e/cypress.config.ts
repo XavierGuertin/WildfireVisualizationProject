@@ -5,7 +5,7 @@ const coverageTask = require('@cypress/code-coverage/task');
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'apps/frontend-e2e/src',
+      cypressDir: 'src',
     }),
     baseUrl: 'http://127.0.0.1:3000', // Set only if NX doesn’t set it automatically
     setupNodeEvents(on, config) {
@@ -16,5 +16,6 @@ export default defineConfig({
     reporterOptions: {
       mochaFile: 'cypress/results/test-output-[hash].xml',
     },
+    supportFile: false,
   },
 });
