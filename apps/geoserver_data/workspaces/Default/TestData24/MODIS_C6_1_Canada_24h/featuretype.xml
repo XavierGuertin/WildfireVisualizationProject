@@ -1,0 +1,43 @@
+<featureType>
+  <id>FeatureTypeInfoImpl-635ac42e:1935f6a3bc7:-7fe8</id>
+  <name>MODIS_C6_1_Canada_24h</name>
+  <nativeName>MODIS_C6_1_Canada_24h</nativeName>
+  <namespace>
+    <id>NamespaceInfoImpl-635ac42e:1935f6a3bc7:-7ff5</id>
+  </namespace>
+  <title>MODIS_C6_1_Canada_24h</title>
+  <keywords>
+    <string>features</string>
+    <string>MODIS_C6_1_Canada_24h</string>
+  </keywords>
+  <srs>EPSG:4326</srs>
+  <nativeBoundingBox>
+    <minx>-124.15753</minx>
+    <maxx>-113.5334</maxx>
+    <miny>42.95755</miny>
+    <maxy>46.84478</maxy>
+  </nativeBoundingBox>
+  <latLonBoundingBox>
+    <minx>-124.15753</minx>
+    <maxx>-113.5334</maxx>
+    <miny>42.95755</miny>
+    <maxy>46.84478</maxy>
+    <crs>EPSG:4326</crs>
+  </latLonBoundingBox>
+  <projectionPolicy>FORCE_DECLARED</projectionPolicy>
+  <enabled>true</enabled>
+  <store class="dataStore">
+    <id>DataStoreInfoImpl-635ac42e:1935f6a3bc7:-7fe9</id>
+  </store>
+  <serviceConfiguration>false</serviceConfiguration>
+  <simpleConversionEnabled>false</simpleConversionEnabled>
+  <internationalTitle/>
+  <internationalAbstract/>
+  <maxFeatures>0</maxFeatures>
+  <numDecimals>0</numDecimals>
+  <padWithZeros>false</padWithZeros>
+  <forcedDecimal>false</forcedDecimal>
+  <overridingServiceSRS>false</overridingServiceSRS>
+  <skipNumberMatched>false</skipNumberMatched>
+  <circularArcPresent>false</circularArcPresent>
+</featureType>

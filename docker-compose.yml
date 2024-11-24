@@ -46,9 +46,13 @@ services:
     ports:
       - "8090:8080"
     environment:
-      GEOSERVER_ADMIN_USER: geoserver
-      GEOSERVER_ADMIN_PASSWORD: password
-
+      - GEOSERVER_ADMIN_USER=geoserver
+      - GEOSERVER_ADMIN_PASSWORD=password
+      - GEOSERVER_DATA_DIR=/var/geoserver/data_dir
+      - RUN_AS_ROOT=TRUE
+    volumes:
+      - ./apps/geoserver_data:/var/geoserver/data_dir
+      
 networks:
   app-network:
     driver: bridge

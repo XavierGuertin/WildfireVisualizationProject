@@ -20,7 +20,7 @@ export const MapLayerProvider: React.FC<PropsWithChildren> = ({children}) => {
 export const useMapLayerContext = () => {
     const mapLayerContext = useContext(MapLayerContext);
     if (!mapLayerContext) {
-      throw new Error('useOnboardingContext must be inside a MapLayerProvider');
+      throw new Error('useMapLayerContext must be inside a MapLayerProvider');
     }
     return mapLayerContext;
   };
