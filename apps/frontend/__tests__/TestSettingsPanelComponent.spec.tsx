@@ -18,10 +18,99 @@ describe('Test SettingsPanel component', () => {
 
     const settingsButton = screen.getByTestId('settings-button');
     fireEvent.click(settingsButton); // Open settings dropdown
+    
+    // Assert settings dropdown is active
     expect(settingsButton).toHaveClass('active');
 
-    fireEvent.click(settingsButton); // Close settings dropdown
+
+    // Assert settings dropdown content is visible
+    const dropdownContent = screen.getByLabelText('API Endpoint:').closest('.dropdown-content');
+    expect(dropdownContent).toHaveClass('show');
+
+    // Check for input, Save and Cancel buttons
+    expect(screen.getByLabelText('API Endpoint:')).toBeInTheDocument();
+    expect(screen.getByText('Save')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+
+  it('should render the correct initial API endpoint value and update the input field', () => {
+    render(<SettingsPanel />);
+  
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton); // Open settings dropdown
+  
+    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
+  
+    // Check initial value
+    expect(inputField.value).toBe('https://default-api-endpoint.com');
+  
+    // Update input field
+    fireEvent.change(inputField, { target: { value: 'https://new-api-endpoint.com' } });
+    expect(inputField.value).toBe('https://new-api-endpoint.com');
+  });
+
+  it('should trigger save action for a valid API endpoint', () => {
+    render(<SettingsPanel />);
+  
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton); // Open settings dropdown
+  
+    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
+    const saveButton = screen.getByText('Save');
+  
+    // Update input field with a valid URL
+    fireEvent.change(inputField, { target: { value: 'https://new-api-endpoint.com' } });
+    fireEvent.click(saveButton);
+  
+    // Verify alert for valid input
+    expect(window.alert).toHaveBeenCalledWith('API Endpoint saved: https://new-api-endpoint.com');
+  });
+  
+  it('should trigger an error alert for an invalid API endpoint', () => {
+    render(<SettingsPanel />);
+  
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton); // Open settings dropdown
+  
+    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
+    const saveButton = screen.getByText('Save');
+  
+    // Update input field with an invalid URL
+    fireEvent.change(inputField, { target: { value: 'invalid-url' } });
+    fireEvent.click(saveButton);
+  
+    // Verify alert for invalid input
+    expect(window.alert).toHaveBeenCalledWith('Invalid URL. Please enter a valid API endpoint.');
+  });
+
+  it('should close the settings dropdown when Cancel is clicked', () => {
+    render(<SettingsPanel />);
+  
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton); // Open settings dropdown
+  
+    const cancelButton = screen.getByText('Cancel');
+  
+    // Click the Cancel button
+    fireEvent.click(cancelButton);
+  
+    // Verify dropdown closes
     expect(settingsButton).not.toHaveClass('active');
+  }); 
+  
+
+  it('should close settings dropdown when clicking outside', () => {
+    render(<SettingsPanel />);
+
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton); // Open settings dropdown
+    const dropdownContent = screen.getByText('API Endpoint:').closest('.dropdown-content');
+
+    expect(dropdownContent).toHaveClass('show'); // Confirm dropdown is visible
+
+    // Simulate clicking outside
+    fireEvent.mouseDown(document.body);
+    expect(settingsButton).not.toHaveClass('active'); // Dropdown should close
   });
 
   it('should open and close the language dropdown', () => {
