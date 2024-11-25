@@ -13,6 +13,7 @@ describe('Test SettingsPanel component', () => {
     jest.clearAllMocks();
   });
 
+  // 1) Prompt Test
   it('should open and close the settings dropdown', () => {
     render(<SettingsPanel />);
 
@@ -49,6 +50,7 @@ describe('Test SettingsPanel component', () => {
     expect(inputField.value).toBe('https://new-api-endpoint.com');
   });
 
+  // 6) Prompt Test
   it('should trigger save action for a valid API endpoint', () => {
     render(<SettingsPanel />);
   
@@ -65,7 +67,9 @@ describe('Test SettingsPanel component', () => {
     // Verify alert for valid input
     expect(window.alert).toHaveBeenCalledWith('API Endpoint saved: https://new-api-endpoint.com');
   });
-  
+
+
+  // 7) Prompt Test
   it('should trigger an error alert for an invalid API endpoint', () => {
     render(<SettingsPanel />);
   
@@ -99,19 +103,66 @@ describe('Test SettingsPanel component', () => {
   }); 
   
 
+  // 2) Prompt Test
   it('should close settings dropdown when clicking outside', () => {
     render(<SettingsPanel />);
 
+    // Open the settings dropdown
     const settingsButton = screen.getByTestId('settings-button');
-    fireEvent.click(settingsButton); // Open settings dropdown
-    const dropdownContent = screen.getByText('API Endpoint:').closest('.dropdown-content');
+    fireEvent.click(settingsButton);
 
+    // Assert the dropdown is open
+    const dropdownContent = screen.getByText('API Endpoint:').closest('.dropdown-content');
     expect(dropdownContent).toHaveClass('show'); // Confirm dropdown is visible
 
     // Simulate clicking outside
     fireEvent.mouseDown(document.body);
-    expect(settingsButton).not.toHaveClass('active'); // Dropdown should close
+
+    // Assert the dropdown is closed
+    expect(settingsButton).not.toHaveClass('active');
+    expect(dropdownContent).not.toBeVisible();
+
+    // Verify 'setDropdownState' was called
+    expect(screen.queryByLabelText('API Endpoint:')).not.toBeInTheDocument();
   });
+
+  // 4) Promp Test
+  it('should handle case where dropdownRef is null without errors', () => {
+    // Mock React.useRef to return a ref with current as null
+    jest.spyOn(React, 'useRef').mockReturnValueOnce({ current: null });
+  
+    render(<SettingsPanel />);
+  
+    // Open the settings dropdown
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
+  
+    // Simulate clicking outside
+    fireEvent.mouseDown(document.body);
+  
+    // Verify no errors occur and dropdown state remains unaffected
+    expect(settingsButton).not.toHaveClass('active');
+  });  
+  
+  // 3) Prompt Test
+  it('should not close settings dropdown if clicking inside dropdown', () => {
+    render(<SettingsPanel />);
+  
+    // Open the settings dropdown
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
+  
+    // Mock dropdownRef.current.contains to return true
+    const dropdownContent = screen.getByLabelText('API Endpoint:').closest('.dropdown-content');
+    jest.spyOn(dropdownContent!, 'contains').mockReturnValueOnce(true);
+  
+    // Simulate clicking inside
+    fireEvent.mouseDown(dropdownContent!);
+  
+    // Dropdown should remain open
+    expect(settingsButton).toHaveClass('active');
+  });
+  
 
   it('should open and close the language dropdown', () => {
     render(<SettingsPanel />);
