@@ -79,3 +79,28 @@
     color: #666;
     text-align: left;
 }
+
+.load-dataset-button {
+    display: block;
+    width: 100%;
+    background-color: #00447E;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.load-dataset-button:hover {
+    background-color: #005a9e;
+}
+
+.load-dataset-button:active {
+    transform: scale(0.98);
+}

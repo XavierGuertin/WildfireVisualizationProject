@@ -9,6 +9,7 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
+  onLoadDataset: () => void;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
@@ -18,6 +19,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   format = "",
   processes = "",
   datasetSource = "",
+  onLoadDataset,
 }) => {
   
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -54,6 +56,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
             </div>
           </div>
         ))}
+        <button 
+        className="load-dataset-button" onClick={onLoadDataset} data-testid="load-dataset-button"> Load Dataset
+        </button>
       </div>
     </div>
   );

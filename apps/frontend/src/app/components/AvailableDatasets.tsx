@@ -29,8 +29,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   useEffect(() => {
@@ -119,38 +117,16 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     setDatasets(sortedDatasets);
   };
 
-  const handleDatasetClick = async (dataset: Dataset) => {
-    setIsLoading(true);
-    setProgress(0);
-    setSelectedDataset(dataset.name);
-
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval);
-          return prevProgress;
-        }
-        return prevProgress + 10;
-      });
-    }, 300);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 4000)); // Replace with actual data fetching logic if needed
-      onDatasetClick(dataset);
-    } catch (error) {
-      console.error('Error loading dataset:', error);
-    } finally {
-      setProgress(100);
-      setIsLoading(false);
-    }
-  };
-
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const handleToggle = () => setIsToggled((prev) => !prev);
 
+  const handleDatasetClick = (dataset: Dataset) => {
+    setSelectedDataset(dataset.name); // Update selected dataset
+    onDatasetClick(dataset); // Pass dataset to parent component
+  };
+
   return (
     <>
-      <LoadingOverlay progress={progress} isVisible={isLoading} />
       <div
         className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
         data-testid="datasets-container"
@@ -220,3 +196,4 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 };
 
 export default AvailableDatasets;
+
