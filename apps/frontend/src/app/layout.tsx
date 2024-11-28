@@ -96,21 +96,3 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 export default Layout;
-
-/*
-    // Placeholder: set loading states
-    // setLoading(true);
-    // setProgress(0); // Reset progress when starting a new load
-
-    // Mock loading progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoading(false); // Hide loading overlay after loading completes
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 50);
-*/
