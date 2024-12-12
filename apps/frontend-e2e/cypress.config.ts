@@ -5,7 +5,7 @@ const coverageTask = require('@cypress/code-coverage/task');
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
+      cypressDir: 'apps/frontend-e2e/src',
     }),
     baseUrl: 'http://127.0.0.1:3000', // Set only if NX doesn’t set it automatically
     setupNodeEvents(on, config) {
