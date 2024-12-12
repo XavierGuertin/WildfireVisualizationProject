@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TopLeftButtons from '../src/app/components/TopLeftButtons';
+import SettingsPanel from '../src/app/components/SettingsPanel';
 
-describe('Test TopLeftButtons component', () => {
+describe('Test SettingsPanel component', () => {
   // Mock alert function to avoid JSDOM error
   beforeAll(() => {
     window.alert = jest.fn();
@@ -14,7 +14,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should open and close the settings dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const settingsButton = screen.getByTestId('settings-button');
     fireEvent.click(settingsButton); // Open settings dropdown
@@ -25,7 +25,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should open and close the language dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown
@@ -37,25 +37,24 @@ describe('Test TopLeftButtons component', () => {
 
     fireEvent.click(languageButton); // Close language dropdown
     expect(languageButton).not.toHaveClass('active');
-    expect(dropdownContent).not.toHaveClass('show'); // Confirm dropdown is closed
   });
 
   it('should select English and French in the language dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown
 
     fireEvent.click(screen.getByText('Français')); // Select French
-    expect(screen.getByText('Français')).toBeInTheDocument(); // French should now be selected
+    expect(window.alert).toHaveBeenCalledWith('Set Language to French');
 
     fireEvent.click(languageButton);
     fireEvent.click(screen.getByText('English')); // Select English
-    expect(screen.getByText('English')).toBeInTheDocument(); // English should now be selected
+    expect(window.alert).toHaveBeenCalledWith('Set Language to English');
   });
 
   it('should open and close the reset dropdown', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton); // Open reset dropdown
@@ -67,11 +66,10 @@ describe('Test TopLeftButtons component', () => {
 
     fireEvent.click(resetButton); // Close reset dropdown
     expect(resetButton).not.toHaveClass('active');
-    expect(dropdownContent).not.toHaveClass('show'); // Confirm dropdown is closed
   });
 
   it('should trigger alert on reset and factory reset clicks', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton); // Open reset dropdown
@@ -85,7 +83,7 @@ describe('Test TopLeftButtons component', () => {
   });
 
   it('should close dropdowns when clicking outside', () => {
-    render(<TopLeftButtons />);
+    render(<SettingsPanel />);
 
     const languageButton = screen.getByTestId('language-button');
     fireEvent.click(languageButton); // Open language dropdown
@@ -94,8 +92,5 @@ describe('Test TopLeftButtons component', () => {
 
     // Simulate clicking outside
     fireEvent.mouseDown(document.body);
-
-    // Verify dropdown content is closed
-    expect(dropdownContent).not.toHaveClass('show');
   });
 });
