@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
-import { MapLayerProvider } from './components/MapContext';
+import { MapProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
@@ -54,7 +54,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <MapLayerProvider>
+    <MapProvider>
       <html lang="en">
       <body>
       <SettingsPanel />
@@ -80,7 +80,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
       </body>
       </html>
-    </MapLayerProvider>
+    </MapProvider>
   );
 };
 

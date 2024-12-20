@@ -2,14 +2,14 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Sidebar from '../src/app/components/Sidebar';
-import { MapLayerProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
 
 describe('Test Sidebar component', () => {
   const renderSidebar = () => {
     render(
-      <MapLayerProvider>
+      <MapProvider>
         <Sidebar />
-      </MapLayerProvider>
+      </MapProvider>
     );
   };
 
@@ -45,10 +45,10 @@ describe('Test Sidebar component', () => {
     };
 
     const TestComponent = () => (
-      <MapLayerProvider>
+      <MapProvider>
         <Sidebar />
         <LayerChecker />
-      </MapLayerProvider>
+      </MapProvider>
     );
 
     render(<TestComponent />);
