@@ -5,7 +5,7 @@ interface MapLayerContextValue{
     layer: string | null;
     setLayer: React.Dispatch<React.SetStateAction<string | null>>;
     mapRef: React.MutableRefObject<Map | null>;
-    resetView: Function;
+    resetView: () => void;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
