@@ -104,3 +104,85 @@
     flex: 1;
     text-align: center;
   }  
+
+  /* Settings prompt styling */
+  .settings-prompt {
+    top: 60px;
+    left: 0;
+    background-color: #00447E;
+    margin-left: 5px;
+    margin-right: 5px;
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 1000;
+    width: 500px;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Label for the settings prompt */
+  .settings-prompt label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    word-wrap: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Input and buttons container */
+  .settings-prompt-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* Input field inside the settings prompt */
+  .settings-prompt input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid white;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+  }
+
+  /* Buttons inside the settings prompt */
+  .settings-prompt-buttons {
+    display: flex;
+    gap: 5px;
+  }
+
+  .settings-prompt-buttons button {
+    background-color: #00447E;
+    color: white;
+    font-weight: bold;
+    border: 1px solid white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .settings-prompt-buttons button:first-child {
+    background-color: #28A745;
+  }
+
+  .settings-prompt-buttons button:hover {
+    background-color: #218838;
+  }
+
+  .settings-prompt-buttons button:last-child {
+    background-color: #dc3545;
+  }
+
+  .settings-prompt-buttons button:last-child:hover {
+    background-color: #b32d39;
+  }

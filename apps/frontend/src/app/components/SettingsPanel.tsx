@@ -11,6 +11,7 @@ const SettingsPanel: React.FC = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
 
   // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
@@ -18,6 +19,21 @@ const SettingsPanel: React.FC = () => {
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
       isOpen: prevState.activeButton !== buttonName,
     }));
+  };
+
+  // Handles settings selection
+  const handleSaveEndpoint = () => {
+    if (isValidUrl(newApiEndpoint)) {
+      alert(`API Endpoint saved: ${newApiEndpoint}`);
+      setDropdownState({ activeButton: null, isOpen: false });
+    } else {
+      alert('Invalid URL. Please enter a valid API endpoint.');
+    }
+  };
+
+  // Cancel button clicked
+  const handleCancelEndpoint = () => {
+    setDropdownState({ activeButton:null, isOpen: false});
   };
 
   // Handles language selection
@@ -37,6 +53,17 @@ const SettingsPanel: React.FC = () => {
     alert('Factory Reset initiated');
     setDropdownState({ activeButton: null, isOpen: false });
   };
+
+  // check if valid URL
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // If mouse clicked outside button-dropdowns, close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,36 +84,62 @@ const SettingsPanel: React.FC = () => {
   return (
     <div className="button-container" ref={dropdownRef}>
       {/* Settings button */}
-      <button data-testid="settings-button" className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
-        onClick={() => toggleDropdown('settings')}>
-        <IoSettingsOutline size={32}/>
-      </button>
+      <div className="dropdown-button">
+        <button 
+          data-testid="settings-button" 
+          className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
+          onClick={() => toggleDropdown('settings')}
+          aria-expanded={dropdownState.activeButton === 'settings'}
+        >
+          <IoSettingsOutline size={32}/>
+        </button>
+        {dropdownState.activeButton === 'settings' && (
+          <div className="dropdown-content show">
+            <div className="settings-prompt">
+              <label htmlFor="api-endpoint-input">API Endpoint:</label>
+              <div className="settings-prompt-row">
+                <input
+                    id="api-endpoint-input"
+                    type="text"
+                    placeholder="Enter new API endpoint"
+                    value={newApiEndpoint}
+                    onChange={(e) => setNewApiEndpoint(e.target.value)}
+                />
+                <div className="settings-prompt-buttons">
+                  <button onClick={handleSaveEndpoint}>Save</button>
+                  <button onClick={handleCancelEndpoint}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-    {/* Language Dropdown */}
-    <div className="dropdown-button">
-      <button
-        data-testid="language-button"
-        className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
-        onClick={() => toggleDropdown('language')}
-        aria-expanded={dropdownState.activeButton === 'language'}
-      >
-        <IoLanguage size={32}/>
-      </button>
-      {dropdownState.activeButton === 'language' && (
-        <div className="dropdown-content show">
-          <button onClick={() => handleLanguageSelect('English')}>
-            {selectedLanguage === 'English' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='black'/>}
-            English
-          </button>
-          <button onClick={() => handleLanguageSelect('French')}>
-            {selectedLanguage === 'French' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='black'/>}
-            Français
-          </button>
-        </div>
-      )}
-    </div>
+      {/* Language Dropdown */}
+      <div className="dropdown-button">
+        <button
+          data-testid="language-button"
+          className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
+          onClick={() => toggleDropdown('language')}
+          aria-expanded={dropdownState.activeButton === 'language'}
+        >
+          <IoLanguage size={32}/>
+        </button>
+        {dropdownState.activeButton === 'language' && (
+          <div className="dropdown-content show">
+            <button onClick={() => handleLanguageSelect('English')}>
+              {selectedLanguage === 'English' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='none'/>}
+              English
+            </button>
+            <button onClick={() => handleLanguageSelect('French')}>
+              {selectedLanguage === 'French' ?  <IoCheckmark size={24} fill='black'/> : <PiArrowClockwiseFill size={24} fill='none'/>}
+              Français
+            </button>
+          </div>
+        )}
+      </div>
 
-{/* Reset Dropdown */}
+      {/* Reset Dropdown */}
       <div className="dropdown-button">
         <button
           data-testid="reset-button"
