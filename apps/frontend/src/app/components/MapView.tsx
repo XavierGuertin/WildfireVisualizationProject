@@ -72,7 +72,7 @@ const MapView = () => {
   const mapElement = useRef(null);
 
   //Context imports
-  const {layer, mapRef, resetView} = useMapLayerContext();
+  const {layer, mapRef} = useMapLayerContext();
 
   const getLayer = () => {
     if(layer === "satellite"){
