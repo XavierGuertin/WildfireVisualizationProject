@@ -14,6 +14,7 @@ const nextConfig = {
   },
   env: {
     MAPTILER_API_KEY: process.env.MAPTILER_API_KEY,
+    REACT_APP_BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8080',
   },
 };
 

@@ -104,7 +104,8 @@ Thumbs.db
 Desktop.ini
 
 # Env variables
-apps/frontend/.env
+apps/frontend/.env.local
+apps/frontend/.env.production
 .env.local
 .env.*.local
 .env
