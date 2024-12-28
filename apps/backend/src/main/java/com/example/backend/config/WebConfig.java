@@ -1,4 +1,3 @@
-// com/example/backend/config/WebConfig.java
 package com.example.backend.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
   @Override
-  public void addCorsCrossOrigins(CorsRegistry registry) {
+  public void addCorsMappings(CorsRegistry registry) {  // Fixed method name here
     registry.addMapping("/api/**")
       .allowedOrigins(
         "http://localhost:3000",    // Local development
