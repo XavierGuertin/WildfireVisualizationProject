@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
+import TestStac from './components/TestStac';
 import './layout.css';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,8 +29,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       });
     }, 300); // Update every 300ms
   };
-  
-  
+
+
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: Dataset) => {
     setSelectedDataset(dataset); // Just update the selected dataset
@@ -38,11 +39,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Handle dataset loading from MapMetaData
   const handleLoadDataset = async () => {
     if (!selectedDataset) return;
-  
+
     try {
       setLoading(true); // Show loading overlay
       showLoadingBar(); // Start progress simulation
-  
+
       // Simulate a delay for loading (mocked)
       await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
       console.log('Dataset loaded successfully (mock)');
@@ -60,6 +61,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <SettingsPanel />
       <div className="layout-container relative">
         <LoadingOverlay progress={progress} isVisible={loading} />
+        <TestStac />
         <main className="app-main">{children}</main>
         <AvailableDatasets onDatasetClick={handleDatasetClick} />
         <MapView />

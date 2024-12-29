@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/frontend",
-        "command": "NODE_ENV=production npx next build"
+        "command": "set NODE_ENV=production && npx next build"
       },
       "configurations": {
         "coverage": {
@@ -19,14 +19,19 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/frontend",
-        "command": "NODE_ENV=production npx next start -p 3000"
+        "command": "set NODE_ENV=production && npx next start -p 3000"
+      },
+      "configurations": {
+        "build": {
+          "command": "npx nx run frontend:build && npx nx run frontend:serve"
+        }
       }
     },
     "dev": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/frontend",
-        "command": "NODE_ENV=local npx next dev -p 3000"
+        "command": "set NODE_ENV=development && npx next dev -p 3000"
       }
     },
     "lint": {

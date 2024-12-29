@@ -103,10 +103,14 @@ jest-test-results.json
 Thumbs.db
 Desktop.ini
 
-# Env variables
-apps/frontend/.env.local
+# Local data volumes from db
+apps/db/data/
+
+
+# Env variabless
+apps/frontend/.env.development
 apps/frontend/.env.production
-.env.local
+.env.development
 .env.*.local
 .env
 

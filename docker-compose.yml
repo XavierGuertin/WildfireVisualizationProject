@@ -18,9 +18,9 @@ services:
       context: .
       dockerfile: ./apps/frontend/Dockerfile
       args:
-        REACT_APP_BACKEND_URL: http://backend:8080  # Used during build
+        NEXT_PUBLIC_BACKEND_URL: http://backend:8080
     environment:
-      - REACT_APP_BACKEND_URL=http://backend:8080    # Used during runtime
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8080
       - MAPTILER_API_KEY=${MAPTILER_API_KEY}
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
@@ -31,7 +31,9 @@ services:
       - backend
 
   db:
-    image: postgis/postgis:15-3.3  # Use PostGIS-enabled PostgreSQL image
+    build:
+      context: ./apps/db
+      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -41,8 +43,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./apps/db_data:/var/lib/postgresql/data  # Persist database data
-      - ./apps/db_init:/docker-entrypoint-initdb.d  # Initialization scripts
+      - ./apps/db/data:/var/lib/postgresql/data
 
   geoserver:
     image: kartoza/geoserver:latest
