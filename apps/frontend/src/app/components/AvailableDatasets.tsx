@@ -147,7 +147,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   type="checkbox"
                   checked={isToggled}
                   onChange={handleToggle}
-                  className="hidden"
+                  style={{ display: 'none' }}
                   data-testid="toggle-checkbox"
                 />
                 <div
