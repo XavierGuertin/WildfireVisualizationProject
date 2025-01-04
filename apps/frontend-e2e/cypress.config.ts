@@ -16,5 +16,6 @@ export default defineConfig({
     reporterOptions: {
       mochaFile: 'cypress/results/test-output-[hash].xml',
     },
+    supportFile: false,
   },
 });
