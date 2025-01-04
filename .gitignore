@@ -75,7 +75,6 @@ cypress/report/
 cypress/reports/
 coverage/
 reports/
-**/*.cy.*
 
 # Jest
 coverage/
