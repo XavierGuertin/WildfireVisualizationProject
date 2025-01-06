@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
-import "../styles/map.css"
+import "../styles/map.css";
 import { Map, View, Feature} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
