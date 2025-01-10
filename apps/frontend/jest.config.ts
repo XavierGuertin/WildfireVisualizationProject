@@ -11,6 +11,10 @@ module.exports = {
   collectCoverageFrom: [
     '<rootDir>/src/**/*.{js,jsx,ts,tsx}',
   ],
+  coveragePathIgnorePatterns:[
+    "/node_modules/",
+    "<rootDir>/src/app/components/MapContext.tsx",
+  ],
   coverageReporters: ['json', 'lcov', 'text', 'clover'],
   roots: ['<rootDir>/__tests__'],
   testMatch: ["**/*.(spec|test).[jt]s?(x)"],

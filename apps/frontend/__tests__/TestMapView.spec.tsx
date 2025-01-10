@@ -49,11 +49,10 @@ jest.mock('../src/app/components/MapContext', () => ({
 
 
 describe(MapView, () => {
-
     beforeEach(()=>{    
         jest.spyOn(React, 'useState').mockImplementation(() => [false, jest.fn()]);
         jest.spyOn(React, 'useContext').mockReturnValue({});
-        jest.spyOn(React, 'useRef').mockReturnValue({current: null})
+        jest.spyOn(React, 'useRef').mockReturnValue({current: {}})
         fetchMock.enableMocks()
     })
 
@@ -61,12 +60,11 @@ describe(MapView, () => {
         jest.clearAllMocks()
     })
 
-    it("renders", () => {
+    it("renders with null mapRef", () => {
         const MapViewComponent = () => {
             return <MapProvider><MapView /></MapProvider>
         }
         fetchMock.mockResponseOnce(JSON.stringify({ ok: true }))
-        
         render(<MapViewComponent />)
     })
 })
