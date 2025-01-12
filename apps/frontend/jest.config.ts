@@ -18,5 +18,6 @@ module.exports = {
   // Add moduleNameMapper to mock CSS files
   moduleNameMapper: {
     '\\.(css|scss)$': '<rootDir>/__mocks__/styleMock.js',
+    '^react-i18next$': '<rootDir>/__mocks__/react-i18next.js',
   },
 };

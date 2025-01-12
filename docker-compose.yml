@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   backend:
     build:
@@ -48,7 +49,7 @@ services:
     networks:
       - app-network
     volumes:
-      - pgstac-data:/var/lib/postgresql/data
+      - ./apps/db/data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
@@ -71,9 +72,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
-volumes:
-  pgstac-data:
 
 networks:
   app-network:

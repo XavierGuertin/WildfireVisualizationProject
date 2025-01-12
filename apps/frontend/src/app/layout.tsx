@@ -9,7 +9,10 @@ import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
 import TestStac from './components/TestStac';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './resources/i18n';
 import './layout.css';
+
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -55,34 +58,36 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <MapLayerProvider>
-      <html lang="en">
-      <body>
-      <SettingsPanel />
-      <div className="layout-container relative">
-        <LoadingOverlay progress={progress} isVisible={loading} />
-        <TestStac />
-        <main className="app-main">{children}</main>
-        <AvailableDatasets onDatasetClick={handleDatasetClick} />
-        <MapView />
-        <Sidebar />
-        {selectedDataset && (
-            <MapMetaData
-              city={selectedDataset.city}
-              name={selectedDataset.name}
-              description={selectedDataset.description}
-              format={selectedDataset.format}
-              processes={selectedDataset.processes}
-              datasetSource={selectedDataset.datasetSource}
-              onLoadDataset={handleLoadDataset}
-            />
-          )
-        }
-        <footer className="app-footer"></footer>
-      </div>
-      </body>
-      </html>
-    </MapLayerProvider>
+    <I18nextProvider i18n={i18n}>
+      <MapLayerProvider>
+        <html lang="en">
+        <body>
+        <SettingsPanel />
+        <div className="layout-container relative">
+          <LoadingOverlay progress={progress} isVisible={loading} />
+          <TestStac />
+          <main className="app-main">{children}</main>
+          <AvailableDatasets onDatasetClick={handleDatasetClick} />
+          <MapView />
+          <Sidebar />
+          {selectedDataset && (
+              <MapMetaData
+                city={selectedDataset.city}
+                name={selectedDataset.name}
+                description={selectedDataset.description}
+                format={selectedDataset.format}
+                processes={selectedDataset.processes}
+                datasetSource={selectedDataset.datasetSource}
+                onLoadDataset={handleLoadDataset}
+              />
+            )
+          }
+          <footer className="app-footer"></footer>
+        </div>
+        </body>
+        </html>
+      </MapLayerProvider>
+    </I18nextProvider>
   );
 };
 
