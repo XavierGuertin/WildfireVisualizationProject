@@ -8,7 +8,7 @@ describe('Test LoadingOverlay component', () => {
   it('should render with initial progress', () => {
     render(<LoadingOverlay progress={10} isVisible={true} />);
     expect(screen.getByText('10%')).toBeInTheDocument();
-    expect(screen.getByText('Loading Dataset...')).toBeInTheDocument();
+    expect(screen.getByText('loading_dataset')).toBeInTheDocument();
   });
 
   it('should update and display different progress values', () => {

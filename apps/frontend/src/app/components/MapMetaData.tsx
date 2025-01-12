@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import "../styles/MapMetaData.css"
-import { IoInformationCircle  } from "react-icons/io5";
+import "../styles/MapMetaData.css";
+import { IoInformationCircle } from "react-icons/io5";
+import { useTranslation } from "react-i18next";
 
 interface MapMetaDataProps {
   city?: string;
@@ -21,53 +22,53 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   datasetSource = "",
   onLoadDataset,
 }) => {
-  
+  const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
 
   const CollapsedMetaData = (
-    <div data-testid="collapsedMetaData" className="metadata-container-collapsed" onClick={toggleCollapse}>
-        <IoInformationCircle size={36} fill="white"/>
-        <span className="collapsed-name">Metadata</span>
+    <div
+      data-testid="collapsedMetaData"
+      className="metadata-container-collapsed"
+      onClick={toggleCollapse}
+    >
+      <IoInformationCircle size={36} fill="white" />
+      <span className="collapsed-name">{t("metadata")}</span>
     </div>
   );
 
   const NonCollapsedMetaData = (
     <div className="metadata-container">
-      <div
-        className="header"
-        onClick={toggleCollapse}
-        data-testid="city-div"
-      >
-        {city}
+      <div className="header" onClick={toggleCollapse} data-testid="city-div">
+        {city || t("unknown_city")}
       </div>
       <div className="content">
         {[
-          { label: "Name", value: name, testId: "dataset-name" },
-          { label: "Description", value: description, testId: "dataset-description" },
-          { label: "Format", value: format, testId: "dataset-format" },
-          { label: "Processes", value: processes, testId: "dataset-processes" },
-          { label: "Dataset Source", value: datasetSource, testId: "dataset-datasource" },
+          { label: t("name"), value: name, testId: "dataset-name" },
+          { label: t("description"), value: description, testId: "dataset-description" },
+          { label: t("format"), value: format, testId: "dataset-format" },
+          { label: t("processes"), value: processes, testId: "dataset-processes" },
+          { label: t("dataset_source"), value: datasetSource, testId: "dataset-datasource" },
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
             <div className="value" data-testid={testId}>
-              {value || "N/A"}
+              {value || t("n_a")}
             </div>
           </div>
         ))}
-        <button 
-        className="load-dataset-button" onClick={onLoadDataset} data-testid="load-dataset-button"> Load Dataset
+        <button
+          className="load-dataset-button"
+          onClick={onLoadDataset}
+          data-testid="load-dataset-button"
+        >
+          {t("load_dataset")}
         </button>
       </div>
     </div>
   );
-  
-  return (
-  <>
-    {isCollapsed ? CollapsedMetaData: NonCollapsedMetaData}
-  </>
-  );
+
+  return <>{isCollapsed ? CollapsedMetaData : NonCollapsedMetaData}</>;
 };
 
 export default MapMetaData;

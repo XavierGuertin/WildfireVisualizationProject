@@ -62,7 +62,7 @@ describe('Test AvailableDatasets component', () => {
 
     await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Date'));
+    fireEvent.click(screen.getByText('date'));
     const datasetButtons = screen.getAllByTestId(/dataset-button-/);
     expect(datasetButtons[0]).toHaveTextContent('Dataset A'); // Validate sort order
   });

@@ -131,8 +131,9 @@ body {
   
   /* Filter button */
   .filter-button {
-    flex: 1;
+    flex-grow: 1;
     min-width: 80px;
+    max-width: 150px;
     padding: 8px;
     background: #ddd;
     color: #333;
@@ -142,6 +143,7 @@ body {
     font-size: 0.9em;
     text-align: center;
     white-space: nowrap;
+    box-sizing: border-box;
   }
   
   .filter-button.active {

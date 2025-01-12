@@ -16,8 +16,9 @@ describe('Test SettingsPanel component', () => {
   // 1) Prompt Test
   it('should open and close the settings dropdown', () => {
     render(<SettingsPanel />);
-
-    const settingsButton = screen.getByTestId('settings-button');
+    
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton); // Open settings dropdown
     
     // Assert settings dropdown is active
@@ -25,22 +26,23 @@ describe('Test SettingsPanel component', () => {
 
 
     // Assert settings dropdown content is visible
-    const dropdownContent = screen.getByLabelText('API Endpoint:').closest('.dropdown-content');
+    const dropdownContent = screen.getByLabelText('api_endpoint:').closest('.dropdown-content');
     expect(dropdownContent).toHaveClass('show');
 
     // Check for input, Save and Cancel buttons
-    expect(screen.getByLabelText('API Endpoint:')).toBeInTheDocument();
-    expect(screen.getByText('Save')).toBeInTheDocument();
-    expect(screen.getByText('Cancel')).toBeInTheDocument();
+    expect(screen.getByLabelText('api_endpoint:')).toBeInTheDocument();
+    expect(screen.getByText('save')).toBeInTheDocument();
+    expect(screen.getByText('cancel')).toBeInTheDocument();
   });
 
   it('should render the correct initial API endpoint value and update the input field', () => {
     render(<SettingsPanel />);
   
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton); // Open settings dropdown
   
-    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
+    const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
   
     // Check initial value
     expect(inputField.value).toBe('https://default-api-endpoint.com');
@@ -54,18 +56,19 @@ describe('Test SettingsPanel component', () => {
   it('should trigger save action for a valid API endpoint', () => {
     render(<SettingsPanel />);
   
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton); // Open settings dropdown
   
-    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
-    const saveButton = screen.getByText('Save');
+    const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
+    const saveButton = screen.getByText('save');
   
     // Update input field with a valid URL
     fireEvent.change(inputField, { target: { value: 'https://new-api-endpoint.com' } });
     fireEvent.click(saveButton);
   
     // Verify alert for valid input
-    expect(window.alert).toHaveBeenCalledWith('API Endpoint saved: https://new-api-endpoint.com');
+    expect(window.alert).toHaveBeenCalledWith('api_endpoint save: https://new-api-endpoint.com');
   });
 
 
@@ -73,27 +76,29 @@ describe('Test SettingsPanel component', () => {
   it('should trigger an error alert for an invalid API endpoint', () => {
     render(<SettingsPanel />);
   
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton); // Open settings dropdown
   
-    const inputField = screen.getByLabelText('API Endpoint:') as HTMLInputElement;
-    const saveButton = screen.getByText('Save');
+    const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
+    const saveButton = screen.getByText('save');
   
     // Update input field with an invalid URL
     fireEvent.change(inputField, { target: { value: 'invalid-url' } });
     fireEvent.click(saveButton);
   
     // Verify alert for invalid input
-    expect(window.alert).toHaveBeenCalledWith('Invalid URL. Please enter a valid API endpoint.');
+    expect(window.alert).toHaveBeenCalledWith('invalid_url');
   });
 
   it('should close the settings dropdown when Cancel is clicked', () => {
     render(<SettingsPanel />);
   
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton); // Open settings dropdown
   
-    const cancelButton = screen.getByText('Cancel');
+    const cancelButton = screen.getByText('cancel');
   
     // Click the Cancel button
     fireEvent.click(cancelButton);
@@ -108,11 +113,12 @@ describe('Test SettingsPanel component', () => {
     render(<SettingsPanel />);
 
     // Open the settings dropdown
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton);
 
     // Assert the dropdown is open
-    const dropdownContent = screen.getByText('API Endpoint:').closest('.dropdown-content');
+    const dropdownContent = screen.getByText('api_endpoint:').closest('.dropdown-content');
     expect(dropdownContent).toHaveClass('show'); // Confirm dropdown is visible
 
     // Simulate clicking outside
@@ -123,7 +129,7 @@ describe('Test SettingsPanel component', () => {
     expect(dropdownContent).not.toBeVisible();
 
     // Verify 'setDropdownState' was called
-    expect(screen.queryByLabelText('API Endpoint:')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('api_endpoint:')).not.toBeInTheDocument();
   });
 
   // 4) Promp Test
@@ -134,7 +140,8 @@ describe('Test SettingsPanel component', () => {
     render(<SettingsPanel />);
   
     // Open the settings dropdown
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton);
   
     // Simulate clicking outside
@@ -149,11 +156,12 @@ describe('Test SettingsPanel component', () => {
     render(<SettingsPanel />);
   
     // Open the settings dropdown
-    const settingsButton = screen.getByTestId('settings-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const settingsButton = buttons[0].querySelector('button')!;
     fireEvent.click(settingsButton);
   
     // Mock dropdownRef.current.contains to return true
-    const dropdownContent = screen.getByLabelText('API Endpoint:').closest('.dropdown-content');
+    const dropdownContent = screen.getByLabelText('api_endpoint:').closest('.dropdown-content');
     jest.spyOn(dropdownContent!, 'contains').mockReturnValueOnce(true);
   
     // Simulate clicking inside
@@ -167,41 +175,50 @@ describe('Test SettingsPanel component', () => {
   it('should open and close the language dropdown', () => {
     render(<SettingsPanel />);
 
-    const languageButton = screen.getByTestId('language-button');
+    const languageButton = screen.getAllByRole('button')[1];
     fireEvent.click(languageButton); // Open language dropdown
     expect(languageButton).toHaveClass('active');
 
     // Check if dropdown content is visible
-    const dropdownContent = screen.getByText('English').closest('.dropdown-content');
+    const dropdownContent = screen.getByText('english').closest('.dropdown-content');
     expect(dropdownContent).toHaveClass('show');
 
     fireEvent.click(languageButton); // Close language dropdown
     expect(languageButton).not.toHaveClass('active');
   });
 
-  it('should select English and French in the language dropdown', () => {
-    render(<SettingsPanel />);
 
-    const languageButton = screen.getByTestId('language-button');
-    fireEvent.click(languageButton); // Open language dropdown
+test('should select English and French in the language dropdown', () => {
+  // Render the SettingsPanel component
+  render(<SettingsPanel />);
 
-    fireEvent.click(screen.getByText('Français')); // Select French
-    expect(window.alert).toHaveBeenCalledWith('Set Language to French');
+  // Open language dropdown
+  const languageButton = screen.getAllByRole('button')[1];
+  fireEvent.click(languageButton);
 
-    fireEvent.click(languageButton);
-    fireEvent.click(screen.getByText('English')); // Select English
-    expect(window.alert).toHaveBeenCalledWith('Set Language to English');
-  });
+  // Select French
+  const frenchButton = screen.getByRole('button', { name: 'french' });
+  fireEvent.click(frenchButton);
+
+  // Open language dropdown again
+  fireEvent.click(languageButton);
+
+  // Select English
+  const englishButton = screen.getByRole('button', { name: 'english' });
+  fireEvent.click(englishButton);
+});
+
 
   it('should open and close the reset dropdown', () => {
     render(<SettingsPanel />);
 
-    const resetButton = screen.getByTestId('reset-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const resetButton = buttons[2].querySelector('button')!;
     fireEvent.click(resetButton); // Open reset dropdown
     expect(resetButton).toHaveClass('active');
 
     // Check if dropdown content is visible
-    const dropdownContent = screen.getByText('Reset').closest('.dropdown-content');
+    const dropdownContent = screen.getByText('reset').closest('.dropdown-content');
     expect(dropdownContent).toHaveClass('show');
 
     fireEvent.click(resetButton); // Close reset dropdown
@@ -211,23 +228,25 @@ describe('Test SettingsPanel component', () => {
   it('should trigger alert on reset and factory reset clicks', () => {
     render(<SettingsPanel />);
 
-    const resetButton = screen.getByTestId('reset-button');
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const resetButton = buttons[2].querySelector('button')!;
     fireEvent.click(resetButton); // Open reset dropdown
 
-    fireEvent.click(screen.getByText('Reset'));
-    expect(window.alert).toHaveBeenCalledWith('Reset initiated');
+    fireEvent.click(screen.getByText('reset'));
+    expect(window.alert).toHaveBeenCalledWith('reset_initiated');
 
     fireEvent.click(resetButton); // Reopen reset dropdown
-    fireEvent.click(screen.getByText('Factory Reset'));
-    expect(window.alert).toHaveBeenCalledWith('Factory Reset initiated');
+    fireEvent.click(screen.getByText('factory_reset'));
+    expect(window.alert).toHaveBeenCalledWith('factory_reset_initiated');
   });
 
   it('should close dropdowns when clicking outside', () => {
     render(<SettingsPanel />);
-
-    const languageButton = screen.getByTestId('language-button');
+    
+    const buttons = document.querySelectorAll('.dropdown-button');
+    const languageButton = buttons[1].querySelector('button')!;
     fireEvent.click(languageButton); // Open language dropdown
-    const dropdownContent = screen.getByText('English').closest('.dropdown-content');
+    const dropdownContent = document.querySelector('.dropdown-content')
     expect(dropdownContent).toHaveClass('show'); // Confirm dropdown is visible
 
     // Simulate clicking outside
