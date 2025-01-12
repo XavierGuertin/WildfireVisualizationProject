@@ -1,93 +1,123 @@
-package com.example.backend.serviceTests;
+package com.example.backend.service;
 
-import com.example.backend.controller.DataController;
+import com.example.backend.repository.StacRepository;
 import com.example.backend.service.DataService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DataControllerTests {
+class DataServiceTests {
 
   @Mock
-  private DataService dataService;
+  private StacRepository stacRepository;
 
   @InjectMocks
-  private DataController dataController;
+  private DataService dataService;
 
-  @Test
-  void getData_Success() throws Exception {
-    // Act
-    ResponseEntity<String> response = dataController.getData();
+  private String testCollectionJson;
+  private String testCollectionId;
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isNotNull();
+  @BeforeEach
+  void setUp() {
+    testCollectionId = "synthetic-wildfire-collection";
+    testCollectionJson = """
+                {
+                    "id": "synthetic-wildfire-collection",
+                    "type": "Collection"
+                }
+                """;
   }
 
   @Test
-  void testStacEndpoint_Success() {
+  void insertAndQueryCollection_NewCollection_Success() {
     // Arrange
-    when(dataService.insertAndQueryCollection())
-      .thenReturn("Success result");
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    List<Map<String, Object>> mockResult = new ArrayList<>();
+    Map<String, Object> mockData = new HashMap<>();
+    mockData.put("id", testCollectionId);
+    mockResult.add(mockData);
+    when(stacRepository.queryCollection(anyString())).thenReturn(mockResult);
 
     // Act
-    ResponseEntity<String> response = dataController.testStacEndpoint();
+    String result = dataService.insertAndQueryCollection(testCollectionJson);
 
     // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Success result");
+    verify(stacRepository).insertCollection(anyString());
+    assertThat(result).contains(testCollectionId);
   }
 
   @Test
-  void testStacEndpoint_Failure() {
+  void insertAndQueryCollection_ExistingCollection_SkipsInsertion() {
     // Arrange
-    when(dataService.insertAndQueryCollection())
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(true);
+    List<Map<String, Object>> mockResult = new ArrayList<>();
+    Map<String, Object> mockData = new HashMap<>();
+    mockData.put("id", testCollectionId);
+    mockResult.add(mockData);
+    when(stacRepository.queryCollection(anyString())).thenReturn(mockResult);
+
+    // Act
+    String result = dataService.insertAndQueryCollection(testCollectionJson);
+
+    // Assert
+    verify(stacRepository, never()).insertCollection(anyString());
+    assertThat(result).contains(testCollectionId);
+  }
+
+  @Test
+  void insertAndQueryCollection_NoResults_ReturnsNotFound() {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(new ArrayList<>());
+
+    // Act
+    String result = dataService.insertAndQueryCollection(testCollectionJson);
+
+    // Assert
+    assertThat(result).isEqualTo("Collection not found");
+  }
+
+  @Test
+  void insertAndQueryCollection_RepositoryError_ThrowsException() {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString()))
       .thenThrow(new RuntimeException("Test error"));
 
-    // Act
-    ResponseEntity<String> response = dataController.testStacEndpoint();
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Test error");
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.insertAndQueryCollection(testCollectionJson))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to process collection");
   }
 
   @Test
-  void createCollection_Success() {
+  void insertAndQueryCollection_WithDefaultValues_Success() {
     // Arrange
-    String testJson = "{\"id\":\"test\"}";
-    when(dataService.insertAndQueryCollection(anyString()))
-      .thenReturn("Success result");
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    List<Map<String, Object>> mockResult = new ArrayList<>();
+    Map<String, Object> mockData = new HashMap<>();
+    mockData.put("id", "synthetic-wildfire-collection");
+    mockResult.add(mockData);
+    when(stacRepository.queryCollection(anyString())).thenReturn(mockResult);
 
     // Act
-    ResponseEntity<String> response = dataController.createCollection(testJson);
+    String result = dataService.insertAndQueryCollection();
 
     // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Success result");
-  }
-
-  @Test
-  void createCollection_Failure() {
-    // Arrange
-    String testJson = "{\"id\":\"test\"}";
-    when(dataService.insertAndQueryCollection(anyString()))
-      .thenThrow(new RuntimeException("Test error"));
-
-    // Act
-    ResponseEntity<String> response = dataController.createCollection(testJson);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Test error");
+    verify(stacRepository).insertCollection(anyString());
+    assertThat(result).contains("synthetic-wildfire-collection");
   }
 }
