@@ -8,7 +8,7 @@ import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
-import TestStac from './components/TestStac';
+import TestStac from './testComponents/TestStac';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
 import './layout.css';

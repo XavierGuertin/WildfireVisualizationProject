@@ -30,7 +30,7 @@ interface GeoJSONResponse {
 }
 
 //Maptiler API key and attributions
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 //layer definitions
@@ -104,7 +104,6 @@ const MapView = () => {
     }
 
     console.log(`Backend URL: ${backendUrl}`);
-    console.log('Node ENV:', process.env.NODE_ENV);
 
     // Fetch the JSON data from the endpoint and add it to the map
     fetch(`${backendUrl}/api/data`)
@@ -167,9 +166,9 @@ const MapView = () => {
   };
 
   return (
-      <div id="map-container" ref={mapElement}>
-        <Footer />
-      </div>
+    <div id="map-container" ref={mapElement}>
+      <Footer />
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import TestStac from "../src/app/components/TestStac";
+import TestStac from "../src/app/testComponents/TestStac";
 import { fetchTestStacData } from "../src/app/services/api";
 
 // Mock the API function
