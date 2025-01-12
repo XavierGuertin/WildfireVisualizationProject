@@ -35,22 +35,22 @@ services:
       - backend
 
   db:
-    build:
-      context: ./apps/db
-      dockerfile: Dockerfile
+    image: ghcr.io/stac-utils/pgstac:v0.9.2
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: postgres
+      PGUSER: postgres
+      PGPASSWORD: password
+      PGDATABASE: postgres
     ports:
       - "5432:5432"
     networks:
       - app-network
     volumes:
-      - ./apps/db/data:/var/lib/postgresql/data
-      - ./apps/db/init:/docker-entrypoint-initdb.d/
+      - pgstac-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,11 +64,16 @@ services:
       - GEOSERVER_ADMIN_PASSWORD=password
       - GEOSERVER_DATA_DIR=/var/geoserver/data_dir
       - RUN_AS_ROOT=TRUE
+    networks:
+      - app-network
     volumes:
       - ./apps/geoserver_data:/var/geoserver/data_dir
     depends_on:
       db:
         condition: service_healthy
+
+volumes:
+  pgstac-data:
 
 networks:
   app-network:

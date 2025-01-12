@@ -48,4 +48,4 @@ USER appuser
 EXPOSE 8080
 
 # Start the backend app, specifying the local Maven repository path and including the PostgreSQL driver
-CMD ["npx", "nx", "run", "backend:serve", "--", "-Dmaven.repo.local=/home/appuser/.m2/repository", "-cp", "/app/postgresql-connector.jar"]
+CMD ["npx", "nx", "run", "backend:serve"]

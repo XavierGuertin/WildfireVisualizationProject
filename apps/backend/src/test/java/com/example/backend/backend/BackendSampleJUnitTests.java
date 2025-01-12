@@ -1,11 +1,11 @@
-package com.example.backend.backendTests;
+package com.example.backend.backend;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.example.backend.backend.BackendSampleForTesting;
 
-public class BackendSampleJUnitTest {
+public class BackendSampleJUnitTests {
 
     @Test
     void createNewBackendForTesting() {
