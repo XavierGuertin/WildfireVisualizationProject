@@ -84,7 +84,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
     const fetchDatasets = async () => {
       try {
-        const backendUrl = process.env.REACT_APP_BACKEND_URL;
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         const response = await axios.get(`${backendUrl}/api/datasets`);
         setDatasets(response.data);
       } catch (error) {

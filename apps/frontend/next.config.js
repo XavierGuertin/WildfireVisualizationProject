@@ -14,6 +14,7 @@ const nextConfig = {
   },
   env: {
     MAPTILER_API_KEY: process.env.MAPTILER_API_KEY,
+    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
 };
 

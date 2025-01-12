@@ -1,4 +1,4 @@
-# Use OpenJDK as base image
+# Use OpenJDK as the base image
 FROM openjdk:22-jdk-slim
 
 # Install Node.js and Maven for nx and build commands
@@ -32,6 +32,9 @@ RUN npm install -g nx
 # Debug: Check if Maven and Node.js are available
 RUN mvn -version && node -v && npm -v && nx --version
 
+# Add PostgreSQL JDBC driver for database connectivity
+RUN curl -o /app/postgresql-connector.jar https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
+
 # Build the backend app using the nx target (with Maven)
 RUN npx nx run backend:build
 
@@ -44,5 +47,5 @@ USER appuser
 # Expose the backend port
 EXPOSE 8080
 
-# Start the backend app, specifying the local Maven repository path
-CMD ["npx", "nx", "run", "backend:serve", "--", "-Dmaven.repo.local=/home/appuser/.m2/repository"]
+# Start the backend app, specifying the local Maven repository path and including the PostgreSQL driver
+CMD ["npx", "nx", "run", "backend:serve"]

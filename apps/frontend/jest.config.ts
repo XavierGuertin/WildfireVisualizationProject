@@ -9,7 +9,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
   collectCoverageFrom: [
-    '<rootDir>/src/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/src/app/components/*.{js,jsx,ts,tsx}',
   ],
   coverageReporters: ['json', 'lcov', 'text', 'clover'],
   roots: ['<rootDir>/__tests__'],

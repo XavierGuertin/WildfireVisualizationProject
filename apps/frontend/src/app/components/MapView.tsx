@@ -102,7 +102,7 @@ const MapView = () => {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
-    
+
     console.log(`Backend URL: ${backendUrl}`);
 
     // Fetch the JSON data from the endpoint and add it to the map
@@ -166,9 +166,9 @@ const MapView = () => {
   };
 
   return (
-      <div id="map-container" ref={mapElement}>
-        <Footer />
-      </div>
+    <div id="map-container" ref={mapElement}>
+      <Footer />
+    </div>
   );
 };
 
