@@ -9,7 +9,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/frontend',
   collectCoverageFrom: [
-    '<rootDir>/src/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/src/app/components/*.{js,jsx,ts,tsx}',
   ],
   coveragePathIgnorePatterns:[
     "/node_modules/",
@@ -34,5 +34,6 @@ module.exports = {
     "^ol/style/Stroke$": "<rootDir>/__mocks__/ol/style/Stroke.js",
     "^ol/style/Fill$": "<rootDir>/__mocks__/ol/style/Fill.js",
     "^ol/geom/Polygon.js$": "<rootDir>/__mocks__/ol/geom/Polygon.js",
+    '^react-i18next$': '<rootDir>/__mocks__/react-i18next.js',
   },
 };

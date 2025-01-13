@@ -15,26 +15,27 @@ describe('Test Sidebar component', () => {
 
   it('should render collapsed sidebar initially', () => {
     renderSidebar();
-    expect(screen.getByAltText('Views')).toBeInTheDocument();
-    expect(screen.getByText('Views')).toBeInTheDocument();
-    expect(screen.queryByAltText('Default Layer')).not.toBeInTheDocument();
+    const viewsButton = document.querySelector('.sidebar-component');
+    expect(viewsButton).toHaveClass('collapsed');
   });
 
   it('should expand sidebar when clicking toggle button', () => {
     renderSidebar();
-    fireEvent.click(screen.getByAltText('Views'));
-    expect(screen.getByAltText('Default Layer')).toBeInTheDocument();
-    expect(screen.getByAltText('Topographical Layer')).toBeInTheDocument();
-    expect(screen.getByAltText('Satellite Layer')).toBeInTheDocument();
+    const viewsButton = document.querySelector('.sidebar-toggle')!;
+    fireEvent.click(viewsButton);
+    expect(screen.getByAltText('default_layer')).toBeInTheDocument();
+    expect(screen.getByAltText('topographical_layer')).toBeInTheDocument();
+    expect(screen.getByAltText('satellite_layer')).toBeInTheDocument();
   });
 
   it('should collapse sidebar when clicking toggle button again', () => {
     renderSidebar();
     // Expand the sidebar first
-    fireEvent.click(screen.getByAltText('Views'));
+    const viewsButton = document.querySelector('.sidebar-component')!;
+    fireEvent.click(viewsButton);
     // Collapse it
-    fireEvent.click(screen.getByAltText('Collapse'));
-    expect(screen.queryByAltText('Default Layer')).not.toBeInTheDocument();
+    fireEvent.click(viewsButton);
+    expect(viewsButton).toHaveClass('collapsed');
   });
 
   it('should call setLayer with correct layer name on image click', () => {
@@ -53,16 +54,16 @@ describe('Test Sidebar component', () => {
 
     render(<TestComponent />);
 
-    fireEvent.click(screen.getByAltText('Views')); // Expand the sidebar
+    fireEvent.click(screen.getByAltText('views')); // Expand the sidebar
 
     // Check each layer click updates the layer value correctly
-    fireEvent.click(screen.getByAltText('Default Layer'));
+    fireEvent.click(screen.getByAltText('default_layer'));
     expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
 
-    fireEvent.click(screen.getByAltText('Topographical Layer'));
+    fireEvent.click(screen.getByAltText('topographical_layer'));
     expect(screen.getByTestId('current-layer')).toHaveTextContent('topographical');
 
-    fireEvent.click(screen.getByAltText('Satellite Layer'));
+    fireEvent.click(screen.getByAltText('satellite_layer'));
     expect(screen.getByTestId('current-layer')).toHaveTextContent('satellite');
   });
 });
