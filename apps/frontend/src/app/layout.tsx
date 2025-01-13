@@ -59,7 +59,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <MapLayerProvider>
+      <MapProvider>
         <html lang="en">
         <body>
         <SettingsPanel />
@@ -86,7 +86,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
         </body>
         </html>
-      </MapLayerProvider>
+      </MapProvider>
     </I18nextProvider>
   );
 };
