@@ -1,10 +1,13 @@
 package com.example.backend.service;
 
 import com.example.backend.repository.StacRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +15,7 @@ import java.util.Optional;
 @Service
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
+  private static final String COLLECTIONS_URL = "https://hirondelle.crim.ca/stac/collections";
 
   private static final String DEFAULT_COLLECTION_JSON = """
             {
@@ -67,6 +71,23 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error in insertAndQueryCollection: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to process collection: " + e.getMessage(), e);
+    }
+  }
+
+  public void fetchAndSaveCollections() {
+    logger.info("Fetching collections from URL: {}", COLLECTIONS_URL);
+    RestTemplate restTemplate = new RestTemplate();
+    try {
+      Map<String, Object> response = restTemplate.getForObject(COLLECTIONS_URL, Map.class);
+      List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
+      for (Map<String, Object> collection : collections) {
+        String collectionJson = new ObjectMapper().writeValueAsString(collection);
+        stacRepository.insertCollection(collectionJson);
+      }
+      logger.info("Successfully fetched and saved collections");
+    } catch (Exception e) {
+      logger.error("Error fetching or saving collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch or save collections: " + e.getMessage(), e);
     }
   }
 }
