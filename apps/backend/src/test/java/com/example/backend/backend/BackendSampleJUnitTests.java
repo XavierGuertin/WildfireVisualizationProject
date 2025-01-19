@@ -3,17 +3,15 @@ package com.example.backend.backend;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.example.backend.backend.BackendSampleForTesting;
-
 public class BackendSampleJUnitTests {
 
-    @Test
-    void createNewBackendForTesting() {
-        var test = new BackendSampleForTesting("TEST", true);
+  @Test
+  void createNewBackendForTesting() {
+    var test = new BackendSampleForTesting("TEST", true);
 
-        Assertions.assertEquals("TEST", test.name(), "Name was not equal to TEST");
+    Assertions.assertEquals("TEST", test.name(), "Name was not equal to TEST");
 
-    }
+  }
 
   @Test
   void testIsCompletedTrue() {

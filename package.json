@@ -9,6 +9,7 @@
     "@types/styled-components": "^5.1.34",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
+    "jest-fetch-mock": "^3.0.3",
     "i18next": "^24.2.1",
     "leaflet": "^1.9.4",
     "next": "15.0.1",

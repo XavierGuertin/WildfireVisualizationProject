@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
-import "../styles/map.css"
+import "../styles/map.css";
 import { Map, View, Feature} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
@@ -70,8 +70,9 @@ const dataLayer = new TileLayer({
 const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
-  const mapRef = useRef<Map | null>(null);
-  const {layer} = useMapLayerContext();
+
+  //Context imports
+  const {layer, mapRef} = useMapLayerContext();
 
   const getLayer = () => {
     if(layer === "satellite"){
@@ -153,17 +154,6 @@ const MapView = () => {
         console.error('Error fetching data:', error);
       });
   }, [layer]);
-
-  //functions
-  const resetView = () => {
-    if (mapRef.current) {
-      mapRef.current.getView().animate({
-        center: [-75.6972, 45.4215],
-        zoom: 5,
-        duration: 1000,
-      });
-    }
-  };
 
   return (
     <div id="map-container" ref={mapElement}>
