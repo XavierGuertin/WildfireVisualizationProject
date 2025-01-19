@@ -19,6 +19,13 @@
         "cwd": "apps/backend"
       }
     },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run",
+        "cwd": "apps/backend"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
