@@ -32,8 +32,6 @@ public class BackendApplication implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-//    logger.info("Creating schema if does not exists");
-//    dataService.createSchemaIfNotExists();
     logger.info("Fetching and saving collections on startup");
     dataService.fetchAndSaveCollections();
   }
