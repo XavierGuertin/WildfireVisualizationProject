@@ -18,22 +18,25 @@ public class DataService {
   private static final String COLLECTIONS_URL = "https://hirondelle.crim.ca/stac/collections";
 
   private static final String DEFAULT_COLLECTION_JSON = """
-            {
-                "id": "synthetic-wildfire-collection",
-                "type": "Collection",
-                "stac_version": "1.0.0",
-                "description": "A synthetic wildfire dataset for testing.",
-                "extent": {
-                    "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
-                    "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
-                }
-            }
-            """;
+    {
+        "id": "synthetic-wildfire-collection",
+        "type": "Collection",
+        "stac_version": "1.0.0",
+        "description": "A synthetic wildfire dataset for testing.",
+        "extent": {
+            "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
+            "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
+        }
+    }
+    """;
 
   private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
 
   @Autowired
   private StacRepository stacRepository;
+
+  @Autowired
+  private RestTemplate restTemplate;
 
   public String insertAndQueryCollection() {
     return insertAndQueryCollection(DEFAULT_COLLECTION_JSON, DEFAULT_COLLECTION_ID);
@@ -76,7 +79,6 @@ public class DataService {
 
   public void fetchAndSaveCollections() {
     logger.info("Fetching collections from URL: {}", COLLECTIONS_URL);
-    RestTemplate restTemplate = new RestTemplate();
     try {
       Map<String, Object> response = restTemplate.getForObject(COLLECTIONS_URL, Map.class);
       List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
