@@ -42,4 +42,9 @@ class BackendApplicationTests {
 
     verify(dataService, times(1)).fetchAndSaveCollections();
   }
+
+  @Test
+  void contextLoads() {
+    // This test will start the Spring application context and verify that it loads successfully.
+  }
 }
