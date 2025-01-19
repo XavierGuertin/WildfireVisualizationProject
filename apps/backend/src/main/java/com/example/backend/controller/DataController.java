@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.repository.StacRepository;
 import com.example.backend.service.DataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,18 @@ public class DataController {
       logger.error("Error creating collection: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
         .body("Error creating collection: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/fetch-collections")
+  public ResponseEntity<String> fetchCollections() {
+    logger.info("Received request to fetch collections");
+    try {
+      dataService.fetchAndSaveCollections();
+      return ResponseEntity.ok("Collections fetched and saved successfully");
+    } catch (Exception e) {
+      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error fetching collections: " + e.getMessage());
     }
   }
 }

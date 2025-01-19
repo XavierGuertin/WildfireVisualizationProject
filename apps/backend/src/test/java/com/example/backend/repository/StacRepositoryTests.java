@@ -6,9 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.dao.DataAccessException;
-import com.example.backend.repository.StacRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StacRepositoryTests {
@@ -37,11 +37,11 @@ class StacRepositoryTests {
   void setUp() {
     testCollectionId = "test-collection";
     testCollectionJson = """
-                {
-                    "id": "test-collection",
-                    "type": "Collection"
-                }
-                """;
+      {
+          "id": "test-collection",
+          "type": "Collection"
+      }
+      """;
   }
 
   @Test
@@ -67,7 +67,8 @@ class StacRepositoryTests {
   @Test
   void checkCollectionExists_ThrowsException_WhenDatabaseError() {
     when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString()))
-      .thenThrow(new DataAccessException("Database error") {});
+      .thenThrow(new DataAccessException("Database error") {
+      });
 
     assertThatThrownBy(() -> stacRepository.checkCollectionExists(testCollectionId))
       .isInstanceOf(RuntimeException.class)
@@ -109,7 +110,8 @@ class StacRepositoryTests {
   @Test
   void queryCollection_ThrowsException_WhenDatabaseError() {
     when(jdbcTemplate.queryForList(anyString(), anyString()))
-      .thenThrow(new DataAccessException("Database error") {});
+      .thenThrow(new DataAccessException("Database error") {
+      });
 
     assertThatThrownBy(() -> stacRepository.queryCollection(testCollectionId))
       .isInstanceOf(RuntimeException.class)

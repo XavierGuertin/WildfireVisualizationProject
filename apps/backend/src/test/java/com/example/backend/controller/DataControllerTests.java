@@ -1,6 +1,5 @@
 package com.example.backend.controller;
 
-import com.example.backend.controller.DataController;
 import com.example.backend.service.DataService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,8 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataControllerTests {
@@ -89,5 +87,43 @@ class DataControllerTests {
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Test error");
+  }
+
+  @Test
+  void fetchCollections_Success() throws Exception {
+    // Act
+    ResponseEntity<String> response = dataController.fetchCollections();
+
+    // Assert
+    verify(dataService, times(1)).fetchAndSaveCollections();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Collections fetched and saved successfully");
+  }
+
+  @Test
+  void fetchCollections_Failure() throws Exception {
+    // Arrange
+    doThrow(new RuntimeException("Test error")).when(dataService).fetchAndSaveCollections();
+
+    // Act
+    ResponseEntity<String> response = dataController.fetchCollections();
+
+    // Assert
+    verify(dataService, times(1)).fetchAndSaveCollections();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error fetching collections: Test error");
+  }
+
+  @Test
+  void handleIOException() {
+    // Arrange
+    doThrow(new RuntimeException("Test IO error")).when(dataService).fetchAndSaveCollections();
+
+    // Act
+    ResponseEntity<String> response = dataController.fetchCollections();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error fetching collections: Test IO error");
   }
 }
