@@ -5,8 +5,16 @@ import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 const Footer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(() => {
+    // Load speed from local storage or default to 1
+    const savedSpeed = localStorage.getItem('playbackSpeed');
+    return savedSpeed ? parseFloat(savedSpeed) : 1;
+  });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('playbackSpeed', speed.toString());
+  }, [speed]);
 
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
   const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
@@ -42,7 +50,7 @@ const Footer = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-  
+
   return (
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}

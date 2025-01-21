@@ -14,6 +14,14 @@ const SettingsPanel: React.FC = () => {
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Initialize language from local storage
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) {
+      i18n.changeLanguage(savedLanguage);
+    }
+  }, [i18n]);
+
   // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
@@ -40,6 +48,7 @@ const SettingsPanel: React.FC = () => {
   // Handles language selection
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language); // Change the application language
+    localStorage.setItem('language', language); // Save to local storage
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -84,7 +93,7 @@ const SettingsPanel: React.FC = () => {
     <div className="button-container" ref={dropdownRef}>
       {/* Settings button */}
       <div className="dropdown-button">
-        <button 
+        <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
           onClick={() => toggleDropdown('settings')}
           aria-expanded={dropdownState.activeButton === 'settings'}
