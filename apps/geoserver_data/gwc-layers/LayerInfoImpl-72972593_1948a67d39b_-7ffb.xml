@@ -67,7 +67,7 @@
       <availableStyles class="sorted-set">
         <string>polygon</string>
       </availableStyles>
-      <defaultStyle>polygon</defaultStyle>
+      <defaultStyle>Default:Color Polygon</defaultStyle>
     </styleParameterFilter>
   </parameterFilters>
   <gutter>0</gutter>
