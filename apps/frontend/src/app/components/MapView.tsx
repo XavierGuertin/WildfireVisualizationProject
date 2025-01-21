@@ -59,7 +59,7 @@ const dataLayer = new TileLayer({
   source: new TileWMS({
     url:'http://localhost:8090/geoserver/Default/wms',
     params: {
-      'LAYERS': 'Default:MODIS_C6_1_Canada_24h',
+      'LAYERS': 'Default:datalayer',
       'TILED': true,
     },
     serverType: 'geoserver',
@@ -103,6 +103,9 @@ const MapView = () => {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
+
+    //add data layer
+    mapRef.current?.addLayer(dataLayer);
 
     console.log(`Backend URL: ${backendUrl}`);
 

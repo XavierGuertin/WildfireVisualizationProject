@@ -1,0 +1,16 @@
+<layer>
+  <name>datalayer</name>
+  <id>LayerInfoImpl-72972593:1948a67d39b:-7fe6</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl-635ac42e:1935f6a3bc7:-7ffe</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-72972593:1948a67d39b:-7fe7</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-01-21 22:21:06.267 UTC</dateCreated>
+</layer>
