@@ -5,10 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import org.springframework.core.io.ClassPathResource;
@@ -47,6 +45,21 @@ public class DataController {
       logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
         .body("Error processing STAC data: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/metadata/{id}")
+  public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
+    logger.info("Received request to /api/metadata");
+    try {
+      // Using default values
+      String result = dataService.retrieveMetaData(collectionId).toString();
+      logger.debug("Successfully processed MetaData");
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error processing MetaData: " + e.getMessage());
     }
   }
 

@@ -39,6 +39,10 @@ public class DataService {
     return insertAndQueryCollection(collectionJson, DEFAULT_COLLECTION_ID);
   }
 
+  public List<Map<String, Object>> retrieveMetaData(String collectionId){
+    return stacRepository.queryMetaData(collectionId);
+  }
+
   public String insertAndQueryCollection(String collectionJson, String collectionId) {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
     try {
