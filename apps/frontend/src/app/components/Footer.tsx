@@ -7,17 +7,38 @@ const Footer = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const [speed, setSpeed] = useState(() => {
     // Load speed from local storage or default to 1
-    const savedSpeed = localStorage.getItem('playbackSpeed');
-    return savedSpeed ? parseFloat(savedSpeed) : 1;
+    try {
+      const savedSpeed = localStorage.getItem('playbackSpeed');
+      return savedSpeed ? parseFloat(savedSpeed) : 1;
+    } catch (e) {
+      console.error('Error reading playback speed from localStorage', e);
+      return 1;  // default speed
+    }
   });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('playbackSpeed', speed.toString());
+    try {
+      localStorage.setItem('playbackSpeed', speed.toString());
+    } catch (e) {
+      console.error('Error saving playback speed to localStorage', e);
+      setErrorMessage('Failed to save playback speed.');
+    }
   }, [speed]);
 
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
-  const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
+  const handleSpeedChange = (newSpeed) => {
+    if (newSpeed > 0) {
+      setSpeed(newSpeed);
+      setSuccessMessage('Speed successfully updated.');
+      setTimeout(() => setSuccessMessage(''), 1000);
+    } else {
+      setErrorMessage('Invalid speed value.');
+      setTimeout(() => setSuccessMessage(''), 1000);
+    }
+  };
 
   useEffect(() => {
     if (isPlaying) {
@@ -53,6 +74,16 @@ const Footer = () => {
 
   return (
     <div className="footerContainer" data-testid="footer-container">
+      {successMessage && (
+        <div className="message success">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="message error">
+          {errorMessage}
+        </div>
+      )}
       {/* Speed controls */}
       <div className="speedContainer">
         {[0.5, 1, 1.5, 2, 4].map((s) => (

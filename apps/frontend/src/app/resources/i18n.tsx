@@ -10,6 +10,7 @@ const resources = {
         cancel: "Cancel",
         invalid_url: "Invalid URL. Please enter a valid API endpoint.",
         enter_new_api_endpoint: "Enter new API endpoint",
+       language_saved: "Language has been saved successfully.",
         //Language
         english: "English",
         french: "French",
@@ -53,6 +54,7 @@ const resources = {
         cancel: "Annuler",
         invalid_url: "URL invalide. Veuillez entrer un point d'API valide.",
         enter_new_api_endpoint: "Entrez un nouveau point d'API",
+        language_saved: "La langue a été enregistrée avec succès.",
         //Language
         english: "Anglais",
         french: "Français",

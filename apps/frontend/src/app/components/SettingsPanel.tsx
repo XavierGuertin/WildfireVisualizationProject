@@ -12,6 +12,8 @@ const SettingsPanel: React.FC = () => {
   }>({ activeButton: null, isOpen: false });
 
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize language from local storage
@@ -47,10 +49,34 @@ const SettingsPanel: React.FC = () => {
 
   // Handles language selection
   const handleLanguageSelect = (language: string) => {
-    i18n.changeLanguage(language); // Change the application language
-    localStorage.setItem('language', language); // Save to local storage
+    try {
+      i18n.changeLanguage(language);
+      localStorage.setItem('language', language);
+      setSuccessMessage(t('language_saved'));
+    } catch (error) {
+      setErrorMessage(t('language_save_error'));
+    }
     setDropdownState({ activeButton: null, isOpen: false });
   };
+
+  // Closes the success or error message after 2 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timeout = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      const timeout = setTimeout(() => {
+        setErrorMessage(null);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [errorMessage]);
 
   // Handles reset actions
   const handleReset = () => {
@@ -167,6 +193,20 @@ const SettingsPanel: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Success/ Error Message */}
+      {successMessage && (
+        <div className="message success">
+          <IoCheckmark size={24} />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="message error">
+          <IoTrashOutline size={24} />
+          <span>{errorMessage}</span>
+        </div>
+      )}
     </div>
   );
 };
