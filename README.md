@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/ci.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/ci.yml)
 [![Docker Image CI](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/docker-build.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/docker-build.yml)
-[![Release](https://img.shields.io/github/v/release/XavierGuertin/wildfire-visualization-platform)](https://github.com/XavierGuertin/WildfireVisualizationProject/releases)
+[![Release](https://img.shields.io/github/v/release/XavierGuertin/WildfireVisualizationProject)](https://github.com/XavierGuertin/WildfireVisualizationProject/releases)
 
 ---
 
