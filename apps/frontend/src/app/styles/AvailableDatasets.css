@@ -19,7 +19,8 @@ body {
     z-index: 1000;
     overflow: visible;
     transition: width 0.3s ease;
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
   
   .datasets-container.collapsed {
@@ -162,8 +163,10 @@ body {
   /* Buttons container */
   .buttons-container {
     display: flex;
+    max-height: 100%;
+    overflow: auto;
     flex-direction: column;
-    align-items: center;
+    /* align-items: center; */
     width: 100%;
   }
   
