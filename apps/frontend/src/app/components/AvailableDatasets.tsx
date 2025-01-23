@@ -2,19 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import LoadingModule from './LoadingModule';
+import { useTranslation } from 'react-i18next'; // Import useTranslation for translations
+import LoadingOverlay from './LoadingOverlay';
 import '../styles/AvailableDatasets.css';
+import { FaChevronCircleLeft, FaChevronCircleRight, FaDatabase, FaFilter } from "react-icons/fa";
 
 export interface Dataset {
-  name: string;
-  date: string;
-  latestAdded: string;
-  latestUpdated: string;
   city: string;
+  date: string;
+  datasetSource: string;
   description: string;
   format: string;
+  latestAdded: string;
+  latestUpdated: string;
+  name: string;
   processes: string;
-  datasetSource: string;
 }
 
 interface AvailableDatasetsProps {
@@ -24,13 +26,12 @@ interface AvailableDatasetsProps {
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
 }) => {
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const { t } = useTranslation(); // Initialize useTranslation for translations
   const [activeFilter, setActiveFilter] = useState<string>('Name');
-  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   useEffect(() => {
     const mockData: Dataset[] = [
@@ -81,18 +82,16 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     ];
     setDatasets(mockData);
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL;
-
-    console.log(`Backend URL: ${backendUrl}`);
-
     const fetchDatasets = async () => {
       try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         const response = await axios.get(`${backendUrl}/api/datasets`);
         setDatasets(response.data);
       } catch (error) {
         console.log('Error fetching datasets:', error);
       }
     };
+
     fetchDatasets();
   }, []);
 
@@ -100,20 +99,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     setActiveFilter(filter);
     const sortedDatasets = [...datasets].sort((a, b) => {
       switch (filter) {
-        case 'Name':
-          return a.name.localeCompare(b.name);
         case 'Date':
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         case 'Latest Added':
           return (
-            new Date(a.latestAdded).getTime() -
-            new Date(b.latestAdded).getTime()
+            new Date(a.latestAdded).getTime() - new Date(b.latestAdded).getTime()
           );
         case 'Latest Updated':
           return (
-            new Date(a.latestUpdated).getTime() -
-            new Date(b.latestUpdated).getTime()
+            new Date(a.latestUpdated).getTime() - new Date(b.latestUpdated).getTime()
           );
+        case 'Name':
+          return a.name.localeCompare(b.name);
         default:
           return 0;
       }
@@ -121,39 +118,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     setDatasets(sortedDatasets);
   };
 
-  const handleDatasetClick = async (dataset: Dataset) => {
-    setIsLoading(true);
-    setProgress(0);
-    setSelectedDataset(dataset.name);
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+  const handleToggle = () => setIsToggled((prev) => !prev);
 
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval);
-          return prevProgress;
-        }
-        return prevProgress + 10;
-      });
-    }, 300);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 4000)); // Replace with actual data fetching logic if needed
-      onDatasetClick(dataset);
-    } catch (error) {
-      console.error('Error loading dataset:', error);
-    } finally {
-      setProgress(100);
-      setIsLoading(false);
-    }
-  };
-
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const handleToggle = () => {
-    setIsToggled((prevIsToggled) => !prevIsToggled);
-    console.log('Toggled state:', !isToggled);
+  const handleDatasetClick = (dataset: Dataset) => {
+    setSelectedDataset(dataset.name); // Update selected dataset
+    onDatasetClick(dataset); // Pass dataset to parent component
   };
 
   return (
@@ -168,56 +138,15 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           onClick={toggleCollapse}
           data-testid="collapse-button"
         >
-          {isCollapsed ? (
-            <svg
-              width="39"
-              height="38"
-              viewBox="0 0 39 38"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16.6757 19L26 28.9667L23.1622 32L11 19L23.1622 6L26 9.03333L16.6757 19Z"
-                fill="#00447E"
-              />
-            </svg>
-          ) : (
-            <svg
-              width="39"
-              height="38"
-              viewBox="0 0 39 38"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect width="39" height="38" rx="2" />
-              <path
-                d="M22.3243 19L13 9.03333L15.8378 6L28 19L15.8378 32L13 28.9667L22.3243 19Z"
-                fill="#00447E"
-              />
-            </svg>
-          )}
+          {isCollapsed ? <FaChevronCircleLeft size={24} /> : <FaChevronCircleRight size={24} />}
         </button>
         {isCollapsed ? (
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M42 10C42 13.3137 33.9411 16 24 16C14.0589 16 6 13.3137 6 10M42 10C42 6.68629 33.9411 4 24 4C14.0589 4 6 6.68629 6 10M42 10V38C42 41.32 34 44 24 44C14 44 6 41.32 6 38V10M42 24C42 27.32 34 30 24 30C14 30 6 27.32 6 24"
-              stroke="white"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FaDatabase fill="white" size={24} />
         ) : (
           <>
             <div className="top-bar" data-testid="top-bar">
-              <h2 className="sidebar-title">Available Datasets</h2>
-              <label style={{ display: 'flex', alignItems: 'center' }}>
+              <h2 className="sidebar-title">{t('available_datasets')}</h2>
+              <label style={{ display: 'flex', alignItems: 'center' }} aria-label={t('toggle_datasets')}>
                 <input
                   type="checkbox"
                   checked={isToggled}
@@ -233,31 +162,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             </div>
             <div className="filter-container" data-testid="filter-container">
               <div className="filter-icon">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M3 5H21V7H3V5ZM6 11H18V13H6V11ZM10 17H14V19H10V17Z"
-                    fill="currentColor"
-                  />
-                </svg>
+                <FaFilter size={24} />
               </div>
-              {['Name', 'Date', 'Latest Added', 'Latest Updated'].map(
-                (filter) => (
-                  <button
-                    key={filter}
-                    className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                    onClick={() => sortDatasets(filter)}
-                    data-testid={`filter-button-${filter}`}
-                  >
-                    {filter}
-                  </button>
-                ),
-              )}
+              {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
+                <button
+                  key={filter}
+                  className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
+                  onClick={() => sortDatasets(filter)}
+                  data-testid={`filter-button-${filter}`}
+                >
+                  {t(filter.toLowerCase().replace(/ /g, '_'))}
+                </button>
+              ))}
             </div>
             <div className="buttons-container" data-testid="buttons-container">
               {datasets.length > 0 ? (
@@ -272,7 +188,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   </button>
                 ))
               ) : (
-                <p data-testid="no-datasets-message">No datasets available.</p>
+                <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
               )}
             </div>
           </>

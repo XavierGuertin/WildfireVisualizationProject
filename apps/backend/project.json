@@ -15,9 +15,15 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
+        "command": "mvn spring-boot:run -Dmaven.repo.local=/home/appuser/.m2/repository",
+        "cwd": "apps/backend"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
         "command": "mvn spring-boot:run",
-        "cwd": "apps/backend",
-        "forwardAllArgs": true
+        "cwd": "apps/backend"
       }
     },
     "test": {

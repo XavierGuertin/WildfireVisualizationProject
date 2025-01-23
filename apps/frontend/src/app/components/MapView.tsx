@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
-import "../styles/map.css"
+import "../styles/map.css";
 import { Map, View, Feature} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
@@ -16,42 +16,63 @@ import { useMapLayerContext } from './MapContext';
 import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
+import {TileWMS} from 'ol/source';
+
+//Attributions
+interface GeoJSONFeature {
+  geometry: {
+    coordinates: number[][][];
+  };
+}
+
+interface GeoJSONResponse {
+  items: GeoJSONFeature[];
+}
 
 //Maptiler API key and attributions
-const apiKey = process.env.MAPTILER_API_KEY;
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
-const attributions =
-  '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
-  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 //layer definitions
 const defaultLayer = new TileLayer({
   source: new XYZ({
-    url: `https://api.maptiler.com/maps/openstreetmap/256/{z}/{x}/{y}.jpg?key=${apiKey}`,
+    url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
     attributions: attributions
   })
 });
 
 const satelliteLayer = new TileLayer({
   source: new XYZ({
-    url: `https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}.jpg?key=${apiKey}`,
+    url: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
     attributions: attributions
   })
 });
 
 const topographicLayer = new TileLayer({
   source: new XYZ({
-    url: `https://api.maptiler.com/maps/topo-v2/256/{z}/{x}/{y}.png?key=${apiKey}`,
+    url: `https://tile.opentopomap.org/{z}/{x}/{y}.png`,
     attributions: attributions
   })
 })
+
+const dataLayer = new TileLayer({
+  source: new TileWMS({
+    url:'http://localhost:8090/geoserver/Default/wms',
+    params: {
+      'LAYERS': 'Default:datalayer',
+      'TILED': true,
+    },
+    serverType: 'geoserver',
+  }),
+});
 
 //Map component
 const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
-  const mapRef = useRef<Map | null>(null);
-  const {layer} = useMapLayerContext();
+
+  //Context imports
+  const {layer, mapRef} = useMapLayerContext();
 
   const getLayer = () => {
     if(layer === "satellite"){
@@ -66,6 +87,7 @@ const MapView = () => {
   }
 
   useEffect(() => {
+    // Initialize map on first render
     if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
@@ -73,16 +95,16 @@ const MapView = () => {
         layers: [getLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Centered at Ottawa
-          zoom: 5
+          zoom: 1,
         })
       });
-    } else {
+    }
+    else {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
 
     console.log(`Backend URL: ${backendUrl}`);
-
 
     // Fetch the JSON data from the endpoint and add it to the map
     fetch(`${backendUrl}/api/data`)
@@ -90,7 +112,7 @@ const MapView = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        return response.json() as Promise<GeoJSONResponse>;
       })
       .then((data) => {
         const features = data.items.map((item: any) => {
@@ -133,21 +155,10 @@ const MapView = () => {
       });
   }, [layer]);
 
-  //functions
-  const resetView = () => {
-    if (mapRef.current) {
-      const view = mapRef.current.getView();
-      if (view) {
-        view.setCenter([-75.6972, 45.4215]);
-        view.setZoom(5);
-      }
-    }
-  };
-
   return (
-      <div id="map-container" ref={mapElement} style={{ height: '100vh', width: '100%' }}>
-        <Footer />
-      </div>
+    <div id="map-container" ref={mapElement}>
+      <Footer />
+    </div>
   );
 };
 

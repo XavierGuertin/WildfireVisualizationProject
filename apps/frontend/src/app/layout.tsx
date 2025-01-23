@@ -1,97 +1,94 @@
 'use client';
 
 import React, { useState } from 'react';
-// import Navbar from './components/Navbar';
-import LoadingModule from './components/LoadingModule';
+import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
-import { MapLayerProvider } from './components/MapContext';
+import { MapProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
-import TopLeftButtons from './components/TopLeftButtons';
+import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
-import "./layout.css";
+import TestStac from './testComponents/TestStac';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './resources/i18n';
+import './layout.css';
+
+
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Placeholder code for SonarCloud analysis
-  const [placeholderValue, setPlaceholderValue] = useState(5); // Unused state
-  const unusedFunction = () => console.log("This is an unused function"); // Unused function
-
-  // Extra function to simulate code changes
-  const calculateProgress = (step: number): number => {
-    let result = 0;
-    for (let i = 0; i < 100; i++) {
-      result += step * i;
-    }
-    return result;
-  };
-
-  const updateWildfireLayer = (layerName: string) => {
-    setLoading(true);
-    setErrorMessage(""); // Clear previous errors
-    setProgress(0);
-
-    // THIS WILL NEED TO BE CHANGED WHEN WE GET REAL DATA
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 50) {
-          clearInterval(interval);
-          setLoading(false);
-          setErrorMessage("Failed to load dataset. Please try again.");
-          return 0; // Reset progress
-        }
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoading(false); // Hide loading overlay after success
+  // Function to show loading bar with progress
+  const showLoadingBar = () => {
+    setProgress(0); // Reset progress
+    const progressInterval = setInterval(() => {
+      setProgress((prevProgress) => {
+        if (prevProgress >= 100) {
+          clearInterval(progressInterval); // Stop auto-progress at 100%
           return 100;
         }
-        return prev + 1;
+        return prevProgress + 10; // Increment progress
       });
-    }, 50);
+    }, 300); // Update every 300ms
   };
 
+
+  // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: Dataset) => {
-    // Mock data for demonstration. We can replace this with actual data based on the dataset name.
-    setSelectedDataset(dataset);
+    setSelectedDataset(dataset); // Just update the selected dataset
   };
 
-  // Additional condition to test SonarCloud rules
-  if (placeholderValue > 10) {
-    console.log("Placeholder value exceeded 10");
-  }
+  // Handle dataset loading from MapMetaData
+  const handleLoadDataset = async () => {
+    if (!selectedDataset) return;
+
+    try {
+      setLoading(true); // Show loading overlay
+      showLoadingBar(); // Start progress simulation
+
+      // Simulate a delay for loading (mocked)
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
+      console.log('Dataset loaded successfully (mock)');
+    } catch (error) {
+      console.error('Error loading dataset:', error);
+    } finally {
+      setLoading(false); // Ensure loading overlay is hidden
+    }
+  };
 
   return (
-    <MapLayerProvider>
-      <html lang="en">
-      <body>
-      <TopLeftButtons />
-      <div className="layout-container relative">
-        <header>
-          {/* <Navbar /> */}
-        </header>
-        <main className="app-main">{children}</main>
-        <AvailableDatasets onDatasetClick={handleDatasetClick} />
-        <MapView />
-        <Sidebar />
-        <LoadingModule datasetBeingLoaded={selectedDataset?.name || " "} progress={progress} isVisible={loading} />
-        {selectedDataset && (
-            <MapMetaData
-              city={selectedDataset.city}
-              name={selectedDataset.name}
-              description={selectedDataset.description}
-              format={selectedDataset.format}
-              processes={selectedDataset.processes}
-              datasetSource={selectedDataset.datasetSource}
-            />
-          )}
-        <footer className="app-footer"></footer>
-      </div>
-      </body>
-      </html>
-    </MapLayerProvider>
+    <I18nextProvider i18n={i18n}>
+      <MapProvider>
+        <html lang="en">
+        <body>
+        <SettingsPanel />
+        <div className="layout-container relative">
+          <LoadingOverlay progress={progress} isVisible={loading} />
+          <TestStac />
+          <main className="app-main">{children}</main>
+          <AvailableDatasets onDatasetClick={handleDatasetClick} />
+          <MapView />
+          <Sidebar />
+          {selectedDataset && (
+              <MapMetaData
+                city={selectedDataset.city}
+                name={selectedDataset.name}
+                description={selectedDataset.description}
+                format={selectedDataset.format}
+                processes={selectedDataset.processes}
+                datasetSource={selectedDataset.datasetSource}
+                onLoadDataset={handleLoadDataset}
+              />
+            )
+          }
+          <footer className="app-footer"></footer>
+        </div>
+        </body>
+        </html>
+      </MapProvider>
+    </I18nextProvider>
   );
 };
 

@@ -20,10 +20,8 @@ describe('Test AvailableDatasets component', () => {
     jest.clearAllMocks();
   });
 
-// Mocking the setInterval and setTimeout for predictable behavior
-  jest.useFakeTimers();
 
-  it('should call onDatasetClick and show loading overlay on dataset click', async () => {
+  it('should call onDatasetClick on dataset click', async () => {
     const mockDatasets = [
       {
         name: 'Dataset A',
@@ -51,19 +49,10 @@ describe('Test AvailableDatasets component', () => {
     const datasetButton = screen.getByTestId('dataset-button-0');
     fireEvent.click(datasetButton);
 
-    // Check loading overlay text
-    expect(screen.getByText('Loading Dataset...')).toBeInTheDocument();
-
-    // Fast-forward time to allow the loading progress to reach 100%
-    jest.advanceTimersByTime(4000);
-
     // Check if onDatasetClick is called after loading completes
     await waitFor(() => {
       expect(mockOnDatasetClick).toHaveBeenCalledWith(mockDatasets[0]);
     });
-
-    // Clear any remaining timers after test execution
-    jest.clearAllTimers();
   });
 
 
@@ -73,7 +62,7 @@ describe('Test AvailableDatasets component', () => {
 
     await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Date'));
+    fireEvent.click(screen.getByText('date'));
     const datasetButtons = screen.getAllByTestId(/dataset-button-/);
     expect(datasetButtons[0]).toHaveTextContent('Dataset A'); // Validate sort order
   });
