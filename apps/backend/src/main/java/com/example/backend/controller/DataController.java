@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.repository.StacRepository;
 import com.example.backend.service.DataService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,21 @@ public class DataController {
       logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
         .body("Error processing STAC data: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/metadata")
+  public ResponseEntity<String> getMetaData() {
+    logger.info("Received request to /api/metadata");
+    try {
+      // Using default values
+      String result = new ObjectMapper().writeValueAsString(dataService.retrieveMetaData());
+      logger.debug("Successfully processed MetaData");
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error processing MetaData: " + e.getMessage());
     }
   }
 

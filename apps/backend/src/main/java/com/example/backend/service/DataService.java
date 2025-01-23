@@ -50,6 +50,10 @@ public class DataService {
     return stacRepository.queryMetaData(collectionId);
   }
 
+  public List<Map<String, Object>> retrieveMetaData(){
+    return stacRepository.queryMetaData();
+  }
+
   public String insertAndQueryCollection(String collectionJson, String collectionId) {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
     try {
@@ -87,6 +91,9 @@ public class DataService {
       Map<String, Object> response = restTemplate.getForObject(COLLECTIONS_URL, Map.class);
       List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
       for (Map<String, Object> collection : collections) {
+        String id = (String) collection.get("id");
+        if(stacRepository.checkCollectionExists(id))
+          continue;
         String collectionJson = new ObjectMapper().writeValueAsString(collection);
         stacRepository.insertCollection(collectionJson);
       }
