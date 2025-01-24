@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -64,11 +65,10 @@ class DataControllerTests {
   }
 
   @Test
-  void getMetaData_Success(){
+  void getMetaData_Success() throws JsonProcessingException {
 
     //Arrange
-    List<Map<String, Object>> list = new ArrayList<>();
-    when(dataService.retrieveMetaData(anyString())).thenReturn(list);
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
     //Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
@@ -79,10 +79,9 @@ class DataControllerTests {
   }
 
   @Test
-  void getMetaData_Failure(){
+  void getMetaData_Failure() throws JsonProcessingException {
 
     //Arrange
-    List<Map<String, Object>> list = new ArrayList<>();
     when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
     //Act

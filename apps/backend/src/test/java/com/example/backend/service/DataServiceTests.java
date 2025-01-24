@@ -145,12 +145,14 @@ class DataServiceTests {
   }
 
   @Test
-  void retrieveMetaData_IsValid(){
-    //This service method is just a middle man between the communication of the StacRepository and the DataController,
-    //so there is not really anything to test.
+  void retrieveMetaData_IsValid() throws JsonProcessingException {
+    //retrieveMetaData is just a middle man between the controller and the repository, so there is not real functionality to test
+
+    //Arrange
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
     //Act
-    List<Map<String, Object>> response = dataService.retrieveMetaData("");
+    String response = dataService.retrieveMetaData("");
 
     //Assert
     assertThat(response).isNotNull();
