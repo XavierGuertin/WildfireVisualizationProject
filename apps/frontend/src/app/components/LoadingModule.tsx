@@ -20,7 +20,9 @@ const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progr
         </div>
       ) : (
         <>
-          <p className="progress-text">Loading {datasetBeingLoaded} - {progress}%</p>
+          <p className="progress-text">
+            {`Loading ${datasetBeingLoaded} - ${progress}%`}
+          </p>
           <div className="progress-bar-background">
             <div
               className="progress-bar"

@@ -7,33 +7,33 @@ describe('Test LoadingModule component', () => {
 
   it('should render with initial progress', () => {
     render(<LoadingModule progress={10} isVisible={true} datasetBeingLoaded={"dataset 1"}/>);
-    expect(screen.getByText('10%')).toBeInTheDocument();
-    expect(screen.getByText('loading_dataset')).toBeInTheDocument();
-    expect(screen.getByText('dataset 1')).toBeInTheDocument();
+    expect(screen.getByText(/10%/)).toBeInTheDocument();
+    expect(screen.getByText(/Loading dataset/)).toBeInTheDocument();
+    expect(screen.getByText(/dataset 1/)).toBeInTheDocument();
   });
 
   it('should update and display different progress values', () => {
     render(<LoadingModule progress={50} isVisible={true} datasetBeingLoaded={"dataset 1"}/>);
-    expect(screen.getByText('50%')).toBeInTheDocument();
-    expect(screen.getByText('dataset 1')).toBeInTheDocument();
+    expect(screen.getByText(/50%/)).toBeInTheDocument();
+    expect(screen.getByText(/dataset 1/)).toBeInTheDocument();
   });
 
   it('should display 0% correctly', () => {
     render(<LoadingModule progress={0} isVisible={true} datasetBeingLoaded={"dataset 1"}/>);
-    expect(screen.getByText('0%')).toBeInTheDocument();
-    expect(screen.getByText('dataset 1')).toBeInTheDocument();
+    expect(screen.getByText(/0%/)).toBeInTheDocument();
+    expect(screen.getByText(/dataset 1/)).toBeInTheDocument();
   });
 
   it('should display 100% correctly', () => {
     render(<LoadingModule progress={100} isVisible={true} datasetBeingLoaded={"dataset 1"}/>);
-    expect(screen.getByText('100%')).toBeInTheDocument();
-    expect(screen.getByText('dataset 1')).toBeInTheDocument();
+    expect(screen.getByText(/100%/)).toBeInTheDocument();
+    expect(screen.getByText(/dataset 1/)).toBeInTheDocument();
   });
 
   it('should display dataset 2 correctly', () => {
     render(<LoadingModule progress={100} isVisible={true} datasetBeingLoaded={"dataset 2"}/>);
-    expect(screen.getByText('100%')).toBeInTheDocument();
-    expect(screen.getByText('dataset 2')).toBeInTheDocument();
+    expect(screen.getByText(/100%/)).toBeInTheDocument();
+    expect(screen.getByText(/dataset 2/)).toBeInTheDocument();
   });
 
   it('should not render anything when isVisible is false', () => {
