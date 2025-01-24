@@ -1,5 +1,3 @@
-// components/LoadingOverlay.tsx
-
 import { error } from 'console';
 import '../styles/LoadingModule.css';
 import React from 'react';

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
 import { MapProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
@@ -12,6 +11,7 @@ import TestStac from './testComponents/TestStac';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
 import './layout.css';
+import LoadingModule from './components/LoadingModule';
 
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -65,7 +65,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <body>
         <SettingsPanel />
         <div className="layout-container relative">
-          <LoadingOverlay progress={progress} isVisible={loading} />
+          <LoadingModule progress={progress} isVisible={loading} datasetBeingLoaded={null} />
           <TestStac />
           <main className="app-main">{children}</main>
           <AvailableDatasets onDatasetClick={handleDatasetClick} />
