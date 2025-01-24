@@ -9,8 +9,25 @@ export const fetchTestStacData = async (): Promise<any> => {
     const data = await response.json();
     return data;
   } catch (error: any) {
-    console.error("Error fetching test STAC data:", error);
-    return { error: "Failed to fetch data" };
+    console.error('Error fetching test STAC data:', error);
+    return { error: 'Failed to fetch data' };
+  }
+};
+
+export const fetchCollectionsFromEndpoint = async (): Promise<{
+  error: string;
+}> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    return { error: 'Failed to fetch data' };
   }
 };  
 

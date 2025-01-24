@@ -3,7 +3,7 @@ package com.example.backend.backend;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class BackendSampleJUnitTests {
+class BackendSampleJUnitTests {
 
   @Test
   void createNewBackendForTesting() {

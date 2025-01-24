@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DataService {
@@ -37,6 +38,9 @@ public class DataService {
 
   @Autowired
   private RestTemplate restTemplate;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   public String insertAndQueryCollection() {
     return insertAndQueryCollection(DEFAULT_COLLECTION_JSON, DEFAULT_COLLECTION_ID);
@@ -78,7 +82,7 @@ public class DataService {
       List<Map<String, Object>> collectionData = stacRepository.queryCollection(finalCollectionId);
       logger.debug("Query completed, returned {} results", collectionData.size());
 
-      return collectionData.isEmpty() ? "Collection not found" : collectionData.toString();
+      return collectionData.isEmpty() ? "Collection not found" : objectMapper.writeValueAsString(collectionData);
     } catch (Exception e) {
       logger.error("Error in insertAndQueryCollection: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to process collection: " + e.getMessage(), e);
@@ -92,15 +96,28 @@ public class DataService {
       List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
       for (Map<String, Object> collection : collections) {
         String id = (String) collection.get("id");
-        if(stacRepository.checkCollectionExists(id))
-          continue;
-        String collectionJson = new ObjectMapper().writeValueAsString(collection);
-        stacRepository.insertCollection(collectionJson);
+        if (!stacRepository.checkCollectionExists(id)) {
+          String collectionJson = objectMapper.writeValueAsString(collection);
+          stacRepository.insertCollection(collectionJson);
+        }
       }
       logger.info("Successfully fetched and saved collections");
     } catch (Exception e) {
       logger.error("Error fetching or saving collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch or save collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getCollections() {
+    logger.info("Fetching collections from database");
+    try {
+      List<Map<String, Object>> collections = stacRepository.getAllCollections();
+      return collections.stream()
+        .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+        .collect(Collectors.toList());
+    } catch (Exception e) {
+      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
     }
   }
 }
