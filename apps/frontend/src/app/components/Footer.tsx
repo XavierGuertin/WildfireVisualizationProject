@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [speed, setSpeed] = useState(() => {
@@ -29,17 +31,28 @@ const Footer = () => {
   }, [speed]);
 
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
-  const handleSpeedChange = (newSpeed) => {
+  const handleSpeedChange = (newSpeed: number) => {
     if (newSpeed > 0) {
       setSpeed(newSpeed);
-      setSuccessMessage('Speed successfully updated.');
-      setTimeout(() => setSuccessMessage(''), 1000);
+      setSuccessMessage(t('speed_saved'));
     } else {
-      setErrorMessage('Invalid speed value.');
-      setTimeout(() => setSuccessMessage(''), 1000);
+      setErrorMessage(t('speed_saved_error'));
     }
   };
+  // Clear success and error messages after a timeout
+  useEffect(() => {
+    if (successMessage) {
+      const timeout = setTimeout(() => setSuccessMessage(null), 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [successMessage]);
 
+  useEffect(() => {
+    if (errorMessage) {
+      const timeout = setTimeout(() => setErrorMessage(null), 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [errorMessage]);
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
