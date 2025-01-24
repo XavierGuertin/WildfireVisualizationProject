@@ -2,21 +2,21 @@
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
-import '../styles/map.css';
-import { Feature, Map, View } from 'ol';
+import "../styles/map.css";
+import { Map, View, Feature} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
-import { defaults as defaultControls, FullScreen } from 'ol/control.js';
-import { useGeographic } from 'ol/proj.js';
+import { FullScreen, defaults as defaultControls} from 'ol/control.js';
+import {useGeographic} from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
 import Polygon from 'ol/geom/Polygon.js';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
-import { TileWMS } from 'ol/source';
+import {TileWMS} from 'ol/source';
 
 //Attributions
 interface GeoJSONFeature {
@@ -30,38 +30,37 @@ interface GeoJSONResponse {
 }
 
 //Maptiler API key and attributions
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-const attributions =
-  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
+const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 //layer definitions
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
-    attributions: attributions,
-  }),
+    attributions: attributions
+  })
 });
 
 const satelliteLayer = new TileLayer({
   source: new XYZ({
     url: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
-    attributions: attributions,
-  }),
+    attributions: attributions
+  })
 });
 
 const topographicLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.opentopomap.org/{z}/{x}/{y}.png`,
-    attributions: attributions,
-  }),
-});
+    attributions: attributions
+  })
+})
 
 const dataLayer = new TileLayer({
   source: new TileWMS({
-    url: 'http://localhost:8090/geoserver/Default/wms',
+    url:'http://localhost:8090/geoserver/Default/wms',
     params: {
-      LAYERS: 'Default:datalayer',
-      TILED: true,
+      'LAYERS': 'Default:datalayer',
+      'TILED': true,
     },
     serverType: 'geoserver',
   }),
@@ -73,19 +72,19 @@ const MapView = () => {
   const mapElement = useRef(null);
 
   //Context imports
-  const { layer, mapRef } = useMapLayerContext();
+  const {layer, mapRef} = useMapLayerContext();
 
   const getLayer = () => {
-    if (layer === 'satellite') {
+    if(layer === "satellite"){
       return satelliteLayer;
     }
 
-    if (layer === 'topographical') {
+    if(layer === "topographical"){
       return topographicLayer;
     }
 
     return defaultLayer;
-  };
+  }
 
   useEffect(() => {
     // Initialize map on first render
@@ -97,9 +96,10 @@ const MapView = () => {
         view: new View({
           center: [-75.6972, 45.4215], // Centered at Ottawa
           zoom: 1,
-        }),
+        })
       });
-    } else {
+    }
+    else {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
@@ -116,22 +116,20 @@ const MapView = () => {
       })
       .then((data) => {
         const features = data.items.map((item: any) => {
-          const coordinates = item.geometry.coordinates[0].map(
-            (coord: number[]) => coord,
-          );
+          const coordinates = item.geometry.coordinates[0].map((coord: number[]) => coord);
           const feature = new Feature({
-            geometry: new Polygon([coordinates]),
+            geometry: new Polygon([coordinates])
           });
           feature.setStyle(
             new Style({
               stroke: new Stroke({
                 color: 'red',
-                width: 2,
+                width: 2
               }),
               fill: new Fill({
-                color: 'rgba(255, 0, 0, 0.1)',
-              }),
-            }),
+                color: 'rgba(255, 0, 0, 0.1)'
+              })
+            })
           );
           return feature;
         });
