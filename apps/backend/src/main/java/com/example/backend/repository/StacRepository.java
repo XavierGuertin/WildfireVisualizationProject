@@ -34,10 +34,9 @@ public class StacRepository {
     logger.debug("Attempting to insert collection");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_collection(?::jsonb)",
-        Object.class,
-        collectionJson
-      );
+          "SELECT pgstac.create_collection(?::jsonb)",
+          Object.class,
+          collectionJson);
       logger.info("Successfully inserted collection");
     } catch (DataAccessException e) {
       logger.error("Error inserting collection: {}", e.getMessage(), e);
@@ -58,16 +57,29 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> queryMetaData(){
+  public List<Map<String, Object>> getAllCollections() {
+    logger.debug("Fetching all collections");
+    try {
+      String sql = "SELECT * FROM pgstac.collections";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching all collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> queryMetaData() {
     logger.debug("Querying metadata for all collections");
     try {
       String sql = "SELECT id as id, " +
-        " (content ->> 'title') AS title," +
-        " (content ->> 'description') AS description," +
-        " datetime AS datetime," +
-        " end_datetime as end_datetime," +
-        " (content -> 'links') as links" +
-        " FROM pgstac.collections";
+          " (content ->> 'title') AS title," +
+          " (content ->> 'description') AS description," +
+          " datetime AS datetime," +
+          " end_datetime as end_datetime," +
+          " (content -> 'links') as links" +
+          " FROM pgstac.collections";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;
@@ -77,15 +89,15 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> queryMetaData(String collectionId){
+  public List<Map<String, Object>> queryMetaData(String collectionId) {
     logger.debug("Querying metadata for: {}", collectionId);
     try {
       String sql = "SELECT (content ->> 'title') AS title," +
-        " (content ->> 'description') AS description," +
-        " datetime AS datetime," +
-        " end_datetime as end_datetime," +
-        " (content -> 'links') as links" +
-        " FROM pgstac.collections WHERE id = ?";
+          " (content ->> 'description') AS description," +
+          " datetime AS datetime," +
+          " end_datetime as end_datetime," +
+          " (content -> 'links') as links" +
+          " FROM pgstac.collections WHERE id = ?";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
       logger.debug("Query returned {} results", results.size());
       return results;

@@ -1,17 +1,21 @@
 package com.example.backend.controller;
 
-import com.example.backend.repository.StacRepository;
 import com.example.backend.service.DataService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import org.springframework.core.io.ClassPathResource;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class DataController {
@@ -21,7 +25,7 @@ public class DataController {
   private DataService dataService;
 
   @GetMapping("/api/data")
-  public ResponseEntity<String> getData() throws IOException {
+  public ResponseEntity<String> getData() {
     logger.info("Received request to /api/data");
     try {
       ClassPathResource resource = new ClassPathResource("synthetic_wildfire_collection.json");
@@ -31,7 +35,7 @@ public class DataController {
     } catch (IOException e) {
       logger.error("Error reading JSON file: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error reading file: " + e.getMessage());
+          .body("Error reading file: " + e.getMessage());
     }
   }
 
@@ -39,14 +43,13 @@ public class DataController {
   public ResponseEntity<String> testStacEndpoint() {
     logger.info("Received request to /api/test-stac");
     try {
-      // Using default values
       String result = dataService.insertAndQueryCollection();
       logger.debug("Successfully processed STAC data");
       return ResponseEntity.ok(result);
     } catch (Exception e) {
       logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing STAC data: " + e.getMessage());
+          .body("Error processing STAC data: " + e.getMessage());
     }
   }
 
@@ -61,7 +64,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing MetaData: " + e.getMessage());
+          .body("Error processing MetaData: " + e.getMessage());
     }
   }
 
@@ -76,7 +79,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing MetaData: " + e.getMessage());
+          .body("Error processing MetaData: " + e.getMessage());
     }
   }
 
@@ -90,19 +93,32 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error creating collection: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error creating collection: " + e.getMessage());
+          .body("Error creating collection: " + e.getMessage());
     }
   }
 
   @GetMapping("/api/fetch-collections")
   public ResponseEntity<String> fetchCollections() {
-    logger.info("Received request to fetch collections");
+    logger.info("Received request to fetch and save collections");
     try {
       dataService.fetchAndSaveCollections();
       return ResponseEntity.ok("Collections fetched and saved successfully");
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body("Error fetching collections: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/get-collections")
+  public ResponseEntity<List<Map<String, Object>>> getCollections() {
+    logger.info("Received request to get collections");
+    try {
+      List<Map<String, Object>> collections = dataService.getCollections();
+      logger.debug("Successfully fetched collections");
+      return ResponseEntity.ok(collections);
+    } catch (Exception e) {
+      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
     }
   }
 }
