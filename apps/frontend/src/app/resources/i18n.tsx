@@ -15,6 +15,8 @@ const resources = {
         french: "French",
         //Reset
         reset: "Reset",
+        reset_data_from_endpoint: "Delete and Fetch Collections",
+        confirm_reset_data_from_endpoint: "Collections saved from Hirondelle's endpoint will first be deleted and then reinstalled. Do you want to proceed?",
         factory_reset: "Factory Reset",
         reset_initiated: "Reset initiated",
         factory_reset_initiated: "Factory Reset initiated",
@@ -42,7 +44,10 @@ const resources = {
         collapse: "Collapse",
         default_layer: "Default Layer",
         topographical_layer: "Topographical Layer",
-        satellite_layer: "Satellite Layer"
+        satellite_layer: "Satellite Layer",
+        //Decisions
+        yes: "Yes",
+        no: "No"
     },
   },
   fr: {
@@ -58,6 +63,8 @@ const resources = {
         french: "Français",
         //Reset
         reset: "Réinitialiser",
+        reset_data_from_endpoint: "Supprimer et récupérer les collections",
+        confirm_reset_data_from_endpoint: "Les collections enregistrées à partir du endpoint de Hirondelle seront d'abord supprimées, puis réinstallées. Voulez-vous continuer?",
         factory_reset: "Réinitialisation d'Usine",
         reset_initiated: "Réinitialisation démarrée",
         factory_reset_initiated: "Réinitialisation d'Usine démarrée",
@@ -85,7 +92,10 @@ const resources = {
         collapse: "Réduire",
         default_layer: "Calque par Défaut",
         topographical_layer: "Calque Topographique",
-        satellite_layer: "Calque Satellite"
+        satellite_layer: "Calque Satellite",
+        //Decisions
+        yes: "Oui",
+        no: "Non"
     },
   },
 };

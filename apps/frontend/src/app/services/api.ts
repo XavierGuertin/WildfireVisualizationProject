@@ -30,3 +30,17 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
     return { error: 'Failed to fetch data' };
   }
 };
+
+export const resetCollections = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-collections`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error resetting collections:', error);
+    throw new Error(`Error resetting collections: ${error.message}`);
+  }
+};

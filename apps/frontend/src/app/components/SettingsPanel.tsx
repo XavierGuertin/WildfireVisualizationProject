@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next'; // Import useTranslation hook
-import '../styles/SettingsPanel.css'; // Import the CSS file
-import { IoSettingsOutline, IoLanguage, IoCheckmark, IoTrashOutline } from "react-icons/io5";
+import { useTranslation } from 'react-i18next';
+import '../styles/SettingsPanel.css';
+import { IoSettingsOutline, IoLanguage, IoCheckmark, IoTrashOutline, IoDownloadOutline } from 'react-icons/io5';
 import { PiArrowClockwiseFill } from "react-icons/pi";
+import { resetCollections } from '../services/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
 
 const SettingsPanel: React.FC = () => {
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, i18n } = useTranslation();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
     isOpen: boolean;
@@ -14,7 +21,6 @@ const SettingsPanel: React.FC = () => {
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
@@ -22,39 +28,55 @@ const SettingsPanel: React.FC = () => {
     }));
   };
 
-  // Handles settings selection
   const handleSaveEndpoint = () => {
     if (isValidUrl(newApiEndpoint)) {
-      alert(`${t('api_endpoint')} ${t('save')}: ${newApiEndpoint}`);
+      toast.success(`${t('api_endpoint')} ${t('save')}: ${newApiEndpoint}`);
       setDropdownState({ activeButton: null, isOpen: false });
     } else {
-      alert(t('invalid_url'));
+      toast.error(t('invalid_url'));
     }
   };
 
-  // Cancel button clicked
   const handleCancelEndpoint = () => {
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  // Handles language selection
   const handleLanguageSelect = (language: string) => {
-    i18n.changeLanguage(language); // Change the application language
+    i18n.changeLanguage(language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  // Handles reset actions
   const handleReset = () => {
-    alert(t('reset_initiated'));
+    toast.info(t('reset_initiated'));
     setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const handleResetDataFromEndpoint = async () => {
+    MySwal.fire({
+      title: t('reset_data_from_endpoint'),
+      text: t('confirm_reset_data_from_endpoint'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: t('yes')
+    }).then(async (result: { isConfirmed: any }) => {
+      if (result.isConfirmed) {
+        try {
+          const message = await resetCollections();
+          toast.success(message);
+        } catch (error: any) {
+          toast.error(error.message);
+        }
+      }
+    });
   };
 
   const handleFactoryReset = () => {
-    alert(t('factory_reset_initiated'));
+    toast.warn(t('factory_reset_initiated'));
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  // Check if valid URL
   const isValidUrl = (url: string) => {
     try {
       new URL(url);
@@ -64,7 +86,6 @@ const SettingsPanel: React.FC = () => {
     }
   };
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -82,9 +103,9 @@ const SettingsPanel: React.FC = () => {
 
   return (
     <div className="button-container" ref={dropdownRef}>
-      {/* Settings button */}
+      <ToastContainer />
       <div className="dropdown-button">
-        <button 
+        <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
           onClick={() => toggleDropdown('settings')}
           aria-expanded={dropdownState.activeButton === 'settings'}
@@ -113,7 +134,6 @@ const SettingsPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Language Dropdown */}
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
@@ -136,7 +156,6 @@ const SettingsPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Reset Dropdown */}
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
@@ -150,6 +169,10 @@ const SettingsPanel: React.FC = () => {
             <button onClick={handleReset}>
               <PiArrowClockwiseFill size={24} />
               {t('reset')}
+            </button>
+            <button onClick={handleResetDataFromEndpoint} style={{ color: '#dc143c' }}>
+              <IoDownloadOutline size={24} />
+              {t('reset_data_from_endpoint')}
             </button>
             <button onClick={handleFactoryReset} style={{ color: '#dc143c' }}>
               <IoTrashOutline size={24} fill="red" />

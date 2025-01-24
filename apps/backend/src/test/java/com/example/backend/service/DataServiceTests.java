@@ -207,4 +207,13 @@ class DataServiceTests {
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Failed to fetch collections");
   }
+
+  @Test
+  void deleteAllCollections_Success() {
+    // Act
+    dataService.deleteAllCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).deleteAllCollections();
+  }
 }

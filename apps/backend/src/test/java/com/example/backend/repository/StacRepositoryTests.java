@@ -18,8 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StacRepositoryTests {
@@ -146,5 +145,14 @@ class StacRepositoryTests {
     assertThatThrownBy(() -> stacRepository.getAllCollections())
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Error fetching all collections");
+  }
+
+  @Test
+  void deleteAllCollections_Success() {
+    // Act
+    stacRepository.deleteAllCollections();
+
+    // Assert
+    verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.collections");
   }
 }
