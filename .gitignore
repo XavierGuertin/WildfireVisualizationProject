@@ -160,3 +160,4 @@ geoserver-cache/
 generated*
 
 .nyc_output/
+/apps/geoserver_data/

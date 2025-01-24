@@ -83,8 +83,11 @@ public class DataService {
       Map<String, Object> response = restTemplate.getForObject(COLLECTIONS_URL, Map.class);
       List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
       for (Map<String, Object> collection : collections) {
-        String collectionJson = new ObjectMapper().writeValueAsString(collection);
-        stacRepository.insertCollection(collectionJson);
+        String id = (String) collection.get("id");
+        if (!stacRepository.checkCollectionExists(id)) {
+          String collectionJson = new ObjectMapper().writeValueAsString(collection);
+          stacRepository.insertCollection(collectionJson);
+        }
       }
       logger.info("Successfully fetched and saved collections");
     } catch (Exception e) {

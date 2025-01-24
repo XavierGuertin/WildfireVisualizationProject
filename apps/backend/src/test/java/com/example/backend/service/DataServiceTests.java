@@ -128,4 +128,38 @@ class DataServiceTests {
     verify(stacRepository, times(1)).queryCollection(anyString());
     assertThat(result).isNotNull();
   }
+
+  @Test
+  void fetchAndSaveCollections_ShouldNotInsert_WhenCollectionExists() {
+    // Arrange
+    Map<String, Object> collection = new HashMap<>();
+    collection.put("id", "existing-collection");
+    mockResponse.put("collections", List.of(collection));
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(mockResponse);
+    when(stacRepository.checkCollectionExists("existing-collection")).thenReturn(true);
+
+    // Act
+    dataService.fetchAndSaveCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists("existing-collection");
+    verify(stacRepository, times(0)).insertCollection(anyString());
+  }
+
+  @Test
+  void fetchAndSaveCollections_ShouldInsert_WhenCollectionDoesNotExist() throws Exception {
+    // Arrange
+    Map<String, Object> collection = new HashMap<>();
+    collection.put("id", "new-collection");
+    mockResponse.put("collections", List.of(collection));
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(mockResponse);
+    when(stacRepository.checkCollectionExists("new-collection")).thenReturn(false);
+
+    // Act
+    dataService.fetchAndSaveCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists("new-collection");
+    verify(stacRepository, times(1)).insertCollection(anyString());
+  }
 }
