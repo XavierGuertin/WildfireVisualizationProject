@@ -57,4 +57,17 @@ public class StacRepository {
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
     }
   }
+
+  public List<Map<String, Object>> getAllCollections() {
+    logger.debug("Fetching all collections");
+    try {
+      String sql = "SELECT * FROM pgstac.collections";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching all collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+    }
+  }
 }
