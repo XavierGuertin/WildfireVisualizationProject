@@ -70,25 +70,6 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> queryMetaData() {
-    logger.debug("Querying metadata for all collections");
-    try {
-      String sql = "SELECT id as id, " +
-          " (content ->> 'title') AS title," +
-          " (content ->> 'description') AS description," +
-          " datetime AS datetime," +
-          " end_datetime as end_datetime," +
-          " (content -> 'links') as links" +
-          " FROM pgstac.collections";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
-    }
-  }
-
   public List<Map<String, Object>> queryMetaData(String collectionId) {
     logger.debug("Querying metadata for: {}", collectionId);
     try {

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useTranslation } from 'react-i18next'; // Import useTranslation for translations
 import '../styles/AvailableDatasets.css';
 import {
@@ -10,13 +9,12 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
+import { fetchCollectionsFromEndpoint, fetchMetaData } from '../services/api';
 
-export interface Dataset {
-  id: string;
-  // city: string;
+export interface DatasetMetadata {
   date: string;
   datasetSource: string;
-  description: string;
+  description: string;     
   format: string;
   latestAdded: string;
   latestUpdated: string;
@@ -25,7 +23,7 @@ export interface Dataset {
 }
 
 interface AvailableDatasetsProps {
-  onDatasetClick: (dataset: Dataset) => void;
+  onDatasetClick: (dataset: DatasetMetadata) => void;
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
@@ -33,88 +31,24 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 }) => {
   const { t } = useTranslation(); // Initialize useTranslation for translations
   const [activeFilter, setActiveFilter] = useState<string>('Name');
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
+  const [datasetIds, setDatasetIds] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   useEffect(() => {
-    // const mockData: Dataset[] = [
-    //   {
-    //     id: 'EuroSAT-subset-train',
-    //     name: 'Dataset A',
-    //     date: '2023-01-01',
-    //     latestAdded: '2023-02-01',
-    //     latestUpdated: '2023-03-01',
-    //     city: 'City A',
-    //     description: 'Description for Dataset A',
-    //     format: 'GeoJSON',
-    //     processes: 'Data analysis',
-    //     datasetSource: 'Source A',
-    //   },
-    //   {
-    //     id: 'EuroSAT-subset-train',
-    //     name: 'Dataset B',
-    //     date: '2023-02-15',
-    //     latestAdded: '2023-02-16',
-    //     latestUpdated: '2023-03-05',
-    //     city: 'City B',
-    //     description: 'Description for Dataset B',
-    //     format: 'Shapefile',
-    //     processes: 'Data cleaning',
-    //     datasetSource: 'Source B',
-    //   },
-    //   {
-    //     id: 'EuroSAT-subset-train',
-    //     name: 'Dataset C',
-    //     date: '2023-03-10',
-    //     latestAdded: '2023-03-15',
-    //     latestUpdated: '2023-04-01',
-    //     city: 'City C',
-    //     description: 'Description for Dataset C',
-    //     format: 'GeoJSON',
-    //     processes: 'Mapping',
-    //     datasetSource: 'Source C',
-    //   },
-    //   {
-    //     id: 'EuroSAT-subset-train',
-    //     name: 'Dataset D',
-    //     date: '2023-01-25',
-    //     latestAdded: '2023-02-10',
-    //     latestUpdated: '2023-02-28',
-    //     city: 'City D',
-    //     description: 'Description for Dataset D',
-    //     format: 'CSV',
-    //     processes: 'Data processing',
-    //     datasetSource: 'Source D',
-    //   },
-    // ];
-    // setDatasets(mockData);
 
     const fetchMetaDataDatasets = async () => {
       try {
-        const datasetList: Dataset[] | null = []
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-        await fetch(`${backendUrl}api/metadata`)
-        .then((response) => response.json())
-        .then((data) =>{
-          for(let i = 0; i < data.length; i++){
-            const entry = data[i];
-            const dataset = {
-              id: entry.id,
-              date: entry.datetime,
-              datasetSource: "Source",
-              description: entry.description,
-              format: "GeoJSON",
-              latestAdded: "test",
-              latestUpdated: "test",
-              name: entry.title,
-              processes: "test",
-            }
-            datasetList.push(dataset)
-          }
-        });
-        setDatasets(datasetList);
+        const datasetList: string[] | null = []
+        const response: any = await fetchCollectionsFromEndpoint()
+        for(let i = 0; i < response.length; i++){
+          const entryId = response[i].id
+          datasetList.push(entryId)
+        }
+        
+        setDatasetIds(datasetList);
       } catch (error) {
         console.log('Error fetching datasets:', error);
       }
@@ -151,8 +85,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const handleToggle = () => setIsToggled((prev) => !prev);
 
-  const handleDatasetClick = (dataset: Dataset) => {
-    setSelectedDataset(dataset.name); // Update selected dataset
+  const handleDatasetClick = async (id: string) => {
+    
+    setSelectedDataset(id); // Update selected dataset
+    const dataset = await fetchMetaData(id);
+    
     onDatasetClick(dataset); // Pass dataset to parent component
   };
 
@@ -214,15 +151,15 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
               )}
             </div>
             <div className="buttons-container" data-testid="buttons-container">
-              {datasets.length > 0 ? (
-                datasets.map((dataset, index) => (
+              {datasetIds.length > 0 ? (
+                datasetIds.map((id, index) => (
                   <button
                     key={index}
-                    className={`dataset-button ${selectedDataset === dataset.name ? 'selected' : ''}`}
-                    onClick={() => handleDatasetClick(dataset)}
+                    className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
+                    onClick={() => handleDatasetClick(id)}
                     data-testid={`dataset-button-${index}`}
                   >
-                    {dataset.name}
+                    {id}
                   </button>
                 ))
               ) : (
