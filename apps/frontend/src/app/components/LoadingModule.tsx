@@ -3,7 +3,7 @@ import '../styles/LoadingModule.css';
 import React from 'react';
 
 interface LoadingModuleProps {
-  datasetBeingLoaded: string | null;
+  datasetBeingLoaded: string | undefined;
   progress: number; // Progress percentage
   isVisible: boolean; // Toggle visibility
   errorMessage?: string; // Error message to display on failure

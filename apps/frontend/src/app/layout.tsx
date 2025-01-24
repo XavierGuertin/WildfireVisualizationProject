@@ -65,7 +65,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <body>
         <SettingsPanel />
         <div className="layout-container relative">
-          <LoadingModule progress={progress} isVisible={loading} datasetBeingLoaded={null} />
+          <LoadingModule progress={progress} isVisible={loading} datasetBeingLoaded={selectedDataset?.name} />
           <TestStac />
           <main className="app-main">{children}</main>
           <AvailableDatasets onDatasetClick={handleDatasetClick} />
