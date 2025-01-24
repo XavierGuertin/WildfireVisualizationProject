@@ -4,17 +4,15 @@ import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
 
 interface MapMetaDataProps {
-  id?: string;
-  name?: string;
-  description?: string;
-  format?: string;
-  processes?: string;
-  datasetSource?: string;
+  name?: String;
+  description?: String;
+  format?: String;
+  processes?: String;
+  datasetSource?: String;
   onLoadDataset: () => void;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  id = "",
   name = "",
   description = "",
   format = "",
