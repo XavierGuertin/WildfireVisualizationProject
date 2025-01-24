@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../styles/MapMetaData.css";
 import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
+import { insertDatalayerView } from "../services/api";
 
 interface MapMetaDataProps {
   id?: string;
@@ -25,6 +26,20 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
+  onLoadDataset = async () => {
+      try {
+        const result = await insertDatalayerView(id);
+        if (result.error) {
+          // setError(result.error);
+        } else {
+          // setStacData(result);
+        }
+      } catch (err: any) {
+        // setError(err.message || "An unknown error occurred.");
+      }
+      // setLoading(false);
+    };
 
   const CollapsedMetaData = (
     <div

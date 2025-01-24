@@ -30,7 +30,7 @@ interface GeoJSONResponse {
 }
 
 //Maptiler API key and attributions
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 //layer definitions
@@ -103,11 +103,11 @@ const MapView = () => {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
     }
-
+    mapRef.current?.addLayer(dataLayer);
     console.log(`Backend URL: ${backendUrl}`);
 
     // Fetch the JSON data from the endpoint and add it to the map
-    fetch(`${backendUrl}/api/data`)
+    fetch(`${backendUrl}api/data`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -123,7 +123,7 @@ const MapView = () => {
           feature.setStyle(
             new Style({
               stroke: new Stroke({
-                color: 'red',
+                color: 'orange',
                 width: 2
               }),
               fill: new Fill({

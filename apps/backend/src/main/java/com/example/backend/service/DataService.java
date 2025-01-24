@@ -54,6 +54,10 @@ public class DataService {
     return stacRepository.queryMetaData();
   }
 
+  public void insertView(String collectionId) {
+    stacRepository.setDatalayerView(collectionId);
+  }
+
   public String insertAndQueryCollection(String collectionJson, String collectionId) {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
     try {

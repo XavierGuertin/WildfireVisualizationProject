@@ -94,4 +94,22 @@ public class StacRepository {
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
     }
   }
+
+  public void setDatalayerView(String collectionId){
+    logger.debug("Attempting to create / insert geometry of selected dataset into datalayer view", collectionId);
+    try {
+      String sql = "CREATE OR REPLACE VIEW DataLayer AS" +
+        " SELECT geometry AS geometry" + 
+        " FROM pgstac.collections WHERE id = ?";
+      jdbcTemplate.queryForObject(
+        sql,
+        Object.class,
+        collectionId
+      );
+      logger.info("Successfully inserted view");
+    } catch (DataAccessException e) {
+      logger.error("Error querying collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
+    }
+  }
 }

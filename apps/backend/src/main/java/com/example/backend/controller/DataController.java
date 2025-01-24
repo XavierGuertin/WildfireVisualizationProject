@@ -105,4 +105,17 @@ public class DataController {
       return ResponseEntity.internalServerError().body("Error fetching collections: " + e.getMessage());
     }
   }
+
+  @PostMapping("/api/set-datalayer-geometry/{id}")
+  public ResponseEntity<String> insertView(@RequestBody String collectionId) {
+    try{
+      dataService.insertView(collectionId);
+      logger.debug("Successfully processed custom collection");
+      return ResponseEntity.ok("Successfully inserted view");
+    } catch (Exception e) {
+      logger.error("Error inserting View: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error inserting view: " + e.getMessage());
+    }
+  }
 }
