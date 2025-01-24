@@ -98,10 +98,28 @@ const MapView = () => {
           zoom: 1,
         })
       });
+
+    // Log the initial extent
+    const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
+    console.log(`Initial Map extent: ${initialExtent}`);
     }
+
     else {
       mapRef.current?.getLayers().clear();
       mapRef.current?.addLayer(getLayer());
+    }
+
+    // Event listener to log extent of map as view changes (pan or zoom)
+    if (mapRef.current) {
+      mapRef.current.getView().on('change:center', () => {
+        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
+        console.log(`Updated Map extent: ${mapExtent}`);
+      });
+
+      mapRef.current.getView().on('change:resolution', () => {
+        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
+        console.log(`Updated Map extent: ${mapExtent}`);
+      });
     }
 
     console.log(`Backend URL: ${backendUrl}`);
