@@ -155,4 +155,26 @@ class StacRepositoryTests {
     // Assert
     verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.collections");
   }
+
+  @Test
+  void insertCollection_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).queryForObject(anyString(), any(Class.class), anyString());
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.insertCollection(testCollectionJson))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error inserting collection");
+  }
+
+  @Test
+  void deleteAllCollections_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).update(anyString());
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.deleteAllCollections())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error deleting collections");
+  }
 }
