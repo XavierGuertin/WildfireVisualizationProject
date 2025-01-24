@@ -108,6 +108,24 @@ class StacRepositoryTests {
   }
 
   @Test
+  void queryMetaData_ReturnsResults() {
+    List<Map<String, Object>> expectedResults = new ArrayList<>();
+    Map<String, Object> result = new HashMap<>();
+    result.put("id", testCollectionId);
+    expectedResults.add(result);
+
+    when(jdbcTemplate.queryForList(anyString(), anyString()))
+      .thenReturn(expectedResults);
+
+    List<Map<String, Object>> actualResults = stacRepository.queryMetaData(testCollectionId);
+
+    assertThat(actualResults).hasSize(1);
+    assertThat(actualResults.get(0))
+      .containsKey("id")
+      .hasFieldOrPropertyWithValue("id", testCollectionId);
+  }
+
+  @Test
   void queryCollection_ThrowsException_WhenDatabaseError() {
     when(jdbcTemplate.queryForList(anyString(), anyString()))
       .thenThrow(new DataAccessException("Database error") {

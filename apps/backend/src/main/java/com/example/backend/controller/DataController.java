@@ -1,16 +1,12 @@
 package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,27 +49,12 @@ public class DataController {
     }
   }
 
-  @GetMapping("/api/metadata")
-  public ResponseEntity<String> getMetaData() {
-    logger.info("Received request to /api/metadata");
-    try {
-      // Using default values
-      String result = new ObjectMapper().writeValueAsString(dataService.retrieveMetaData());
-      logger.debug("Successfully processed MetaData");
-      return ResponseEntity.ok(result);
-    } catch (Exception e) {
-      logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-        .body("Error processing MetaData: " + e.getMessage());
-    }
-  }
-
   @GetMapping("/api/metadata/{id}")
   public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
     logger.info("Received request to /api/metadata");
     try {
       // Using default values
-      String result = dataService.retrieveMetaData(collectionId).toString();
+      String result = dataService.retrieveMetaData(collectionId);
       logger.debug("Successfully processed MetaData");
       return ResponseEntity.ok(result);
     } catch (Exception e) {

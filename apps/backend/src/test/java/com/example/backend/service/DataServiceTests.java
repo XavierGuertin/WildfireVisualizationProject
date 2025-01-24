@@ -145,6 +145,18 @@ class DataServiceTests {
   }
 
   @Test
+  void retrieveMetaData_IsValid(){
+    //This service method is just a middle man between the communication of the StacRepository and the DataController,
+    //so there is not really anything to test.
+
+    //Act
+    List<Map<String, Object>> response = dataService.retrieveMetaData("");
+
+    //Assert
+    assertThat(response).isNotNull();
+  }
+
+  @Test
   void fetchAndSaveCollections_ShouldNotInsert_WhenCollectionExists() {
     // Arrange
     Map<String, Object> collection = new HashMap<>();

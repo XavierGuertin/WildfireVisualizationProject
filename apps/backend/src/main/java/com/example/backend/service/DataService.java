@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.repository.StacRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +51,8 @@ public class DataService {
     return insertAndQueryCollection(collectionJson, DEFAULT_COLLECTION_ID);
   }
 
-  public List<Map<String, Object>> retrieveMetaData(String collectionId){
-    return stacRepository.queryMetaData(collectionId);
-  }
-
-  public List<Map<String, Object>> retrieveMetaData(){
-    return stacRepository.queryMetaData();
+  public String retrieveMetaData(String collectionId) throws JsonProcessingException {
+    return objectMapper.writeValueAsString(stacRepository.queryMetaData(collectionId));
   }
 
   public String insertAndQueryCollection(String collectionJson, String collectionId) {
