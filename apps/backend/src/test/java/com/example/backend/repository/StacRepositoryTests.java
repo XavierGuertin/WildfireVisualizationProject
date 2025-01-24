@@ -109,6 +109,7 @@ class StacRepositoryTests {
 
   @Test
   void queryMetaData_ReturnsResults() {
+    //Arrange
     List<Map<String, Object>> expectedResults = new ArrayList<>();
     Map<String, Object> result = new HashMap<>();
     result.put("id", testCollectionId);
@@ -117,8 +118,10 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString(), anyString()))
       .thenReturn(expectedResults);
 
+    //Act
     List<Map<String, Object>> actualResults = stacRepository.queryMetaData(testCollectionId);
 
+    //Assert
     assertThat(actualResults).hasSize(1);
     assertThat(actualResults.get(0))
       .containsKey("id")

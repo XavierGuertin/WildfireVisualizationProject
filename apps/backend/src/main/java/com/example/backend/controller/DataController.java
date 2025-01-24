@@ -53,7 +53,6 @@ public class DataController {
   public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
     logger.info("Received request to /api/metadata");
     try {
-      // Using default values
       String result = dataService.retrieveMetaData(collectionId);
       logger.debug("Successfully processed MetaData");
       return ResponseEntity.ok(result);

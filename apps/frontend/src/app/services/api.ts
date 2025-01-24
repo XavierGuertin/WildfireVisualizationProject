@@ -31,7 +31,7 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
   }
 };  
 
-export const fetchMetaData = async (collectionId: String): Promise<any> => {
+export const fetchMetaData = async (collectionId: string): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}api/metadata/${collectionId}`);
     if (!response.ok) {
@@ -55,11 +55,11 @@ export const fetchMetaData = async (collectionId: String): Promise<any> => {
     const format = items.type.split('/').pop()
 
     const sourceLink = parent.href
-    let truncatedSource: String = ""
+    let truncatedSource = ""
     if(sourceLink.charAt(sourceLink.length - 1) === '/')
       truncatedSource = sourceLink.substring(0, sourceLink.length - 1);
 
-    let source = truncatedSource.split('/').pop()?.toUpperCase()
+    const source = truncatedSource.split('/').pop()?.toUpperCase()
 
     const metadata = {
       date: data[0].datetime,

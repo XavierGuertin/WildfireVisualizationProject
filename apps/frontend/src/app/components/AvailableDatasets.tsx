@@ -32,16 +32,16 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const { t } = useTranslation(); // Initialize useTranslation for translations
   const [activeFilter, setActiveFilter] = useState<string>('Name');
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
-  const [datasetIds, setDatasetIds] = useState<String[]>([]);
+  const [datasetIds, setDatasetIds] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
-  const [selectedDataset, setSelectedDataset] = useState<String | null>(null);
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   useEffect(() => {
 
     const fetchMetaDataDatasets = async () => {
       try {
-        const datasetList: String[] | null = []
+        const datasetList: string[] | null = []
         const response: any = await fetchCollectionsFromEndpoint()
         for(let i = 0; i < response.length; i++){
           const entryId = response[i].id
@@ -85,7 +85,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const handleToggle = () => setIsToggled((prev) => !prev);
 
-  const handleDatasetClick = async (id: String) => {
+  const handleDatasetClick = async (id: string) => {
     
     setSelectedDataset(id); // Update selected dataset
     const dataset = await fetchMetaData(id);

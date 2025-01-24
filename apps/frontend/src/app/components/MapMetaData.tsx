@@ -4,11 +4,11 @@ import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
 
 interface MapMetaDataProps {
-  name?: String;
-  description?: String;
-  format?: String;
-  processes?: String;
-  datasetSource?: String;
+  name?: string;
+  description?: string;
+  format?: string;
+  processes?: string;
+  datasetSource?: string;
   onLoadDataset: () => void;
 }
 
