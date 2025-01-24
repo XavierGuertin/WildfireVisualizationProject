@@ -9,6 +9,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -22,7 +25,7 @@ class DataControllerTests {
   private DataController dataController;
 
   @Test
-  void getData_Success() throws Exception {
+  void getData_Success() {
     // Act
     ResponseEntity<String> response = dataController.getData();
 
@@ -90,7 +93,7 @@ class DataControllerTests {
   }
 
   @Test
-  void fetchCollections_Success() throws Exception {
+  void fetchCollections_Success() {
     // Act
     ResponseEntity<String> response = dataController.fetchCollections();
 
@@ -101,7 +104,7 @@ class DataControllerTests {
   }
 
   @Test
-  void fetchCollections_Failure() throws Exception {
+  void fetchCollections_Failure() {
     // Arrange
     doThrow(new RuntimeException("Test error")).when(dataService).fetchAndSaveCollections();
 
@@ -125,5 +128,35 @@ class DataControllerTests {
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error fetching collections: Test IO error");
+  }
+
+  @Test
+  void getCollections_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+      Map.of("key", "value1", "id", "id1"),
+      Map.of("key", "value2", "id", "id2")
+    );
+    when(dataService.getCollections()).thenReturn(mockCollections);
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockCollections);
+  }
+
+  @Test
+  void getCollections_Failure() {
+    // Arrange
+    when(dataService.getCollections()).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
   }
 }
