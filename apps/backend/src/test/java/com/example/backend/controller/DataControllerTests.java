@@ -189,4 +189,31 @@ class DataControllerTests {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isNull();
   }
+
+  @Test
+  void resetCollections_Success() {
+    // Act
+    ResponseEntity<String> response = dataController.resetCollections();
+
+    // Assert
+    verify(dataService, times(1)).deleteAllCollections();
+    verify(dataService, times(0)).fetchAndSaveCollections();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Collections deleted successfully");
+  }
+
+  @Test
+  void resetCollections_Failure() {
+    // Arrange
+    doThrow(new RuntimeException("Test error")).when(dataService).deleteAllCollections();
+
+    // Act
+    ResponseEntity<String> response = dataController.resetCollections();
+
+    // Assert
+    verify(dataService, times(1)).deleteAllCollections();
+    verify(dataService, times(0)).fetchAndSaveCollections();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error resetting collections: Test error");
+  }
 }

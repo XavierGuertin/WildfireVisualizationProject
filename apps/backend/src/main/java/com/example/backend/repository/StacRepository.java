@@ -71,6 +71,18 @@ public class StacRepository {
     }
   }
 
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections from pgstac.collections");
+    try {
+      String sql = "DELETE FROM pgstac.collections";
+      jdbcTemplate.update(sql);
+      logger.info("All collections deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
+    }
+  }
+
   public List<Map<String, Object>> queryMetaData(String collectionId){
     logger.debug("Querying metadata for: {}", collectionId);
     try {
