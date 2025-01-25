@@ -49,7 +49,7 @@ const Footer = () => {
 
   useEffect(() => {
     if (errorMessage) {
-      const timeout = setTimeout(() => setErrorMessage(null), 1000);
+      const timeout = setTimeout(() => setErrorMessage(""), 1000);
       return () => clearTimeout(timeout);
     }
   }, [errorMessage]);
