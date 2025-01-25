@@ -1,18 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import LoadingOverlay from './components/LoadingOverlay';
 import MapView from './components/MapView';
 import { MapProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
 import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
-import TestStac from './testComponents/TestStac';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
 import './layout.css';
-
+import LoadingModule from './components/LoadingModule';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -32,7 +30,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       });
     }, 300); // Update every 300ms
   };
-
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: Dataset) => {
@@ -61,30 +58,32 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <I18nextProvider i18n={i18n}>
       <MapProvider>
         <html lang="en">
-        <body>
-        <SettingsPanel />
-        <div className="layout-container relative">
-          <LoadingOverlay progress={progress} isVisible={loading} />
-          <TestStac />
-          <main className="app-main">{children}</main>
-          <AvailableDatasets onDatasetClick={handleDatasetClick} />
-          <MapView />
-          <Sidebar />
-          {selectedDataset && (
-              <MapMetaData
-                city={selectedDataset.city}
-                name={selectedDataset.name}
-                description={selectedDataset.description}
-                format={selectedDataset.format}
-                processes={selectedDataset.processes}
-                datasetSource={selectedDataset.datasetSource}
-                onLoadDataset={handleLoadDataset}
+          <body>
+            <SettingsPanel />
+            <div className="layout-container relative">
+              <LoadingModule
+                progress={progress}
+                isVisible={loading}
+                datasetBeingLoaded={selectedDataset?.name}
               />
-            )
-          }
-          <footer className="app-footer"></footer>
-        </div>
-        </body>
+              <main className="app-main">{children}</main>
+              <AvailableDatasets onDatasetClick={handleDatasetClick} />
+              <MapView />
+              <Sidebar />
+              {selectedDataset && (
+                <MapMetaData
+                  city={selectedDataset.city}
+                  name={selectedDataset.name}
+                  description={selectedDataset.description}
+                  format={selectedDataset.format}
+                  processes={selectedDataset.processes}
+                  datasetSource={selectedDataset.datasetSource}
+                  onLoadDataset={handleLoadDataset}
+                />
+              )}
+              <footer className="app-footer"></footer>
+            </div>
+          </body>
         </html>
       </MapProvider>
     </I18nextProvider>

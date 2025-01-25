@@ -14,7 +14,7 @@ export const fetchTestStacData = async (): Promise<any> => {
   }
 };
 
-export const fetchCollectionsFromEndpoint = async (): Promise<{
+export const returnListOfCollectionsFromEndpoint = async (): Promise<{
   error: string;
 }> => {
   try {
@@ -28,5 +28,36 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
+  }
+};
+
+export const fetchCollectionsFromEndpoint = async (): Promise<string> => {
+  try {
+    // this will eventually pass a parameter to call the endpoint URL we want
+    const response = await fetch(`${BASE_URL}/api/fetch-collections`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+}
+
+
+
+export const resetCollections = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-collections`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error resetting collections:', error);
+    throw new Error(`Error resetting collections: ${error.message}`);
   }
 };
