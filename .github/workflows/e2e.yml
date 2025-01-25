@@ -64,6 +64,8 @@ jobs:
       # Build Frontend Application
       - name: Build Frontend
         run: npx nx build frontend
+        env:
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
