@@ -112,4 +112,15 @@ public class DataService {
       throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
     }
   }
+
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections");
+    try {
+      stacRepository.deleteAllCollections();
+      logger.info("All collections deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to delete collections: " + e.getMessage(), e);
+    }
+  }
 }
