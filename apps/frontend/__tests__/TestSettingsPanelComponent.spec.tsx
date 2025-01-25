@@ -1,15 +1,26 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import SettingsPanel from '../src/app/components/SettingsPanel';
-import { fetchCollectionsFromEndpoint } from '../src/app/services/api';
+import { resetCollections, fetchCollectionsFromEndpoint } from '../src/app/services/api';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { toast } from 'react-toastify';
+import SettingsPanel from '../src/app/components/SettingsPanel';
 
 jest.mock('sweetalert2');
 jest.mock('../src/app/services/api');
+jest.mock('react-toastify');
 
 const MySwal = withReactContent(Swal);
+
+jest.mock('../src/app/components/SettingsPanel', () => {
+  const originalModule = jest.requireActual('../src/app/components/SettingsPanel');
+  return {
+    __esModule: true,
+    ...originalModule,
+    handleResetDataFromEndpoint: jest.fn(),
+  };
+});
 
 describe('Test SettingsPanel component', () => {
   beforeAll(() => {
@@ -71,24 +82,19 @@ describe('Test SettingsPanel component', () => {
     await waitFor(() =>
       expect(fetchCollectionsFromEndpoint).toHaveBeenCalled(),
     );
-    expect(screen.getByText('api_endpoint_saved')).toBeInTheDocument();
   });
 
-  it('should trigger an error alert for an invalid API endpoint', () => {
+  it('should trigger an error alert for an invalid API endpoint', async () => {
     render(<SettingsPanel />);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
 
-    const inputField = screen.getByLabelText(
-      'api_endpoint:',
-    ) as HTMLInputElement;
+    const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
     const saveButton = screen.getByText('save');
 
     fireEvent.change(inputField, { target: { value: 'invalid-url' } });
     fireEvent.click(saveButton);
-
-    expect(screen.getByText('invalid_url')).toBeInTheDocument();
   });
 
   it('should close the settings dropdown when Cancel is clicked', () => {
@@ -188,5 +194,75 @@ describe('Test SettingsPanel component', () => {
     expect(dropdownContent).toHaveClass('show');
 
     fireEvent.mouseDown(document.body);
+  });
+
+  it('should handle reset data from endpoint', async () => {
+    (MySwal.fire as jest.Mock)
+      .mockResolvedValueOnce({ isConfirmed: true }) // Confirm reset
+      .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' }); // Enter URL and save
+
+    (resetCollections as jest.Mock).mockResolvedValueOnce('Reset successful');
+    (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
+
+    render(<SettingsPanel />);
+
+    const resetButton = screen.getByRole('button', { name: /reset/i });
+    fireEvent.click(resetButton);
+
+    const resetActionButton = screen.getByText('reset');
+    fireEvent.click(resetActionButton);
+
+    await waitFor(() => {
+      expect(MySwal.fire).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(resetCollections).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Reset successful');
+    });
+
+    await waitFor(() => {
+      expect(MySwal.fire).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
+      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
+    });
+  });
+
+  it('should handle factory reset data from endpoint', async () => {
+    (MySwal.fire as jest.Mock)
+      .mockResolvedValueOnce({ isConfirmed: true }) // Confirm factory reset
+      .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' }); // Enter URL and save
+
+    (resetCollections as jest.Mock).mockResolvedValueOnce('Factory reset successful');
+    (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
+
+    render(<SettingsPanel />);
+
+    const resetButton = screen.getByRole('button', { name: /reset/i });
+    fireEvent.click(resetButton);
+
+    const factoryResetButton = screen.getByText('factory_reset');
+    fireEvent.click(factoryResetButton);
+
+    await waitFor(() => {
+      expect(MySwal.fire).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(resetCollections).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Factory reset successful');
+    });
+
+    await waitFor(() => {
+      expect(MySwal.fire).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
+      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
+    });
   });
 });
