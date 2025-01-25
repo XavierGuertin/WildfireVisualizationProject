@@ -73,7 +73,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Sidebar />
               {selectedDataset && (
                 <MapMetaData
-                  city={selectedDataset.city}
                   name={selectedDataset.name}
                   description={selectedDataset.description}
                   format={selectedDataset.format}
