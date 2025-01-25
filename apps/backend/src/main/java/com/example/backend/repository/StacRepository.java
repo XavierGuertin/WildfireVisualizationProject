@@ -70,47 +70,15 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollectionsByName() {
-    logger.debug("Fetching all collections filtered by name");
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections from pgstac.collections");
     try {
-      String sql = "SELECT * FROM pgstac.collections ORDER BY id";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
-      return results;
+      String sql = "DELETE FROM pgstac.collections";
+      jdbcTemplate.update(sql);
+      logger.info("All collections deleted successfully");
     } catch (DataAccessException e) {
-      logger.error("Error fetching all collections filtered by name: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections filtered by name: " + e.getMessage(), e);
-    }
-  }
-
-  public List<Map<String, Object>> getAllCollectionsByDate() {
-    logger.debug("Fetching all collections");
-    try {
-      String sql = "SELECT * FROM pgstac.collections ORDER BY datetime";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error fetching all collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
-    }
-  }
-
-  public List<Map<String, Object>> queryMetaData(String collectionId) {
-    logger.debug("Querying metadata for: {}", collectionId);
-    try {
-      String sql = "SELECT (content ->> 'title') AS title," +
-          " (content ->> 'description') AS description," +
-          " datetime AS datetime," +
-          " end_datetime as end_datetime," +
-          " (content -> 'links') as links" +
-          " FROM pgstac.collections WHERE id = ?";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
-      logger.debug("Query returned {} results", results.size());
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
     }
   }
 }

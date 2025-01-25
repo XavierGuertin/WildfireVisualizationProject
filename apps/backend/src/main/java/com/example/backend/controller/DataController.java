@@ -107,6 +107,18 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/reset-collections")
+  public ResponseEntity<String> resetCollections() {
+    logger.info("Received request to reset collections");
+    try {
+      dataService.deleteAllCollections();
+      return ResponseEntity.ok("Collections deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error resetting collections: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error resetting collections: " + e.getMessage());
+    }
+  }
+
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
     logger.info("Received request to get collections by name");
