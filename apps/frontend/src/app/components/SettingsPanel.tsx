@@ -35,11 +35,13 @@ const SettingsPanel: React.FC = () => {
 
   // Initialize language from local storage
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language');
-    if (savedLanguage) {
-      i18n.changeLanguage(savedLanguage);
-    }
-  }, [i18n]);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedLanguage = localStorage.getItem('language');
+      if (savedLanguage) {
+        i18n.changeLanguage(savedLanguage);
+        }
+      }
+    }, [i18n]);
 
   // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
@@ -96,7 +98,7 @@ const SettingsPanel: React.FC = () => {
       return () => clearTimeout(timeout);
     }
   }, [errorMessage]);
-      
+
   const handleReset = () => {
     handleResetDataFromEndpoint(IS_NOT_FACTORY_RESET).then(() =>
       setDropdownState({ activeButton: null, isOpen: false }),

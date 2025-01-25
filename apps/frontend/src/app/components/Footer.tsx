@@ -22,11 +22,27 @@ const Footer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('playbackSpeed', speed.toString());
-    } catch (e) {
-      console.error('Error saving playback speed to localStorage', e);
-      setErrorMessage('Failed to save playback speed.');
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const savedSpeed = localStorage.getItem('playbackSpeed');
+        if (savedSpeed) {
+          setSpeed(parseFloat(savedSpeed));
+        }
+      } catch (e) {
+        console.error('Error reading playback speed from localStorage', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Store speed in localStorage whenever it changes
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem('playbackSpeed', speed.toString());
+      } catch (e) {
+        console.error('Error saving playback speed to localStorage', e);
+        setErrorMessage('Failed to save playback speed.');
+      }
     }
   }, [speed]);
 
