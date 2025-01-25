@@ -117,4 +117,34 @@ class StacRepositoryTests {
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Error querying collection");
   }
+
+  @Test
+  void getAllCollections_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+      Map.of("key", "value1", "id", "id1"),
+      Map.of("key", "value2", "id", "id2")
+    );
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllCollections();
+
+    // Assert
+    assertThat(results).isNotNull();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+  }
+
+  @Test
+  void getAllCollections_Failure() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
+    });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllCollections())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching all collections");
+  }
 }

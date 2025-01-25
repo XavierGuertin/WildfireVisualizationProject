@@ -1,0 +1,23 @@
+<layer>
+  <name>collections</name>
+  <id>LayerInfoImpl-72972593:1948a67d39b:-7ffb</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl-72972593:1948a67d39b:-7fd9</id>
+  </defaultStyle>
+  <styles class="linked-hash-set">
+    <style>
+      <id>StyleInfoImpl-635ac42e:1935f6a3bc7:-7ffe</id>
+    </style>
+  </styles>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-72972593:1948a67d39b:-7ffc</id>
+  </resource>
+  <opaque>false</opaque>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-01-21 19:55:40.318 UTC</dateCreated>
+  <dateModified>2025-01-21 23:09:55.916 UTC</dateModified>
+</layer>

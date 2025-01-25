@@ -1,6 +1,8 @@
 package com.example.backend.service;
 
 import com.example.backend.repository.StacRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +27,9 @@ class DataServiceTests {
 
   @Mock
   private RestTemplate restTemplate;
+
+  @Mock
+  private ObjectMapper objectMapper;
 
   @InjectMocks
   private DataService dataService;
@@ -36,16 +43,21 @@ class DataServiceTests {
   }
 
   @Test
-  void fetchAndSaveCollections_ShouldFetchAndSaveCollections() throws Exception {
+  void fetchAndSaveCollections_ShouldFetchAndSaveCollections() throws JsonProcessingException {
     // Arrange
+    Map<String, Object> collection = new HashMap<>();
+    collection.put("id", "test-collection");
+    mockResponse.put("collections", List.of(collection));
     when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(mockResponse);
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
     dataService.fetchAndSaveCollections();
 
     // Assert
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
-    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).checkCollectionExists("test-collection");
+    verify(stacRepository, times(1)).insertCollection("mockedJson");
   }
 
   @Test
@@ -62,5 +74,137 @@ class DataServiceTests {
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
     verify(stacRepository, times(0)).insertCollection(anyString());
+  }
+
+  @Test
+  void insertAndQueryCollection_DefaultParams() throws JsonProcessingException {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of(new HashMap<>()));
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
+
+    // Act
+    String result = dataService.insertAndQueryCollection();
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void insertAndQueryCollection_WithCollectionJson() throws JsonProcessingException {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of(new HashMap<>()));
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
+
+    // Act
+    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}");
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void insertAndQueryCollection_WithCollectionJsonAndId() throws JsonProcessingException {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of(new HashMap<>()));
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
+
+    // Act
+    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void insertAndQueryCollection_CollectionExists() throws JsonProcessingException {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(true);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of(new HashMap<>()));
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
+
+    // Act
+    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(0)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void fetchAndSaveCollections_ShouldNotInsert_WhenCollectionExists() {
+    // Arrange
+    Map<String, Object> collection = new HashMap<>();
+    collection.put("id", "existing-collection");
+    mockResponse.put("collections", List.of(collection));
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(mockResponse);
+    when(stacRepository.checkCollectionExists("existing-collection")).thenReturn(true);
+
+    // Act
+    dataService.fetchAndSaveCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists("existing-collection");
+    verify(stacRepository, times(0)).insertCollection(anyString());
+  }
+
+  @Test
+  void fetchAndSaveCollections_ShouldInsert_WhenCollectionDoesNotExist() throws Exception {
+    // Arrange
+    Map<String, Object> collection = new HashMap<>();
+    collection.put("id", "new-collection");
+    mockResponse.put("collections", List.of(collection));
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(mockResponse);
+    when(stacRepository.checkCollectionExists("new-collection")).thenReturn(false);
+    when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
+
+    // Act
+    dataService.fetchAndSaveCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).checkCollectionExists("new-collection");
+    verify(stacRepository, times(1)).insertCollection(anyString());
+  }
+
+  @Test
+  void getCollections_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+      Map.of("key", "value1", "id", "id1"),
+      Map.of("key", "value2", "id", "id2")
+    );
+    when(stacRepository.getAllCollections()).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollections();
+
+    // Assert
+    assertThat(collections).isNotNull();
+    assertThat(collections).hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+  }
+
+  @Test
+  void getCollections_Failure() {
+    // Arrange
+    when(stacRepository.getAllCollections()).thenThrow(new RuntimeException("Test error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getCollections())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to fetch collections");
   }
 }
