@@ -7,7 +7,7 @@
     gap: 20px;
     z-index: 1000;
   }
-  
+
   /* Base style for each button */
   .button {
     width: 50px;
@@ -24,29 +24,29 @@
     outline: none;
     border: none;
   }
-  
+
   /* Active button state: adds a white border */
   .button.active {
     border: 2px solid white;
   }
-  
+
   /* Hover effect for the button */
   .button:hover {
     background-color: #0056b3;
   }
-  
+
   /* Style for the image inside the button */
   .button img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
+
   /* Style for the dropdown container */
   .dropdown-button {
     position: relative;
   }
-  
+
   /* Dropdown content styling, initially hidden */
   .dropdown-content {
     display: none;
@@ -59,12 +59,12 @@
     z-index: 1;
     margin-top: 3px;
   }
-  
+
   /* Show dropdown content when it's open */
   .dropdown-content.show {
     display: block;
   }
-  
+
   /* Style for each dropdown button */
   .dropdown-content button {
     background: none;
@@ -79,7 +79,7 @@
     position: relative;
     gap: 10px;
   }
-  
+
   /* Hover effect for dropdown buttons */
   .dropdown-content button:hover::before {
     content: "";
@@ -91,19 +91,19 @@
     z-index: -1;
     border-radius: 10px;
   }
-  
+
   /* Style for images inside the dropdown buttons */
   .dropdown-content button img {
     width: 25px;
     height: 25px;
     margin-right: 10px;
   }
-  
+
   /* Centering the text inside dropdown button */
   .dropdown-content button span {
     flex: 1;
     text-align: center;
-  }  
+  }
 
   /* Settings prompt styling */
   .settings-prompt {
@@ -185,4 +185,9 @@
 
   .settings-prompt-buttons button:last-child:hover {
     background-color: #b32d39;
+  }
+
+  .custom-swal-popup {
+    text-align: justify;
+    white-space: pre-line;
   }
