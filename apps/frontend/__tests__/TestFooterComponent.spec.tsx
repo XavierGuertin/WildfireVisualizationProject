@@ -1,9 +1,19 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 
 beforeEach(() => {
+  // Mock localStorage
+  const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => (store[key] = value || ''),
+      clear: () => (store = {}),
+    };
+  })();
+  Object.defineProperty(global, 'localStorage', { value: localStorageMock });
   jest.useFakeTimers();
 });
 
@@ -69,5 +79,25 @@ describe('Footer component', () => {
 
     // Verify slider value changed
     expect(slider.getAttribute('value')).toBe('50');
+    // Verify localStorage updated
+    expect(localStorage.getItem('playbackSpeed')).toBe('1');
+  });
+
+  it('displays a success message when speed is saved', async () => {
+    render(<Footer />);
+
+    const speedButton = screen.getByTestId('speed-button-2');
+    fireEvent.click(speedButton);
+
+    // Verify success message appears
+    expect(screen.getByText('speed_saved')).toBeInTheDocument();
+
+    // Advance timers to allow the success message to disappear
+    jest.advanceTimersByTime(1000);
+
+    // Wait for the message to disappear
+    await waitFor(() => {
+      expect(screen.queryByText('speed_saved')).toBeNull();
+    });
   });
 });
