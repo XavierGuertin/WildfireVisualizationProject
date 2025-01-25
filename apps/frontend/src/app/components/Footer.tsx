@@ -42,7 +42,7 @@ const Footer = () => {
   // Clear success and error messages after a timeout
   useEffect(() => {
     if (successMessage) {
-      const timeout = setTimeout(() => setSuccessMessage(null), 1000);
+      const timeout = setTimeout(() => setSuccessMessage(""), 1000);
       return () => clearTimeout(timeout);
     }
   }, [successMessage]);
@@ -53,6 +53,7 @@ const Footer = () => {
       return () => clearTimeout(timeout);
     }
   }, [errorMessage]);
+
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
