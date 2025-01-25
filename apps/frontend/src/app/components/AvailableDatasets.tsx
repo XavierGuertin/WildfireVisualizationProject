@@ -4,8 +4,12 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next'; // Import useTranslation for translations
 import '../styles/AvailableDatasets.css';
-import { FaChevronCircleLeft, FaChevronCircleRight, FaDatabase, FaFilter } from "react-icons/fa";
-import LoadingModule from './LoadingModule';
+import {
+  FaChevronCircleLeft,
+  FaChevronCircleRight,
+  FaDatabase,
+  FaFilter,
+} from 'react-icons/fa';
 
 export interface Dataset {
   city: string;
@@ -103,11 +107,13 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         case 'Latest Added':
           return (
-            new Date(a.latestAdded).getTime() - new Date(b.latestAdded).getTime()
+            new Date(a.latestAdded).getTime() -
+            new Date(b.latestAdded).getTime()
           );
         case 'Latest Updated':
           return (
-            new Date(a.latestUpdated).getTime() - new Date(b.latestUpdated).getTime()
+            new Date(a.latestUpdated).getTime() -
+            new Date(b.latestUpdated).getTime()
           );
         case 'Name':
           return a.name.localeCompare(b.name);
@@ -131,67 +137,79 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
       data-testid="datasets-container"
     >
-      <button
-        className={`collapse-button ${isCollapsed ? 'collapsed' : ''}`}
-        onClick={toggleCollapse}
-        data-testid="collapse-button"
-      >
-        {isCollapsed ? <FaChevronCircleLeft size={24} /> : <FaChevronCircleRight size={24} />}
-      </button>
-      {isCollapsed ? (
-        <FaDatabase fill="white" size={24} />
-      ) : (
-        <>
-          <div className="top-bar" data-testid="top-bar">
-            <h2 className="sidebar-title">{t('available_datasets')}</h2>
-            <label style={{ display: 'flex', alignItems: 'center' }} aria-label={t('toggle_datasets')}>
-              <input
-                type="checkbox"
-                checked={isToggled}
-                onChange={handleToggle}
-                style={{ display: 'none' }}
-                data-testid="toggle-checkbox"
-              />
-              <div
-                className={`toggle-button ${isToggled ? 'toggled' : ''}`}
-                data-testid="toggle-button"
-              ></div>
-            </label>
-          </div>
-          <div className="filter-container" data-testid="filter-container">
-            <div className="filter-icon">
-              <FaFilter size={24} />
-            </div>
-            {['Name', 'Date', 'Latest Added', 'Latest Updated'].map((filter) => (
-              <button
-                key={filter}
-                className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                onClick={() => sortDatasets(filter)}
-                data-testid={`filter-button-${filter}`}
+        <button
+          className={`collapse-button ${isCollapsed ? 'collapsed' : ''}`}
+          onClick={toggleCollapse}
+          data-testid="collapse-button"
+        >
+          {isCollapsed ? (
+            <FaChevronCircleLeft size={24} />
+          ) : (
+            <FaChevronCircleRight size={24} />
+          )}
+        </button>
+        {isCollapsed ? (
+          <FaDatabase fill="white" size={24} />
+        ) : (
+          <>
+            <div className="top-bar" data-testid="top-bar">
+              <h2 className="sidebar-title">{t('available_datasets')}</h2>
+              <label
+                style={{ display: 'flex', alignItems: 'center' }}
+                aria-label={t('toggle_datasets')}
               >
-                {t(filter.toLowerCase().replace(/ /g, '_'))}
-              </button>
-            ))}
-          </div>
-          <div className="buttons-container" data-testid="buttons-container">
-            {datasets.length > 0 ? (
-              datasets.map((dataset, index) => (
-                <button
-                  key={index}
-                  className={`dataset-button ${selectedDataset === dataset.name ? 'selected' : ''}`}
-                  onClick={() => handleDatasetClick(dataset)}
-                  data-testid={`dataset-button-${index}`}
-                >
-                  {dataset.name}
-                </button>
-              ))
-            ) : (
-              <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+                <input
+                  type="checkbox"
+                  checked={isToggled}
+                  onChange={handleToggle}
+                  style={{ display: 'none' }}
+                  data-testid="toggle-checkbox"
+                />
+                <div
+                  className={`toggle-button ${isToggled ? 'toggled' : ''}`}
+                  data-testid="toggle-button"
+                ></div>
+              </label>
+            </div>
+            <div className="filter-container" data-testid="filter-container">
+              <div className="filter-icon">
+                <FaFilter size={24} />
+              </div>
+              {['Name', 'Date', 'Latest Added', 'Latest Updated'].map(
+                (filter) => (
+                  <button
+                    key={filter}
+                    className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
+                    onClick={() => sortDatasets(filter)}
+                    data-testid={`filter-button-${filter}`}
+                  >
+                    {t(filter.toLowerCase().replace(/ /g, '_'))}
+                  </button>
+                ),
+              )}
+            </div>
+            <div className="buttons-container" data-testid="buttons-container">
+              {datasets.length > 0 ? (
+                datasets.map((dataset, index) => (
+                  <button
+                    key={index}
+                    className={`dataset-button ${selectedDataset === dataset.name ? 'selected' : ''}`}
+                    onClick={() => handleDatasetClick(dataset)}
+                    data-testid={`dataset-button-${index}`}
+                  >
+                    {dataset.name}
+                  </button>
+                ))
+              ) : (
+                <p data-testid="no-datasets-message">
+                  {t('no_datasets_available')}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 };
 
