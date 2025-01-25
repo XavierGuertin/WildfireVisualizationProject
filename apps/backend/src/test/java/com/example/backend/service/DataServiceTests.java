@@ -207,4 +207,41 @@ class DataServiceTests {
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Failed to fetch collections");
   }
+
+  @Test
+  void deleteAllCollections_Success() {
+    // Act
+    dataService.deleteAllCollections();
+
+    // Assert
+    verify(stacRepository, times(1)).deleteAllCollections();
+  }
+
+  @Test
+  void insertAndQueryCollection_ShouldLogError_WhenExceptionThrown() {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenThrow(new RuntimeException("Test exception"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.insertAndQueryCollection())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to process collection: Test exception");
+
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(0)).insertCollection(anyString());
+    verify(stacRepository, times(0)).queryCollection(anyString());
+  }
+
+  @Test
+  void deleteAllCollections_ShouldLogError_WhenExceptionThrown() {
+    // Arrange
+    doThrow(new RuntimeException("Test exception")).when(stacRepository).deleteAllCollections();
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.deleteAllCollections())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to delete collections: Test exception");
+
+    verify(stacRepository, times(1)).deleteAllCollections();
+  }
 }

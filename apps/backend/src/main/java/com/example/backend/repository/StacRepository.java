@@ -70,4 +70,16 @@ public class StacRepository {
       throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
     }
   }
+
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections from pgstac.collections");
+    try {
+      String sql = "DELETE FROM pgstac.collections";
+      jdbcTemplate.update(sql);
+      logger.info("All collections deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
+    }
+  }
 }

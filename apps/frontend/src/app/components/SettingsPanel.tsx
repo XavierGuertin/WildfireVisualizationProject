@@ -1,11 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next'; // Import useTranslation hook
-import '../styles/SettingsPanel.css'; // Import the CSS file
-import { IoSettingsOutline, IoLanguage, IoCheckmark, IoTrashOutline } from "react-icons/io5";
-import { PiArrowClockwiseFill } from "react-icons/pi";
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import '../styles/SettingsPanel.css';
+import {
+  IoCheckmark,
+  IoLanguage,
+  IoSettingsOutline,
+  IoTrashOutline,
+} from 'react-icons/io5';
+import { PiArrowClockwiseFill } from 'react-icons/pi';
+import {
+  fetchCollectionsFromEndpoint,
+  resetCollections,
+} from '../services/api';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
+const IS_NOT_FACTORY_RESET = false;
+const IS_FACTORY_RESET = true;
 
 const SettingsPanel: React.FC = () => {
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, i18n } = useTranslation();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
     isOpen: boolean;
@@ -32,22 +49,24 @@ const SettingsPanel: React.FC = () => {
     }));
   };
 
-  // Handles settings selection
-  const handleSaveEndpoint = () => {
-    if (isValidUrl(newApiEndpoint)) {
-      alert(`${t('api_endpoint')} ${t('save')}: ${newApiEndpoint}`);
+  const handleSaveAndFetchEndpoint = async (endpoint: string) => {
+    // This section is dependent on the task that
+    // enables the user to save the endpoint in the config
+    if (isValidUrl(endpoint)) {
+      const message = await fetchCollectionsFromEndpoint();
+      toast.success(message);
+
+      toast.success(t('api_endpoint_saved'));
       setDropdownState({ activeButton: null, isOpen: false });
     } else {
-      alert(t('invalid_url'));
+      toast.error(t('invalid_url'));
     }
   };
 
-  // Cancel button clicked
   const handleCancelEndpoint = () => {
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  // Handles language selection
   const handleLanguageSelect = (language: string) => {
     try {
       i18n.changeLanguage(language);
@@ -77,19 +96,68 @@ const SettingsPanel: React.FC = () => {
       return () => clearTimeout(timeout);
     }
   }, [errorMessage]);
-
-  // Handles reset actions
+      
   const handleReset = () => {
-    alert(t('reset_initiated'));
-    setDropdownState({ activeButton: null, isOpen: false });
+    handleResetDataFromEndpoint(IS_NOT_FACTORY_RESET).then(() =>
+      setDropdownState({ activeButton: null, isOpen: false }),
+    );
   };
 
   const handleFactoryReset = () => {
-    alert(t('factory_reset_initiated'));
-    setDropdownState({ activeButton: null, isOpen: false });
+    handleResetDataFromEndpoint(IS_FACTORY_RESET).then(() =>
+      setDropdownState({ activeButton: null, isOpen: false }),
+    );
   };
 
-  // Check if valid URL
+  const handleResetDataFromEndpoint = async (isFactoryReset: boolean) => {
+    MySwal.fire({
+      title: isFactoryReset ? t('factory_reset') : t('reset'),
+      text: isFactoryReset
+        ? t('confirm_factory_reset_data_from_endpoint')
+        : t('confirm_reset_data_from_endpoint'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t('yes'),
+      customClass: {
+        popup: 'custom-swal-popup',
+      },
+    }).then(async (result: { isConfirmed: any }) => {
+      if (result.isConfirmed) {
+        try {
+          if (isFactoryReset) {
+            // Phil/Ali you can put your reset config method call here
+            // (instead of ResetCollections but make sure to also call
+            // the resetCollections endpoint)
+            const message = await resetCollections();
+            toast.success(message);
+          } else {
+            const message = await resetCollections();
+            toast.success(message);
+          }
+
+          MySwal.fire({
+            title: t('api_endpoint'),
+            input: 'text',
+            inputPlaceholder: 'https://default-api-endpoint.com',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            showCancelButton: true,
+            confirmButtonText: t('save'),
+            cancelButtonText: t('cancel'),
+          }).then((result) => {
+            if (result.isConfirmed) {
+              handleSaveAndFetchEndpoint(result.value);
+            }
+          });
+        } catch (error: any) {
+          toast.error(error.message);
+        }
+      }
+    });
+  };
+
   const isValidUrl = (url: string) => {
     try {
       new URL(url);
@@ -99,10 +167,12 @@ const SettingsPanel: React.FC = () => {
     }
   };
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownState({ activeButton: null, isOpen: false });
       }
     };
@@ -117,12 +187,13 @@ const SettingsPanel: React.FC = () => {
 
   return (
     <div className="button-container" ref={dropdownRef}>
-      {/* Settings button */}
+      <ToastContainer />
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
           onClick={() => toggleDropdown('settings')}
           aria-expanded={dropdownState.activeButton === 'settings'}
+          aria-label="settings"
         >
           <IoSettingsOutline size={32} />
         </button>
@@ -139,7 +210,11 @@ const SettingsPanel: React.FC = () => {
                   onChange={(e) => setNewApiEndpoint(e.target.value)}
                 />
                 <div className="settings-prompt-buttons">
-                  <button onClick={handleSaveEndpoint}>{t('save')}</button>
+                  <button
+                    onClick={() => handleSaveAndFetchEndpoint(newApiEndpoint)}
+                  >
+                    {t('save')}
+                  </button>
                   <button onClick={handleCancelEndpoint}>{t('cancel')}</button>
                 </div>
               </div>
@@ -148,35 +223,43 @@ const SettingsPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Language Dropdown */}
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
           onClick={() => toggleDropdown('language')}
           aria-expanded={dropdownState.activeButton === 'language'}
+          aria-label="language"
         >
           <IoLanguage size={32} />
         </button>
         {dropdownState.activeButton === 'language' && (
           <div className="dropdown-content show">
             <button onClick={() => handleLanguageSelect('en')}>
-              {i18n.language === 'en' ? <IoCheckmark size={24} fill="black" /> : <PiArrowClockwiseFill size={24} fill="none" />}
+              {i18n.language === 'en' ? (
+                <IoCheckmark size={24} fill="black" />
+              ) : (
+                <PiArrowClockwiseFill size={24} fill="none" />
+              )}
               {t('english')}
             </button>
             <button onClick={() => handleLanguageSelect('fr')}>
-              {i18n.language === 'fr' ? <IoCheckmark size={24} fill="black" /> : <PiArrowClockwiseFill size={24} fill="none" />}
+              {i18n.language === 'fr' ? (
+                <IoCheckmark size={24} fill="black" />
+              ) : (
+                <PiArrowClockwiseFill size={24} fill="none" />
+              )}
               {t('french')}
             </button>
           </div>
         )}
       </div>
 
-      {/* Reset Dropdown */}
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
+          aria-label="reset"
         >
           <PiArrowClockwiseFill size={32} />
         </button>

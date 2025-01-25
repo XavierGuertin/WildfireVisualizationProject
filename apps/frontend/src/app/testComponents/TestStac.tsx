@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchCollectionsFromEndpoint } from '../services/api';
+import { returnListOfCollectionsFromEndpoint } from '../services/api';
 
 // Define the structure of the data being fetched
 interface StacData {
@@ -15,7 +15,7 @@ const TestStac: React.FC = () => {
     setLoading(true);
     setError(null); // Clear any previous errors
     try {
-      const result = await fetchCollectionsFromEndpoint();
+      const result = await returnListOfCollectionsFromEndpoint();
       if (result.error) {
         setError(result.error);
       } else {

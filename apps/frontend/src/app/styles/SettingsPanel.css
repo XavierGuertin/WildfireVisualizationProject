@@ -186,6 +186,7 @@
   .settings-prompt-buttons button:last-child:hover {
     background-color: #b32d39;
   }
+
 .message {
   padding: 10px;
   margin: 10px 0;
@@ -203,3 +204,8 @@
   background-color: #f8d7da;
   color: #721c24;
 }
+
+  .custom-swal-popup {
+    text-align: justify;
+    white-space: pre-line;
+  }
