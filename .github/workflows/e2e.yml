@@ -1,0 +1,69 @@
+name: E2E Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e_tests:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Start PostgreSQL, Backend, and Geoserver using Docker Compose
+      - name: Start Services
+        run: docker-compose up -d db backend geoserver
+
+      # Wait for Database to be Ready using Health Check
+      - name: Wait for Database
+        run: |
+          for i in {1..30}; do
+            if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=db) | grep -q "healthy"; then
+              echo "Database is ready!";
+              break;
+            fi;
+            echo "Waiting for the database...";
+            sleep 5;
+          done
+
+      # Wait for Geoserver to be Ready
+      - name: Wait for Geoserver
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8090/geoserver/web/ | grep -q "GeoServer"; then
+              echo "Geoserver is ready!";
+              break;
+            fi;
+            echo "Waiting for Geoserver...";
+            sleep 5;
+          done
+
+      # Set up Node.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # Install Node.js dependencies
+      - name: Install Node.js Dependencies
+        run: npm install --legacy-peer-deps
+
+      # Wait for Backend to Start
+      - name: Wait for Backend
+        run: sleep 20
+
+      # Run Cypress for E2E Testing
+      - name: Run Cypress E2E Tests
+        run: npx nx e2e frontend-e2e
+        env:
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+
+      # Post-Test Cleanup
+      - name: Cleanup
+        run: docker-compose down
