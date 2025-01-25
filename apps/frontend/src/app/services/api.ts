@@ -18,12 +18,13 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
   error: string;
 }> => {
   try {
-    const response = await fetch(`${BASE_URL}api/get-collections`);
+    const response = await fetch(`${BASE_URL}/api/get-collections`);
+    console.log('1) Fetching from: ', `${BASE_URL}/api/get-collections`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
     const data = await response.json();
-    console.log('Fetched collections:', data);
+    console.log('1.1) Fetched collectionssss:', data);
     return data;
   } catch (error: any) {
     console.error('Error fetching collections:', error);
@@ -31,9 +32,44 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
   }
 };  
 
+export const fetchCollectionsFromEndpointByName = async (): Promise<{
+  error: string;
+}> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections-by-name`);
+    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-name`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections by name:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections by name:', error);
+    return { error: 'Failed to fetch data by name' };
+  }
+}
+
+export const fetchCollectionsFromEndpointByDate = async (): Promise<{
+  error: string;
+}> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections-by-date`);
+    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-date`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections by name:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections by name:', error);
+    return { error: 'Failed to fetch data by name' };
+  }
+}
 export const fetchMetaData = async (collectionId: string): Promise<any> => {
   try {
-    const response = await fetch(`${BASE_URL}api/metadata/${collectionId}`);
+    const response = await fetch(`${BASE_URL}/api/metadata/${collectionId}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }

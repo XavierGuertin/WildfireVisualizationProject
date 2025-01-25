@@ -1,14 +1,14 @@
 package com.example.backend.repository;
 
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Map;
 
 @Repository
 public class StacRepository {
@@ -61,6 +61,32 @@ public class StacRepository {
     logger.debug("Fetching all collections");
     try {
       String sql = "SELECT * FROM pgstac.collections";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching all collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getAllCollectionsByName() {
+    logger.debug("Fetching all collections filtered by name");
+    try {
+      String sql = "SELECT * FROM pgstac.collections ORDER BY id";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching all collections filtered by name: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections filtered by name: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getAllCollectionsByDate() {
+    logger.debug("Fetching all collections");
+    try {
+      String sql = "SELECT * FROM pgstac.collections ORDER BY datetime";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;

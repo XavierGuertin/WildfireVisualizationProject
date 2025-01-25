@@ -1,17 +1,22 @@
 package com.example.backend.controller;
 
-import com.example.backend.service.DataService;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
+import com.example.backend.service.DataService;
 
 @RestController
 public class DataController {
@@ -101,4 +106,31 @@ public class DataController {
       return ResponseEntity.internalServerError().body(null);
     }
   }
+
+  @GetMapping("/api/get-collections-by-name")
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
+    logger.info("Received request to get collections by name");
+    try {
+      List<Map<String, Object>> collections = dataService.getCollectionsByName();
+      logger.debug("Successfully fetched collections by name");
+      return ResponseEntity.ok(collections);
+    } catch (Exception e) {
+      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
+  @GetMapping("/api/get-collections-by-date")
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate() {
+    logger.info("Received request to get collections by name");
+    try {
+      List<Map<String, Object>> collections = dataService.getCollectionsByDate();
+      logger.debug("Successfully fetched collections by name");
+      return ResponseEntity.ok(collections);
+    } catch (Exception e) {
+      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+  
 }

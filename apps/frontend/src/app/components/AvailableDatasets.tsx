@@ -9,7 +9,7 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { fetchCollectionsFromEndpoint, fetchMetaData } from '../services/api';
+import { fetchCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
 
 export interface DatasetMetadata {
   date: string;
@@ -31,7 +31,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 }) => {
   const { t } = useTranslation(); // Initialize useTranslation for translations
   const [activeFilter, setActiveFilter] = useState<string>('Name');
-  const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [datasetIds, setDatasetIds] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
@@ -39,14 +38,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
   useEffect(() => {
 
-    const fetchMetaDataDatasets = async () => {
+    const fetchDefaultDatasets = async () => {
       try {
         const datasetList: string[] | null = []
         const response: any = await fetchCollectionsFromEndpoint()
         for(let i = 0; i < response.length; i++){
           const entryId = response[i].id
           datasetList.push(entryId)
-        }
+        } 
         
         setDatasetIds(datasetList);
       } catch (error) {
@@ -54,32 +53,39 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       }
     };
 
-    fetchMetaDataDatasets();
+    fetchDefaultDatasets();
   }, []);
 
-  const sortDatasets = (filter: string) => {
+  // Handle filter changes
+  const handleFilterChange = async (filter: string) => {
     setActiveFilter(filter);
-    const sortedDatasets = [...datasets].sort((a, b) => {
-      switch (filter) {
-        case 'Date':
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'Latest Added':
-          return (
-            new Date(a.latestAdded).getTime() -
-            new Date(b.latestAdded).getTime()
-          );
-        case 'Latest Updated':
-          return (
-            new Date(a.latestUpdated).getTime() -
-            new Date(b.latestUpdated).getTime()
-          );
-        case 'Name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
+    
+    try {
+      let datasetList: string[] = [];
+      let response: any;
+
+      // Call appropriate API based on the selected filter
+      if(filter === 'Name'){
+        response = await fetchCollectionsFromEndpointByName();
+      } else if (filter === 'Date'){
+        response = await fetchCollectionsFromEndpointByDate();
+      } else if (filter === 'Latest Added'){
+        response = await fetchCollectionsFromEndpoint();
+        //TODO: call latestAdded endpoint, once we have Latest Added attribute
+      } else if (filter === 'Latest Updated'){
+        response = await fetchCollectionsFromEndpoint();
+        //TODO: call latestUpdated endpoint, once we have Latest Added attribute
       }
-    });
-    setDatasets(sortedDatasets);
+
+      for(let i = 0; i < response.length; i++){
+        datasetList.push(response[i].id);
+      } 
+
+      setDatasetIds(datasetList);
+      
+    } catch(error){
+      console.log(`Error fetching datasets for filter ${filter}:`, error);
+    }
   };
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
@@ -142,7 +148,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   <button
                     key={filter}
                     className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                    onClick={() => sortDatasets(filter)}
+                    onClick={() => handleFilterChange(filter)}
                     data-testid={`filter-button-${filter}`}
                   >
                     {t(filter.toLowerCase().replace(/ /g, '_'))}
