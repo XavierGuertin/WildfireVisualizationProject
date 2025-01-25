@@ -42,7 +42,7 @@ jobs:
       # Wait for Geoserver to be Ready
       - name: Wait for Geoserver
         run: |
-          for i in {1..30}; do
+          for i in {1..180}; do
             if curl -s http://localhost:8090/geoserver/web/ | grep -q "GeoServer"; then
               echo "Geoserver is ready!";
               break;
@@ -60,6 +60,10 @@ jobs:
       # Install Node.js dependencies
       - name: Install Node.js Dependencies
         run: npm install --legacy-peer-deps
+
+      # Build Frontend Application
+      - name: Build Frontend
+        run: npx nx build frontend
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
