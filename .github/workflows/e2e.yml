@@ -39,11 +39,11 @@ jobs:
             sleep 5;
           done
 
-      # Wait for Geoserver to be Ready
+      # Wait for Geoserver to be Ready using Health Check
       - name: Wait for Geoserver
         run: |
-          for i in {1..180}; do
-            if curl -s http://localhost:8090/geoserver/web/ | grep -q "GeoServer"; then
+          for i in {1..30}; do
+            if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=geoserver) | grep -q "healthy"; then
               echo "Geoserver is ready!";
               break;
             fi;
