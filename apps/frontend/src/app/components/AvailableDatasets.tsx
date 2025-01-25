@@ -9,7 +9,7 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { fetchCollectionsFromEndpoint, fetchMetaData } from '../services/api';
+import { fetchMetaData, returnListOfCollectionsFromEndpoint } from '../services/api';
 
 export interface DatasetMetadata {
   date: string;
@@ -42,7 +42,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     const fetchMetaDataDatasets = async () => {
       try {
         const datasetList: string[] | null = []
-        const response: any = await fetchCollectionsFromEndpoint()
+        const response: any = await returnListOfCollectionsFromEndpoint()
         for(let i = 0; i < response.length; i++){
           const entryId = response[i].id
           datasetList.push(entryId)
