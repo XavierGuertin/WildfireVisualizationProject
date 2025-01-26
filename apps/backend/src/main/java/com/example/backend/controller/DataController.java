@@ -106,11 +106,12 @@ public class DataController {
     }
   }
 
-  @PostMapping("/api/set-datalayer-geometry/{id}")
-  public ResponseEntity<String> insertView(@RequestBody String collectionId) {
+  @GetMapping("/api/set-datalayer-geometry/{id}")
+  public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
     try{
+      logger.info("Received request to /api/set-datalayer-geometry");
       dataService.insertView(collectionId);
-      logger.debug("Successfully processed custom collection");
+      logger.info("Successfully processed custom collection");
       return ResponseEntity.ok("Successfully inserted view");
     } catch (Exception e) {
       logger.error("Error inserting View: {}", e.getMessage(), e);

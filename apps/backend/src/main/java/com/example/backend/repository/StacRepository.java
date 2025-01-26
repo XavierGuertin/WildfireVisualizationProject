@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -95,21 +96,45 @@ public class StacRepository {
     }
   }
 
-  public void setDatalayerView(String collectionId){
-    logger.debug("Attempting to create / insert geometry of selected dataset into datalayer view", collectionId);
+  public void setDatalayerView(String collectionId) {
+    logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
     try {
-      String sql = "CREATE OR REPLACE VIEW DataLayer AS" +
-        " SELECT geometry AS geometry" + 
-        " FROM pgstac.collections WHERE id = ?";
-      jdbcTemplate.queryForObject(
-        sql,
-        Object.class,
-        collectionId
-      );
-      logger.info("Successfully inserted view");
+        // Safely escape single quotes by replacing them with double single quotes
+        String safeCollectionId = collectionId.replace("'", "''");
+
+        String sqlDrop = "DROP VIEW IF EXISTS Datalayer";
+
+        jdbcTemplate.execute(sqlDrop);
+
+        String sqlInsert = "CREATE VIEW DataLayer AS" +
+          " SELECT geometry FROM pgstac.collections WHERE id = '" + safeCollectionId + "'";
+
+        jdbcTemplate.execute(sqlInsert);
+
+        logger.info("Successfully created/replaced view for collectionId: {}", collectionId);
     } catch (DataAccessException e) {
-      logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
+        logger.error("Error querying collection: {}", e.getMessage(), e);
+        throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
     }
+}
+
+public boolean checkDatalayerView() {
+  try {
+      // Ensure correct case and schema handling
+      String sql = "SELECT COUNT(*) FROM DataLayer";
+
+      logger.info("Executing SQL: {}", sql);
+
+      int result = jdbcTemplate.queryForObject(sql, Integer.class);
+
+      return result == 1;  // If ID exists, return true
+  } catch (EmptyResultDataAccessException e) {
+      logger.info("No data found: {}");
+      return false;
+  } catch (DataAccessException e) {
+      logger.error("Error querying DataLayer: {}", e.getMessage(), e);
+      return false;
   }
+}
+
 }

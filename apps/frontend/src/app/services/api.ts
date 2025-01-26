@@ -30,7 +30,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
 
 export const insertDatalayerView = async (collectionId: string): Promise<any> => {
   try {
-    const response = await fetch(`${BASE_URL}api/insert-datalayer-geometry/${collectionId}`);
+    const response = await fetch(`${BASE_URL}api/set-datalayer-geometry/${collectionId}`);
     if(!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
