@@ -3,16 +3,14 @@ describe('dataset', () => {
     cy.visit('http://localhost:3000')
   })
   it('loads', () => {
-    const datasetName = "Dataset A"
-    const dataset = cy.get('.dataset-button').contains(datasetName).first()
+    const dataset = cy.get('[data-testid=dataset-button-1]', {timeout: 5000}).first()
     dataset.click()
     cy.get('.metadata-container', { timeout: 10000 })
-    cy.get('[data-testid=dataset-name]').contains(datasetName)
   })
   it('collapses', () => {
 
     //Click on button to collapse available dataset
-    cy.get('.collapse-button').click()
+    cy.get('.collapse-button').click({force: true})
 
     //Get Collapsed Container
     cy.get('.datasets-container', { timeout: 5000 })

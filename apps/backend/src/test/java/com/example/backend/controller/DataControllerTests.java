@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +62,34 @@ class DataControllerTests {
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Test error");
+  }
+
+  @Test
+  void getMetaData_Success() throws JsonProcessingException {
+
+    //Arrange
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
+
+    //Act
+    ResponseEntity<String> response = dataController.getMetaData("ID");
+
+    //Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+  }
+
+  @Test
+  void getMetaData_Failure() throws JsonProcessingException {
+
+    //Arrange
+    when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
+
+    //Act
+    ResponseEntity<String> response = dataController.getMetaData("ID");
+
+    //Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isEqualTo("Error processing MetaData: Entry not found");
   }
 
   @Test

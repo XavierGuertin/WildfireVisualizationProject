@@ -18,19 +18,11 @@ describe(MapMetaData, () => {
         jest.clearAllMocks()
     })
 
-    it("meta data displays city prop", () => {
-
-        const {getByTestId} = render(<MapMetaData city='Montreal' onLoadDataset={function (): void {
-            throw new Error('Function not implemented.');
-        } }/>);
-        const displayedCity = getByTestId("city-div").textContent;
-        expect(displayedCity).toEqual("Montreal")
-    })
     it("meta data displays dataset name prop", () => {
         const {getByTestId} = render(<MapMetaData name='Dataset1' onLoadDataset={function (): void {
             throw new Error('Function not implemented.');
         } }/>)
-        const displayedName = getByTestId("dataset-name").textContent;
+        const displayedName = getByTestId("name-div").textContent;
         expect(displayedName).toEqual("Dataset1")
     })
     it("meta data displays description prop", () => {
@@ -62,14 +54,11 @@ describe(MapMetaData, () => {
         expect(displayedSource).toEqual("Source")
     })
     it("all data displays in the metadata box", () => {
-        const {getByTestId} = render(<MapMetaData city='Montreal' name='Dataset1' description='Desc' format='CSV' processes='Process' datasetSource='Source' onLoadDataset={function (): void {
+        const {getByTestId} = render(<MapMetaData name='Dataset1' description='Desc' format='CSV' processes='Process' datasetSource='Source' onLoadDataset={function (): void {
             throw new Error('Function not implemented.');
         } }/>)
 
-        const displayedCity = getByTestId("city-div").textContent;
-        expect(displayedCity).toEqual("Montreal")
-
-        const displayedName = getByTestId("dataset-name").textContent;
+        const displayedName = getByTestId("name-div").textContent;
         expect(displayedName).toEqual("Dataset1")
 
         const displayedDesc = getByTestId("dataset-description").textContent;

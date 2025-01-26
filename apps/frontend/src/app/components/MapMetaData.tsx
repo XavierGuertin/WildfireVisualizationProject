@@ -4,7 +4,6 @@ import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
 
 interface MapMetaDataProps {
-  city?: string;
   name?: string;
   description?: string;
   format?: string;
@@ -14,7 +13,6 @@ interface MapMetaDataProps {
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  city = "",
   name = "",
   description = "",
   format = "",
@@ -39,12 +37,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const NonCollapsedMetaData = (
     <div className="metadata-container">
-      <div className="header" onClick={toggleCollapse} data-testid="city-div">
-        {city || t("unknown_city")}
+      <div className="header" onClick={toggleCollapse} data-testid="name-div">
+        {name || t("unknown_name")}
       </div>
       <div className="content">
         {[
-          { label: t("name"), value: name, testId: "dataset-name" },
           { label: t("description"), value: description, testId: "dataset-description" },
           { label: t("format"), value: format, testId: "dataset-format" },
           { label: t("processes"), value: processes, testId: "dataset-processes" },
