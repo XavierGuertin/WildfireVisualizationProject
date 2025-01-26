@@ -28,11 +28,30 @@ const SettingsPanel: React.FC = () => {
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
 
-  const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
-    'https://default-api-endpoint.com',
-  );
+  const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
 
+  // Initialize language from local storage and handle toast messages
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage && !languageInitialized) {
+      const savedLanguage = localStorage.getItem('language');
+
+      if (savedLanguage) {
+        // If a language is saved in localStorage, use it
+        if (savedLanguage !== i18n.language) {
+          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
+        }
+        toast.success(t('language_retrieved')); // Show success message if language is retrieved
+      } else {
+        // If no language is saved, use the default language
+        toast.info(t('default_language_retrieved')); // Show default language message
+      }
+      setLanguageInitialized(true); // Mark language initialization as done
+    }
+  }, [i18n, t, languageInitialized]);
+
+  // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
@@ -60,6 +79,7 @@ const SettingsPanel: React.FC = () => {
 
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
+    localStorage.setItem('language', language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -245,5 +265,4 @@ const SettingsPanel: React.FC = () => {
     </div>
   );
 };
-
 export default SettingsPanel;

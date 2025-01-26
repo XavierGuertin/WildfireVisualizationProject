@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { toast } from 'react-toastify';
 import SettingsPanel from '../src/app/components/SettingsPanel';
+import Footer from '../src/app/components/Footer';
 
 jest.mock('sweetalert2');
 jest.mock('../src/app/services/api');
@@ -57,6 +58,7 @@ describe('Test SettingsPanel component', () => {
     fireEvent.change(inputField, {
       target: { value: 'https://new-api-endpoint.com' },
     });
+
     expect(inputField.value).toBe('https://new-api-endpoint.com');
   });
 
@@ -89,6 +91,7 @@ describe('Test SettingsPanel component', () => {
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
+
 
     const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
     const saveButton = screen.getByText('save');
@@ -264,5 +267,64 @@ describe('Test SettingsPanel component', () => {
       expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
       expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
     });
+  });
+});
+
+describe('Local Storage functionality in SettingsPanel', () => {
+  // Mock alert function to avoid JSDOM error
+  beforeAll(() => {
+    window.alert = jest.fn();
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it('should retrieve the saved language from local storage on initialization', () => {
+    // Set a saved language in localStorage
+    localStorage.setItem('language', 'fr');
+
+    // Render the component
+    render(<SettingsPanel />);
+
+    // Verify that the language retrieved from local storage is applied
+    expect(localStorage.getItem('language')).toBe('fr');
+  });
+
+  it('should save the selected language to local storage when changed', () => {
+    render(<SettingsPanel />);
+
+    // Open the language dropdown
+    const languageButton = screen.getByRole('button', { name: /language/i }); // Assuming the button has the 'language' name
+    fireEvent.click(languageButton);
+
+    // Select French
+    const frenchButton = screen.getByRole('button', { name: /french/i });
+    fireEvent.click(frenchButton);
+
+    // Verify that the language was saved in local storage
+    expect(localStorage.getItem('language')).toBe('fr');
+
+    // Open the language dropdown again and select English
+    fireEvent.click(languageButton);
+    const englishButton = screen.getByRole('button', { name: /english/i });
+    fireEvent.click(englishButton);
+
+    // Verify that the language was updated in local storage
+    expect(localStorage.getItem('language')).toBe('en');
+  });
+  it('should initialize language from localStorage and show success toast', async () => {
+    localStorage.setItem('language', 'fr');
+
+    render(<SettingsPanel />);
+
+    // Ensure that toast.success was called after language retrieval
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('language_retrieved');
+    });
+
+    // Ensure that the language change was triggered
+    expect(localStorage.getItem('language')).toBe('fr');
   });
 });
