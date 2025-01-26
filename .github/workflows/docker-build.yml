@@ -4,21 +4,24 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev  # Triggers on merging PRs to main branch
+      - dev  # Triggers on pushes to the dev branch
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - uses: actions/checkout@v4
 
+      # Java Setup
       - name: Java Setup
         uses: actions/setup-java@v2
         with:
           java-version: '22'
           distribution: 'adopt'
 
+      # Build Backend
       - name: Build Backend
         run: mvn clean package -f apps/backend
 
@@ -36,17 +39,20 @@ jobs:
           sudo apt-get install -y docker-compose
 
       # Build and start the services in detached mode
-      - name: Build and start services
+      - name: Build and Start Services
         run: docker-compose up --build -d
         env:
-          REACT_APP_BACKEND_URL: http://backend:8080
+          SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: password
+          NEXT_PUBLIC_BACKEND_URL: http://backend:8080
           MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
 
-      # Push images to Docker Hub
-      - name: Push Docker images
+      # Push Docker images to Docker Hub
+      - name: Push Docker Images
         run: docker-compose push
 
       # Tear down the services
-      - name: Tear Down the Docker-Compose
+      - name: Tear Down Services
         if: always()
         run: docker-compose down
