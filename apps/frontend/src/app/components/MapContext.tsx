@@ -14,7 +14,9 @@ const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefine
 
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
-    const mapRef = useRef<Map | null>(null);    
+    const mapRef = useRef<Map | null>(null);  
+    
+    //Timeline playback speed
     const [speed, setSpeed] = useState(() => {
         // Load speed from local storage or default to 1
         try {
@@ -31,8 +33,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
         if (mapRef.current) {
         mapRef.current.getView().animate({
             center: [-75.6972, 45.4215],
-            zoom: 5,
-            duration: 1000,
+            zoom: 1,
         });
         }
     };

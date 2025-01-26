@@ -30,7 +30,7 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const {setLayer, setSpeed} = useMapLayerContext();
+  const {setLayer, setSpeed, resetView} = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
@@ -127,6 +127,7 @@ const SettingsPanel: React.FC = () => {
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
+        resetView();
         try {
           if (isFactoryReset) {
             const message = await resetConfig();
