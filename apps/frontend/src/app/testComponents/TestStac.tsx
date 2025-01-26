@@ -10,14 +10,14 @@ interface StacData {
 const IS_COMPONENT_ENABLED = false;
 
 const TestStac: React.FC = () => {
-  // If the component is disabled, return null (renders nothing)
-  if (!IS_COMPONENT_ENABLED) {
-    return null;
-  }
-
   const [stacData, setStacData] = useState<StacData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If the component is disabled, return null (renders nothing)
+  if (!IS_COMPONENT_ENABLED) {
+    return <></>; // Explicitly return an empty fragment to satisfy linting rules
+  }
 
   const handleFetchData = async () => {
     setLoading(true);
