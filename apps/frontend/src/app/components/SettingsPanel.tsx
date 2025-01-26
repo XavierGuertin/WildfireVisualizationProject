@@ -82,6 +82,7 @@ const SettingsPanel: React.FC = () => {
       localStorage.removeItem('playbackSpeed');
       setLayer('default');
       resetCollections();
+      return 'Factory reset successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
     }
