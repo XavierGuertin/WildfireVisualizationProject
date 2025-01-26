@@ -79,11 +79,11 @@ To get started as a developer on this project:
     ```
 6. **Launch the Backend Once built, you can serve the backend:**
     ```bash
-    nx serve backend
+    nx dev backend
     ```
 7. **Launch the Frontend After the backend is running, you can start the frontend:**
     ```bash
-    nx serve frontend
+    nx dev frontend
     ```
 
 ## Running Production
