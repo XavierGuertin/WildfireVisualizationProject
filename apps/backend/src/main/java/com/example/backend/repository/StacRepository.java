@@ -59,22 +59,28 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> queryMetaData(){
-    logger.debug("Querying metadata for all collections");
+  public List<Map<String, Object>> getAllCollections() {
+    logger.debug("Fetching all collections");
     try {
-      String sql = "SELECT id as id, " +
-        " (content ->> 'title') AS title," +
-        " (content ->> 'description') AS description," +
-        " datetime AS datetime," +
-        " end_datetime as end_datetime," +
-        " (content -> 'links') as links" +
-        " FROM pgstac.collections";
+      String sql = "SELECT * FROM pgstac.collections";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;
     } catch (DataAccessException e) {
-      logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
+      logger.error("Error fetching all collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+    }
+  }
+
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections from pgstac.collections");
+    try {
+      String sql = "DELETE FROM pgstac.collections";
+      jdbcTemplate.update(sql);
+      logger.info("All collections deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
     }
   }
 
@@ -95,7 +101,7 @@ public class StacRepository {
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
     }
   }
-
+  
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
     try {

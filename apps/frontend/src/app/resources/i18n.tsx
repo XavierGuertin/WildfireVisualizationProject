@@ -10,11 +10,14 @@ const resources = {
         cancel: "Cancel",
         invalid_url: "Invalid URL. Please enter a valid API endpoint.",
         enter_new_api_endpoint: "Enter new API endpoint",
+        api_endpoint_saved: "API Endpoint Successfully Saved",
         //Language
         english: "English",
         french: "French",
         //Reset
         reset: "Reset",
+        confirm_reset_data_from_endpoint: "Collections in the database will be deleted. You will then be prompted to enter the endpoint to fetch new collections. \nDo you want to proceed?",
+        confirm_factory_reset_data_from_endpoint: "All data,  simulation configurations, and configurations files will be deleted. You will then be prompted to enter the endpoint to fetch new collections. \nDo you want to proceed?",
         factory_reset: "Factory Reset",
         reset_initiated: "Reset initiated",
         factory_reset_initiated: "Factory Reset initiated",
@@ -42,7 +45,10 @@ const resources = {
         collapse: "Collapse",
         default_layer: "Default Layer",
         topographical_layer: "Topographical Layer",
-        satellite_layer: "Satellite Layer"
+        satellite_layer: "Satellite Layer",
+        //Decisions
+        yes: "Yes",
+        no: "No"
     },
   },
   fr: {
@@ -53,11 +59,14 @@ const resources = {
         cancel: "Annuler",
         invalid_url: "URL invalide. Veuillez entrer un point d'API valide.",
         enter_new_api_endpoint: "Entrez un nouveau point d'API",
+        api_endpoint_saved: "Point d'API enregistré avec succès",
         //Language
         english: "Anglais",
         french: "Français",
         //Reset
         reset: "Réinitialiser",
+        confirm_reset_data_from_endpoint: "Les collections dans la base de données seront supprimées. Vous serez ensuite invité à entrer l'endpoint pour récupérer de nouvelles collections. \nVoulez-vous continuer?",
+        confirm_factory_reset_data_from_endpoint: "Toutes les données, configurations de simulation et fichiers de configuration seront supprimés. Vous serez ensuite invité à entrer l'endpoint pour récupérer de nouvelles collections. \nVoulez-vous continuer ?",
         factory_reset: "Réinitialisation d'Usine",
         reset_initiated: "Réinitialisation démarrée",
         factory_reset_initiated: "Réinitialisation d'Usine démarrée",
@@ -85,7 +94,10 @@ const resources = {
         collapse: "Réduire",
         default_layer: "Calque par Défaut",
         topographical_layer: "Calque Topographique",
-        satellite_layer: "Calque Satellite"
+        satellite_layer: "Calque Satellite",
+        //Decisions
+        yes: "Oui",
+        no: "Non"
     },
   },
 };

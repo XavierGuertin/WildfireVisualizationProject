@@ -16,7 +16,7 @@ interface MapMetaDataProps {
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  id = "",
+  id="",
   name = "",
   description = "",
   format = "",
@@ -30,7 +30,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   onLoadDataset = async () => {
     await insertDatalayerView(id);
-    changeLayer()
+    changeLayer();
     };
 
   const CollapsedMetaData = (
@@ -46,7 +46,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const NonCollapsedMetaData = (
     <div className="metadata-container">
-      <div className="header" onClick={toggleCollapse} data-testid="city-div">
+      <div className="header" onClick={toggleCollapse} data-testid="name-div">
         {name || t("unknown_name")}
       </div>
       <div className="content">

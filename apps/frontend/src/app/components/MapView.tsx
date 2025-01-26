@@ -61,8 +61,6 @@ const dataLayer = new TileLayer({
 });
 
 export const changeLayer = () => {
-  console.log("here louis")
-  console.log(dataLayer)
   dataLayer.getSource()?.updateParams({'TIMESTAMP' : Date.now()});
 }
 
