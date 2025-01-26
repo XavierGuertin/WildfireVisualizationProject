@@ -6,8 +6,15 @@ interface StacData {
   [key: string]: any; // Adjust this based on the exact structure of your STAC data
 }
 
+// Hardcoded flag to enable/disable the component
+const IS_COMPONENT_ENABLED = false;
+
 const TestStac: React.FC = () => {
-  const [isEnabled, setIsEnabled] = useState(false); // Control rendering with this state
+  // If the component is disabled, return null (renders nothing)
+  if (!IS_COMPONENT_ENABLED) {
+    return null;
+  }
+
   const [stacData, setStacData] = useState<StacData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,24 +52,11 @@ const TestStac: React.FC = () => {
     overflowWrap: 'break-word',
   };
 
-  if (!isEnabled) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <h2>TestStac Component is Disabled</h2>
-        <button onClick={() => setIsEnabled(true)}>Enable Component</button>
-      </div>
-    );
-  }
-
   return (
     <div style={containerStyle}>
       <h2>Test STAC Endpoint</h2>
       <button onClick={handleFetchData} disabled={loading}>
         {loading ? 'Loading...' : 'Fetch Data'}
-      </button>
-
-      <button onClick={() => setIsEnabled(false)} style={{ marginLeft: '10px' }}>
-        Disable Component
       </button>
 
       {error && (
