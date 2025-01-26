@@ -100,4 +100,50 @@ describe('Footer component', () => {
       expect(screen.queryByText('speed_saved')).toBeNull();
     });
   });
+
+  it('displays an error message if localStorage throws an error when saving speed', () => {
+    // Mock localStorage to throw an error
+    Object.defineProperty(global, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('1'),
+        setItem: jest.fn().mockImplementation(() => { throw new Error('LocalStorage Error'); }),
+      },
+      writable: true,
+    });
+
+    render(<Footer />);
+
+    const speedButton = screen.getByTestId('speed-button-2');
+    fireEvent.click(speedButton);
+
+    // Verify error message appears
+    expect(screen.getByText('Failed to save playback speed.')).toBeInTheDocument();
+  });
+
+  it('displays success message when speed is changed', () => {
+    render(<Footer />);
+
+    // Change speed to 1.5x
+    const speedButton = screen.getByTestId('speed-button-1.5');
+    fireEvent.click(speedButton);
+
+    // Check that the success message is displayed
+    expect(screen.getByText('speed_saved')).toBeInTheDocument();
+  });
+
+  it('handles keyboard spacebar for play/pause toggle', () => {
+    render(<Footer />);
+
+    // Trigger spacebar keydown event to toggle play/pause
+    fireEvent.keyDown(window, { code: 'Space' });
+
+    // Verify play is toggled to pause
+    expect(screen.getByTestId('pause-icon')).toBeInTheDocument();
+
+    // Trigger spacebar keydown event again to toggle back to play
+    fireEvent.keyDown(window, { code: 'Space' });
+
+    // Verify play is toggled back to play icon
+    expect(screen.getByTestId('play-icon')).toBeInTheDocument();
+  });
 });

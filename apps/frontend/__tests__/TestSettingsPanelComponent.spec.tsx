@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { toast } from 'react-toastify';
 import SettingsPanel from '../src/app/components/SettingsPanel';
+import Footer from '../src/app/components/Footer';
 
 jest.mock('sweetalert2');
 jest.mock('../src/app/services/api');
@@ -66,7 +67,7 @@ describe('Test SettingsPanel component', () => {
       'Collections fetched successfully',
     );
     render(<SettingsPanel />);
-    
+
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
 
@@ -122,7 +123,7 @@ describe('Test SettingsPanel component', () => {
     expect(settingsButton).not.toHaveClass('active');
     expect(screen.queryByLabelText('api_endpoint:')).not.toBeInTheDocument();
   });
-  
+
   it('should not close settings dropdown if clicking inside dropdown', () => {
     render(<SettingsPanel />);
 
@@ -295,11 +296,11 @@ describe('Local Storage functionality in SettingsPanel', () => {
     render(<SettingsPanel />);
 
     // Open the language dropdown
-    const languageButton = screen.getAllByRole('button')[1];
+    const languageButton = screen.getByRole('button', { name: /language/i }); // Assuming the button has the 'language' name
     fireEvent.click(languageButton);
 
     // Select French
-    const frenchButton = screen.getByRole('button', { name: 'french' });
+    const frenchButton = screen.getByRole('button', { name: /french/i });
     fireEvent.click(frenchButton);
 
     // Verify that the language was saved in local storage
@@ -307,10 +308,55 @@ describe('Local Storage functionality in SettingsPanel', () => {
 
     // Open the language dropdown again and select English
     fireEvent.click(languageButton);
-    const englishButton = screen.getByRole('button', { name: 'english' });
+    const englishButton = screen.getByRole('button', { name: /english/i });
     fireEvent.click(englishButton);
 
     // Verify that the language was updated in local storage
     expect(localStorage.getItem('language')).toBe('en');
+  });
+  it('should save the language and display a success message', () => {
+    render(<SettingsPanel />);
+
+    // Mock i18n.changeLanguage to simulate a successful language change
+    const languageButton = screen.getByRole('button', { name: /language/i });
+    fireEvent.click(languageButton);
+
+    const frenchButton = screen.getByRole('button', { name: /french/i });
+    fireEvent.click(frenchButton);
+
+    // Check if the language is saved in localStorage
+    expect(localStorage.getItem('language')).toBe('fr');
+
+    // Ensure the success message is displayed
+    expect(screen.getByText('language_saved')).toBeInTheDocument();
+
+    // Optional: Check if the success message disappears after 1 second
+    setTimeout(() => {
+      expect(screen.queryByText('language_saved')).not.toBeInTheDocument();
+    }, 1000);
+  });
+
+  it('displays an error message if language is not saved', () => {
+    // Mock localStorage to throw an error
+    Object.defineProperty(global, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('english'),
+        setItem: jest.fn().mockImplementation(() => {
+          throw new Error('LocalStorage Error');
+        }),
+      },
+      writable: true,
+    });
+
+    render(<SettingsPanel />);
+
+    const languageButton = screen.getByRole('button', { name: /language/i });
+    fireEvent.click(languageButton);
+
+    const frenchButton = screen.getByRole('button', { name: /french/i });
+    fireEvent.click(frenchButton);
+
+    // Verify error message appears
+    expect(screen.getByText('language_save_error')).toBeInTheDocument();
   });
 });
