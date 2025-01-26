@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
+import { MapProvider } from '../src/app/components/MapContext';
 
 jest.mock('react-toastify');
 beforeEach(() => {
@@ -26,7 +27,7 @@ afterEach(() => {
 
 describe('Footer component', () => {
   it('renders the footer with initial elements', () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     // Verify speed buttons
     [0.5, 1, 1.5, 2, 4].forEach((speed) => {
@@ -41,7 +42,7 @@ describe('Footer component', () => {
   });
 
   it('toggles play and pause states correctly', () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     // Click to start playing
     const playPauseButton = screen.getByTestId('play-pause-button');
@@ -54,7 +55,7 @@ describe('Footer component', () => {
   });
 
   it('resets to initial state when stop button is pressed', () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     // Start playback
     const playPauseButton = screen.getByTestId('play-pause-button');
@@ -74,7 +75,7 @@ describe('Footer component', () => {
   });
 
   it('changes the slider value when user interacts with it', () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     const slider = screen.getByTestId('slider');
     fireEvent.change(slider, { target: { value: '50' } });
@@ -89,17 +90,17 @@ describe('Footer component', () => {
   it('should display toast message when speed is retrieved from localStorage', async () => {
     localStorage.setItem('playbackSpeed', '1.5');
 
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved'));
   });
   it('should display toast message when default speed is used (no speed in localStorage)', async () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
   });
   it('should handle speed change and save to localStorage', () => {
-    render(<Footer />);
+    render(<MapProvider><Footer /></MapProvider>);
 
     const speedButton = screen.getByTestId('speed-button-1.5');
 
