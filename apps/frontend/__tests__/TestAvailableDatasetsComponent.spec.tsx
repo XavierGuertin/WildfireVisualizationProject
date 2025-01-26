@@ -1,15 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import AvailableDatasets, { Dataset } from '../src/app/components/AvailableDatasets';
+import AvailableDatasets, { DatasetMetadata } from '../src/app/components/AvailableDatasets';
 import axios from 'axios';
+import fetchMock from 'jest-fetch-mock';
+import * as api from '../src/app/services/api'
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const mockDatasets: Dataset[] = [
-  { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', city: 'City A', description: 'Description A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
-  { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', city: 'City B', description: 'Description B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' }
+const mockDatasets: DatasetMetadata[] = [
+  { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', description: 'Description A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
+  { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', description: 'Description B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' }
 ];
 
 describe('Test AvailableDatasets component', () => {
@@ -24,11 +26,11 @@ describe('Test AvailableDatasets component', () => {
   it('should call onDatasetClick on dataset click', async () => {
     const mockDatasets = [
       {
+        id: "test",
         name: 'Dataset A',
         date: '2023-01-01',
         latestAdded: '2023-02-01',
         latestUpdated: '2023-03-01',
-        city: 'City A',
         description: 'Description for Dataset A',
         format: 'GeoJSON',
         processes: 'Data analysis',
@@ -36,8 +38,13 @@ describe('Test AvailableDatasets component', () => {
       },
     ];
 
-    // Mock the axios GET request
-    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+    jest.spyOn(api, 'fetchMetaData').mockImplementation(() => Promise.resolve(mockDatasets[0]))
+
+    fetchMock.enableMocks()
+
+    fetchMock.mockResponseOnce(JSON.stringify(mockDatasets))
+
+
 
     // Render component with mock function
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
@@ -57,14 +64,31 @@ describe('Test AvailableDatasets component', () => {
 
 
   it('should display sorted datasets when sorting is applied', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+    const mockDatasets = [
+      {
+        id: "test",
+        name: 'Dataset A',
+        date: '2023-01-01',
+        latestAdded: '2023-02-01',
+        latestUpdated: '2023-03-01',
+        description: 'Description for Dataset A',
+        format: 'GeoJSON',
+        processes: 'Data analysis',
+        datasetSource: 'Source A'
+      },
+    ];
+    
+    jest.spyOn(api, 'fetchMetaData').mockImplementation(() => Promise.resolve(mockDatasets[0]))
+    fetchMock.enableMocks()
+    fetchMock.mockResponseOnce(JSON.stringify(mockDatasets))
+
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
 
     await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
 
     fireEvent.click(screen.getByText('date'));
     const datasetButtons = screen.getAllByTestId(/dataset-button-/);
-    expect(datasetButtons[0]).toHaveTextContent('Dataset A'); // Validate sort order
+    expect(datasetButtons[0]).toHaveTextContent('test'); // Validate sort order
   });
 
   it('should collapse and expand the component on button click', async () => {
