@@ -4,6 +4,7 @@ import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 
+
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);

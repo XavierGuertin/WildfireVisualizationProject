@@ -45,7 +45,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: password
-          NEXT_PUBLIC_BACKEND_URL: http://backend:8080
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
 
       # Push Docker images to Docker Hub
