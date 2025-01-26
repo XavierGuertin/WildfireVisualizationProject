@@ -16,6 +16,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useMapLayerContext } from './MapContext';
+import { set } from 'ol/transform';
 
 const MySwal = withReactContent(Swal);
 const IS_NOT_FACTORY_RESET = false;
@@ -27,7 +29,7 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-
+  const {setLayer} = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -74,6 +76,16 @@ const SettingsPanel: React.FC = () => {
       setDropdownState({ activeButton: null, isOpen: false }),
     );
   };
+  const resetConfig = async() => {
+    try {
+      localStorage.removeItem('language');
+      localStorage.removeItem('playbackSpeed');
+      setLayer('default');
+      resetCollections();
+    } catch (error: any) {
+      throw new Error(`Error resetting config: ${error.message}`);
+    }
+  };
 
   const handleResetDataFromEndpoint = async (isFactoryReset: boolean) => {
     MySwal.fire({
@@ -93,10 +105,7 @@ const SettingsPanel: React.FC = () => {
       if (result.isConfirmed) {
         try {
           if (isFactoryReset) {
-            // Phil/Ali you can put your reset config method call here
-            // (instead of ResetCollections but make sure to also call
-            // the resetCollections endpoint)
-            const message = await resetCollections();
+            const message = await resetConfig();
             toast.success(message);
           } else {
             const message = await resetCollections();
