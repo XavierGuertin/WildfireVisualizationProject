@@ -66,6 +66,7 @@ const resources = {
         language_retrieved: "La langue a été récupérée à partir des paramètres précédents.",
         default_language_retrieved: "La langue par défaut a été récupérée.",
         speed_retrieved: "La vitesse a été récupérée à partir des paramètres précédents.",
+        default_speed_retrieved:"La vitesse par défaut a été récupérée.",
         api_endpoint_saved: "Point d'API enregistré avec succès",
         //Language
         english: "Anglais",

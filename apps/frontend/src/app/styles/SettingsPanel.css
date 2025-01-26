@@ -187,24 +187,6 @@
     background-color: #b32d39;
   }
 
-.message {
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.success {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
   .custom-swal-popup {
     text-align: justify;
     white-space: pre-line;
