@@ -1,9 +1,21 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
+import { toast } from 'react-toastify';
 
+jest.mock('react-toastify');
 beforeEach(() => {
+  // Mock localStorage
+  const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => (store[key] = value || ''),
+      clear: () => (store = {}),
+    };
+  })();
+  Object.defineProperty(global, 'localStorage', { value: localStorageMock });
   jest.useFakeTimers();
 });
 
@@ -69,5 +81,31 @@ describe('Footer component', () => {
 
     // Verify slider value changed
     expect(slider.getAttribute('value')).toBe('50');
+    // Verify localStorage updated
+    expect(localStorage.getItem('playbackSpeed')).toBe('1');
   });
+
+
+  it('should display toast message when speed is retrieved from localStorage', async () => {
+    localStorage.setItem('playbackSpeed', '1.5');
+
+    render(<Footer />);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved'));
+  });
+  it('should display toast message when default speed is used (no speed in localStorage)', async () => {
+    render(<Footer />);
+
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
+  });
+  it('should handle speed change and save to localStorage', () => {
+    render(<Footer />);
+
+    const speedButton = screen.getByTestId('speed-button-1.5');
+
+    fireEvent.click(speedButton);
+
+    expect(localStorage.getItem('playbackSpeed')).toBe('1.5');
+  });
+
 });

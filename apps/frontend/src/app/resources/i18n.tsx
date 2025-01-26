@@ -10,6 +10,10 @@ const resources = {
         cancel: "Cancel",
         invalid_url: "Invalid URL. Please enter a valid API endpoint.",
         enter_new_api_endpoint: "Enter new API endpoint",
+        language_retrieved: "Language has been retrieved from previous settings.",
+        default_language_retrieved: "Default language has been retrieved.",
+        speed_retrieved:"Speed  has been retrieved from previous settings.",
+        default_speed_retrieved:"Default speed  has been retrieved.",
         api_endpoint_saved: "API Endpoint Successfully Saved",
         //Language
         english: "English",
@@ -59,6 +63,10 @@ const resources = {
         cancel: "Annuler",
         invalid_url: "URL invalide. Veuillez entrer un point d'API valide.",
         enter_new_api_endpoint: "Entrez un nouveau point d'API",
+        language_retrieved: "La langue a été récupérée à partir des paramètres précédents.",
+        default_language_retrieved: "La langue par défaut a été récupérée.",
+        speed_retrieved: "La vitesse a été récupérée à partir des paramètres précédents.",
+        default_speed_retrieved:"La vitesse par défaut a été récupérée.",
         api_endpoint_saved: "Point d'API enregistré avec succès",
         //Language
         english: "Anglais",
