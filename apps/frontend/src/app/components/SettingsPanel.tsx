@@ -29,19 +29,27 @@ const SettingsPanel: React.FC = () => {
   }>({ activeButton: null, isOpen: false });
 
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
 
-  // Initialize language from local storage
+  // Initialize language from local storage and handle toast messages
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (typeof window !== 'undefined' && window.localStorage && !languageInitialized) {
       const savedLanguage = localStorage.getItem('language');
+
       if (savedLanguage) {
-        i18n.changeLanguage(savedLanguage);
+        // If a language is saved in localStorage, use it
+        if (savedLanguage !== i18n.language) {
+          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
         }
+        toast.success(t('language_retrieved')); // Show success message if language is retrieved
+      } else {
+        // If no language is saved, use the default language
+        toast.info(t('default_language_retrieved')); // Show default language message
       }
-    }, [i18n]);
+      setLanguageInitialized(true); // Mark language initialization as done
+    }
+  }, [i18n, t, languageInitialized]);
 
   // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
@@ -70,34 +78,10 @@ const SettingsPanel: React.FC = () => {
   };
 
   const handleLanguageSelect = (language: string) => {
-    try {
-      i18n.changeLanguage(language);
-      localStorage.setItem('language', language);
-      setSuccessMessage(t('language_saved'));
-    } catch (error) {
-      setErrorMessage(t('language_save_error'));
-    }
+    i18n.changeLanguage(language);
+    localStorage.setItem('language', language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
-
-  // Closes the success or error message after 2 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timeout = setTimeout(() => {
-        setSuccessMessage(null);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [successMessage]);
-
-  useEffect(() => {
-    if (errorMessage) {
-      const timeout = setTimeout(() => {
-        setErrorMessage(null);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [errorMessage]);
 
   const handleReset = () => {
     handleResetDataFromEndpoint(IS_NOT_FACTORY_RESET).then(() =>
@@ -278,22 +262,7 @@ const SettingsPanel: React.FC = () => {
           </div>
         )}
       </div>
-      {/* Success/ Error Message */}
-      {successMessage && (
-        <div className="message success">
-          <IoCheckmark size={24} />
-          <span>{successMessage}</span>
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="message error">
-          <IoTrashOutline size={24} />
-          <span>{errorMessage}</span>
-        </div>
-      )}
     </div>
   );
 };
-
 export default SettingsPanel;

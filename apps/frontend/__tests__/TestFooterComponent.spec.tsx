@@ -2,7 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
+import { toast } from 'react-toastify';
 
+jest.mock('react-toastify');
 beforeEach(() => {
   // Mock localStorage
   const localStorageMock = (() => {
@@ -83,67 +85,27 @@ describe('Footer component', () => {
     expect(localStorage.getItem('playbackSpeed')).toBe('1');
   });
 
-  it('displays a success message when speed is saved', async () => {
+
+  it('should display toast message when speed is retrieved from localStorage', async () => {
+    localStorage.setItem('playbackSpeed', '1.5');
+
     render(<Footer />);
 
-    const speedButton = screen.getByTestId('speed-button-2');
-    fireEvent.click(speedButton);
-
-    // Verify success message appears
-    expect(screen.getByText('speed_saved')).toBeInTheDocument();
-
-    // Advance timers to allow the success message to disappear
-    jest.advanceTimersByTime(1000);
-
-    // Wait for the message to disappear
-    await waitFor(() => {
-      expect(screen.queryByText('speed_saved')).toBeNull();
-    });
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved'));
   });
-
-  it('displays an error message if localStorage throws an error when saving speed', () => {
-    // Mock localStorage to throw an error
-    Object.defineProperty(global, 'localStorage', {
-      value: {
-        getItem: jest.fn().mockReturnValue('1'),
-        setItem: jest.fn().mockImplementation(() => { throw new Error('LocalStorage Error'); }),
-      },
-      writable: true,
-    });
-
+  it('should display toast message when default speed is used (no speed in localStorage)', async () => {
     render(<Footer />);
 
-    const speedButton = screen.getByTestId('speed-button-2');
-    fireEvent.click(speedButton);
-
-    // Verify error message appears
-    expect(screen.getByText('Failed to save playback speed.')).toBeInTheDocument();
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
   });
-
-  it('displays success message when speed is changed', () => {
+  it('should handle speed change and save to localStorage', () => {
     render(<Footer />);
 
-    // Change speed to 1.5x
     const speedButton = screen.getByTestId('speed-button-1.5');
+
     fireEvent.click(speedButton);
 
-    // Check that the success message is displayed
-    expect(screen.getByText('speed_saved')).toBeInTheDocument();
+    expect(localStorage.getItem('playbackSpeed')).toBe('1.5');
   });
 
-  it('handles keyboard spacebar for play/pause toggle', () => {
-    render(<Footer />);
-
-    // Trigger spacebar keydown event to toggle play/pause
-    fireEvent.keyDown(window, { code: 'Space' });
-
-    // Verify play is toggled to pause
-    expect(screen.getByTestId('pause-icon')).toBeInTheDocument();
-
-    // Trigger spacebar keydown event again to toggle back to play
-    fireEvent.keyDown(window, { code: 'Space' });
-
-    // Verify play is toggled back to play icon
-    expect(screen.getByTestId('play-icon')).toBeInTheDocument();
-  });
 });

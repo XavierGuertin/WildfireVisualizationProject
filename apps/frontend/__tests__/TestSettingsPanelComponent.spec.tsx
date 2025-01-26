@@ -314,49 +314,17 @@ describe('Local Storage functionality in SettingsPanel', () => {
     // Verify that the language was updated in local storage
     expect(localStorage.getItem('language')).toBe('en');
   });
-  it('should save the language and display a success message', () => {
+  it('should initialize language from localStorage and show success toast', async () => {
+    localStorage.setItem('language', 'fr');
+
     render(<SettingsPanel />);
 
-    // Mock i18n.changeLanguage to simulate a successful language change
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    fireEvent.click(languageButton);
-
-    const frenchButton = screen.getByRole('button', { name: /french/i });
-    fireEvent.click(frenchButton);
-
-    // Check if the language is saved in localStorage
-    expect(localStorage.getItem('language')).toBe('fr');
-
-    // Ensure the success message is displayed
-    expect(screen.getByText('language_saved')).toBeInTheDocument();
-
-    // Optional: Check if the success message disappears after 1 second
-    setTimeout(() => {
-      expect(screen.queryByText('language_saved')).not.toBeInTheDocument();
-    }, 1000);
-  });
-
-  it('displays an error message if language is not saved', () => {
-    // Mock localStorage to throw an error
-    Object.defineProperty(global, 'localStorage', {
-      value: {
-        getItem: jest.fn().mockReturnValue('english'),
-        setItem: jest.fn().mockImplementation(() => {
-          throw new Error('LocalStorage Error');
-        }),
-      },
-      writable: true,
+    // Ensure that toast.success was called after language retrieval
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('language_retrieved');
     });
 
-    render(<SettingsPanel />);
-
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    fireEvent.click(languageButton);
-
-    const frenchButton = screen.getByRole('button', { name: /french/i });
-    fireEvent.click(frenchButton);
-
-    // Verify error message appears
-    expect(screen.getByText('language_save_error')).toBeInTheDocument();
+    // Ensure that the language change was triggered
+    expect(localStorage.getItem('language')).toBe('fr');
   });
 });

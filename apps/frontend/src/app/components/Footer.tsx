@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
+import { toast, ToastContainer } from 'react-toastify';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -17,58 +18,33 @@ const Footer = () => {
       return 1;  // default speed
     }
   });
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        const savedSpeed = localStorage.getItem('playbackSpeed');
-        if (savedSpeed) {
-          setSpeed(parseFloat(savedSpeed));
-        }
-      } catch (e) {
-        console.error('Error reading playback speed from localStorage', e);
-      }
-    }
-  }, []);
+    if (typeof window !== 'undefined' && window.localStorage && !speedInitialized) {
+      const savedSpeed = localStorage.getItem('playbackSpeed');
 
-  useEffect(() => {
-    // Store speed in localStorage whenever it changes
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        localStorage.setItem('playbackSpeed', speed.toString());
-      } catch (e) {
-        console.error('Error saving playback speed to localStorage', e);
-        setErrorMessage('Failed to save playback speed.');
+      if (savedSpeed) {
+        // If speed is retrieved from localStorage, show success message
+        toast.success(t('speed_retrieved'));
+      } else {
+        // If no speed is saved, use the default speed
+        toast.info(t('default_speed_retrieved'));
       }
+
+      setSpeedInitialized(true); // Mark speed initialization as done
     }
-  }, [speed]);
+
+    try {
+      localStorage.setItem('playbackSpeed', speed.toString());
+    } catch (e) {
+      console.error('Error saving playback speed to localStorage', e);
+    }
+  }, [speed, t, speedInitialized]);
 
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
-  const handleSpeedChange = (newSpeed: number) => {
-    if (newSpeed > 0) {
-      setSpeed(newSpeed);
-      setSuccessMessage(t('speed_saved'));
-    } else {
-      setErrorMessage(t('speed_saved_error'));
-    }
-  };
-  // Clear success and error messages after a timeout
-  useEffect(() => {
-    if (successMessage) {
-      const timeout = setTimeout(() => setSuccessMessage(""), 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [successMessage]);
-
-  useEffect(() => {
-    if (errorMessage) {
-      const timeout = setTimeout(() => setErrorMessage(""), 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [errorMessage]);
+  const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
 
   useEffect(() => {
     if (isPlaying) {
@@ -104,16 +80,6 @@ const Footer = () => {
 
   return (
     <div className="footerContainer" data-testid="footer-container">
-      {successMessage && (
-        <div className="message success">
-          {successMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div className="message error">
-          {errorMessage}
-        </div>
-      )}
       {/* Speed controls */}
       <div className="speedContainer">
         {[0.5, 1, 1.5, 2, 4].map((s) => (
