@@ -7,6 +7,7 @@ interface StacData {
 }
 
 const TestStac: React.FC = () => {
+  const [isEnabled, setIsEnabled] = useState(false); // Control rendering with this state
   const [stacData, setStacData] = useState<StacData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +45,24 @@ const TestStac: React.FC = () => {
     overflowWrap: 'break-word',
   };
 
+  if (!isEnabled) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <h2>TestStac Component is Disabled</h2>
+        <button onClick={() => setIsEnabled(true)}>Enable Component</button>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
       <h2>Test STAC Endpoint</h2>
       <button onClick={handleFetchData} disabled={loading}>
         {loading ? 'Loading...' : 'Fetch Data'}
+      </button>
+
+      <button onClick={() => setIsEnabled(false)} style={{ marginLeft: '10px' }}>
+        Disable Component
       </button>
 
       {error && (
