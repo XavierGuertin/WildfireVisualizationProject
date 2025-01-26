@@ -16,6 +16,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedDataset, setSelectedDataset] = useState<DatasetMetadata | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Function to show loading bar with progress
   const showLoadingBar = () => {
@@ -72,7 +73,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Sidebar />
               {selectedDataset && (
                 <MapMetaData
-                  city={selectedDataset.city}
                   name={selectedDataset.name}
                   description={selectedDataset.description}
                   format={selectedDataset.format}

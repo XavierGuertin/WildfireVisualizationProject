@@ -1,20 +1,24 @@
 package com.example.backend.controller;
 
-import com.example.backend.service.DataService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import com.example.backend.service.DataService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @ExtendWith(MockitoExtension.class)
 class DataControllerTests {
@@ -64,11 +68,10 @@ class DataControllerTests {
   }
 
   @Test
-  void getMetaData_Success(){
+  void getMetaData_Success() throws JsonProcessingException {
 
     //Arrange
-    List<Map<String, Object>> list = new ArrayList<>();
-    when(dataService.retrieveMetaData(anyString())).thenReturn(list);
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
     //Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
@@ -79,10 +82,9 @@ class DataControllerTests {
   }
 
   @Test
-  void getMetaData_Failure(){
+  void getMetaData_Failure() throws JsonProcessingException {
 
     //Arrange
-    List<Map<String, Object>> list = new ArrayList<>();
     when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
     //Act

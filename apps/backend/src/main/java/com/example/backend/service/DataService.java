@@ -134,7 +134,7 @@ public class DataService {
   }
 
   public List<Map<String, Object>> getCollectionsByDate() {
-    logger.info("Fetching collections from database filter by name");
+    logger.info("Fetching collections from database filter by date");
     try {
       List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
       logger.debug("Fetched collections: {}", collections);

@@ -1,23 +1,29 @@
 package com.example.backend.service;
 
-import com.example.backend.repository.StacRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestTemplate;
+
+import com.example.backend.repository.StacRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class DataServiceTests {
@@ -145,12 +151,14 @@ class DataServiceTests {
   }
 
   @Test
-  void retrieveMetaData_IsValid(){
-    //This service method is just a middle man between the communication of the StacRepository and the DataController,
-    //so there is not really anything to test.
+  void retrieveMetaData_IsValid() throws JsonProcessingException {
+    //retrieveMetaData is just a middle man between the controller and the repository, so there is not real functionality to test
+
+    //Arrange
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
     //Act
-    List<Map<String, Object>> response = dataService.retrieveMetaData("");
+    String response = dataService.retrieveMetaData("");
 
     //Assert
     assertThat(response).isNotNull();
