@@ -6,10 +6,18 @@ interface StacData {
   [key: string]: any; // Adjust this based on the exact structure of your STAC data
 }
 
+// Hardcoded flag to enable/disable the component
+const IS_COMPONENT_ENABLED = false;
+
 const TestStac: React.FC = () => {
   const [stacData, setStacData] = useState<StacData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If the component is disabled, return null (renders nothing)
+  if (!IS_COMPONENT_ENABLED) {
+    return <></>; // Explicitly return an empty fragment to satisfy linting rules
+  }
 
   const handleFetchData = async () => {
     setLoading(true);
