@@ -5,7 +5,7 @@ import MapView from './components/MapView';
 import { MapProvider } from './components/MapContext';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
-import AvailableDatasets, { Dataset } from './components/AvailableDatasets';
+import AvailableDatasets, { DatasetMetadata } from './components/AvailableDatasets';
 import MapMetaData from './components/MapMetaData';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
@@ -15,7 +15,8 @@ import LoadingModule from './components/LoadingModule';
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [selectedDataset, setSelectedDataset] = useState<DatasetMetadata | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Function to show loading bar with progress
   const showLoadingBar = () => {
@@ -32,7 +33,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   // Handle dataset selection (no loading bar here)
-  const handleDatasetClick = (dataset: Dataset) => {
+  const handleDatasetClick = (dataset: DatasetMetadata) => {
     setSelectedDataset(dataset); // Just update the selected dataset
   };
 
@@ -72,7 +73,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Sidebar />
               {selectedDataset && (
                 <MapMetaData
-                  city={selectedDataset.city}
                   name={selectedDataset.name}
                   description={selectedDataset.description}
                   format={selectedDataset.format}

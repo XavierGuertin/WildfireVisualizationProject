@@ -145,6 +145,20 @@ class DataServiceTests {
   }
 
   @Test
+  void retrieveMetaData_IsValid() throws JsonProcessingException {
+    //retrieveMetaData is just a middle man between the controller and the repository, so there is not real functionality to test
+
+    //Arrange
+    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
+
+    //Act
+    String response = dataService.retrieveMetaData("");
+
+    //Assert
+    assertThat(response).isNotNull();
+  }
+
+  @Test
   void fetchAndSaveCollections_ShouldNotInsert_WhenCollectionExists() {
     // Arrange
     Map<String, Object> collection = new HashMap<>();
