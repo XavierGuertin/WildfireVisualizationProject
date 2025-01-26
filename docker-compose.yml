@@ -63,6 +63,8 @@ services:
     environment:
       - GEOSERVER_ADMIN_USER=geoserver
       - GEOSERVER_ADMIN_PASSWORD=password
+      - GEOSERVER_DATA_DIR=/var/geoserver/data_dir
+      - RUN_AS_ROOT=TRUE
     networks:
       - app-network
     volumes:
