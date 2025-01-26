@@ -3,21 +3,13 @@ import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
+import { useMapLayerContext } from './MapContext';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const [speed, setSpeed] = useState(() => {
-    // Load speed from local storage or default to 1
-    try {
-      const savedSpeed = localStorage.getItem('playbackSpeed');
-      return savedSpeed ? parseFloat(savedSpeed) : 1;
-    } catch (e) {
-      console.error('Error reading playback speed from localStorage', e);
-      return 1;  // default speed
-    }
-  });
+  const {speed, setSpeed} = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 

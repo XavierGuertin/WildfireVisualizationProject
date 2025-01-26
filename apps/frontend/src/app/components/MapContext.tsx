@@ -6,6 +6,8 @@ interface MapLayerContextValue{
     setLayer: React.Dispatch<React.SetStateAction<string | null>>;
     mapRef: React.MutableRefObject<Map | null>;
     resetView: () => void;
+    speed: number;
+    setSpeed : React.Dispatch<React.SetStateAction<number>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
@@ -13,6 +15,16 @@ const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefine
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
     const mapRef = useRef<Map | null>(null);    
+    const [speed, setSpeed] = useState(() => {
+        // Load speed from local storage or default to 1
+        try {
+          const savedSpeed = localStorage.getItem('playbackSpeed');
+          return savedSpeed ? parseFloat(savedSpeed) : 1;
+        } catch (e) {
+          console.error('Error reading playback speed from localStorage', e);
+          return 1;  // default speed
+        }
+      });
 
     //Map Specific Functions
     const resetView = () => {
@@ -26,7 +38,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     };
  
     return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView }}>
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed }}>
             {children}
         </MapLayerContext.Provider>
     )

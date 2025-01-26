@@ -19,6 +19,7 @@ import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from './MapContext';
 import { set } from 'ol/transform';
 
+
 const MySwal = withReactContent(Swal);
 const IS_NOT_FACTORY_RESET = false;
 const IS_FACTORY_RESET = true;
@@ -29,7 +30,7 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const {setLayer} = useMapLayerContext();
+  const {setLayer, setSpeed} = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
@@ -98,10 +99,12 @@ const SettingsPanel: React.FC = () => {
   };
   const resetConfig = async() => {
     try {
-      localStorage.removeItem('language');
-      localStorage.removeItem('playbackSpeed');
+      localStorage.setItem('language', 'en');
+      localStorage.setItem('playbackSpeed', '1');
       setLayer('default');
       resetCollections();
+      setLanguageInitialized(false);
+      setSpeed(1);
       return 'Factory reset successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
