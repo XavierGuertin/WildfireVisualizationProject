@@ -10,8 +10,8 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const mockDatasets: DatasetMetadata[] = [
-  { name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', description: 'Description A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
-  { name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', description: 'Description B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' }
+  { id:"test", name: 'Dataset A', date: '2023-01-01', latestAdded: '2023-02-01', latestUpdated: '2023-03-01', description: 'Description A', format: 'GeoJSON', processes: 'Data analysis', datasetSource: 'Source A' },
+  { id:"test", name: 'Dataset B', date: '2023-02-15', latestAdded: '2023-02-16', latestUpdated: '2023-03-05', description: 'Description B', format: 'Shapefile', processes: 'Data cleaning', datasetSource: 'Source B' }
 ];
 
 describe('Test AvailableDatasets component', () => {

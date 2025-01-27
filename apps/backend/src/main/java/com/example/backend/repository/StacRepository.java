@@ -35,10 +35,9 @@ public class StacRepository {
     logger.debug("Attempting to insert collection");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_collection(?::jsonb)",
-        Object.class,
-        collectionJson
-      );
+          "SELECT pgstac.create_collection(?::jsonb)",
+          Object.class,
+          collectionJson);
       logger.info("Successfully inserted collection");
     } catch (DataAccessException e) {
       logger.error("Error inserting collection: {}", e.getMessage(), e);
@@ -84,15 +83,15 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> queryMetaData(String collectionId){
+  public List<Map<String, Object>> queryMetaData(String collectionId) {
     logger.debug("Querying metadata for: {}", collectionId);
     try {
       String sql = "SELECT (content ->> 'title') AS title," +
-        " (content ->> 'description') AS description," +
-        " datetime AS datetime," +
-        " end_datetime as end_datetime," +
-        " (content -> 'links') as links" +
-        " FROM pgstac.collections WHERE id = ?";
+          " (content ->> 'description') AS description," +
+          " datetime AS datetime," +
+          " end_datetime as end_datetime," +
+          " (content -> 'links') as links" +
+          " FROM pgstac.collections WHERE id = ?";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
       logger.debug("Query returned {} results", results.size());
       return results;
@@ -101,31 +100,31 @@ public class StacRepository {
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
     }
   }
-  
+
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
     try {
-        // Safely escape single quotes by replacing them with double single quotes
-        String safeCollectionId = collectionId.replace("'", "''");
+      // Safely escape single quotes by replacing them with double single quotes
+      String safeCollectionId = collectionId.replace("'", "''");
 
-        String sqlDrop = "DROP VIEW IF EXISTS Datalayer";
+      String sqlDrop = "DROP VIEW IF EXISTS Datalayer";
 
-        jdbcTemplate.execute(sqlDrop);
+      jdbcTemplate.execute(sqlDrop);
 
-        String sqlInsert = "CREATE VIEW DataLayer AS" +
+      String sqlInsert = "CREATE VIEW DataLayer AS" +
           " SELECT geometry FROM pgstac.collections WHERE id = '" + safeCollectionId + "'";
 
-        jdbcTemplate.execute(sqlInsert);
+      jdbcTemplate.execute(sqlInsert);
 
-        logger.info("Successfully created/replaced view for collectionId: {}", collectionId);
+      logger.info("Successfully created/replaced view for collectionId: {}", collectionId);
     } catch (DataAccessException e) {
-        logger.error("Error querying collection: {}", e.getMessage(), e);
-        throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
+      logger.error("Error inserting view: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
     }
-}
+  }
 
-public boolean checkDatalayerView() {
-  try {
+  public boolean checkDatalayerView() {
+    try {
       // Ensure correct case and schema handling
       String sql = "SELECT COUNT(*) FROM DataLayer";
 
@@ -133,14 +132,13 @@ public boolean checkDatalayerView() {
 
       int result = jdbcTemplate.queryForObject(sql, Integer.class);
 
-      return result == 1;  // If ID exists, return true
-  } catch (EmptyResultDataAccessException e) {
+      return result == 1; // If ID exists, return true
+    } catch (EmptyResultDataAccessException e) {
       logger.info("No data found: {}");
       return false;
-  } catch (DataAccessException e) {
+    } catch (DataAccessException e) {
       logger.error("Error querying DataLayer: {}", e.getMessage(), e);
       return false;
+    }
   }
-}
-
 }

@@ -56,6 +56,10 @@ public class DataService {
   }
 
   public void insertView(String collectionId) {
+    insertView(collectionId, 50);
+  }
+
+  public void insertView(String collectionId, int sleepMillis) {
     stacRepository.setDatalayerView(collectionId);
     boolean check = false;
     int count = 0;
@@ -65,7 +69,7 @@ public class DataService {
         count++;
         try {
             // Sleep to avoid overwhelming the database
-            Thread.sleep(50); 
+            Thread.sleep(sleepMillis); 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Thread interrupted while waiting for the view to be created", e);
@@ -77,9 +81,9 @@ public class DataService {
         logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
         logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
+        throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
-}
-
+  }
 
   public String insertAndQueryCollection(String collectionJson, String collectionId) {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
