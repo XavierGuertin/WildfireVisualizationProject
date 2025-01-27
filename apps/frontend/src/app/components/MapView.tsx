@@ -11,20 +11,8 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import {TileWMS} from 'ol/source';
-
+      
 //Attributions
-interface GeoJSONFeature {
-  geometry: {
-    coordinates: number[][][];
-  };
-}
-
-interface GeoJSONResponse {
-  items: GeoJSONFeature[];
-}
-
-//Maptiler API key and attributions
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 //layer definitions
@@ -101,8 +89,6 @@ const MapView = () => {
       map.addLayer(getLayer());
       map.addLayer(dataLayer);
     }
-    
-    console.log(`Backend URL: ${backendUrl}`);
   }, [layer]);
 
   return (
