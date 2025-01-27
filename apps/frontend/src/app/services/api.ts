@@ -46,8 +46,6 @@ export const fetchCollectionsFromEndpoint = async (): Promise<string> => {
   }
 }
 
-
-
 export const resetCollections = async (): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/reset-collections`);
