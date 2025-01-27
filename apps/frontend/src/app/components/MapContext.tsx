@@ -17,16 +17,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const mapRef = useRef<Map | null>(null);  
     
     //Timeline playback speed
-    const [speed, setSpeed] = useState(() => {
-        // Load speed from local storage or default to 1
-        try {
-          const savedSpeed = localStorage.getItem('playbackSpeed');
-          return savedSpeed ? parseFloat(savedSpeed) : 1;
-        } catch (e) {
-          console.error('Error reading playback speed from localStorage', e);
-          return 1;  // default speed
-        }
-      });
+    const [speed, setSpeed] = useState<number>(1);
 
     //Map Specific Functions
     const resetView = () => {
