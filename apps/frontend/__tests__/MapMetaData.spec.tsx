@@ -1,7 +1,9 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import MapMetaData from '../src/app/components/MapMetaData';
-import { render } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
+import { insertDatalayerView } from '../src/app/services/api';
+import { changeLayer } from '../src/app/components/MapView';
 
 jest.mock('react', ()=>({
     ...jest.requireActual('react'),
@@ -89,5 +91,24 @@ describe(MapMetaData, () => {
         } } />)
         const collapsedBox = getByTestId("collapsedMetaData");
         expect(collapsedBox).toBeInTheDocument();
+    });
+    it('calls insertDatalayerView and changeLayer when load dataset button is clicked', async () => {
+        const mockOnLoadDataset = jest.fn();
+    
+        const { getByTestId } = render(
+            <MapMetaData 
+                id="123" 
+                onLoadDataset={mockOnLoadDataset} 
+            />
+        );
+    
+        const loadButton = getByTestId('load-dataset-button');
+    
+        await act(async () => {
+            fireEvent.click(loadButton);
+        });
+    
+        expect(insertDatalayerView).toHaveBeenCalledWith("123");
+        expect(changeLayer).toHaveBeenCalled();
     });
 })
