@@ -6,27 +6,31 @@ interface MapLayerContextValue{
     setLayer: React.Dispatch<React.SetStateAction<string | null>>;
     mapRef: React.MutableRefObject<Map | null>;
     resetView: () => void;
+    speed: number;
+    setSpeed : React.Dispatch<React.SetStateAction<number>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
 
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
-    const mapRef = useRef<Map | null>(null);    
+    const mapRef = useRef<Map | null>(null);  
+    
+    //Timeline playback speed
+    const [speed, setSpeed] = useState<number>(1);
 
     //Map Specific Functions
     const resetView = () => {
         if (mapRef.current) {
         mapRef.current.getView().animate({
             center: [-75.6972, 45.4215],
-            zoom: 5,
-            duration: 1000,
+            zoom: 1,
         });
         }
     };
  
     return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView }}>
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed }}>
             {children}
         </MapLayerContext.Provider>
     )

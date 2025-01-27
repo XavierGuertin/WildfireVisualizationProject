@@ -3,14 +3,14 @@ import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-
+import { useMapLayerContext } from './MapContext';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const [speed, setSpeed] = useState<number>(1);
-  const [speedInitialized, setSpeedInitialized] = useState(false);
+  const {speed, setSpeed} = useMapLayerContext();
+  const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {

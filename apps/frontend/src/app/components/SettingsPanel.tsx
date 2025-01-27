@@ -16,6 +16,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useMapLayerContext } from './MapContext';
+import { set } from 'ol/transform';
+
 
 const MySwal = withReactContent(Swal);
 const IS_NOT_FACTORY_RESET = false;
@@ -27,7 +30,7 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-
+  const {setLayer, setSpeed, resetView} = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
@@ -94,6 +97,19 @@ const SettingsPanel: React.FC = () => {
       setDropdownState({ activeButton: null, isOpen: false }),
     );
   };
+  const resetConfig = async() => {
+    try {
+      localStorage.setItem('language', 'en');
+      localStorage.setItem('playbackSpeed', '1');
+      setLayer('default');
+      resetCollections();
+      setLanguageInitialized(false);
+      setSpeed(1);
+      return 'Factory reset successful';
+    } catch (error: any) {
+      throw new Error(`Error resetting config: ${error.message}`);
+    }
+  };
 
   const handleResetDataFromEndpoint = async (isFactoryReset: boolean) => {
     MySwal.fire({
@@ -111,12 +127,10 @@ const SettingsPanel: React.FC = () => {
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
+        resetView();
         try {
           if (isFactoryReset) {
-            // Phil/Ali you can put your reset config method call here
-            // (instead of ResetCollections but make sure to also call
-            // the resetCollections endpoint)
-            const message = await resetCollections();
+            const message = await resetConfig();
             toast.success(message);
           } else {
             const message = await resetCollections();
