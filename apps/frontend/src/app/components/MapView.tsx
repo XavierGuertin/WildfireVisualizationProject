@@ -85,23 +85,23 @@ const MapView = () => {
   }
 
   useEffect(() => {
-    // Initialize map on first render
     if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer()],
+        layers: [getLayer(), dataLayer],
         view: new View({
-          center: [-75.6972, 45.4215], // Centered at Ottawa
+          center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
-        })
+        }),
       });
+    } else {
+      const map = mapRef.current;
+      map.getLayers().clear();
+      map.addLayer(getLayer());
+      map.addLayer(dataLayer);
     }
-    else {
-      mapRef.current?.getLayers().clear();
-      mapRef.current?.addLayer(getLayer());
-    }
-    mapRef.current?.addLayer(dataLayer);
+    
     console.log(`Backend URL: ${backendUrl}`);
   }, [layer]);
 

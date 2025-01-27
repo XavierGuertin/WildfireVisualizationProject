@@ -11,6 +11,10 @@ module.exports = {
   collectCoverageFrom: [
     '<rootDir>/src/app/components/*.{js,jsx,ts,tsx}',
   ],
+  transformIgnorePatterns: [
+    "/node_modules/(?!(ol)/).*/",
+    "node_modules/(?!(ol)/)",
+  ],
   coveragePathIgnorePatterns:[
     "/node_modules/",
     "<rootDir>/src/app/components/MapContext.tsx",

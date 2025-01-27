@@ -8,6 +8,14 @@ jest.mock('react', ()=>({
     useState: jest.fn()
   }));
 
+jest.mock('../src/app/services/api', () => ({
+    insertDatalayerView: jest.fn(),
+}));
+  
+jest.mock('../src/app/components/MapView', () => ({
+    changeLayer: jest.fn(),
+}));
+
 describe(MapMetaData, () => {
 
     beforeEach(()=>{
