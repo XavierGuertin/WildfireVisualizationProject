@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
 import "../styles/map.css";
-import { Map, View, Feature} from 'ol';
+import { Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import { FullScreen, defaults as defaultControls} from 'ol/control.js';
 import {useGeographic} from 'ol/proj.js';
@@ -48,6 +48,10 @@ const dataLayer = new TileLayer({
   }),
 });
 
+export const changeLayer = () => {
+  dataLayer.getSource()?.updateParams({'TIMESTAMP' : Date.now()});
+}
+
 //Map component
 const MapView = () => {
   useGeographic();
@@ -69,21 +73,21 @@ const MapView = () => {
   }
 
   useEffect(() => {
-    // Initialize map on first render
     if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer()],
+        layers: [getLayer(), dataLayer],
         view: new View({
-          center: [-75.6972, 45.4215], // Centered at Ottawa
+          center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
-        })
+        }),
       });
-    }
-    else {
-      mapRef.current?.getLayers().clear();
-      mapRef.current?.addLayer(getLayer());
+    } else {
+      const map = mapRef.current;
+      map.getLayers().clear();
+      map.addLayer(getLayer());
+      map.addLayer(dataLayer);
     }
   }, [layer]);
 

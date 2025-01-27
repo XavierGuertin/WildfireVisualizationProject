@@ -91,6 +91,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     const source = truncatedSource.split('/').pop()?.toUpperCase()
 
     const metadata = {
+      id: collectionId,
       date: data[0].datetime,
       enddate: data[0].end_datetime,
       datasetSource: source, 
@@ -107,3 +108,15 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     return { error: "Failed to fetch MetaData" };
   }
 };
+
+export const insertDatalayerView = async (collectionId: string): Promise<any> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/set-datalayer-geometry/${collectionId}`);
+    if(!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+  } catch (error: any) {
+    console.error("Error inserting View:", error);
+    return { error: "Failed to insert View" };
+  }
+}
