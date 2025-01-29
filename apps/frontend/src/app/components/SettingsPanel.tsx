@@ -12,13 +12,12 @@ import {
   fetchCollectionsFromEndpoint,
   resetCollections,
 } from '../services/api';
+import { getConfig, saveConfig } from '../services/configApi';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from './MapContext';
-import { set } from 'ol/transform';
-
 
 const MySwal = withReactContent(Swal);
 const IS_NOT_FACTORY_RESET = false;
@@ -30,31 +29,26 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const {setLayer, setSpeed, resetView} = useMapLayerContext();
-  const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
+  const { setLayer, setSpeed, resetView } = useMapLayerContext();
+  const [newApiEndpoint, setNewApiEndpoint] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
 
-  // Initialize language from local storage and handle toast messages
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage && !languageInitialized) {
-      const savedLanguage = localStorage.getItem('language');
-
-      if (savedLanguage) {
-        // If a language is saved in localStorage, use it
-        if (savedLanguage !== i18n.language) {
-          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
-        }
-        toast.success(t('language_retrieved')); // Show success message if language is retrieved
-      } else {
-        // If no language is saved, use the default language
-        toast.info(t('default_language_retrieved')); // Show default language message
+    const fetchConfig = async () => {
+      const config = await getConfig();
+      if (config.endpoint) {
+        setNewApiEndpoint(config.endpoint);
       }
-      setLanguageInitialized(true); // Mark language initialization as done
-    }
-  }, [i18n, t, languageInitialized]);
+      if (config.language && config.language !== i18n.language) {
+        i18n.changeLanguage(config.language);
+        toast.success(t('language_retrieved'));
+      }
+      setLanguageInitialized(true);
+    };
+    fetchConfig();
+  }, [i18n]);
 
-  // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
@@ -63,11 +57,13 @@ const SettingsPanel: React.FC = () => {
   };
 
   const handleSaveAndFetchEndpoint = async (endpoint: string) => {
-    // This section is dependent on the task that
-    // enables the user to save the endpoint in the config
     if (isValidUrl(endpoint)) {
       const message = await fetchCollectionsFromEndpoint();
       toast.success(message);
+
+      const config = await getConfig();
+      config.endpoint = endpoint;
+      await saveConfig(config);
 
       toast.success(t('api_endpoint_saved'));
       setDropdownState({ activeButton: null, isOpen: false });
@@ -80,9 +76,11 @@ const SettingsPanel: React.FC = () => {
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  const handleLanguageSelect = (language: string) => {
+  const handleLanguageSelect = async (language: string) => {
     i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
+    const config = await getConfig();
+    config.language = language;
+    await saveConfig(config);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -97,10 +95,15 @@ const SettingsPanel: React.FC = () => {
       setDropdownState({ activeButton: null, isOpen: false }),
     );
   };
-  const resetConfig = async() => {
+
+  const resetConfig = async () => {
     try {
-      localStorage.setItem('language', 'en');
-      localStorage.setItem('playbackSpeed', '1');
+      const defaultConfig = {
+        language: 'en',
+        playbackSpeed: 1,
+        endpoint: 'https://default-api-endpoint.com',
+      };
+      await saveConfig(defaultConfig);
       setLayer('default');
       resetCollections();
       setLanguageInitialized(false);
