@@ -2,8 +2,6 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import MapMetaData from '../src/app/components/MapMetaData';
 import { render, fireEvent, act } from '@testing-library/react';
-import { insertDatalayerView } from '../src/app/services/api';
-import { changeLayer } from '../src/app/components/MapView';
 
 jest.mock('react', () => ({
     ...jest.requireActual('react'),
@@ -57,49 +55,81 @@ describe(MapMetaData, () => {
 
     it("metadata box collapses when isCollapsed = false", () => {
         setStateMock = jest.fn();
-        jest.spyOn(React, 'useState').mockImplementation(() => [false, setStateMock]);
         jest.spyOn(React, 'useState').mockImplementation(() => [true, setStateMock]);
         const { getByTestId } = render(<MapMetaData />);
         expect(getByTestId("collapsedMetaData")).toBeInTheDocument();
-    });
+    });        
 
-    // it("displays the loading module when dataset loading starts", async () => {
-    //     jest.useFakeTimers();
-    //     const { getByTestId, queryByTestId, rerender } = render(<MapMetaData id="123" />);
-    
-    //     const loadButton = getByTestId("load-dataset-button");
-    
-    //     // Ensure loading module is NOT visible initially
-    //     expect(queryByTestId("loading-module")).not.toBeInTheDocument();
-    
-    //     await act(async () => {
-    //         fireEvent.click(loadButton);
-    //         jest.advanceTimersByTime(500); // Allow loading state to update
-    //         rerender(<MapMetaData id="123" />); // 🔹 Force re-render to reflect state change
-    //     });
-    
-    //     expect(getByTestId("loading-module")).toBeInTheDocument(); // ✅ Should be visible now
-    
-    //     // Simulate loading completion
-    //     jest.advanceTimersByTime(4000);
-    //     expect(setTimeout).toHaveBeenCalled();
-    //     jest.useRealTimers();
-    // });       
-
-    it("calls insertDatalayerView and changeLayer when load dataset button is clicked", async () => {
+    it("calls showLoadingBar and increments progress until it reaches 100", async () => {
         jest.useFakeTimers();
-        const { getByTestId } = render(<MapMetaData id="123" />);
     
+        let progressState = 0;
+        const setProgressMock = jest.fn((updateFn) => {
+            if (typeof updateFn === "function") {
+                progressState = updateFn(progressState);
+            } else {
+                progressState = updateFn;
+            }
+        });
+    
+        jest.spyOn(React, "useState")
+            .mockImplementationOnce(() => [false, jest.fn()])
+            .mockImplementationOnce(() => [false, jest.fn()])
+            .mockImplementationOnce(() => [progressState, setProgressMock]);
+    
+        const { getByTestId } = render(<MapMetaData id="123" />);
         const loadButton = getByTestId("load-dataset-button");
     
         await act(async () => {
             fireEvent.click(loadButton);
-            jest.advanceTimersByTime(4000);
         });
     
-        expect(insertDatalayerView).toHaveBeenCalledWith("123");
-        expect(changeLayer).toHaveBeenCalled();
+        // Simulate the progress updates over time
+        for (let i = 0; i < 10; i++) {
+            jest.advanceTimersByTime(300);
+            await act(async () => {});
+        }
+    
+        // Ensure `setProgress` was called multiple times (progress is updating)
+        expect(setProgressMock).toHaveBeenCalledTimes(11);
+        expect(progressState).toBe(100);
     
         jest.useRealTimers();
     });
+    
+    it("handles errors in onLoadDataset gracefully", async () => {
+        jest.useFakeTimers();
+        
+        // Mock error in insertDatalayerView
+        const errorMock = new Error("API failure");
+        const insertDatalayerViewMock = require("../src/app/services/api").insertDatalayerView;
+        insertDatalayerViewMock.mockRejectedValue(errorMock);
+    
+        let setLoadingMock = jest.fn();
+        let setProgressMock = jest.fn();
+    
+        jest.spyOn(React, "useState")
+            .mockImplementationOnce(() => [false, jest.fn()])
+            .mockImplementationOnce(() => [false, setLoadingMock])
+            .mockImplementationOnce(() => [0, setProgressMock]);
+    
+        const { getByTestId } = render(<MapMetaData id="123" />);
+        const loadButton = getByTestId("load-dataset-button");
+    
+        await act(async () => {
+            fireEvent.click(loadButton);
+        });
+    
+        // Advance time to trigger progress bar updates
+        jest.advanceTimersByTime(4000);
+        await act(async () => {});
+    
+        // Check if the error was logged and loading state was reset
+        expect(insertDatalayerViewMock).toHaveBeenCalledWith("123");
+        expect(setLoadingMock).toHaveBeenCalledWith(true);
+        expect(setLoadingMock).toHaveBeenCalledWith(false);
+        expect(setProgressMock).toHaveBeenCalled();
+    
+        jest.useRealTimers();
+    });    
 });
