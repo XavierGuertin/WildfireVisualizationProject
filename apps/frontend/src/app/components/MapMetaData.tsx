@@ -44,9 +44,6 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   };
 
   const onLoadDataset = async () => {
-
-    // if (!selectedDataset) return;
-
     try {
       setLoading(true); // Show loading overlay
       showLoadingBar(); // Start progress simulation
