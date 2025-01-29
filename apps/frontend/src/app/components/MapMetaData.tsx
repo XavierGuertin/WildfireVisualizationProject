@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import "../styles/MapMetaData.css";
 import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
+import { insertDatalayerView } from "../services/api";
+import { changeLayer } from "./MapView";
 
 interface MapMetaDataProps {
+  id?: string;
   name?: string;
   description?: string;
   format?: string;
@@ -13,6 +16,7 @@ interface MapMetaDataProps {
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
+  id="",
   name = "",
   description = "",
   format = "",
@@ -23,6 +27,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
+  onLoadDataset = async () => {
+    await insertDatalayerView(id);
+    changeLayer();
+    };
 
   const CollapsedMetaData = (
     <div

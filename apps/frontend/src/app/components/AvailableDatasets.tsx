@@ -20,6 +20,7 @@ export interface DatasetMetadata {
   latestUpdated: string;
   name: string;
   processes: string;
+  id: string;
 }
 
 interface AvailableDatasetsProps {

@@ -16,6 +16,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useMapLayerContext } from './MapContext';
+import { set } from 'ol/transform';
+
 
 const MySwal = withReactContent(Swal);
 const IS_NOT_FACTORY_RESET = false;
@@ -27,12 +30,31 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-
-  const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
-    'https://default-api-endpoint.com',
-  );
+  const {setLayer, setSpeed, resetView} = useMapLayerContext();
+  const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
 
+  // Initialize language from local storage and handle toast messages
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage && !languageInitialized) {
+      const savedLanguage = localStorage.getItem('language');
+
+      if (savedLanguage) {
+        // If a language is saved in localStorage, use it
+        if (savedLanguage !== i18n.language) {
+          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
+        }
+        toast.success(t('language_retrieved')); // Show success message if language is retrieved
+      } else {
+        // If no language is saved, use the default language
+        toast.info(t('default_language_retrieved')); // Show default language message
+      }
+      setLanguageInitialized(true); // Mark language initialization as done
+    }
+  }, [i18n, t, languageInitialized]);
+
+  // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
@@ -60,6 +82,7 @@ const SettingsPanel: React.FC = () => {
 
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
+    localStorage.setItem('language', language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -73,6 +96,19 @@ const SettingsPanel: React.FC = () => {
     handleResetDataFromEndpoint(IS_FACTORY_RESET).then(() =>
       setDropdownState({ activeButton: null, isOpen: false }),
     );
+  };
+  const resetConfig = async() => {
+    try {
+      localStorage.setItem('language', 'en');
+      localStorage.setItem('playbackSpeed', '1');
+      setLayer('default');
+      resetCollections();
+      setLanguageInitialized(false);
+      setSpeed(1);
+      return 'Factory reset successful';
+    } catch (error: any) {
+      throw new Error(`Error resetting config: ${error.message}`);
+    }
   };
 
   const handleResetDataFromEndpoint = async (isFactoryReset: boolean) => {
@@ -91,12 +127,10 @@ const SettingsPanel: React.FC = () => {
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
+        resetView();
         try {
           if (isFactoryReset) {
-            // Phil/Ali you can put your reset config method call here
-            // (instead of ResetCollections but make sure to also call
-            // the resetCollections endpoint)
-            const message = await resetCollections();
+            const message = await resetConfig();
             toast.success(message);
           } else {
             const message = await resetCollections();
@@ -245,5 +279,4 @@ const SettingsPanel: React.FC = () => {
     </div>
   );
 };
-
 export default SettingsPanel;

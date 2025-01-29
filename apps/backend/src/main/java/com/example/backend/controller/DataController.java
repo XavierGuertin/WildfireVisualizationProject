@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-
+import com.example.backend.service.DataService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,7 +115,7 @@ public class DataController {
       return ResponseEntity.internalServerError().body("Error resetting collections: " + e.getMessage());
     }
   }
-
+  
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
     logger.info("Received request to get collections by name");
@@ -141,4 +142,17 @@ public class DataController {
     }
   }
   
+  @GetMapping("/api/set-datalayer-geometry/{id}")
+  public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
+    try{
+      logger.info("Received request to /api/set-datalayer-geometry");
+      dataService.insertView(collectionId);
+      logger.info("Successfully processed custom collection");
+      return ResponseEntity.ok("Successfully inserted view");
+    } catch (Exception e) {
+      logger.error("Error inserting View: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error inserting view: " + e.getMessage());
+    }
+  }
 }

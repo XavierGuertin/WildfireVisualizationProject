@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/ci.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/ci.yml)
 [![Docker Image CI](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/docker-build.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/docker-build.yml)
+[![E2E Pipeline](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml)
 [![Release](https://img.shields.io/github/v/release/XavierGuertin/WildfireVisualizationProject)](https://github.com/XavierGuertin/WildfireVisualizationProject/releases)
 
 ---
@@ -10,6 +11,7 @@
 
 [Release 1](https://drive.google.com/file/d/1JsXKsDaoS1fAFSvkUBiOB_QMhBAMq9s_/view?usp=sharing)
 
+[Release 2](https://drive.google.com/file/d/1EwC_pmEvNcNeKkw6HzDpERxLRwDPYCPv/view?usp=sharing)
 ---
 
 ## Most Important Files and Tests
@@ -78,11 +80,11 @@ To get started as a developer on this project:
     ```
 6. **Launch the Backend Once built, you can serve the backend:**
     ```bash
-    nx serve backend
+    nx dev backend
     ```
 7. **Launch the Frontend After the backend is running, you can start the frontend:**
     ```bash
-    nx serve frontend
+    nx dev frontend
     ```
 
 ## Running Production

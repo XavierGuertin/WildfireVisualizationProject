@@ -17,8 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.example.backend.service.DataService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataControllerTests {
@@ -218,5 +221,29 @@ class DataControllerTests {
     verify(dataService, times(0)).fetchAndSaveCollections();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error resetting collections: Test error");
+  }
+
+  @Test
+  void insertView_Success() {
+    //Arrange
+    doNothing().when(dataService).insertView("ID");
+
+    // Act
+    ResponseEntity<String> response = dataController.insertView("ID");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  void insertView_Failure() {
+    //Arrange
+    doThrow(new RuntimeException("Test error")).when(dataService).insertView("ID");
+
+    // Act
+    ResponseEntity<String> response = dataController.insertView("ID");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

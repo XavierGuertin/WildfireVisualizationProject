@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -197,5 +199,81 @@ class StacRepositoryTests {
     assertThatThrownBy(() -> stacRepository.deleteAllCollections())
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Error deleting collections");
+  }
+
+  @Test
+  void setDatalayerView_Success() {
+    // Arrange
+    doNothing().when(jdbcTemplate).execute(anyString());
+
+    // Act  
+    stacRepository.setDatalayerView(testCollectionId);
+
+    // Assert
+    verify(jdbcTemplate, times(1)).execute("DROP VIEW IF EXISTS Datalayer");
+    verify(jdbcTemplate, times(1)).execute("CREATE VIEW DataLayer AS" +
+    " SELECT geometry FROM pgstac.collections WHERE id = '" + testCollectionId.replace("'", "''") + "'");
+  }
+
+  @Test
+  void setDatalayerView_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).execute(anyString());
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.setDatalayerView("ID"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error inserting view");
+  }
+
+  @Test
+  void checkDatalayerView_True_Success() {
+    // Arrange
+    String sql = "SELECT COUNT(*) FROM DataLayer";
+    when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(1);
+
+    // Act  
+    boolean result = stacRepository.checkDatalayerView();
+
+    // Assert
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void checkDatalayerView_False_Success() {
+    // Arrange
+    String sql = "SELECT COUNT(*) FROM DataLayer";
+    when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(0);
+
+    // Act  
+    boolean result = stacRepository.checkDatalayerView();
+
+    // Assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void checkDatalayerView_ThrowsException_WhenEmptyResultDataAccessExceptionError() {
+    // Arrange
+    String sql = "SELECT COUNT(*) FROM DataLayer";
+    doThrow(new EmptyResultDataAccessException(1)).when(jdbcTemplate).queryForObject(sql, Integer.class);
+    // Act & Assert
+    boolean result = stacRepository.checkDatalayerView();
+
+    // Assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void checkDatalayerView_ThrowsException_WhenDataAccessExceptionError() {
+    // Arrange
+    String sql = "SELECT COUNT(*) FROM DataLayer";
+    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).queryForObject(sql, Integer.class);
+
+    // Act & Assert
+    boolean result = stacRepository.checkDatalayerView();
+
+    // Assert
+    assertThat(result).isFalse();
   }
 }

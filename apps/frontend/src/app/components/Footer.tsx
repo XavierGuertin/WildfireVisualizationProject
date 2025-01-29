@@ -1,14 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/footer.css';
 import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+import { useMapLayerContext } from './MapContext';
 
 const Footer = () => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const [speed, setSpeed] = useState(1);
+  const {speed, setSpeed} = useMapLayerContext();
+  const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handlePlayPause = () => setIsPlaying((prev) => !prev);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Load speed from localStorage if available
+        const savedSpeed = localStorage.getItem('playbackSpeed');
+        if (savedSpeed) {
+          setSpeed(parseFloat(savedSpeed));
+          toast.success(t('speed_retrieved'));
+        } else {
+          toast.info(t('default_speed_retrieved'));
+        }
+        setSpeedInitialized(true);
+      } catch (error) {
+        console.error('Error reading playback speed from localStorage:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (speedInitialized && typeof window !== 'undefined') {
+      try {
+        // Save speed to localStorage whenever it changes
+        localStorage.setItem('playbackSpeed', speed.toString());
+      } catch (error) {
+        console.error('Error saving playback speed to localStorage:', error);
+      }
+    }
+  }, [speed, speedInitialized]);
+
+const handlePlayPause = () => setIsPlaying((prev) => !prev);
   const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
 
   useEffect(() => {
@@ -42,7 +76,7 @@ const Footer = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-  
+
   return (
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}

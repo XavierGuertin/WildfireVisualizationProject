@@ -21,9 +21,16 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.backend.repository.StacRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataServiceTests {
@@ -263,5 +270,31 @@ class DataServiceTests {
       .hasMessageContaining("Failed to delete collections: Test exception");
 
     verify(stacRepository, times(1)).deleteAllCollections();
+  }
+
+  @Test
+  void insertView_Default_Success() {
+    // Arrange
+    doNothing().when(stacRepository).setDatalayerView("ID");
+    when(stacRepository.checkDatalayerView()).thenReturn(true);
+
+    // Act
+    dataService.insertView("ID");
+
+    // Assert
+    verify(stacRepository, atLeastOnce()).setDatalayerView("ID");
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void insertView_SleepMillisAdjusted_Failure() {
+    // Arrange
+    doNothing().when(stacRepository).setDatalayerView("ID");
+    when(stacRepository.checkDatalayerView()).thenReturn(false);
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.insertView("ID", 0))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("View could not be created for collectionId: ID");
   }
 }

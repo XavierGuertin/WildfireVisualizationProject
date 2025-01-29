@@ -30,8 +30,23 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
   }
-};  
 
+}; 
+
+export const fetchCollectionsFromEndpoint = async (): Promise<string> => {
+  try {
+    // this will eventually pass a parameter to call the endpoint URL we want
+    const response = await fetch(`${BASE_URL}/api/fetch-collections`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+}
 
 export const resetCollections = async (): Promise<string> => {
   try {
@@ -78,6 +93,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     const source = truncatedSource.split('/').pop()?.toUpperCase()
 
     const metadata = {
+      id: collectionId,
       date: data[0].datetime,
       enddate: data[0].end_datetime,
       datasetSource: source, 
@@ -93,8 +109,6 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     console.error("Error fetching MetaData:", error);
     return { error: "Failed to fetch MetaData" };
   }
-}
-
 export const fetchCollectionsFromEndpoint = async (): Promise<{
   error: string;
 }> => {
@@ -148,3 +162,15 @@ export const fetchCollectionsFromEndpointByDate = async (): Promise<{
     return { error: 'Failed to fetch data by name' };
   }
 };
+
+export const insertDatalayerView = async (collectionId: string): Promise<any> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/set-datalayer-geometry/${collectionId}`);
+    if(!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+  } catch (error: any) {
+    console.error("Error inserting View:", error);
+    return { error: "Failed to insert View" };
+  }
+}

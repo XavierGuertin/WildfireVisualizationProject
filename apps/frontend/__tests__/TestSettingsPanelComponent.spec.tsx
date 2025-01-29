@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { toast } from 'react-toastify';
 import SettingsPanel from '../src/app/components/SettingsPanel';
+import Footer from '../src/app/components/Footer';
+import { MapProvider } from '../src/app/components/MapContext';
 
 jest.mock('sweetalert2');
 jest.mock('../src/app/services/api');
@@ -32,7 +34,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should open and close the settings dropdown', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -44,7 +46,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should render the correct initial API endpoint value and update the input field', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -57,6 +59,7 @@ describe('Test SettingsPanel component', () => {
     fireEvent.change(inputField, {
       target: { value: 'https://new-api-endpoint.com' },
     });
+
     expect(inputField.value).toBe('https://new-api-endpoint.com');
   });
 
@@ -64,7 +67,7 @@ describe('Test SettingsPanel component', () => {
     (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValue(
       'Collections fetched successfully',
     );
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -85,10 +88,11 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should trigger an error alert for an invalid API endpoint', async () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
+
 
     const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
     const saveButton = screen.getByText('save');
@@ -98,7 +102,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should close the settings dropdown when Cancel is clicked', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -110,7 +114,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should close settings dropdown when clicking outside', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -122,7 +126,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should not close settings dropdown if clicking inside dropdown', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const settingsButton = screen.getByRole('button', { name: /settings/i });
     fireEvent.click(settingsButton);
@@ -138,7 +142,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should open and close the language dropdown', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const languageButton = screen.getByRole('button', { name: /language/i });
     fireEvent.click(languageButton);
@@ -154,7 +158,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should select English and French in the language dropdown', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const languageButton = screen.getByRole('button', { name: /language/i });
     fireEvent.click(languageButton);
@@ -169,7 +173,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should open and close the reset dropdown', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const resetButton = screen.getByRole('button', { name: /reset/i });
     fireEvent.click(resetButton);
@@ -185,7 +189,7 @@ describe('Test SettingsPanel component', () => {
   });
 
   it('should close dropdowns when clicking outside', () => {
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const languageButton = screen.getByRole('button', { name: /language/i });
     fireEvent.click(languageButton);
@@ -204,7 +208,7 @@ describe('Test SettingsPanel component', () => {
     (resetCollections as jest.Mock).mockResolvedValueOnce('Reset successful');
     (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
 
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const resetButton = screen.getByRole('button', { name: /reset/i });
     fireEvent.click(resetButton);
@@ -239,7 +243,7 @@ describe('Test SettingsPanel component', () => {
     (resetCollections as jest.Mock).mockResolvedValueOnce('Factory reset successful');
     (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
 
-    render(<SettingsPanel />);
+    render(<MapProvider><SettingsPanel /></MapProvider>);
 
     const resetButton = screen.getByRole('button', { name: /reset/i });
     fireEvent.click(resetButton);
@@ -264,5 +268,64 @@ describe('Test SettingsPanel component', () => {
       expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
       expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
     });
+  });
+});
+
+describe('Local Storage functionality in SettingsPanel', () => {
+  // Mock alert function to avoid JSDOM error
+  beforeAll(() => {
+    window.alert = jest.fn();
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it('should retrieve the saved language from local storage on initialization', () => {
+    // Set a saved language in localStorage
+    localStorage.setItem('language', 'fr');
+
+    // Render the component
+    render(<MapProvider><SettingsPanel /></MapProvider>);
+
+    // Verify that the language retrieved from local storage is applied
+    expect(localStorage.getItem('language')).toBe('fr');
+  });
+
+  it('should save the selected language to local storage when changed', () => {
+    render(<MapProvider><SettingsPanel /></MapProvider>);
+
+    // Open the language dropdown
+    const languageButton = screen.getByRole('button', { name: /language/i }); // Assuming the button has the 'language' name
+    fireEvent.click(languageButton);
+
+    // Select French
+    const frenchButton = screen.getByRole('button', { name: /french/i });
+    fireEvent.click(frenchButton);
+
+    // Verify that the language was saved in local storage
+    expect(localStorage.getItem('language')).toBe('fr');
+
+    // Open the language dropdown again and select English
+    fireEvent.click(languageButton);
+    const englishButton = screen.getByRole('button', { name: /english/i });
+    fireEvent.click(englishButton);
+
+    // Verify that the language was updated in local storage
+    expect(localStorage.getItem('language')).toBe('en');
+  });
+  it('should initialize language from localStorage and show success toast', async () => {
+    localStorage.setItem('language', 'fr');
+
+    render(<MapProvider><SettingsPanel /></MapProvider>);
+
+    // Ensure that toast.success was called after language retrieval
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('language_retrieved');
+    });
+
+    // Ensure that the language change was triggered
+    expect(localStorage.getItem('language')).toBe('fr');
   });
 });
