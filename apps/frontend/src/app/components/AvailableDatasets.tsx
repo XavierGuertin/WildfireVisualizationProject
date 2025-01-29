@@ -9,7 +9,7 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { fetchCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
+import { getCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
 
 export interface DatasetMetadata {
   date: string;
@@ -41,7 +41,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     const fetchDatasets = async () => {
       try {
         const datasetList: string[] | null = []
-        const response: any = await fetchCollectionsFromEndpoint()
+        const response: any = await getCollectionsFromEndpoint()
         for(let i = 0; i < response.length; i++){
           const entryId = response[i].id
           datasetList.push(entryId)
@@ -70,10 +70,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       } else if (filter === 'Date'){
         response = await fetchCollectionsFromEndpointByDate();
       } else if (filter === 'Latest Added'){
-        response = await fetchCollectionsFromEndpoint();
+        response = await getCollectionsFromEndpoint();
         //TODO: call latestAdded endpoint, once we have Latest Added attribute
       } else if (filter === 'Latest Updated'){
-        response = await fetchCollectionsFromEndpoint();
+        response = await getCollectionsFromEndpoint();
         //TODO: call latestUpdated endpoint, once we have Latest Added attribute
       }
 

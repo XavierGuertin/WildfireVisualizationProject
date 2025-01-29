@@ -20,6 +20,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.backend.repository.StacRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -159,15 +162,16 @@ class DataServiceTests {
 
   @Test
   void retrieveMetaData_IsValid() throws JsonProcessingException {
-    //retrieveMetaData is just a middle man between the controller and the repository, so there is not real functionality to test
+    // retrieveMetaData is just a middle man between the controller and the
+    // repository, so there is not real functionality to test
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
-    //Act
+    // Act
     String response = dataService.retrieveMetaData("");
 
-    //Assert
+    // Assert
     assertThat(response).isNotNull();
   }
 
@@ -210,9 +214,8 @@ class DataServiceTests {
   void getCollections_Success() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2")
-    );
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
     when(stacRepository.getAllCollections()).thenReturn(mockCollections);
 
     // Act
@@ -231,8 +234,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.getCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to fetch collections");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
   }
 
   @Test
@@ -251,8 +254,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.insertAndQueryCollection())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to process collection: Test exception");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to process collection: Test exception");
 
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
     verify(stacRepository, times(0)).insertCollection(anyString());
@@ -266,8 +269,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.deleteAllCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to delete collections: Test exception");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to delete collections: Test exception");
 
     verify(stacRepository, times(1)).deleteAllCollections();
   }
@@ -294,7 +297,7 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.insertView("ID", 0))
-      .isInstanceOf(IllegalStateException.class)
-      .hasMessageContaining("View could not be created for collectionId: ID");
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("View could not be created for collectionId: ID");
   }
 }

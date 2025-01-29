@@ -1,9 +1,5 @@
 package com.example.backend.controller;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
 import com.example.backend.service.DataService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -12,6 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
 
 import com.example.backend.service.DataService;
 
@@ -61,7 +62,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing MetaData: " + e.getMessage());
+          .body("Error processing MetaData: " + e.getMessage());
     }
   }
 
@@ -115,7 +116,7 @@ public class DataController {
       return ResponseEntity.internalServerError().body("Error resetting collections: " + e.getMessage());
     }
   }
-  
+
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
     logger.info("Received request to get collections by name");
@@ -141,10 +142,10 @@ public class DataController {
       return ResponseEntity.internalServerError().body(null);
     }
   }
-  
+
   @GetMapping("/api/set-datalayer-geometry/{id}")
   public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
-    try{
+    try {
       logger.info("Received request to /api/set-datalayer-geometry");
       dataService.insertView(collectionId);
       logger.info("Successfully processed custom collection");
@@ -152,7 +153,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error inserting view: " + e.getMessage());
+          .body("Error inserting view: " + e.getMessage());
     }
   }
 }

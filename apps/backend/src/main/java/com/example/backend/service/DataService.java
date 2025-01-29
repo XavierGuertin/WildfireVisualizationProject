@@ -1,19 +1,31 @@
 package com.example.backend.service;
 
+import com.example.backend.repository.StacRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import com.example.backend.repository.StacRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.asserThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @Service
 public class DataService {
@@ -64,25 +76,25 @@ public class DataService {
     stacRepository.setDatalayerView(collectionId);
     boolean check = false;
     int count = 0;
-    
+
     while (!check && count < 50) {
-        check = stacRepository.checkDatalayerView();
-        count++;
-        try {
-            // Sleep to avoid overwhelming the database
-            Thread.sleep(sleepMillis); 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Thread interrupted while waiting for the view to be created", e);
-            break;
-        }
+      check = stacRepository.checkDatalayerView();
+      count++;
+      try {
+        // Sleep to avoid overwhelming the database
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Thread interrupted while waiting for the view to be created", e);
+        break;
+      }
     }
 
     if (check) {
-        logger.info("View successfully detected in database for collectionId: {}", collectionId);
+      logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
-        logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
-        throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
+      logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
+      throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
   }
 

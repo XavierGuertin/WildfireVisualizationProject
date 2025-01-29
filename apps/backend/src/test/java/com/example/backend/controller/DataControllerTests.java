@@ -1,18 +1,11 @@
 package com.example.backend.controller;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.example.backend.service.DataService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +39,7 @@ class DataControllerTests {
   void testStacEndpoint_Success() {
     // Arrange
     when(dataService.insertAndQueryCollection())
-      .thenReturn("Success result");
+        .thenReturn("Success result");
 
     // Act
     ResponseEntity<String> response = dataController.testStacEndpoint();
@@ -60,7 +53,7 @@ class DataControllerTests {
   void testStacEndpoint_Failure() {
     // Arrange
     when(dataService.insertAndQueryCollection())
-      .thenThrow(new RuntimeException("Test error"));
+        .thenThrow(new RuntimeException("Test error"));
 
     // Act
     ResponseEntity<String> response = dataController.testStacEndpoint();
@@ -73,13 +66,13 @@ class DataControllerTests {
   @Test
   void getMetaData_Success() throws JsonProcessingException {
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
-    //Act
+    // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
 
-    //Assert
+    // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
   }
@@ -87,13 +80,13 @@ class DataControllerTests {
   @Test
   void getMetaData_Failure() throws JsonProcessingException {
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
-    //Act
+    // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
 
-    //Assert
+    // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isEqualTo("Error processing MetaData: Entry not found");
   }
@@ -103,7 +96,7 @@ class DataControllerTests {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
     when(dataService.insertAndQueryCollection(anyString()))
-      .thenReturn("Success result");
+        .thenReturn("Success result");
 
     // Act
     ResponseEntity<String> response = dataController.createCollection(testJson);
@@ -118,7 +111,7 @@ class DataControllerTests {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
     when(dataService.insertAndQueryCollection(anyString()))
-      .thenThrow(new RuntimeException("Test error"));
+        .thenThrow(new RuntimeException("Test error"));
 
     // Act
     ResponseEntity<String> response = dataController.createCollection(testJson);
@@ -170,9 +163,8 @@ class DataControllerTests {
   void getCollections_Success() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2")
-    );
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
     when(dataService.getCollections()).thenReturn(mockCollections);
 
     // Act
@@ -225,7 +217,7 @@ class DataControllerTests {
 
   @Test
   void insertView_Success() {
-    //Arrange
+    // Arrange
     doNothing().when(dataService).insertView("ID");
 
     // Act
@@ -237,7 +229,7 @@ class DataControllerTests {
 
   @Test
   void insertView_Failure() {
-    //Arrange
+    // Arrange
     doThrow(new RuntimeException("Test error")).when(dataService).insertView("ID");
 
     // Act

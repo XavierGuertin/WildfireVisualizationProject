@@ -1,8 +1,5 @@
 package com.example.backend.repository;
 
-import java.util.List;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +7,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Map;
 
 @Repository
 public class StacRepository {
@@ -71,6 +71,18 @@ public class StacRepository {
     }
   }
 
+  public void deleteAllCollections() {
+    logger.info("Deleting all collections from pgstac.collections");
+    try {
+      String sql = "DELETE FROM pgstac.collections";
+      jdbcTemplate.update(sql);
+      logger.info("All collections deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
+    }
+  }
+
   public List<Map<String, Object>> getAllCollectionsByName() {
     logger.debug("Fetching all collections");
     try {
@@ -112,18 +124,6 @@ public class StacRepository {
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
-    }
-  }
-
-  public void deleteAllCollections() {
-    logger.info("Deleting all collections from pgstac.collections");
-    try {
-      String sql = "DELETE FROM pgstac.collections";
-      jdbcTemplate.update(sql);
-      logger.info("All collections deleted successfully");
-    } catch (DataAccessException e) {
-      logger.error("Error deleting collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
     }
   }
 
