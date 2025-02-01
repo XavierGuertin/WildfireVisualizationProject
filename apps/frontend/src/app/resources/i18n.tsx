@@ -12,8 +12,8 @@ const resources = {
         enter_new_api_endpoint: "Enter new API endpoint",
         language_retrieved: "Language has been retrieved from previous settings.",
         default_language_retrieved: "Default language has been retrieved.",
-        speed_retrieved:"Speed  has been retrieved from previous settings.",
-        default_speed_retrieved:"Default speed  has been retrieved.",
+        speed_retrieved:"Speed has been retrieved from previous settings.",
+        default_speed_retrieved:"Default speed has been retrieved.",
         api_endpoint_saved: "API Endpoint Successfully Saved",
         //Language
         english: "English",

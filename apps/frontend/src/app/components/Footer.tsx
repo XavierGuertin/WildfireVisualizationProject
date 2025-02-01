@@ -4,38 +4,41 @@ import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { useMapLayerContext } from './MapContext';
-import { getConfig, saveConfig } from '../services/configApi';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const { speed, setSpeed } = useMapLayerContext();
+  const {speed, setSpeed} = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await getConfig();
-      if (config.playbackSpeed) {
-        setSpeed(parseFloat(config.playbackSpeed));
-        toast.success(t('speed_retrieved'));
-      } else {
-        toast.info(t('default_speed_retrieved'));
+    if (typeof window !== 'undefined') {
+      try {
+        // Load speed from localStorage if available
+        const savedSpeed = localStorage.getItem('playbackSpeed');
+        if (savedSpeed) {
+          setSpeed(parseFloat(savedSpeed));
+          toast.success(t('speed_retrieved'));
+        } else {
+          toast.info(t('default_speed_retrieved'));
+        }
+        setSpeedInitialized(true);
+      } catch (error) {
+        console.error('Error reading playback speed from localStorage:', error);
       }
-      setSpeedInitialized(true);
-    };
-    fetchConfig();
-  }, [t, setSpeed]);
+    }
+  }, []);
 
   useEffect(() => {
-    if (speedInitialized) {
-      const saveSpeed = async () => {
-        const config = await getConfig();
-        config.playbackSpeed = speed.toString();
-        await saveConfig(config);
-      };
-      saveSpeed();
+    if (speedInitialized && typeof window !== 'undefined') {
+      try {
+        // Save speed to localStorage whenever it changes
+        localStorage.setItem('playbackSpeed', speed.toString());
+      } catch (error) {
+        console.error('Error saving playback speed to localStorage:', error);
+      }
     }
   }, [speed, speedInitialized]);
 
