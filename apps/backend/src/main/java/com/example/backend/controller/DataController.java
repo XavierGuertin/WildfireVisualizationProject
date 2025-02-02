@@ -1,7 +1,6 @@
 package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,20 +35,6 @@ public class DataController {
     }
   }
 
-  @GetMapping("/api/test-stac")
-  public ResponseEntity<String> testStacEndpoint() {
-    logger.info("Received request to /api/test-stac");
-    try {
-      String result = dataService.insertAndQueryCollection();
-      logger.debug("Successfully processed STAC data");
-      return ResponseEntity.ok(result);
-    } catch (Exception e) {
-      logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-        .body("Error processing STAC data: " + e.getMessage());
-    }
-  }
-
   @GetMapping("/api/metadata/{id}")
   public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
     logger.info("Received request to /api/metadata");
@@ -68,7 +53,7 @@ public class DataController {
   public ResponseEntity<String> createCollection(@RequestBody String collectionJson) {
     logger.info("Received request to create collection");
     try {
-      String result = dataService.insertAndQueryCollection(collectionJson);
+      String result = dataService.insertAndQueryCollectionTests(collectionJson);
       logger.debug("Successfully processed custom collection");
       return ResponseEntity.ok(result);
     } catch (Exception e) {
@@ -79,10 +64,10 @@ public class DataController {
   }
 
   @GetMapping("/api/fetch-collections")
-  public ResponseEntity<String> fetchCollections() {
-    logger.info("Received request to fetch and save collections");
+  public ResponseEntity<String> fetchCollections(@RequestParam String endpoint_url) {
+    logger.info("Received request to fetch and save collections from endpoint: {}", endpoint_url);
     try {
-      dataService.fetchAndSaveCollections();
+      dataService.fetchAndSaveCollections(endpoint_url);
       return ResponseEntity.ok("Collections fetched and saved successfully");
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -126,6 +111,23 @@ public class DataController {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
         .body("Error inserting view: " + e.getMessage());
+    }
+  }
+
+  /*
+   * Tests method
+   */
+  @GetMapping("/api/test-stac")
+  public ResponseEntity<String> testStacEndpoint() {
+    logger.info("Received request to /api/test-stac");
+    try {
+      String result = dataService.insertAndQueryCollectionTests();
+      logger.debug("Successfully processed STAC data");
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error processing STAC data: " + e.getMessage());
     }
   }
 }

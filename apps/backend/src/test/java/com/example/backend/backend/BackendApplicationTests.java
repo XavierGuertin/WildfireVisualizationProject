@@ -19,19 +19,22 @@ class BackendApplicationTests {
   @InjectMocks
   private BackendApplication backendApplication;
 
+  private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
+
+
   @Test
   void run_ShouldFetchAndSaveCollections() throws Exception {
     // Act
     backendApplication.run();
 
     // Assert
-    verify(dataService, times(1)).fetchAndSaveCollections();
+    verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
   }
 
   @Test
   void run_ShouldLogError_WhenExceptionThrown() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Test exception")).when(dataService).fetchAndSaveCollections();
+    doThrow(new RuntimeException("Test exception")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Act & Assert
     try {
@@ -40,7 +43,7 @@ class BackendApplicationTests {
       // Expected exception
     }
 
-    verify(dataService, times(1)).fetchAndSaveCollections();
+    verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
   }
 
   @Test

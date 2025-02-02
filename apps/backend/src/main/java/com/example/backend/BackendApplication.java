@@ -23,6 +23,8 @@ public class BackendApplication implements CommandLineRunner {
 
   private static final Logger logger = LogManager.getLogger(BackendApplication.class);
 
+  private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
+
   @Autowired
   private DataService dataService;
 
@@ -33,6 +35,6 @@ public class BackendApplication implements CommandLineRunner {
   @Override
   public void run(String... args) throws Exception {
     logger.info("Fetching and saving collections on startup");
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
   }
 }

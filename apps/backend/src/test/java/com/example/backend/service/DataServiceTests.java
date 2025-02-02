@@ -39,6 +39,9 @@ class DataServiceTests {
 
   private Map<String, Object> mockResponse;
 
+  private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
+
+
   @BeforeEach
   void setUp() {
     mockResponse = new HashMap<>();
@@ -55,7 +58,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
@@ -70,7 +73,7 @@ class DataServiceTests {
 
     // Act & Assert
     try {
-      dataService.fetchAndSaveCollections();
+      dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     } catch (Exception e) {
       // Expected exception
     }
@@ -87,7 +90,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection();
+    String result = dataService.insertAndQueryCollectionTests();
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -104,7 +107,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -121,7 +124,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -138,7 +141,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -171,7 +174,7 @@ class DataServiceTests {
     when(stacRepository.checkCollectionExists("existing-collection")).thenReturn(true);
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists("existing-collection");
@@ -189,7 +192,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists("new-collection");
@@ -240,7 +243,7 @@ class DataServiceTests {
     when(stacRepository.checkCollectionExists(anyString())).thenThrow(new RuntimeException("Test exception"));
 
     // Act & Assert
-    assertThatThrownBy(() -> dataService.insertAndQueryCollection())
+    assertThatThrownBy(() -> dataService.insertAndQueryCollectionTests())
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Failed to process collection: Test exception");
 
