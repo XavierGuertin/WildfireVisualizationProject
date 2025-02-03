@@ -1,5 +1,8 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.PostGISData;
+import com.example.backend.dto.StacItemDto;
+import com.example.backend.exception.StacConversionException;
 import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,17 +23,17 @@ public class DataService {
   private static final String COLLECTIONS_URL = "https://hirondelle.crim.ca/stac/collections";
 
   private static final String DEFAULT_COLLECTION_JSON = """
-    {
-        "id": "synthetic-wildfire-collection",
-        "type": "Collection",
-        "stac_version": "1.0.0",
-        "description": "A synthetic wildfire dataset for testing.",
-        "extent": {
-            "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
-            "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
-        }
-    }
-    """;
+      {
+          "id": "synthetic-wildfire-collection",
+          "type": "Collection",
+          "stac_version": "1.0.0",
+          "description": "A synthetic wildfire dataset for testing.",
+          "extent": {
+              "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
+              "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
+          }
+      }
+      """;
 
   private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
 
@@ -42,6 +45,9 @@ public class DataService {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @Autowired
+  private StacDataConverter stacDataConverter;
 
   public String insertAndQueryCollection() {
     return insertAndQueryCollection(DEFAULT_COLLECTION_JSON, DEFAULT_COLLECTION_ID);
@@ -63,25 +69,25 @@ public class DataService {
     stacRepository.setDatalayerView(collectionId);
     boolean check = false;
     int count = 0;
-    
+
     while (!check && count < 50) {
-        check = stacRepository.checkDatalayerView();
-        count++;
-        try {
-            // Sleep to avoid overwhelming the database
-            Thread.sleep(sleepMillis); 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Thread interrupted while waiting for the view to be created", e);
-            break;
-        }
+      check = stacRepository.checkDatalayerView();
+      count++;
+      try {
+        // Sleep to avoid overwhelming the database
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Thread interrupted while waiting for the view to be created", e);
+        break;
+      }
     }
 
     if (check) {
-        logger.info("View successfully detected in database for collectionId: {}", collectionId);
+      logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
-        logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
-        throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
+      logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
+      throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
   }
 
@@ -89,9 +95,9 @@ public class DataService {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
     try {
       String finalCollectionJson = Optional.ofNullable(collectionJson)
-        .orElse(DEFAULT_COLLECTION_JSON);
+          .orElse(DEFAULT_COLLECTION_JSON);
       String finalCollectionId = Optional.ofNullable(collectionId)
-        .orElse(DEFAULT_COLLECTION_ID);
+          .orElse(DEFAULT_COLLECTION_ID);
 
       logger.debug("Using collection JSON: {}", finalCollectionJson);
       logger.info("Checking if collection exists: {}", finalCollectionId);
@@ -140,8 +146,8 @@ public class DataService {
     try {
       List<Map<String, Object>> collections = stacRepository.getAllCollections();
       return collections.stream()
-        .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
@@ -156,6 +162,18 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error deleting collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to delete collections: " + e.getMessage(), e);
+    }
+  }
+
+  public String processStacData(StacItemDto stacData) {
+    logger.info("Processing STAC data for item: {}", stacData.getId());
+    try {
+      PostGISData convertedData = stacDataConverter.convert(stacData);
+      // Store in database using your repository
+      return convertedData.getId();
+    } catch (Exception e) {
+      logger.error("Error processing STAC data: {}", e.getMessage(), e);
+      throw new StacConversionException("Failed to process STAC data", e);
     }
   }
 }
