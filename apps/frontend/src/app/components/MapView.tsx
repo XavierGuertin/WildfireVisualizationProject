@@ -11,6 +11,7 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import {TileWMS} from 'ol/source';
+import { map } from 'eslint.config';
       
 //Attributions
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -83,22 +84,16 @@ const MapView = () => {
           zoom: 1,
         }),
       });
-    // Log the initial extent
-    const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
-    console.log(`Initial Map extent: ${initialExtent}`);
-    }
+      // Log the initial extent
+      const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
+      console.log(`Initial Map extent: ${initialExtent}`);
+    } else {
+      const map = mapRef.current;
+      map.getLayers().clear();
+      map.addLayer(getLayer());
+      map.addLayer(dataLayer);
 
-    else {
-      mapRef.current?.getLayers().clear();
-      mapRef.current?.addLayer(getLayer());
-    }
 
-    // Event listener to log extent of map as view changes (pan or zoom)
-    if (mapRef.current) {
-      mapRef.current.getView().on('change:center', () => {
-        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
-        console.log(`Updated Map extent: ${mapExtent}`);
-      });
 
       mapRef.current.getView().on('change:resolution', () => {
         const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
@@ -106,60 +101,12 @@ const MapView = () => {
       });
     }
 
-    console.log(`Backend URL: ${backendUrl}`);
-
-    // Fetch the JSON data from the endpoint and add it to the map
-    fetch(`${backendUrl}/api/data`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json() as Promise<GeoJSONResponse>;
-      })
-      .then((data) => {
-        const features = data.items.map((item: any) => {
-          const coordinates = item.geometry.coordinates[0].map((coord: number[]) => coord);
-          const feature = new Feature({
-            geometry: new Polygon([coordinates])
-          });
-          feature.setStyle(
-            new Style({
-              stroke: new Stroke({
-                color: 'red',
-                width: 2
-              }),
-              fill: new Fill({
-                color: 'rgba(255, 0, 0, 0.1)'
-              })
-            })
-          );
-          return feature;
-        });
-
-        const vectorSource = new VectorSource({
-          features: features,
-        });
-
-        const vectorLayer = new VectorLayer({
-          source: vectorSource,
-        });
-
-        if (mapRef.current) {
-          mapRef.current.addLayer(vectorLayer);
-          // Ensure the map is centered on Ottawa
-          const view = mapRef.current.getView();
-          view.setCenter([-75.6972, 45.4215]);
-          view.setZoom(5);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
+    if(mapRef.current){
+      // Event listener to log extent of map as view changes (pan or zoom)
+      mapRef.current.getView().on('change:center', () => {
+        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
+        console.log(`Updated Map extent: ${mapExtent}`);
       });
-    } else {
-      const map = mapRef.current;
-      map.getLayers().clear();
-      map.addLayer(getLayer());
-      map.addLayer(dataLayer);
     }
   }, [layer]);
 

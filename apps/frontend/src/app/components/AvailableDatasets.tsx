@@ -9,7 +9,7 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { getCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
+import { fetchCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
 
 export interface DatasetMetadata {
   date: string;
@@ -36,23 +36,22 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null); 
 
   useEffect(() => {
     const fetchDatasets = async () => {
       try {
         const datasetList: string[] | null = []
-        const response: any = await getCollectionsFromEndpoint()
+        const response: any = await fetchCollectionsFromEndpoint()
         for(let i = 0; i < response.length; i++){
-          const entryId = response[i].id
-          datasetList.push(entryId)
+          datasetList.push(response[i].id);
         }
-        
         setDatasets(datasetList);
       } catch (error) {
         console.log('Error fetching datasets:', error);
+        setFetchError('Failed to load datasets.');
       }
     };
-
     fetchDatasets();
   }, []);
 
@@ -70,10 +69,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       } else if (filter === 'Date'){
         response = await fetchCollectionsFromEndpointByDate();
       } else if (filter === 'Latest Added'){
-        response = await getCollectionsFromEndpoint();
+        response = await fetchCollectionsFromEndpoint();
         //TODO: call latestAdded endpoint, once we have Latest Added attribute
       } else if (filter === 'Latest Updated'){
-        response = await getCollectionsFromEndpoint();
+        response = await fetchCollectionsFromEndpoint();
         //TODO: call latestUpdated endpoint, once we have Latest Added attribute
       }
 
@@ -157,21 +156,23 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
               )}
             </div>
             <div className="buttons-container" data-testid="buttons-container">
-              {datasets.length > 0 ? (
-                datasets.map((id, index) => (
-                  <button
-                    key={index}
-                    className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
-                    onClick={() => handleDatasetClick(id)}
-                    data-testid={`dataset-button-${index}`}
-                  >
-                    {id}
-                  </button>
-                ))
+              {fetchError ? ( 
+                <p data-testid="no-datasets-message">{fetchError}</p>
               ) : (
-                <p data-testid="no-datasets-message">
-                  {t('no_datasets_available')}
-                </p>
+                  datasets.length > 0 ? (
+                    datasets.map((id, index) => (
+                      <button
+                        key={index}
+                        className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
+                        onClick={() => handleDatasetClick(id)}
+                        data-testid={`dataset-button-${index}`}
+                      >
+                        {id}
+                      </button>
+                    ))
+                  ) : (
+                    <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
+                  )
               )}
             </div>
           </>

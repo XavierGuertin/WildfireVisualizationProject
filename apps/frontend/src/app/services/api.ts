@@ -19,7 +19,6 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
 }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
-    console.log('1) Fetching from: ', `${BASE_URL}/api/get-collections`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -111,8 +110,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
 };
 
 export const fetchCollectionsFromEndpoint = async (): Promise<{
-  error: string;
-}> => {
+  id: string; key: number}[] | { error: string }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections`);
@@ -129,8 +127,7 @@ export const fetchCollectionsFromEndpoint = async (): Promise<{
 }
 
 export const fetchCollectionsFromEndpointByName = async (): Promise<{
-  error: string;
-}> => {
+  id: string; key: number}[] | { error: string }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections-by-name`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-name`);
@@ -147,8 +144,7 @@ export const fetchCollectionsFromEndpointByName = async (): Promise<{
 }
 
 export const fetchCollectionsFromEndpointByDate = async (): Promise<{
-  error: string;
-}> => {
+  id: string; key: number}[] | { error: string }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections-by-date`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-date`);
