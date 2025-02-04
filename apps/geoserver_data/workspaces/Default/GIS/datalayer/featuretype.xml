@@ -1,5 +1,5 @@
 <featureType>
-  <id>FeatureTypeInfoImpl-72972593:1948a67d39b:-7fe7</id>
+  <id>FeatureTypeInfoImpl--72893d83:194d2686908:-7aaf</id>
   <name>datalayer</name>
   <nativeName>datalayer</nativeName>
   <namespace>
@@ -21,22 +21,32 @@
   AUTHORITY[&quot;EPSG&quot;,&quot;4326&quot;]]</nativeCRS>
   <srs>EPSG:4326</srs>
   <nativeBoundingBox>
-    <minx>-180.0</minx>
-    <maxx>180.0</maxx>
-    <miny>-90.0</miny>
-    <maxy>90.0</maxy>
+    <minx>-7.882190080512502</minx>
+    <maxx>27.911651652899923</maxx>
+    <miny>37.13739173208318</miny>
+    <maxy>58.21798141355221</maxy>
     <crs>EPSG:4326</crs>
   </nativeBoundingBox>
   <latLonBoundingBox>
-    <minx>-180.0</minx>
-    <maxx>180.0</maxx>
-    <miny>-90.0</miny>
-    <maxy>90.0</maxy>
+    <minx>-7.882190080512502</minx>
+    <maxx>27.911651652899923</maxx>
+    <miny>37.13739173208318</miny>
+    <maxy>58.21798141355221</maxy>
     <crs>EPSG:4326</crs>
   </latLonBoundingBox>
   <projectionPolicy>FORCE_DECLARED</projectionPolicy>
   <enabled>true</enabled>
   <metadata>
+    <entry key="elevation">
+      <dimensionInfo>
+        <enabled>false</enabled>
+      </dimensionInfo>
+    </entry>
+    <entry key="time">
+      <dimensionInfo>
+        <enabled>false</enabled>
+      </dimensionInfo>
+    </entry>
     <entry key="cachingEnabled">false</entry>
   </metadata>
   <store class="dataStore">
