@@ -76,9 +76,17 @@ const MapView = () => {
   const { layer, mapRef } = useMapLayerContext();
 
   const getLayer = () => {
-    if (layer === "satellite") return satelliteLayer;
-    if (layer === "topographical") return topographicLayer;
-    return defaultLayer;
+    let selectedLayer = defaultLayer;
+    switch (layer) {
+      case 'satellite':
+        selectedLayer = satelliteLayer;
+        break;
+      case 'topographical':
+        selectedLayer = topographicLayer;
+        break;
+    }
+    selectedLayer.set('id', 'baseLayer');
+    return selectedLayer;
   };
 
   useEffect(() => {
@@ -95,7 +103,12 @@ const MapView = () => {
       });
     } else {
       const map = mapRef.current;
-
+      const layers = map.getLayers().getArray();
+      const baseLayer = layers.find(layer => layer.get('id') === 'baseLayer');
+      if (baseLayer) {
+        map.removeLayer(baseLayer);
+      }
+      map.addLayer(getLayer());
       refreshLayer(map);  // Ensure dataLayer is reloaded correctly
     }
   }, [layer]);
