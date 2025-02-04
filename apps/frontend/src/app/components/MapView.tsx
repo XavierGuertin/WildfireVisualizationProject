@@ -75,19 +75,22 @@ const MapView = () => {
   const mapElement = useRef(null);
   const { layer, mapRef } = useMapLayerContext();
 
-  const getLayer = () => {
-    let selectedLayer = defaultLayer;
-    switch (layer) {
-      case 'satellite':
-        selectedLayer = satelliteLayer;
-        break;
-      case 'topographical':
-        selectedLayer = topographicLayer;
-        break;
+  const getLayer = (): TileLayer => {
+    const layerMap: Record<string, TileLayer> = {
+      satellite: satelliteLayer,
+      topographical: topographicLayer,
+      default: defaultLayer,
+    };
+
+    // Ensure `layer` is always a valid string before accessing the object
+    const selectedLayer = layerMap[layer ?? "default"];
+    if (!selectedLayer.get('id')) {
+      selectedLayer.set('id', 'baseLayer');
     }
-    selectedLayer.set('id', 'baseLayer');
+
     return selectedLayer;
   };
+
 
   useEffect(() => {
     if (!mapRef.current) {
