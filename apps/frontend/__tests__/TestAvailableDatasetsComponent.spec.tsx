@@ -137,28 +137,4 @@ describe('Test AvailableDatasets component', () => {
     fireEvent.click(toggleCheckbox);
     expect(toggleCheckbox).not.toBeChecked();
   });
-
-  it('should call fetchCollectionsFromEndpoint when the "Latest Added" filter is selected', async () => {
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
-  
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('filter-button-Latest Added'));
-    });
-  
-    await waitFor(() => {
-      expect(api.fetchCollectionsFromEndpoint).toHaveBeenCalledTimes(1);
-    });
-  });
-  
-  it('should call fetchCollectionsFromEndpoint when the "Latest Updated" filter is selected', async () => {
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
-  
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('filter-button-Latest Updated'));
-    });
-  
-    await waitFor(() => {
-      expect(api.fetchCollectionsFromEndpoint).toHaveBeenCalledTimes(1);
-    });
-  });  
 });

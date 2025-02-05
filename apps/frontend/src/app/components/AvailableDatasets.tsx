@@ -47,6 +47,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           datasetList.push(response[i].id);
         }
         setDatasets(datasetList);
+        setFetchError(null);
       } catch (error) {
         console.log('Error fetching datasets:', error);
         setFetchError('Failed to load datasets.');
@@ -68,12 +69,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         response = await fetchCollectionsFromEndpointByName();
       } else if (filter === 'Date'){
         response = await fetchCollectionsFromEndpointByDate();
-      } else if (filter === 'Latest Added'){
-        response = await fetchCollectionsFromEndpoint();
-        //TODO: call latestAdded endpoint, once we have Latest Added attribute
-      } else if (filter === 'Latest Updated'){
-        response = await fetchCollectionsFromEndpoint();
-        //TODO: call latestUpdated endpoint, once we have Latest Added attribute
       }
 
       for(let i = 0; i < response.length; i++){
@@ -81,9 +76,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       } 
 
       setDatasets(datasetList);
-      
+      setFetchError(null);
     } catch(error){
       console.log(`Error fetching datasets for filter ${filter}:`, error);
+      setDatasets([]);
+      setFetchError('Failed to load datasets.');
     }
   };
 
@@ -142,7 +139,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
               <div className="filter-icon">
                 <FaFilter size={24} />
               </div>
-              {['Name', 'Date', 'Latest Added', 'Latest Updated'].map(
+              {['Name', 'Date'].map(
                 (filter) => (
                   <button
                     key={filter}
@@ -157,22 +154,20 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             </div>
             <div className="buttons-container" data-testid="buttons-container">
               {fetchError ? ( 
-                <p data-testid="no-datasets-message">{fetchError}</p>
+                <p className="error-message" data-testid="no-datasets-message">{fetchError}</p>
+              ) : datasets.length > 0 ? (
+                datasets.map((id, index) => (
+                  <button
+                    key={index}
+                    className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
+                    onClick={() => handleDatasetClick(id)}
+                    data-testid={`dataset-button-${index}`}
+                  >
+                    {id}
+                  </button>
+                ))
               ) : (
-                  datasets.length > 0 ? (
-                    datasets.map((id, index) => (
-                      <button
-                        key={index}
-                        className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
-                        onClick={() => handleDatasetClick(id)}
-                        data-testid={`dataset-button-${index}`}
-                      >
-                        {id}
-                      </button>
-                    ))
-                  ) : (
-                    <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
-                  )
+                <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
               )}
             </div>
           </>
