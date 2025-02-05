@@ -167,7 +167,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   </button>
                 ))
               ) : (
-                <p data-testid="no-datasets-message">{t('no_datasets_available')}</p>
+                <div className="no-datasets-container" data-testid="no-datasets-message">
+                  <FaDatabase size={40} className="no-datasets-icon" />
+                  <p>{t('no_datasets_available')}</p>
+                </div>
               )}
             </div>
           </>

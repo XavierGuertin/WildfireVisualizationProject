@@ -206,4 +206,29 @@ body {
   
   .dataset-button.selected:hover {
     background: #003355;
-  }  
+  }
+  
+  /* No Dataset Container */
+  .no-datasets-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    color: #555;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  .no-datasets-icon {
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+  
+  .error-message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+  }

@@ -27,7 +27,7 @@ const resources = {
         factory_reset_initiated: "Factory Reset initiated",
         //Datasets
         available_datasets: "Available Datasets",
-        no_datasets_available: "No Datasets available.",
+        no_datasets_available: "No Datasets available....",
         toggle_datasets: "Toggle Datasets",
         name: "Name",
         date: "Date",
@@ -80,7 +80,7 @@ const resources = {
         factory_reset_initiated: "Réinitialisation d'Usine démarrée",
         //Datasets
         available_datasets: "Jeux de Données Disponibles",
-        no_datasets_available: "Aucun Jeu de Données disponible.",
+        no_datasets_available: "Aucun Base de Données disponible...",
         toggle_datasets: "Afficher les Jeux de Données",
         name: "Nom",
         date: "Date",
