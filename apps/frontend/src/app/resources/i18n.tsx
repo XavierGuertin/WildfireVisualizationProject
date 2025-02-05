@@ -16,7 +16,7 @@ const resources = {
       default_speed_retrieved: 'Default speed has been retrieved.',
       speed_changed: 'Speed has been changed to: ',
       api_endpoint_saved:
-        'API Endpoint Successfully Saved Under apps/backend/config/app-config.json',
+        'API endpoint successfully saved under apps/backend/config/app-config.json',
       copied_to_clipboard: 'Copied to clipboard',
       //Language
       english: 'English',
@@ -30,10 +30,10 @@ const resources = {
       factory_reset: 'Factory Reset',
       reset_initiated: 'Reset initiated',
       reset_completed: 'Properties have been reset to default values.',
-      factory_reset_initiated: 'Factory Reset initiated',
+      factory_reset_initiated: 'Factory reset initiated',
       //Datasets
       available_datasets: 'Available Datasets',
-      no_datasets_available: 'No Datasets available.',
+      no_datasets_available: 'No datasets available.',
       toggle_datasets: 'Toggle Datasets',
       name: 'Name',
       date: 'Date',
@@ -96,9 +96,9 @@ const resources = {
       reset_completed: 'Les propriétés ont été réinitialisées aux valeurs par défaut.',
       factory_reset_initiated: "Réinitialisation d'Usine démarrée",
       //Datasets
-      available_datasets: 'Jeux de Données Disponibles',
-      no_datasets_available: 'Aucun Jeu de Données disponible.',
-      toggle_datasets: 'Afficher les Jeux de Données',
+      available_datasets: 'Collections disponibles',
+      no_datasets_available: 'Aucune collections disponible.',
+      toggle_datasets: 'Afficher les collections de données',
       name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',

@@ -23,7 +23,9 @@ import { getConfig, saveConfig } from '../services/configApi';
 
 const MySwal = withReactContent(Swal);
 
-const SettingsPanel: React.FC = () => {
+const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
+  refreshDatasets,
+}) => {
   const { t, i18n } = useTranslation();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
@@ -34,7 +36,7 @@ const SettingsPanel: React.FC = () => {
     'https://default-api-endpoint.com',
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
+  const [languageInitialized, setLanguageInitialized] = useState(false);
   const [datasetIds, setDatasetIds] = useState<string[]>([]);
 
   // Initialize language from local storage and handle toast messages
@@ -45,7 +47,6 @@ const SettingsPanel: React.FC = () => {
       !languageInitialized
     ) {
       const savedLanguage = localStorage.getItem('language');
-
       if (savedLanguage) {
         // If a language is saved in localStorage, use it
         if (savedLanguage !== i18n.language) {
@@ -115,6 +116,8 @@ const SettingsPanel: React.FC = () => {
         await saveConfig(config);
 
         toast.success(t('api_endpoint_saved'));
+
+        refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
         return true;
@@ -193,6 +196,11 @@ const SettingsPanel: React.FC = () => {
             if (inputResult.isConfirmed) {
               success = await handleSaveAndFetchEndpoint(inputResult.value);
             } else {
+              const config = await getConfig();
+              config.endpoint = 'No endpoint saved';
+              await saveConfig(config);
+
+              refreshDatasets(); // Trigger the refresh
               break; // Exit the loop if the user cancels the input dialog
             }
           }
@@ -350,4 +358,5 @@ const SettingsPanel: React.FC = () => {
     </div>
   );
 };
+
 export default SettingsPanel;
