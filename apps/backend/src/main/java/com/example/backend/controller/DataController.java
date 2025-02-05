@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +67,19 @@ public class DataController {
   }
 
   @GetMapping("/api/fetch-collections")
-  public ResponseEntity<String> fetchCollections(@RequestParam String endpoint_url) {
-    logger.info("Received request to fetch and save collections from endpoint: {}", endpoint_url);
+  public ResponseEntity<String> fetchCollections(@RequestParam String endpointUrl) {
+    logger.info("Fetching collections from URL: {}", endpointUrl);
+
     try {
-      dataService.fetchAndSaveCollections(endpoint_url);
+      URI uri = new URI(endpointUrl);
+      uri.toURL();
+    } catch (URISyntaxException | MalformedURLException e) {
+      logger.error("Invalid URL provided: {}", endpointUrl);
+      return ResponseEntity.badRequest().body("Invalid URL provided: " + endpointUrl);
+    }
+
+    try {
+      dataService.fetchAndSaveCollections(endpointUrl);
       return ResponseEntity.ok("Collections fetched and saved successfully");
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -85,6 +97,19 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
+  @GetMapping("/api/verify-collections")
+  public ResponseEntity<String> verifyIfEndpointHasCollections(@RequestParam String endpointUrl) {
+    logger.info("Checking if there exist at least one collection from Endpoint URL: {}", endpointUrl);
+
+    try {
+      String result = dataService.verifyCollections(endpointUrl);
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error checking collections: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error checking collections: " + e.getMessage());
     }
   }
 

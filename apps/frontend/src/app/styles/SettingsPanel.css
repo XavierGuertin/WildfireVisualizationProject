@@ -115,7 +115,7 @@
     border-radius: 8px;
     padding: 12px;
     z-index: 1000;
-    width: 500px;
+    width: 400px;
     box-sizing: border-box;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   }
@@ -136,9 +136,19 @@
   .settings-prompt-row {
     display: flex;
     align-items: center;
-    gap: 10px;
     width: 100%;
     margin-top: 5px;
+  }
+
+  .settings-prompt-row button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin-left: 10px;
+  }
+
+  .settings-prompt-row button svg {
+    color: white;
   }
 
   /* Input field inside the settings prompt */

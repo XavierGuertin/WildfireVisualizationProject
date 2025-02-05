@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import '../styles/SettingsPanel.css';
 import {
   IoCheckmark,
+  IoCopyOutline,
   IoLanguage,
   IoSettingsOutline,
   IoTrashOutline,
@@ -11,18 +12,16 @@ import { PiArrowClockwiseFill } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
   resetCollections,
+  verifyIfEndpointHasCollections,
 } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from './MapContext';
-import { set } from 'ol/transform';
-
+import { getConfig, saveConfig } from '../services/configApi';
 
 const MySwal = withReactContent(Swal);
-const IS_NOT_FACTORY_RESET = false;
-const IS_FACTORY_RESET = true;
 
 const SettingsPanel: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -30,14 +29,21 @@ const SettingsPanel: React.FC = () => {
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const {setLayer, setSpeed, resetView} = useMapLayerContext();
-  const [newApiEndpoint, setNewApiEndpoint] = useState<string>("https://default-api-endpoint.com");
+  const { setLayer, setSpeed, resetView } = useMapLayerContext();
+  const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
+    'https://default-api-endpoint.com',
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false); // Flag to track if language is initialized
+  const [datasetIds, setDatasetIds] = useState<string[]>([]);
 
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage && !languageInitialized) {
+    if (
+      typeof window !== 'undefined' &&
+      window.localStorage &&
+      !languageInitialized
+    ) {
       const savedLanguage = localStorage.getItem('language');
 
       if (savedLanguage) {
@@ -48,36 +54,78 @@ const SettingsPanel: React.FC = () => {
         toast.success(t('language_retrieved')); // Show success message if language is retrieved
       } else {
         // If no language is saved, use the default language
+        localStorage.setItem('language', 'en');
         toast.info(t('default_language_retrieved')); // Show default language message
       }
       setLanguageInitialized(true); // Mark language initialization as done
     }
   }, [i18n, t, languageInitialized]);
 
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const config = await getConfig();
+      if (config.endpoint) {
+        setNewApiEndpoint(config.endpoint);
+      }
+      if (config.language && config.language !== i18n.language) {
+        i18n.changeLanguage(config.language);
+        toast.success(t('language_retrieved'));
+      }
+      setLanguageInitialized(true);
+    };
+    fetchConfig();
+  }, [i18n]);
+
   // Toggles dropdown state
-  const toggleDropdown = (buttonName: string) => {
+  const toggleDropdown = async (buttonName: string) => {
+    if (buttonName === 'settings') {
+      const config = await getConfig();
+      if (config.endpoint) {
+        setNewApiEndpoint(config.endpoint);
+      }
+    }
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
       isOpen: prevState.activeButton !== buttonName,
     }));
   };
 
-  const handleSaveAndFetchEndpoint = async (endpoint: string) => {
-    // This section is dependent on the task that
-    // enables the user to save the endpoint in the config
-    if (isValidUrl(endpoint)) {
-      const message = await fetchCollectionsFromEndpoint();
-      toast.success(message);
+  const handleSaveAndFetchEndpoint = async (
+    endpointUrl: string,
+  ): Promise<boolean> => {
+    if (isValidUrl(endpointUrl)) {
+      try {
+        // Check if the URL retrieves collections
+        const verificationMessage =
+          await verifyIfEndpointHasCollections(endpointUrl);
+        if (verificationMessage !== 'Collections found') {
+          toast.error(t('no_collections_found'));
+          return false;
+        }
 
-      toast.success(t('api_endpoint_saved'));
-      setDropdownState({ activeButton: null, isOpen: false });
+        // Reset collections before fetching new ones
+        await resetCollections();
+
+        const message = await fetchCollectionsFromEndpoint(endpointUrl);
+        toast.success(message);
+
+        // Save the new endpoint to config file
+        const config = await getConfig();
+        config.endpoint = endpointUrl;
+        await saveConfig(config);
+
+        toast.success(t('api_endpoint_saved'));
+
+        setDropdownState({ activeButton: null, isOpen: false });
+        return true;
+      } catch (error: any) {
+        toast.error(t('error_fetching_collections'));
+        return false;
+      }
     } else {
       toast.error(t('invalid_url'));
+      return false;
     }
-  };
-
-  const handleCancelEndpoint = () => {
-    setDropdownState({ activeButton: null, isOpen: false });
   };
 
   const handleLanguageSelect = (language: string) => {
@@ -86,37 +134,35 @@ const SettingsPanel: React.FC = () => {
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
-  const handleReset = () => {
-    handleResetDataFromEndpoint(IS_NOT_FACTORY_RESET).then(() =>
-      setDropdownState({ activeButton: null, isOpen: false }),
-    );
-  };
-
-  const handleFactoryReset = () => {
-    handleResetDataFromEndpoint(IS_FACTORY_RESET).then(() =>
-      setDropdownState({ activeButton: null, isOpen: false }),
-    );
-  };
-  const resetConfig = async() => {
-    try {
-      localStorage.setItem('language', 'en');
-      localStorage.setItem('playbackSpeed', '1');
-      setLayer('default');
-      resetCollections();
-      setLanguageInitialized(false);
-      setSpeed(1);
-      return 'Factory reset successful';
-    } catch (error: any) {
-      throw new Error(`Error resetting config: ${error.message}`);
-    }
-  };
-
-  const handleResetDataFromEndpoint = async (isFactoryReset: boolean) => {
+  const handleReset = async () => {
     MySwal.fire({
-      title: isFactoryReset ? t('factory_reset') : t('reset'),
-      text: isFactoryReset
-        ? t('confirm_factory_reset_data_from_endpoint')
-        : t('confirm_reset_data_from_endpoint'),
+      title: t('reset'),
+      text: t('confirm_reset_properties'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t('yes'),
+      customClass: {
+        popup: 'custom-swal-popup',
+      },
+    }).then(async (result: { isConfirmed: any }) => {
+      if (result.isConfirmed) {
+        // reset localStorage properties to default properties
+        localStorage.setItem('language', 'en');
+        localStorage.setItem('playbackSpeed', '1');
+
+        toast.success(t('reset_completed'));
+      }
+    });
+
+    setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const handleFactoryReset = async () => {
+    MySwal.fire({
+      title: t('factory_reset'),
+      text: t('confirm_factory_reset_data_from_endpoint'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -129,33 +175,48 @@ const SettingsPanel: React.FC = () => {
       if (result.isConfirmed) {
         resetView();
         try {
-          if (isFactoryReset) {
-            const message = await resetConfig();
-            toast.success(message);
-          } else {
-            const message = await resetCollections();
-            toast.success(message);
-          }
+          await resetConfig();
 
-          MySwal.fire({
-            title: t('api_endpoint'),
-            input: 'text',
-            inputPlaceholder: 'https://default-api-endpoint.com',
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            showCancelButton: true,
-            confirmButtonText: t('save'),
-            cancelButtonText: t('cancel'),
-          }).then((result) => {
-            if (result.isConfirmed) {
-              handleSaveAndFetchEndpoint(result.value);
+          let success = false;
+          while (!success) {
+            const inputResult = await MySwal.fire({
+              title: t('api_endpoint'),
+              input: 'text',
+              inputPlaceholder: 'https://default-api-endpoint.com',
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              showCancelButton: true,
+              confirmButtonText: t('save'),
+              cancelButtonText: t('cancel'),
+            });
+
+            if (inputResult.isConfirmed) {
+              success = await handleSaveAndFetchEndpoint(inputResult.value);
+            } else {
+              break; // Exit the loop if the user cancels the input dialog
             }
-          });
+          }
         } catch (error: any) {
           toast.error(error.message);
         }
       }
     });
+
+    setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const resetConfig = async () => {
+    try {
+      localStorage.setItem('language', 'en');
+      localStorage.setItem('playbackSpeed', '1');
+
+      setLayer('default');
+      await resetCollections();
+      setSpeed(1);
+      return 'Reset was successful';
+    } catch (error: any) {
+      throw new Error(`Error resetting config: ${error.message}`);
+    }
   };
 
   const isValidUrl = (url: string) => {
@@ -185,6 +246,21 @@ const SettingsPanel: React.FC = () => {
     };
   }, [dropdownState.isOpen]);
 
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const config = await getConfig();
+      if (config.endpoint) {
+        setNewApiEndpoint(config.endpoint);
+      }
+    };
+    fetchConfig();
+  }, [dropdownState.activeButton === 'settings']);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(newApiEndpoint);
+    toast.success(t('copied_to_clipboard'));
+  };
+
   return (
     <div className="button-container" ref={dropdownRef}>
       <ToastContainer />
@@ -207,16 +283,11 @@ const SettingsPanel: React.FC = () => {
                   type="text"
                   placeholder={t('enter_new_api_endpoint')}
                   value={newApiEndpoint}
-                  onChange={(e) => setNewApiEndpoint(e.target.value)}
+                  disabled
                 />
-                <div className="settings-prompt-buttons">
-                  <button
-                    onClick={() => handleSaveAndFetchEndpoint(newApiEndpoint)}
-                  >
-                    {t('save')}
-                  </button>
-                  <button onClick={handleCancelEndpoint}>{t('cancel')}</button>
-                </div>
+                <button onClick={copyToClipboard} aria-label="copy">
+                  <IoCopyOutline size={24} />
+                </button>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 package com.example.backend;
 
-import com.example.backend.service.DataService;
+import com.example.backend.controller.DataController;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,15 +26,15 @@ public class BackendApplication implements CommandLineRunner {
   private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
 
   @Autowired
-  private DataService dataService;
+  private DataController dataController;
 
   public static void main(String[] args) {
     SpringApplication.run(BackendApplication.class, args);
   }
 
   @Override
-  public void run(String... args) throws Exception {
+  public void run(String... args) {
     logger.info("Fetching and saving collections on startup");
-    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
+    dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
   }
 }

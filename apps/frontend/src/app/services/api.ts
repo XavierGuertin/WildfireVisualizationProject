@@ -33,7 +33,7 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
 
 export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
-    const response = await fetch(`${endpoint_url}/api/fetch-collections`);
+    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -42,6 +42,20 @@ export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promis
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+};
+
+export const verifyIfEndpointHasCollections = async (endpoint_url: string): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error checking collections:', error);
+    throw new Error(`Failed to check collections: ${error.message}`);
   }
 };
 
@@ -70,13 +84,11 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     const links = JSON.parse(data[0].links.value)
     let items = {rel: "", href: "", type: ""};
     let parent = {rel: "", href: "", type: ""};
-    for(let i = 0; i < links.length; i++){
-      const element = links[i];
-      if(element.rel === 'items'){
-        items = element
-      }
-      else if(element.rel === 'parent'){
-        parent = element
+    for (const element of links) {
+      if (element.rel === 'items') {
+        items = element;
+      } else if (element.rel === 'parent') {
+        parent = element;
       }
     }
 

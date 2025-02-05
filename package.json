@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "start:frontend": "nx dev frontend",
+    "start:backend": "nx dev backend",
+    "build:backend": "nx build backend"
+  },
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
     "@types/styled-components": "^5.1.34",

@@ -75,10 +75,9 @@ public class DataService {
     }
   }
 
-  public void fetchAndSaveCollections(String endpoint_url) {
-    logger.info("Fetching collections from URL: {}", endpoint_url);
+  public void fetchAndSaveCollections(String endpointUrl) {
     try {
-      Map<String, Object> response = restTemplate.getForObject(endpoint_url, Map.class);
+      Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
       List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
       for (Map<String, Object> collection : collections) {
         String id = (String) collection.get("id");
@@ -104,6 +103,20 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
+    }
+  }
+
+  public String verifyCollections(String endpointUrl) {
+    try {
+      Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
+      List<Map<String, Object>> collections = (List<Map<String, Object>>) response.get("collections");
+      if (collections == null || collections.isEmpty()) {
+        throw new RuntimeException("No collections found at the provided URL");
+      }
+      return "Collections found";
+    } catch (Exception e) {
+      logger.error("Error checking collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error checking collections: " + e.getMessage(), e);
     }
   }
 
