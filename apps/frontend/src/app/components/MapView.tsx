@@ -11,8 +11,7 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import {TileWMS} from 'ol/source';
-import { map } from 'eslint.config';
-      
+
 //Attributions
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
@@ -84,29 +83,11 @@ const MapView = () => {
           zoom: 1,
         }),
       });
-      // Log the initial extent
-      const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
-      console.log(`Initial Map extent: ${initialExtent}`);
     } else {
       const map = mapRef.current;
       map.getLayers().clear();
       map.addLayer(getLayer());
       map.addLayer(dataLayer);
-
-
-
-      mapRef.current.getView().on('change:resolution', () => {
-        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
-        console.log(`Updated Map extent: ${mapExtent}`);
-      });
-    }
-
-    if(mapRef.current){
-      // Event listener to log extent of map as view changes (pan or zoom)
-      mapRef.current.getView().on('change:center', () => {
-        const mapExtent = mapRef.current!.getView().calculateExtent(mapRef.current!.getSize());
-        console.log(`Updated Map extent: ${mapExtent}`);
-      });
     }
   }, [layer]);
 
