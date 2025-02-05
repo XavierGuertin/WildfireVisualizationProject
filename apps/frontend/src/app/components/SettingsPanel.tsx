@@ -73,6 +73,18 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
         toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
+
+      // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
+      if (config.endpoint === 'No endpoint saved' || config.endpoint === undefined) {
+        await promptForEndpoint(
+          refreshDatasets,
+          t,
+          MySwal,
+          handleSaveAndFetchEndpoint,
+          getConfig,
+          saveConfig,
+        );
+      }
     };
     fetchConfig();
   }, [i18n]);
@@ -179,31 +191,14 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
         resetView();
         try {
           await resetConfig();
-
-          let success = false;
-          while (!success) {
-            const inputResult = await MySwal.fire({
-              title: t('api_endpoint'),
-              input: 'text',
-              inputPlaceholder: 'https://default-api-endpoint.com',
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              showCancelButton: true,
-              confirmButtonText: t('save'),
-              cancelButtonText: t('cancel'),
-            });
-
-            if (inputResult.isConfirmed) {
-              success = await handleSaveAndFetchEndpoint(inputResult.value);
-            } else {
-              const config = await getConfig();
-              config.endpoint = 'No endpoint saved';
-              await saveConfig(config);
-
-              refreshDatasets(); // Trigger the refresh
-              break; // Exit the loop if the user cancels the input dialog
-            }
-          }
+          await promptForEndpoint(
+            refreshDatasets,
+            t,
+            MySwal,
+            handleSaveAndFetchEndpoint,
+            getConfig,
+            saveConfig,
+          );
         } catch (error: any) {
           toast.error(error.message);
         }
@@ -224,6 +219,40 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
+    }
+  };
+
+  const promptForEndpoint = async (
+    refreshDatasets: () => void,
+    t: any,
+    MySwal: any,
+    handleSaveAndFetchEndpoint: any,
+    getConfig: any,
+    saveConfig: any,
+  ) => {
+    let success = false;
+    while (!success) {
+      const inputResult = await MySwal.fire({
+        title: t('api_endpoint'),
+        input: 'text',
+        inputPlaceholder: 'https://default-api-endpoint.com',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        showCancelButton: true,
+        confirmButtonText: t('save'),
+        cancelButtonText: t('cancel'),
+      });
+
+      if (inputResult.isConfirmed) {
+        success = await handleSaveAndFetchEndpoint(inputResult.value);
+      } else {
+        const config = await getConfig();
+        config.endpoint = 'No endpoint saved';
+        await saveConfig(config);
+
+        refreshDatasets(); // Trigger the refresh
+        break; // Exit the loop if the user cancels the input dialog
+      }
     }
   };
 
