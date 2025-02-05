@@ -9,9 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +71,7 @@ public class DataController {
     try {
       URI uri = new URI(endpointUrl);
       uri.toURL();
-    } catch (URISyntaxException | MalformedURLException e) {
+    } catch (Exception e) {
       logger.error("Invalid URL provided: {}", endpointUrl);
       return ResponseEntity.badRequest().body("Invalid URL provided: " + endpointUrl);
     }
@@ -127,7 +125,7 @@ public class DataController {
 
   @GetMapping("/api/set-datalayer-geometry/{id}")
   public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
-    try{
+    try {
       logger.info("Received request to /api/set-datalayer-geometry");
       dataService.insertView(collectionId);
       logger.info("Successfully processed custom collection");

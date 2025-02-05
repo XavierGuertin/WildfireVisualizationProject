@@ -16,7 +16,11 @@ import java.util.Map;
 public class ConfigService {
   private static final Logger logger = LoggerFactory.getLogger(ConfigService.class);
   private static final String CONFIG_FILE_PATH = "apps/backend/config/app-config.json";
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
+
+  public ConfigService(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   public Map<String, Object> getConfig() {
     try {

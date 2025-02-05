@@ -241,4 +241,40 @@ class DataControllerTests {
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
   }
+
+  @Test
+  void fetchCollections_ShouldHandleURISyntaxException() {
+    // Act
+    ResponseEntity<String> response = dataController.fetchCollections("invalid-url");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).contains("Invalid URL provided: invalid-url");
+  }
+
+  @Test
+  void verifyIfEndpointHasCollections_ShouldLogInfoAndReturnResult() {
+    // Arrange
+    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenReturn("Verification result");
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Verification result");
+  }
+
+  @Test
+  void verifyIfEndpointHasCollections_ShouldHandleException() {
+    // Arrange
+    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error checking collections: Test error");
+  }
 }

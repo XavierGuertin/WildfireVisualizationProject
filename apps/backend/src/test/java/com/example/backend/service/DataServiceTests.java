@@ -212,8 +212,7 @@ class DataServiceTests {
     List<Map<String, Object>> collections = dataService.getCollections();
 
     // Assert
-    assertThat(collections).isNotNull();
-    assertThat(collections).hasSize(2);
+    assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
   }
 
@@ -289,5 +288,79 @@ class DataServiceTests {
     assertThatThrownBy(() -> dataService.insertView("ID", 0))
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining("View could not be created for collectionId: ID");
+  }
+
+  @Test
+  void insertView_ShouldHandleInterruptedException() {
+    // Arrange
+    doNothing().when(stacRepository).setDatalayerView("ID");
+    when(stacRepository.checkDatalayerView()).thenReturn(false);
+
+    // Act & Assert
+    assertThatThrownBy(() -> {
+      Thread.currentThread().interrupt(); // Simulate interruption
+      dataService.insertView("ID", 0);
+    }).isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("View could not be created for collectionId: ID");
+
+    verify(stacRepository, atLeastOnce()).setDatalayerView("ID");
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void verifyCollections_ShouldThrowException_WhenCollectionsAreNull() {
+    // Arrange
+    Map<String, Object> response = new HashMap<>();
+    response.put("collections", null);
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(response);
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("No collections found at the provided URL");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void verifyCollections_ShouldThrowException_WhenCollectionsAreEmpty() {
+    // Arrange
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(Map.of("collections", List.of()));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("No collections found at the provided URL");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void verifyCollections_ShouldLogError_WhenExceptionThrown() {
+    // Arrange
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenThrow(new RuntimeException("Test exception"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error checking collections");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void insertAndQueryCollectionTests_ShouldReturnNotFound_WhenCollectionDataIsEmpty() {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of());
+
+    // Act
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
+
+    // Assert
+    assertThat(result).isEqualTo("Collection not found");
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
   }
 }
