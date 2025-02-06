@@ -1,27 +1,9 @@
 describe('dataset', () => {
   beforeEach(() => {
-
-    it('debug where we are running from', () => {
-      cy.exec('pwd').then((result) => {
-        cy.log('Current working dir: ' + result.stdout);
-      });
-      cy.exec('ls -la').then((result) => {
-        cy.log('Contents: ' + result.stdout);
-      });
-    });
-
-
     const deleteCommand =
       Cypress.platform === 'win32'
-        ? 'del /f ..\\..\\backend\\config\\app-config.json'
-        : 'rm -f ../../backend/config/app-config.json';
-
-    const checkFileCommand =
-      Cypress.platform === 'win32'
-        ? 'if exist ..\\..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
-        : 'if [ -f ../../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
-
-    cy.exec(checkFileCommand).its('stdout').should('contain', 'exists');
+        ? 'del /f apps\\backend\\config\\app-config.json'
+        : 'rm -f apps/backend/config/app-config.json';
 
     // Execute the deletion command
     cy.exec(deleteCommand);
@@ -29,28 +11,13 @@ describe('dataset', () => {
     cy.visit('http://localhost:3000');
 
     // Input text into the prompt
-    cy.get('#swal2-input').type(
-      'https://hirondelle.crim.ca/stac/collections',
-    );
+    cy.get('#swal2-input').type('https://hirondelle.crim.ca/stac/collections');
     // Click the save button
     cy.get('.swal2-confirm').click();
   });
 
   it('loads', () => {
-
-    it('debug where we are running from', () => {
-      // Print the working directory from within Cypress
-      cy.exec('pwd').then((result) => {
-        cy.log('PWD: ' + result.stdout);
-      });
-
-      // List files to see what’s in that directory
-      cy.exec('ls -la').then((result) => {
-        cy.log('Directory listing:\n' + result.stdout);
-      });
-    });
-
-        // Find and click the dataset button
+    // Find and click the dataset button
     const dataset = cy
       .get('[data-testid=dataset-button-1]', { timeout: 5000 })
       .first();

@@ -11,88 +11,70 @@ jobs:
   e2e_tests:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout the code
+      # Checkout the code
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Print current working directory
-      - name: Print working directory (pwd)
-        run: pwd
-
-      # 3. List files in current directory
-      - name: List files
-        run: ls -la
-
-      # 4. Install Docker Compose
+      # Install Docker Compose using apt
       - name: Install Docker Compose
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
           docker-compose --version
 
-      # 5. Start your Docker services (db, backend, geoserver)
+      # Start PostgreSQL, Backend, and Geoserver using Docker Compose
       - name: Start Services
         run: docker-compose up -d db backend geoserver
 
-      # 6. Wait for Database
+      # Wait for Database to be Ready using Health Check
       - name: Wait for Database
         run: |
           for i in {1..30}; do
             if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=db) | grep -q "healthy"; then
-              echo "Database is ready!"
-              break
-            fi
-            echo "Waiting for the database..."
-            sleep 5
+              echo "Database is ready!";
+              break;
+            fi;
+            echo "Waiting for the database...";
+            sleep 5;
           done
 
-      # 7. Wait for Geoserver
+      # Wait for Geoserver to be Ready using Health Check
       - name: Wait for Geoserver
         run: |
           for i in {1..30}; do
             if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=geoserver) | grep -q "healthy"; then
-              echo "Geoserver is ready!"
-              break
-            fi
-            echo "Waiting for Geoserver..."
-            sleep 5
+              echo "Geoserver is ready!";
+              break;
+            fi;
+            echo "Waiting for Geoserver...";
+            sleep 5;
           done
 
-      # 8. Set up Node.js
+      # Set up Node.js
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # 9. Install Node.js Dependencies
+      # Install Node.js dependencies
       - name: Install Node.js Dependencies
         run: npm install --legacy-peer-deps
 
-      # 10. Build your Frontend
+      # Build Frontend Application
       - name: Build Frontend
         run: npx nx build frontend
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
 
-      # 11. List files again (optional) to see if your build generated extra folders
-      - name: Print working directory
-        run: pwd
-
-      - name: List files post-build
-        run: ls -la
-
-      # 12. Run Nx E2E (Cypress tests)
+      # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
         run: npx nx e2e frontend-e2e
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           CYPRESS_BASE_URL: http://localhost:3000
 
-      - name: Print working directory
-        run: pwd
-
-      # 13. Cleanup
+      # Post-Test Cleanup
       - name: Cleanup
         if: always()
         run: docker-compose down

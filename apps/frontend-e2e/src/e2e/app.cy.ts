@@ -5,13 +5,6 @@ describe('frontend-e2e', () => {
         ? 'del /f ..\\backend\\config\\app-config.json'
         : 'rm -f ../backend/config/app-config.json';
 
-    const checkFileCommand =
-      Cypress.platform === 'win32'
-        ? 'if exist ..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
-        : 'if [ -f ../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
-
-    cy.exec(checkFileCommand).its('stdout').should('contain', 'exists');
-
     // Execute the deletion command
     cy.exec(deleteCommand);
 
