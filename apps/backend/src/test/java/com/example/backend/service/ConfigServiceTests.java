@@ -28,7 +28,7 @@ class ConfigServiceTests {
   @InjectMocks
   private ConfigService configService;
 
-  private static final String CONFIG_FILE_PATH = "apps/backend/config/app-config.json";
+  private static final String CONFIG_FILE_PATH = System.getenv().getOrDefault("CONFIG_FILE_PATH", "config/app-config.json");
   private static final Path CONFIG_DIR_PATH = Path.of("apps/backend/config");
 
   @BeforeEach
@@ -69,9 +69,10 @@ class ConfigServiceTests {
   @Test
   void getConfig_ShouldThrowException_WhenIOExceptionOccurs() throws IOException {
     // Arrange
-    File configFile = new File(CONFIG_FILE_PATH);
-    Files.createFile(configFile.toPath());
-    when(objectMapper.readValue(configFile, Map.class)).thenThrow(new IOException("Test IO error"));
+    Path configFilePath = Path.of(CONFIG_FILE_PATH);
+    Files.createDirectories(configFilePath.getParent());
+    Files.createFile(configFilePath);
+    when(objectMapper.readValue(configFilePath.toFile(), Map.class)).thenThrow(new IOException("Test IO error"));
 
     // Act & Assert
     RuntimeException exception = assertThrows(RuntimeException.class, () -> configService.getConfig());

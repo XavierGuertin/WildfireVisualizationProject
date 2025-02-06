@@ -159,4 +159,4 @@ geoserver-cache/
 generated*
 
 .nyc_output/
-/apps/backend/config/app-config.json
+config/app-config.json

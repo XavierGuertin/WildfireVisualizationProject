@@ -16,7 +16,7 @@ const resources = {
       default_speed_retrieved: 'Default speed has been retrieved.',
       speed_changed: 'Speed has been changed to: ',
       api_endpoint_saved:
-        'API endpoint successfully saved under apps/backend/config/app-config.json',
+        'API endpoint successfully saved under config/app-config.json',
       copied_to_clipboard: 'Copied to clipboard',
       //Language
       english: 'English',
@@ -80,7 +80,7 @@ const resources = {
       default_speed_retrieved: 'La vitesse par défaut a été récupérée.',
       speed_changed: 'La vitesse a été changée à: ',
       api_endpoint_saved:
-        'Endpoint enregistré avec succès sous apps/backend/config/app-config.json',
+        'Endpoint enregistré avec succès sous config/app-config.json',
       copied_to_clipboard: 'Copié dans le presse-papiers',
       //Language
       english: 'Anglais',
