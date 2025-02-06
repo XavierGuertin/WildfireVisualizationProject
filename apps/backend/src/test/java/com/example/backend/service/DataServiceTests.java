@@ -14,10 +14,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -236,6 +232,70 @@ class DataServiceTests {
     assertThatThrownBy(() -> dataService.getCollections())
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Failed to fetch collections");
+  }
+
+  @Test
+  void getCollectionsByName_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
+    when(stacRepository.getAllCollectionsByName()).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByName();
+
+    // Assert
+    assertThat(collections).isNotNull();
+    assertThat(collections).hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
+    verify(stacRepository, times(1)).getAllCollectionsByName();
+  }
+
+  @Test
+  void getCollectionsByName_Failure() {
+    // Arrange
+    when(stacRepository.getAllCollectionsByName()).thenThrow(new RuntimeException("Test error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getCollectionsByName())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
+
+    verify(stacRepository, times(1)).getAllCollectionsByName();
+  }
+
+  @Test
+  void getCollectionsByDate_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
+    when(stacRepository.getAllCollectionsByDate()).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByDate();
+
+    // Assert
+    assertThat(collections).isNotNull();
+    assertThat(collections).hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
+    verify(stacRepository, times(1)).getAllCollectionsByDate();
+  }
+
+  @Test
+  void getCollectionsByDate_Failure() {
+    // Arrange
+    when(stacRepository.getAllCollectionsByDate()).thenThrow(new RuntimeException("Test error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getCollectionsByDate())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
+
+    verify(stacRepository, times(1)).getAllCollectionsByDate();
   }
 
   @Test

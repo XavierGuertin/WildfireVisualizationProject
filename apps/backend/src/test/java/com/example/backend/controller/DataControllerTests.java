@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -213,6 +214,64 @@ class DataControllerTests {
     verify(dataService, times(0)).fetchAndSaveCollections();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error resetting collections: Test error");
+  }
+
+  @Test
+  void getCollectionsByName_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("name", "Collection A", "id", "id1"),
+        Map.of("name", "Collection B", "id", "id2"));
+    when(dataService.getCollectionsByName()).thenReturn(mockCollections);
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockCollections);
+  }
+
+  @Test
+  void getCollectionsByName_Failure() {
+    // Arrange
+    when(dataService.getCollectionsByName()).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
+  }
+
+  @Test
+  void getCollectionsByDate_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("date", "2023-01-01", "id", "id1"),
+        Map.of("date", "2023-02-01", "id", "id2"));
+    when(dataService.getCollectionsByDate()).thenReturn(mockCollections);
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockCollections);
+  }
+
+  @Test
+  void getCollectionsByDate_Failure() {
+    // Arrange
+    when(dataService.getCollectionsByDate()).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
   }
 
   @Test
