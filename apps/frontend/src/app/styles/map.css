@@ -1,11 +1,11 @@
 /*+/- zoom control*/
 .ol-zoom {
-    left: auto;
-    right: 8px;
-    top: 38px;
- }
+  left: auto;
+  right: 8px;
+  top: 38px;
+}
 
 #map-container {
-    height: 100vh;
-    width: 100%;
+  height: 100vh;
+  width: 100%;
 }

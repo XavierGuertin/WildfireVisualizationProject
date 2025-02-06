@@ -37,7 +37,6 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
-  const [datasetIds, setDatasetIds] = useState<string[]>([]);
 
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
@@ -240,7 +239,7 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
         cancelButtonColor: '#d33',
         showCancelButton: true,
         confirmButtonText: t('save'),
-        cancelButtonText: t('cancel'),
+        cancelButtonText: t('cancel')
       });
 
       if (inputResult.isConfirmed) {

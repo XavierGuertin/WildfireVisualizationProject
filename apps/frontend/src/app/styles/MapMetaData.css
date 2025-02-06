@@ -1,106 +1,106 @@
 .metadata-container {
-    font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    width: 400px;
-    /* Increased width */
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    left: 20px;
-    top: 20%;
-    z-index: 1000;
+  font-family: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+  "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  width: 400px;
+  /* Increased width */
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 20px;
+  top: 20%;
+  z-index: 1000;
 }
 
 .metadata-container-collapsed {
-    cursor: pointer;
-    display: flex;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-right: 10px;
-    padding-left: 10px;
-    justify-content: center;
-    align-items: center;
-    width: 100px;
-    /* Increased width */
-    background: #00447E;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    left: 20px;
-    top: 20%;
-    z-index: 1000;
+  cursor: pointer;
+  display: flex;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  padding-left: 10px;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  /* Increased width */
+  background: #00447E;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 20px;
+  top: 20%;
+  z-index: 1000;
 }
 
 
 .collapsed-icon {
-    width: 50px;
-    margin-right: 5px;
+  width: 50px;
+  margin-right: 5px;
 }
 
 .collapsed-name {
-    color: white;
-    font-size: 13px;
+  color: white;
+  font-size: 13px;
 }
 
 .header {
-    cursor: pointer;
-    background-color: #00447E;
-    color: #ffffff;
-    padding: 10px;
-    font-size: 1.2em;
-    font-weight: bold;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+  cursor: pointer;
+  background-color: #00447E;
+  color: #ffffff;
+  padding: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 .content {
-    padding: 12px;
+  padding: 12px;
 }
 
 .data-row {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    /* Fixed width for labels, flexible width for values */
-    align-items: start;
-    gap: 8px;
-    margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  /* Fixed width for labels, flexible width for values */
+  align-items: start;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .label {
-    font-weight: bold;
-    color: #333;
-    text-align: left;
+  font-weight: bold;
+  color: #333;
+  text-align: left;
 }
 
 .value {
-    color: #666;
-    text-align: left;
+  color: #666;
+  text-align: left;
 }
 
 .load-dataset-button {
-    display: block;
-    width: 100%;
-    background-color: #00447E;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 10px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    margin-top: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  display: block;
+  width: 100%;
+  background-color: #00447E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
 }
 
 .load-dataset-button:hover {
-    background-color: #005a9e;
+  background-color: #005a9e;
 }
 
 .load-dataset-button:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }
