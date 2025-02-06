@@ -2,8 +2,15 @@ describe('metadata', () => {
   beforeEach(() => {
     const deleteCommand =
       Cypress.platform === 'win32'
-        ? 'del /f apps\\backend\\config\\app-config.json'
-        : 'rm -f apps/backend/config/app-config.json';
+        ? 'del /f ..\\..\\..\\backend\\config\\app-config.json'
+        : 'rm -f ../../../backend/config/app-config.json';
+
+    const checkFileCommand =
+      Cypress.platform === 'win32'
+        ? 'if exist ..\\..\\..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
+        : 'if [ -f ../../../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
+
+    cy.exec(checkFileCommand).its('stdout').should('contain', 'not exists');
 
     // Execute the deletion command
     cy.exec(deleteCommand);

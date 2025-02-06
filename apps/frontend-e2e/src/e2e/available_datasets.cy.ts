@@ -2,8 +2,15 @@ describe('dataset', () => {
   beforeEach(() => {
     const deleteCommand =
       Cypress.platform === 'win32'
-        ? 'del /f apps\\backend\\config\\app-config.json'
-        : 'rm -f apps/backend/config/app-config.json';
+        ? 'del /f ..\\..\\backend\\config\\app-config.json'
+        : 'rm -f ../../backend/config/app-config.json';
+
+    const checkFileCommand =
+      Cypress.platform === 'win32'
+        ? 'if exist ..\\..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
+        : 'if [ -f ../../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
+
+    cy.exec(checkFileCommand).its('stdout').should('contain', 'not exists');
 
     // Execute the deletion command
     cy.exec(deleteCommand);
@@ -19,6 +26,19 @@ describe('dataset', () => {
   });
 
   it('loads', () => {
+
+    it('debug where we are running from', () => {
+      // Print the working directory from within Cypress
+      cy.exec('pwd').then((result) => {
+        cy.log('PWD: ' + result.stdout);
+      });
+
+      // List files to see what’s in that directory
+      cy.exec('ls -la').then((result) => {
+        cy.log('Directory listing:\n' + result.stdout);
+      });
+    });
+
         // Find and click the dataset button
     const dataset = cy
       .get('[data-testid=dataset-button-1]', { timeout: 5000 })
