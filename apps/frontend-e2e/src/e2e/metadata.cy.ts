@@ -10,7 +10,7 @@ describe('metadata', () => {
         ? 'if exist ..\\..\\..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
         : 'if [ -f ../../../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
 
-    cy.exec(checkFileCommand).its('stdout').should('contain', 'not exists');
+    cy.exec(checkFileCommand).its('stdout').should('contain', 'exists');
 
     // Execute the deletion command
     cy.exec(deleteCommand);

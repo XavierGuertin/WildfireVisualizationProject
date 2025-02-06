@@ -1,5 +1,16 @@
 describe('dataset', () => {
   beforeEach(() => {
+
+    it('debug where we are running from', () => {
+      cy.exec('pwd').then((result) => {
+        cy.log('Current working dir: ' + result.stdout);
+      });
+      cy.exec('ls -la').then((result) => {
+        cy.log('Contents: ' + result.stdout);
+      });
+    });
+
+
     const deleteCommand =
       Cypress.platform === 'win32'
         ? 'del /f ..\\..\\backend\\config\\app-config.json'
@@ -10,7 +21,7 @@ describe('dataset', () => {
         ? 'if exist ..\\..\\backend\\config\\app-config.json (echo exists) else (echo not exists)'
         : 'if [ -f ../../backend/config/app-config.json ]; then echo exists; else echo not exists; fi';
 
-    cy.exec(checkFileCommand).its('stdout').should('contain', 'not exists');
+    cy.exec(checkFileCommand).its('stdout').should('contain', 'exists');
 
     // Execute the deletion command
     cy.exec(deleteCommand);

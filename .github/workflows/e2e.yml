@@ -76,6 +76,9 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
 
       # 11. List files again (optional) to see if your build generated extra folders
+      - name: Print working directory
+        run: pwd
+
       - name: List files post-build
         run: ls -la
 
@@ -85,6 +88,9 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           CYPRESS_BASE_URL: http://localhost:3000
+
+      - name: Print working directory
+        run: pwd
 
       # 13. Cleanup
       - name: Cleanup
