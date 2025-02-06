@@ -3,19 +3,18 @@
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
 import "../styles/map.css";
-import { Map, View} from 'ol';
+import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { FullScreen, defaults as defaultControls} from 'ol/control.js';
-import {useGeographic} from 'ol/proj.js';
+import { FullScreen, defaults as defaultControls } from 'ol/control.js';
+import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
-import {TileWMS} from 'ol/source';
+import { TileWMS } from 'ol/source';
 
-//Attributions
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
-//layer definitions
+// Base layers
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
@@ -35,49 +34,70 @@ const topographicLayer = new TileLayer({
     url: `https://tile.opentopomap.org/{z}/{x}/{y}.png`,
     attributions: attributions
   })
-})
-
-const dataLayer = new TileLayer({
-  source: new TileWMS({
-    url:'http://localhost:8090/geoserver/Default/wms',
-    params: {
-      'LAYERS': 'Default:datalayer',
-      'TILED': true,
-    },
-    serverType: 'geoserver',
-  }),
 });
 
-export const changeLayer = () => {
-  dataLayer.getSource()?.updateParams({'TIMESTAMP' : Date.now()});
-}
+// Dynamic Data Layer (STAC Item)
+const createDataLayer = () => {
+  const newLayer = new TileLayer({
+    source: new TileWMS({
+      url: 'http://localhost:8090/geoserver/Default/wms',
+      params: {
+        'LAYERS': 'Default:datalayer',
+        'TILED': true,
+        'CACHED': false,
+        '_t': Date.now(),  // Ensures cache busting
+      },
+      serverType: 'geoserver',
+    }),
+  });
+  newLayer.set('id', 'dataLayer');
+  return newLayer;
+};
 
-//Map component
+export const refreshLayer = (map: Map) => {
+  const layers = map.getLayers().getArray();
+  const dataLayer = layers.find(layer => layer.get('id') === 'dataLayer');
+
+  if (dataLayer) {
+    // Remove old data layer
+    map.removeLayer(dataLayer);
+  }
+
+  // Create new layer and add it to map
+  const newLayer = createDataLayer();
+  map.addLayer(newLayer);
+};
+
+// Map component
 const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
+  const { layer, mapRef } = useMapLayerContext();
 
-  //Context imports
-  const {layer, mapRef} = useMapLayerContext();
+  const getLayer = (): TileLayer => {
+    const layerMap: Record<string, TileLayer> = {
+      satellite: satelliteLayer,
+      topographical: topographicLayer,
+      default: defaultLayer,
+    };
 
-  const getLayer = () => {
-    if(layer === "satellite"){
-      return satelliteLayer;
+    // Ensure `layer` is always a valid string before accessing the object
+    const selectedLayer = layerMap[layer ?? "default"];
+    if (!selectedLayer.get('id')) {
+      selectedLayer.set('id', 'baseLayer');
     }
 
-    if(layer === "topographical"){
-      return topographicLayer;
-    }
+    return selectedLayer;
+  };
 
-    return defaultLayer;
-  }
 
   useEffect(() => {
     if (!mapRef.current) {
+
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer(), dataLayer],
+        layers: [getLayer(), createDataLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -85,9 +105,13 @@ const MapView = () => {
       });
     } else {
       const map = mapRef.current;
-      map.getLayers().clear();
+      const layers = map.getLayers().getArray();
+      const baseLayer = layers.find(layer => layer.get('id') === 'baseLayer');
+      if (baseLayer) {
+        map.removeLayer(baseLayer);
+      }
       map.addLayer(getLayer());
-      map.addLayer(dataLayer);
+      refreshLayer(map);  // Ensure dataLayer is reloaded correctly
     }
   }, [layer]);
 
@@ -97,5 +121,9 @@ const MapView = () => {
     </div>
   );
 };
+
+export const changeLayer = (map: Map) => {
+  refreshLayer(map)
+}
 
 export default MapView;
