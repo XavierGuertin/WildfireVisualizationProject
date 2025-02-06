@@ -56,6 +56,19 @@ services:
       timeout: 5s
       retries: 5
 
+  tileserver:
+    image: maptiler/tileserver-gl
+    container_name: tileserver
+    restart: always
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./apps/tileserver/layers:/data
+    environment:
+      - MAPBOX_ACCESS_TOKEN=""
+    networks:
+      - app-network
+
   geoserver:
     image: kartoza/geoserver:latest
     ports:

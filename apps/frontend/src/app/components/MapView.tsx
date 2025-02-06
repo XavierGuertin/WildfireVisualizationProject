@@ -15,26 +15,36 @@ import { TileWMS } from 'ol/source';
 // Attributions
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
-// Base layers
+// Offline tile source (forces zoom levels 3 and 5)
+const offlineLayer = new TileLayer({
+  source: new XYZ({
+    tileUrlFunction: function (tileCoord) {
+      const z = tileCoord[0];
+      return `http://localhost:8081/data/OAM-World-1-8-J80/${z}/${tileCoord[1]}/${tileCoord[2]}.png`;
+    },
+  }),
+});
+
+// Online base layers
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
-    attributions: attributions
-  })
+    attributions: attributions,
+  }),
 });
 
 const satelliteLayer = new TileLayer({
   source: new XYZ({
     url: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
-    attributions: attributions
-  })
+    attributions: attributions,
+  }),
 });
 
 const topographicLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.opentopomap.org/{z}/{x}/{y}.png`,
-    attributions: attributions
-  })
+    attributions: attributions,
+  }),
 });
 
 // Dynamic Data Layer (STAC Item)
@@ -46,7 +56,7 @@ const createDataLayer = () => {
         'LAYERS': 'Default:datalayer',
         'TILED': true,
         'CACHED': false,
-        '_t': Date.now(),  // Ensures cache busting
+        '_t': Date.now(), // Ensures cache busting
       },
       serverType: 'geoserver',
     }),
@@ -55,16 +65,15 @@ const createDataLayer = () => {
   return newLayer;
 };
 
+// Function to refresh the data layer dynamically
 export const refreshLayer = (map: Map) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find(layer => layer.get('id') === 'dataLayer');
 
   if (dataLayer) {
-    // Remove old data layer
     map.removeLayer(dataLayer);
   }
 
-  // Create new layer and add it to map
   const newLayer = createDataLayer();
   map.addLayer(newLayer);
 };
@@ -82,10 +91,27 @@ const MapView = () => {
       default: defaultLayer,
     };
 
-    // Ensure `layer` is always a valid string before accessing the object
     const selectedLayer = layerMap[layer ?? "default"];
     if (!selectedLayer.get('id')) {
       selectedLayer.set('id', 'baseLayer');
+    }
+
+    let consecutiveErrors = 0;
+    const errorThreshold = 5;
+    let isOffline = false;
+
+    const source = selectedLayer.getSource();
+    if (source) {
+      source.on('tileloaderror', () => {
+        consecutiveErrors += 1;
+        console.warn(`Tile load error (${consecutiveErrors}/${errorThreshold})`);
+
+        if (consecutiveErrors >= errorThreshold && !isOffline) {
+          console.error(`Multiple tile errors detected. Switching to offline layer.`);
+          mapRef.current?.getLayers().setAt(0, offlineLayer);
+          isOffline = true;
+        }
+      });
     }
 
     return selectedLayer;
@@ -94,25 +120,25 @@ const MapView = () => {
 
   useEffect(() => {
     if (!mapRef.current) {
-
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
         layers: [getLayer(), createDataLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
-          zoom: 1,
+          zoom: 3,
         }),
       });
     } else {
       const map = mapRef.current;
       const layers = map.getLayers().getArray();
       const baseLayer = layers.find(layer => layer.get('id') === 'baseLayer');
+
       if (baseLayer) {
         map.removeLayer(baseLayer);
       }
       map.addLayer(getLayer());
-      refreshLayer(map);  // Ensure dataLayer is reloaded correctly
+      refreshLayer(map); // Ensure dataLayer is reloaded correctly
     }
   }, [layer]);
 
@@ -124,7 +150,7 @@ const MapView = () => {
 };
 
 export const changeLayer = (map: Map) => {
-  refreshLayer(map)
-}
+  refreshLayer(map);
+};
 
 export default MapView;
