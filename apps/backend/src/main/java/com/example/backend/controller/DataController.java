@@ -14,8 +14,6 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
-import com.example.backend.service.DataService;
-
 @RestController
 public class DataController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);

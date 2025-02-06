@@ -156,8 +156,8 @@ public class DataService {
           .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
+      logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Name: " + e.getMessage(), e);
     }
   }
 
@@ -170,8 +170,8 @@ public class DataService {
           .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
+      logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Date: " + e.getMessage(), e);
     }
   }
 
