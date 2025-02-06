@@ -17,6 +17,6 @@ export default defineConfig({
       mochaFile: 'cypress/results/test-output-[hash].xml',
     },
     supportFile: false,
-    specPattern: 'src/e2e/**.cy.{js,jsx,ts,tsx}', // Ensure this pattern matches your test files
+    specPattern: 'src/e2e/**.cy.{js,jsx,ts,tsx}', // Uncomment this if testing locally
   },
 });

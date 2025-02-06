@@ -367,16 +367,17 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
           aria-label="reset"
+          data-testid="reset-dropdown-button"
         >
           <PiArrowClockwiseFill size={32} />
         </button>
         {dropdownState.activeButton === 'reset' && (
           <div className="dropdown-content show">
-            <button onClick={handleReset}>
+            <button onClick={handleReset} data-testid="reset-button">
               <PiArrowClockwiseFill size={24} />
               {t('reset')}
             </button>
-            <button onClick={handleFactoryReset} style={{ color: '#dc143c' }}>
+            <button onClick={handleFactoryReset} data-testid="factory-reset-button" style={{ color: '#dc143c' }}>
               <IoTrashOutline size={24} fill="red" />
               {t('factory_reset')}
             </button>
