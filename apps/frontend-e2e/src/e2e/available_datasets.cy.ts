@@ -4,7 +4,19 @@ describe('dataset', () => {
   });
 
   it('loads', () => {
+    // Input text into the prompt
+    cy.get('#swal2-input').type(
+      'https://hirondelle.crim.ca/stac/collections',
+    );
+    // Click the save button
+    cy.get('.swal2-confirm').click();
+
     // Find and click the dataset button
+    const dataset = cy
+      .get('[data-testid=dataset-button-1]', { timeout: 5000 })
+      .first();
+    dataset.click();
+    cy.get('.metadata-container', { timeout: 10000 });
   });
 
   it('collapses', () => {
