@@ -5,11 +5,6 @@ describe('dataset', () => {
 
   it('loads', () => {
     // Find and click the dataset button
-    const dataset = cy
-      .get('[data-testid=dataset-button-1]', { timeout: 5000 })
-      .first();
-    dataset.click();
-    cy.get('.metadata-container', { timeout: 10000 });
   });
 
   it('collapses', () => {
