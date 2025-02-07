@@ -66,10 +66,14 @@ const SettingsPanel: React.FC = () => {
     // This section is dependent on the task that
     // enables the user to save the endpoint in the config
     if (isValidUrl(endpoint)) {
-      const message = await fetchCollectionsFromEndpoint();
-      toast.success(message);
-
-      toast.success(t('api_endpoint_saved'));
+      const response = await fetchCollectionsFromEndpoint();
+  
+      if (!Array.isArray(response) && response.error) {
+        toast.error(response.error); // Show error toast if an error object is returned
+      } else {
+        toast.success(t('api_endpoint_saved')); // Show success message only
+      }
+  
       setDropdownState({ activeButton: null, isOpen: false });
     } else {
       toast.error(t('invalid_url'));

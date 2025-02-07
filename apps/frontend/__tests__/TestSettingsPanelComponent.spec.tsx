@@ -222,7 +222,9 @@ describe('Test SettingsPanel component', () => {
 
     await waitFor(() => {
       expect(resetCollections).toHaveBeenCalled();
-      expect(toast.success).toHaveBeenCalledWith('Reset successful');
+      expect(toast.success).toHaveBeenNthCalledWith(1, 'language_retrieved');
+      expect(toast.success).toHaveBeenNthCalledWith(2, 'Reset successful');
+      expect(toast.success).toHaveBeenNthCalledWith(3, 'api_endpoint_saved');
     });
 
     await waitFor(() => {
@@ -231,7 +233,6 @@ describe('Test SettingsPanel component', () => {
 
     await waitFor(() => {
       expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
-      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
     });
   });
 
@@ -266,7 +267,7 @@ describe('Test SettingsPanel component', () => {
 
     await waitFor(() => {
       expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
-      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
+      expect(toast.success).toHaveBeenCalledWith('api_endpoint_saved');
     });
   });
 });
