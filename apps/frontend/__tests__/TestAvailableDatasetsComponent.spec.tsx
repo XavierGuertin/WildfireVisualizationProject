@@ -42,18 +42,22 @@ describe('Test AvailableDatasets component', () => {
 
 
   it('should call onDatasetClick when a dataset is clicked', async () => {
+    // Mock API response for dataset metadata
     jest.spyOn(api, 'fetchMetaData').mockResolvedValue({
       id: 'EuroSAT-subset-train',
       key: 9,
     });
-
+  
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
-
-    await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
-
-    const datasetButton = screen.getByTestId('dataset-button-0');
-    fireEvent.click(datasetButton);
-
+  
+    // Ensure dataset buttons are rendered
+    const datasetButtons = await screen.findAllByTestId(/^dataset-button-/);
+    expect(datasetButtons.length).toBeGreaterThan(0);
+    
+    // Click the first dataset button
+    fireEvent.click(datasetButtons[0]);
+    
+    // Ensure onDatasetClick is called with the correct dataset metadata
     await waitFor(() => {
       expect(mockOnDatasetClick).toHaveBeenCalledWith({
         id: 'EuroSAT-subset-train',
@@ -61,6 +65,7 @@ describe('Test AvailableDatasets component', () => {
       });
     });
   });
+  
 
   it('should handle errors when fetching datasets on mount', async () => {
     jest.spyOn(api, 'fetchCollectionsFromEndpoint').mockRejectedValue(new Error('API Error'));
@@ -74,6 +79,33 @@ describe('Test AvailableDatasets component', () => {
     expect(console.log).toHaveBeenCalledWith('Error fetching datasets:', expect.any(Error));
   });
 
+  it('should handle API returning an error object when fetching datasets on mount', async () => {
+    jest.spyOn(api, 'fetchCollectionsFromEndpoint').mockResolvedValue({ error: 'Custom API Error' });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('Custom API Error');
+    });
+  
+    expect(console.log).not.toHaveBeenCalledWith('Error fetching datasets:', expect.any(Error));
+  });
+
+  it('should handle API returning an error object when fetching datasets for a filter', async () => {
+    jest.spyOn(api, 'fetchCollectionsFromEndpointByName').mockResolvedValue({ error: 'Filter API Error' });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);
+  
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('filter-button-Name'));
+    });
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('Filter API Error');
+    });
+  
+    expect(console.log).not.toHaveBeenCalledWith('Error fetching datasets for filter Name:', expect.any(Error));
+  });  
 
   it('should call fetchCollectionsFromEndpointByName when the Name filter is selected', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} />);

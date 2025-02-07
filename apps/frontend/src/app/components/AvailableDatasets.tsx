@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next'; // Import useTranslation for translations
+import { useTranslation } from 'react-i18next';
 import '../styles/AvailableDatasets.css';
 import {
   FaChevronCircleLeft,
@@ -10,6 +10,11 @@ import {
   FaFilter,
 } from 'react-icons/fa';
 import { fetchCollectionsFromEndpoint, fetchCollectionsFromEndpointByName, fetchCollectionsFromEndpointByDate, fetchMetaData } from '../services/api';
+
+interface DatasetEntry {
+  key: number;
+  id: string;
+}
 
 export interface DatasetMetadata {
   date: string;
@@ -27,57 +32,58 @@ interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
 }
 
-const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
-  onDatasetClick,
-}) => {
-  const { t } = useTranslation(); // Initialize useTranslation for translations
+const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({ onDatasetClick }) => {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('Name');
-  const [datasets, setDatasets] = useState<string[]>([]);
+  const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null); 
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDatasets = async () => {
       try {
-        const datasetList: string[] | null = []
-        const response: any = await fetchCollectionsFromEndpoint()
-        for(let i = 0; i < response.length; i++){
-          datasetList.push(response[i].id);
+        const response = await fetchCollectionsFromEndpoint();
+
+        if (!Array.isArray(response)) {
+          setFetchError(response.error || 'Unknown error occurred');
+          setDatasets([]); // Ensure datasets is an empty array if an error occurs
+          return;
         }
-        setDatasets(datasetList);
+        
+        setDatasets(response);
         setFetchError(null);
       } catch (error) {
         console.log('Error fetching datasets:', error);
+        setDatasets([]);
         setFetchError('Failed to load datasets.');
       }
     };
     fetchDatasets();
   }, []);
 
-  // Handle filter changes
   const handleFilterChange = async (filter: string) => {
     setActiveFilter(filter);
     
     try {
-      let datasetList: string[] = [];
-      let response: any;
+      let response;
 
-      // Call appropriate API based on the selected filter
-      if(filter === 'Name'){
+      if (filter === 'Name') {
         response = await fetchCollectionsFromEndpointByName();
-      } else if (filter === 'Date'){
+      } else {
         response = await fetchCollectionsFromEndpointByDate();
       }
 
-      for(let i = 0; i < response.length; i++){
-        datasetList.push(response[i].id);
-      } 
+      if (!Array.isArray(response)) {
+        setFetchError(response.error || 'Unknown error occurred');
+        setDatasets([]); 
+        return;
+      }
 
-      setDatasets(datasetList);
+      setDatasets(response);
       setFetchError(null);
-    } catch(error){
+    } catch (error) {
       console.log(`Error fetching datasets for filter ${filter}:`, error);
       setDatasets([]);
       setFetchError('Failed to load datasets.');
@@ -88,95 +94,76 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const handleToggle = () => setIsToggled((prev) => !prev);
 
   const handleDatasetClick = async (id: string) => {
-    
-    setSelectedDataset(id); // Update selected dataset
+    setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
-
-    onDatasetClick(dataset); // Pass dataset to parent component
+    onDatasetClick(dataset);
   };
 
   return (
-    <>
-      <div
-        className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
-        data-testid="datasets-container"
+    <div className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`} data-testid="datasets-container">
+      <button
+        className={`collapse-button ${isCollapsed ? 'collapsed' : ''}`}
+        onClick={toggleCollapse}
+        data-testid="collapse-button"
       >
-        <button
-          className={`collapse-button ${isCollapsed ? 'collapsed' : ''}`}
-          onClick={toggleCollapse}
-          data-testid="collapse-button"
-        >
-          {isCollapsed ? (
-            <FaChevronCircleLeft size={24} />
-          ) : (
-            <FaChevronCircleRight size={24} />
-          )}
-        </button>
-        {isCollapsed ? (
-          <FaDatabase fill="white" size={24} />
-        ) : (
-          <>
-            <div className="top-bar" data-testid="top-bar">
-              <h2 className="sidebar-title">{t('available_datasets')}</h2>
-              <label
-                style={{ display: 'flex', alignItems: 'center' }}
-                aria-label={t('toggle_datasets')}
+        {isCollapsed ? <FaChevronCircleLeft size={24} /> : <FaChevronCircleRight size={24} />}
+      </button>
+      {isCollapsed ? (
+        <FaDatabase fill="white" size={24} />
+      ) : (
+        <>
+          <div className="top-bar" data-testid="top-bar">
+            <h2 className="sidebar-title">{t('available_datasets')}</h2>
+            <label style={{ display: 'flex', alignItems: 'center' }} aria-label={t('toggle_datasets')}>
+              <input
+                type="checkbox"
+                checked={isToggled}
+                onChange={handleToggle}
+                style={{ display: 'none' }}
+                data-testid="toggle-checkbox"
+              />
+              <div className={`toggle-button ${isToggled ? 'toggled' : ''}`} data-testid="toggle-button"></div>
+            </label>
+          </div>
+          <div className="filter-container" data-testid="filter-container">
+            <div className="filter-icon">
+              <FaFilter size={24} />
+            </div>
+            {['Name', 'Date'].map((filter) => (
+              <button
+                key={filter}
+                className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
+                onClick={() => handleFilterChange(filter)}
+                data-testid={`filter-button-${filter}`}
               >
-                <input
-                  type="checkbox"
-                  checked={isToggled}
-                  onChange={handleToggle}
-                  style={{ display: 'none' }}
-                  data-testid="toggle-checkbox"
-                />
-                <div
-                  className={`toggle-button ${isToggled ? 'toggled' : ''}`}
-                  data-testid="toggle-button"
-                ></div>
-              </label>
-            </div>
-            <div className="filter-container" data-testid="filter-container">
-              <div className="filter-icon">
-                <FaFilter size={24} />
+                {t(filter.toLowerCase().replace(/ /g, '_'))}
+              </button>
+            ))}
+          </div>
+          <div className="buttons-container" data-testid="buttons-container">
+            {fetchError ? ( 
+              <p className="error-message" data-testid="no-datasets-message">{fetchError}</p>
+            ) : datasets.length > 0 ? (
+              datasets.map(({id}, index) => (
+                <button
+                  key={id}
+                  className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
+                  onClick={() => handleDatasetClick(id)}
+                  data-testid={`dataset-button-${index}`}
+                >
+                  {id}
+                </button>
+              ))
+            ) : (
+              <div className="no-datasets-container" data-testid="no-datasets-message">
+                <FaDatabase size={40} className="no-datasets-icon" />
+                <p>{t('no_datasets_available')}</p>
               </div>
-              {['Name', 'Date'].map(
-                (filter) => (
-                  <button
-                    key={filter}
-                    className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                    onClick={() => handleFilterChange(filter)}
-                    data-testid={`filter-button-${filter}`}
-                  >
-                    {t(filter.toLowerCase().replace(/ /g, '_'))}
-                  </button>
-                ),
-              )}
-            </div>
-            <div className="buttons-container" data-testid="buttons-container">
-              {fetchError ? ( 
-                <p className="error-message" data-testid="no-datasets-message">{fetchError}</p>
-              ) : datasets.length > 0 ? (
-                datasets.map((id, index) => (
-                  <button
-                    key={index}
-                    className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
-                    onClick={() => handleDatasetClick(id)}
-                    data-testid={`dataset-button-${index}`}
-                  >
-                    {id}
-                  </button>
-                ))
-              ) : (
-                <div className="no-datasets-container" data-testid="no-datasets-message">
-                  <FaDatabase size={40} className="no-datasets-icon" />
-                  <p>{t('no_datasets_available')}</p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
