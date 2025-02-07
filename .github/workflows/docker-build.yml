@@ -47,6 +47,7 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: password
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
+          CONFIG_FILE_PATH: /var/config/app-config.json
 
       # Push Docker images to Docker Hub
       - name: Push Docker Images

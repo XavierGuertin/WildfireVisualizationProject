@@ -15,6 +15,7 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
+  onLoadDataset: () => Promise<void>;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
