@@ -44,6 +44,8 @@ class DataServiceTests {
 
   private Map<String, Object> mockResponse;
 
+  private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
+
   @BeforeEach
   void setUp() {
     mockResponse = new HashMap<>();
@@ -60,7 +62,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
@@ -75,7 +77,7 @@ class DataServiceTests {
 
     // Act & Assert
     try {
-      dataService.fetchAndSaveCollections();
+      dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     } catch (Exception e) {
       // Expected exception
     }
@@ -92,7 +94,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection();
+    String result = dataService.insertAndQueryCollectionTests();
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -109,7 +111,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -126,7 +128,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -143,7 +145,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    String result = dataService.insertAndQueryCollection("{\"id\":\"test\"}", "test-id");
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
@@ -177,7 +179,7 @@ class DataServiceTests {
     when(stacRepository.checkCollectionExists("existing-collection")).thenReturn(true);
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists("existing-collection");
@@ -195,7 +197,7 @@ class DataServiceTests {
     when(objectMapper.writeValueAsString(any())).thenReturn("mockedJson");
 
     // Act
-    dataService.fetchAndSaveCollections();
+    dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     verify(stacRepository, times(1)).checkCollectionExists("new-collection");
@@ -214,8 +216,7 @@ class DataServiceTests {
     List<Map<String, Object>> collections = dataService.getCollections();
 
     // Assert
-    assertThat(collections).isNotNull();
-    assertThat(collections).hasSize(2);
+    assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
   }
 
@@ -309,7 +310,7 @@ class DataServiceTests {
     when(stacRepository.checkCollectionExists(anyString())).thenThrow(new RuntimeException("Test exception"));
 
     // Act & Assert
-    assertThatThrownBy(() -> dataService.insertAndQueryCollection())
+    assertThatThrownBy(() -> dataService.insertAndQueryCollectionTests())
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Failed to process collection: Test exception");
 
@@ -355,5 +356,79 @@ class DataServiceTests {
     assertThatThrownBy(() -> dataService.insertView("ID", 0))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("View could not be created for collectionId: ID");
+  }
+
+  @Test
+  void insertView_ShouldHandleInterruptedException() {
+    // Arrange
+    doNothing().when(stacRepository).setDatalayerView("ID");
+    when(stacRepository.checkDatalayerView()).thenReturn(false);
+
+    // Act & Assert
+    assertThatThrownBy(() -> {
+      Thread.currentThread().interrupt(); // Simulate interruption
+      dataService.insertView("ID", 0);
+    }).isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("View could not be created for collectionId: ID");
+
+    verify(stacRepository, atLeastOnce()).setDatalayerView("ID");
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void verifyCollections_ShouldThrowException_WhenCollectionsAreNull() {
+    // Arrange
+    Map<String, Object> response = new HashMap<>();
+    response.put("collections", null);
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(response);
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("No collections found at the provided URL");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void verifyCollections_ShouldThrowException_WhenCollectionsAreEmpty() {
+    // Arrange
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(Map.of("collections", List.of()));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("No collections found at the provided URL");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void verifyCollections_ShouldLogError_WhenExceptionThrown() {
+    // Arrange
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenThrow(new RuntimeException("Test exception"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error checking collections");
+
+    verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
+  }
+
+  @Test
+  void insertAndQueryCollectionTests_ShouldReturnNotFound_WhenCollectionDataIsEmpty() {
+    // Arrange
+    when(stacRepository.checkCollectionExists(anyString())).thenReturn(false);
+    when(stacRepository.queryCollection(anyString())).thenReturn(List.of());
+
+    // Act
+    String result = dataService.insertAndQueryCollectionTests("{\"id\":\"test\"}", "test-id");
+
+    // Assert
+    assertThat(result).isEqualTo("Collection not found");
+    verify(stacRepository, times(1)).checkCollectionExists(anyString());
+    verify(stacRepository, times(1)).insertCollection(anyString());
+    verify(stacRepository, times(1)).queryCollection(anyString());
   }
 }

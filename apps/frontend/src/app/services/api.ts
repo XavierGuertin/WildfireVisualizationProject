@@ -31,10 +31,9 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
   }
 }; 
 
-export const getCollectionsFromEndpoint = async (): Promise<string> => {
+export const getCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
-    // this will eventually pass a parameter to call the endpoint URL we want
-    const response = await fetch(`${BASE_URL}/api/fetch-collections`);
+    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -43,6 +42,20 @@ export const getCollectionsFromEndpoint = async (): Promise<string> => {
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+};
+
+export const verifyIfEndpointHasCollections = async (endpoint_url: string): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error checking collections:', error);
+    throw new Error(`Failed to check collections: ${error.message}`);
   }
 };
 
@@ -68,19 +81,17 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     }
     const data = await response.json();
 
-    const links = JSON.parse(data[0].links.value) 
+    const links = JSON.parse(data[0].links.value)
     let items = {rel: "", href: "", type: ""};
     let parent = {rel: "", href: "", type: ""};
-    for(let i = 0; i < links.length; i++){
-      const element = links[i];
-      if(element.rel === 'items'){
-        items = element
-      }
-      else if(element.rel === 'parent'){
-        parent = element
+    for (const element of links) {
+      if (element.rel === 'items') {
+        items = element;
+      } else if (element.rel === 'parent') {
+        parent = element;
       }
     }
-    
+
     const format = items.type.split('/').pop()
 
     const sourceLink = parent.href
@@ -94,7 +105,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
       id: collectionId,
       date: data[0].datetime,
       enddate: data[0].end_datetime,
-      datasetSource: source, 
+      datasetSource: source,
       description: data[0].description,
       format: format,
       latestAdded: "",

@@ -12,8 +12,11 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
+      - CONFIG_FILE_PATH=/var/config/app-config.json
     networks:
       - app-network
+    volumes:
+      - ./config:/var/config/
     depends_on:
       db:
         condition: service_healthy

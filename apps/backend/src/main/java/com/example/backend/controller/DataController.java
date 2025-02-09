@@ -1,7 +1,6 @@
 package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -36,20 +36,6 @@ public class DataController {
     }
   }
 
-  @GetMapping("/api/test-stac")
-  public ResponseEntity<String> testStacEndpoint() {
-    logger.info("Received request to /api/test-stac");
-    try {
-      String result = dataService.insertAndQueryCollection();
-      logger.debug("Successfully processed STAC data");
-      return ResponseEntity.ok(result);
-    } catch (Exception e) {
-      logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-          .body("Error processing STAC data: " + e.getMessage());
-    }
-  }
-
   @GetMapping("/api/metadata/{id}")
   public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
     logger.info("Received request to /api/metadata");
@@ -68,7 +54,7 @@ public class DataController {
   public ResponseEntity<String> createCollection(@RequestBody String collectionJson) {
     logger.info("Received request to create collection");
     try {
-      String result = dataService.insertAndQueryCollection(collectionJson);
+      String result = dataService.insertAndQueryCollectionTests(collectionJson);
       logger.debug("Successfully processed custom collection");
       return ResponseEntity.ok(result);
     } catch (Exception e) {
@@ -79,10 +65,19 @@ public class DataController {
   }
 
   @GetMapping("/api/fetch-collections")
-  public ResponseEntity<String> fetchCollections() {
-    logger.info("Received request to fetch and save collections");
+  public ResponseEntity<String> fetchCollections(@RequestParam String endpointUrl) {
+    logger.info("Fetching collections from URL: {}", endpointUrl);
+
     try {
-      dataService.fetchAndSaveCollections();
+      URI uri = new URI(endpointUrl);
+      uri.toURL();
+    } catch (Exception e) {
+      logger.error("Invalid URL provided: {}", endpointUrl);
+      return ResponseEntity.badRequest().body("Invalid URL provided: " + endpointUrl);
+    }
+
+    try {
+      dataService.fetchAndSaveCollections(endpointUrl);
       return ResponseEntity.ok("Collections fetched and saved successfully");
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -100,6 +95,19 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
+  @GetMapping("/api/verify-collections")
+  public ResponseEntity<String> verifyIfEndpointHasCollections(@RequestParam String endpointUrl) {
+    logger.info("Checking if there exist at least one collection from Endpoint URL: {}", endpointUrl);
+
+    try {
+      String result = dataService.verifyCollections(endpointUrl);
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error checking collections: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error checking collections: " + e.getMessage());
     }
   }
 
@@ -152,6 +160,23 @@ public class DataController {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
           .body("Error inserting view: " + e.getMessage());
+    }
+  }
+
+  /*
+   * Tests method
+   */
+  @GetMapping("/api/test-stac")
+  public ResponseEntity<String> testStacEndpoint() {
+    logger.info("Received request to /api/test-stac");
+    try {
+      String result = dataService.insertAndQueryCollectionTests();
+      logger.debug("Successfully processed STAC data");
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+          .body("Error processing STAC data: " + e.getMessage());
     }
   }
 }

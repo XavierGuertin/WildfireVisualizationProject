@@ -26,6 +26,8 @@ class DataControllerTests {
   @InjectMocks
   private DataController dataController;
 
+  private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
+
   @Test
   void getData_Success() {
     // Act
@@ -39,7 +41,7 @@ class DataControllerTests {
   @Test
   void testStacEndpoint_Success() {
     // Arrange
-    when(dataService.insertAndQueryCollection())
+    when(dataService.insertAndQueryCollectionTests())
         .thenReturn("Success result");
 
     // Act
@@ -53,7 +55,7 @@ class DataControllerTests {
   @Test
   void testStacEndpoint_Failure() {
     // Arrange
-    when(dataService.insertAndQueryCollection())
+    when(dataService.insertAndQueryCollectionTests())
         .thenThrow(new RuntimeException("Test error"));
 
     // Act
@@ -96,7 +98,7 @@ class DataControllerTests {
   void createCollection_Success() {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
-    when(dataService.insertAndQueryCollection(anyString()))
+    when(dataService.insertAndQueryCollectionTests(anyString()))
         .thenReturn("Success result");
 
     // Act
@@ -111,7 +113,7 @@ class DataControllerTests {
   void createCollection_Failure() {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
-    when(dataService.insertAndQueryCollection(anyString()))
+    when(dataService.insertAndQueryCollectionTests(anyString()))
         .thenThrow(new RuntimeException("Test error"));
 
     // Act
@@ -125,10 +127,10 @@ class DataControllerTests {
   @Test
   void fetchCollections_Success() {
     // Act
-    ResponseEntity<String> response = dataController.fetchCollections();
+    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
-    verify(dataService, times(1)).fetchAndSaveCollections();
+    verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isEqualTo("Collections fetched and saved successfully");
   }
@@ -136,13 +138,13 @@ class DataControllerTests {
   @Test
   void fetchCollections_Failure() {
     // Arrange
-    doThrow(new RuntimeException("Test error")).when(dataService).fetchAndSaveCollections();
+    doThrow(new RuntimeException("Test error")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Act
-    ResponseEntity<String> response = dataController.fetchCollections();
+    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
-    verify(dataService, times(1)).fetchAndSaveCollections();
+    verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error fetching collections: Test error");
   }
@@ -150,10 +152,10 @@ class DataControllerTests {
   @Test
   void handleIOException() {
     // Arrange
-    doThrow(new RuntimeException("Test IO error")).when(dataService).fetchAndSaveCollections();
+    doThrow(new RuntimeException("Test IO error")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
     // Act
-    ResponseEntity<String> response = dataController.fetchCollections();
+    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
 
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -196,7 +198,7 @@ class DataControllerTests {
 
     // Assert
     verify(dataService, times(1)).deleteAllCollections();
-    verify(dataService, times(0)).fetchAndSaveCollections();
+    verify(dataService, times(0)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isEqualTo("Collections deleted successfully");
   }
@@ -211,7 +213,7 @@ class DataControllerTests {
 
     // Assert
     verify(dataService, times(1)).deleteAllCollections();
-    verify(dataService, times(0)).fetchAndSaveCollections();
+    verify(dataService, times(0)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error resetting collections: Test error");
   }
@@ -296,5 +298,41 @@ class DataControllerTests {
 
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void fetchCollections_ShouldHandleURISyntaxException() {
+    // Act
+    ResponseEntity<String> response = dataController.fetchCollections("invalid-url");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).contains("Invalid URL provided: invalid-url");
+  }
+
+  @Test
+  void verifyIfEndpointHasCollections_ShouldLogInfoAndReturnResult() {
+    // Arrange
+    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenReturn("Verification result");
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Verification result");
+  }
+
+  @Test
+  void verifyIfEndpointHasCollections_ShouldHandleException() {
+    // Arrange
+    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error checking collections: Test error");
   }
 }
