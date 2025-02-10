@@ -3,8 +3,10 @@ import "../styles/MapMetaData.css";
 import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
 import { insertDatalayerView } from "../services/api";
-import { changeLayer } from "./MapView";
+import { changeLayer } from './MapView';
+import { useMapLayerContext } from './MapContext';
 import LoadingModule from "./LoadingModule";
+import { Map } from 'ol';
 
 interface MapMetaDataProps {
   id?: string;
@@ -13,6 +15,7 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
+  onLoadDataset: () => Promise<void>;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
@@ -43,12 +46,15 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     }, 300); // Update every 300ms
   };
 
+  const { mapRef } = useMapLayerContext();
+
   const onLoadDataset = async () => {
     try {
       setLoading(true); // Show loading overlay
       showLoadingBar(); // Start progress simulation
       await insertDatalayerView(id);
-      changeLayer();
+      const map = mapRef.current as Map;
+      changeLayer(map);
 
       // Simulate a delay for loading (mocked)
       await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay

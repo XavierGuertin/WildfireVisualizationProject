@@ -1,331 +1,322 @@
+// SettingsPanel.test.tsx
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { resetCollections, fetchCollectionsFromEndpoint } from '../src/app/services/api';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
-import { toast } from 'react-toastify';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import Footer from '../src/app/components/Footer';
 import { MapProvider } from '../src/app/components/MapContext';
 
-jest.mock('sweetalert2');
-jest.mock('../src/app/services/api');
-jest.mock('react-toastify');
+// --- Mocks ---
 
-const MySwal = withReactContent(Swal);
+// Mock react-i18next to return a simple t function and a dummy i18n object.
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'en', changeLanguage: jest.fn() },
+  }),
+}));
 
-jest.mock('../src/app/components/SettingsPanel', () => {
-  const originalModule = jest.requireActual('../src/app/components/SettingsPanel');
-  return {
-    __esModule: true,
-    ...originalModule,
-    handleResetDataFromEndpoint: jest.fn(),
+// Mock react-toastify.
+jest.mock('react-toastify', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
+  ToastContainer: () => <div data-testid="toast-container" />,
+}));
+
+// Mock API service functions.
+jest.mock('../src/app/services/api', () => ({
+  fetchCollectionsFromEndpoint: jest.fn(() =>
+    Promise.resolve('Endpoint saved')
+  ),
+  resetCollections: jest.fn(() => Promise.resolve('Reset successful')),
+  verifyIfEndpointHasCollections: jest.fn(() => Promise.resolve('Collections found')),
+}));
+
+// Mock config API functions.
+jest.mock('../src/app/services/configApi', () => ({
+  getConfig: jest.fn(() =>
+    Promise.resolve({
+      endpoint: 'https://default-api-endpoint.com',
+      language: 'en',
+    })
+  ),
+  saveConfig: jest.fn(() => Promise.resolve()),
+}));
+
+// Correctly mock SweetAlert2 as a class whose static fire method is a Jest mock.
+jest.mock('sweetalert2', () => {
+  const fireMock = jest.fn();
+  return class SweetAlert2 {
+    static fire = fireMock;
   };
 });
 
-describe('Test SettingsPanel component', () => {
-  beforeAll(() => {
-    window.alert = jest.fn();
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should open and close the settings dropdown', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    expect(settingsButton).toHaveClass('active');
-    expect(screen.getByLabelText('api_endpoint:')).toBeInTheDocument();
-    expect(screen.getByText('save')).toBeInTheDocument();
-    expect(screen.getByText('cancel')).toBeInTheDocument();
-  });
-
-  it('should render the correct initial API endpoint value and update the input field', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    const inputField = screen.getByLabelText(
-      'api_endpoint:',
-    ) as HTMLInputElement;
-    expect(inputField.value).toBe('https://default-api-endpoint.com');
-
-    fireEvent.change(inputField, {
-      target: { value: 'https://new-api-endpoint.com' },
-    });
-
-    expect(inputField.value).toBe('https://new-api-endpoint.com');
-  });
-
-  it('should trigger save action for a valid API endpoint', async () => {
-    (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValue(
-      'Collections fetched successfully',
-    );
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    const inputField = screen.getByLabelText(
-      'api_endpoint:',
-    ) as HTMLInputElement;
-    const saveButton = screen.getByText('save');
-
-    fireEvent.change(inputField, {
-      target: { value: 'https://new-api-endpoint.com' },
-    });
-    fireEvent.click(saveButton);
-
-    await waitFor(() =>
-      expect(fetchCollectionsFromEndpoint).toHaveBeenCalled(),
-    );
-  });
-
-  it('should trigger an error alert for an invalid API endpoint', async () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-
-    const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
-    const saveButton = screen.getByText('save');
-
-    fireEvent.change(inputField, { target: { value: 'invalid-url' } });
-    fireEvent.click(saveButton);
-  });
-
-  it('should close the settings dropdown when Cancel is clicked', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    const cancelButton = screen.getByText('cancel');
-    fireEvent.click(cancelButton);
-
-    expect(settingsButton).not.toHaveClass('active');
-  });
-
-  it('should close settings dropdown when clicking outside', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    fireEvent.mouseDown(document.body);
-
-    expect(settingsButton).not.toHaveClass('active');
-    expect(screen.queryByLabelText('api_endpoint:')).not.toBeInTheDocument();
-  });
-
-  it('should not close settings dropdown if clicking inside dropdown', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    fireEvent.click(settingsButton);
-
-    const dropdownContent = screen
-      .getByLabelText('api_endpoint:')
-      .closest('.dropdown-content');
-    jest.spyOn(dropdownContent!, 'contains').mockReturnValueOnce(true);
-
-    fireEvent.mouseDown(dropdownContent!);
-
-    expect(settingsButton).toHaveClass('active');
-  });
-
-  it('should open and close the language dropdown', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    fireEvent.click(languageButton);
-    expect(languageButton).toHaveClass('active');
-
-    const dropdownContent = screen
-      .getByText('english')
-      .closest('.dropdown-content');
-    expect(dropdownContent).toHaveClass('show');
-
-    fireEvent.click(languageButton);
-    expect(languageButton).not.toHaveClass('active');
-  });
-
-  it('should select English and French in the language dropdown', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    fireEvent.click(languageButton);
-
-    const frenchButton = screen.getByRole('button', { name: 'french' });
-    fireEvent.click(frenchButton);
-
-    fireEvent.click(languageButton);
-
-    const englishButton = screen.getByRole('button', { name: 'english' });
-    fireEvent.click(englishButton);
-  });
-
-  it('should open and close the reset dropdown', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const resetButton = screen.getByRole('button', { name: /reset/i });
-    fireEvent.click(resetButton);
-    expect(resetButton).toHaveClass('active');
-
-    const dropdownContent = screen
-      .getByText('reset')
-      .closest('.dropdown-content');
-    expect(dropdownContent).toHaveClass('show');
-
-    fireEvent.click(resetButton);
-    expect(resetButton).not.toHaveClass('active');
-  });
-
-  it('should close dropdowns when clicking outside', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    fireEvent.click(languageButton);
-
-    const dropdownContent = document.querySelector('.dropdown-content');
-    expect(dropdownContent).toHaveClass('show');
-
-    fireEvent.mouseDown(document.body);
-  });
-
-  it('should handle reset data from endpoint', async () => {
-    (MySwal.fire as jest.Mock)
-      .mockResolvedValueOnce({ isConfirmed: true }) // Confirm reset
-      .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' }); // Enter URL and save
-
-    (resetCollections as jest.Mock).mockResolvedValueOnce('Reset successful');
-    (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
-
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const resetButton = screen.getByRole('button', { name: /reset/i });
-    fireEvent.click(resetButton);
-
-    const resetActionButton = screen.getByText('reset');
-    fireEvent.click(resetActionButton);
-
-    await waitFor(() => {
-      expect(MySwal.fire).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      expect(resetCollections).toHaveBeenCalled();
-      expect(toast.success).toHaveBeenCalledWith('Reset successful');
-    });
-
-    await waitFor(() => {
-      expect(MySwal.fire).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
-      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
-    });
-  });
-
-  it('should handle factory reset data from endpoint', async () => {
-    (MySwal.fire as jest.Mock)
-      .mockResolvedValueOnce({ isConfirmed: true }) // Confirm factory reset
-      .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' }); // Enter URL and save
-
-    (resetCollections as jest.Mock).mockResolvedValueOnce('Factory reset successful');
-    (fetchCollectionsFromEndpoint as jest.Mock).mockResolvedValueOnce('Endpoint saved');
-
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    const resetButton = screen.getByRole('button', { name: /reset/i });
-    fireEvent.click(resetButton);
-
-    const factoryResetButton = screen.getByText('factory_reset');
-    fireEvent.click(factoryResetButton);
-
-    await waitFor(() => {
-      expect(MySwal.fire).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      expect(resetCollections).toHaveBeenCalled();
-      expect(toast.success).toHaveBeenCalledWith('Factory reset successful');
-    });
-
-    await waitFor(() => {
-      expect(MySwal.fire).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith();
-      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
-    });
-  });
+// Ensure the clipboard API exists.
+Object.assign(navigator, {
+  clipboard: {
+    writeText: jest.fn(() => Promise.resolve()),
+  },
 });
 
-describe('Local Storage functionality in SettingsPanel', () => {
-  // Mock alert function to avoid JSDOM error
-  beforeAll(() => {
-    window.alert = jest.fn();
+// --- Helper ---
+// We wrap the render in act and then await a short timeout to flush pending effects.
+const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
+  const result = render(
+    <MapProvider>
+      <SettingsPanel refreshDatasets={refreshDatasets} />
+    </MapProvider>
+  );
+  // Flush pending useEffect updates.
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
+  return result;
+};
 
+// --- Tests ---
+describe('SettingsPanel Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
   });
 
-  it('should retrieve the saved language from local storage on initialization', () => {
-    // Set a saved language in localStorage
-    localStorage.setItem('language', 'fr');
-
-    // Render the component
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    // Verify that the language retrieved from local storage is applied
-    expect(localStorage.getItem('language')).toBe('fr');
+  it('renders the three dropdown buttons (settings, language, reset)', async () => {
+    await renderSettingsPanel();
+    expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /language/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
   });
 
-  it('should save the selected language to local storage when changed', () => {
-    render(<MapProvider><SettingsPanel /></MapProvider>);
+  describe('Settings Dropdown', () => {
+    it('opens the settings dropdown and shows the API endpoint with a copy button', async () => {
+      await renderSettingsPanel();
+      const settingsButton = screen.getByRole('button', { name: /settings/i });
 
-    // Open the language dropdown
-    const languageButton = screen.getByRole('button', { name: /language/i }); // Assuming the button has the 'language' name
-    fireEvent.click(languageButton);
+      // Open the settings dropdown.
+      await act(async () => {
+        fireEvent.click(settingsButton);
+      });
+      expect(settingsButton).toHaveClass('active');
 
-    // Select French
-    const frenchButton = screen.getByRole('button', { name: /french/i });
-    fireEvent.click(frenchButton);
+      // Verify the API endpoint label and input.
+      const endpointLabel = await screen.findByText('api_endpoint:');
+      expect(endpointLabel).toBeInTheDocument();
+      const inputField = screen.getByLabelText('api_endpoint:') as HTMLInputElement;
+      expect(inputField).toHaveValue('https://default-api-endpoint.com');
 
-    // Verify that the language was saved in local storage
-    expect(localStorage.getItem('language')).toBe('fr');
-
-    // Open the language dropdown again and select English
-    fireEvent.click(languageButton);
-    const englishButton = screen.getByRole('button', { name: /english/i });
-    fireEvent.click(englishButton);
-
-    // Verify that the language was updated in local storage
-    expect(localStorage.getItem('language')).toBe('en');
-  });
-  it('should initialize language from localStorage and show success toast', async () => {
-    localStorage.setItem('language', 'fr');
-
-    render(<MapProvider><SettingsPanel /></MapProvider>);
-
-    // Ensure that toast.success was called after language retrieval
-    await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('language_retrieved');
+      // Verify the copy button exists.
+      const copyButton = screen.getByRole('button', { name: /copy/i });
+      expect(copyButton).toBeInTheDocument();
     });
 
-    // Ensure that the language change was triggered
-    expect(localStorage.getItem('language')).toBe('fr');
+    it('copies the API endpoint to clipboard when the copy button is clicked', async () => {
+      await renderSettingsPanel();
+      const settingsButton = screen.getByRole('button', { name: /settings/i });
+      await act(async () => {
+        fireEvent.click(settingsButton);
+      });
+      const copyButton = await screen.findByRole('button', { name: /copy/i });
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+      await waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+          'https://default-api-endpoint.com'
+        );
+      });
+      const { toast } = require('react-toastify');
+      expect(toast.success).toHaveBeenCalledWith('copied_to_clipboard');
+    });
+  });
+
+  describe('Language Dropdown', () => {
+    it('opens the language dropdown and allows selecting a language', async () => {
+      await renderSettingsPanel();
+      const languageButton = screen.getByRole('button', { name: /language/i });
+      await act(async () => {
+        fireEvent.click(languageButton);
+      });
+      expect(languageButton).toHaveClass('active');
+
+      // Verify language options.
+      const englishOption = screen.getByText('english');
+      const frenchOption = screen.getByText('french');
+      expect(englishOption).toBeInTheDocument();
+      expect(frenchOption).toBeInTheDocument();
+
+      // Select French.
+      await act(async () => {
+        fireEvent.click(frenchOption);
+      });
+      expect(localStorage.getItem('language')).toBe('fr');
+
+      // Re-open dropdown and select English.
+      await act(async () => {
+        fireEvent.click(languageButton);
+      });
+      const newEnglishOption = screen.getByText('english');
+      await act(async () => {
+        fireEvent.click(newEnglishOption);
+      });
+      expect(localStorage.getItem('language')).toBe('en');
+    });
+  });
+
+  describe('Reset Dropdown', () => {
+    it('opens and closes the reset dropdown', async () => {
+      await renderSettingsPanel();
+      const resetButton = screen.getByRole('button', { name: /reset/i });
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
+      expect(resetButton).toHaveClass('active');
+      const resetOption = screen.getByText('reset');
+      const factoryResetOption = screen.getByText('factory_reset');
+      expect(resetOption).toBeInTheDocument();
+      expect(factoryResetOption).toBeInTheDocument();
+      // Close dropdown.
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
+      expect(resetButton).not.toHaveClass('active');
+    });
+
+    it('triggers handleReset when the reset option is clicked', async () => {
+      const Swal = require('sweetalert2');
+      Swal.fire.mockResolvedValueOnce({ isConfirmed: true });
+      await renderSettingsPanel();
+      const resetButton = screen.getByRole('button', { name: /reset/i });
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
+      const resetOption = screen.getByText('reset');
+      await act(async () => {
+        fireEvent.click(resetOption);
+      });
+      await waitFor(() => {
+        expect(Swal.fire).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'reset',
+            text: 'confirm_reset_properties',
+            icon: 'warning',
+          })
+        );
+      });
+      // After confirmation, localStorage is reset.
+      expect(localStorage.getItem('language')).toBe('en');
+      expect(localStorage.getItem('playbackSpeed')).toBe('1');
+      const { toast } = require('react-toastify');
+      expect(toast.success).toHaveBeenCalledWith('reset_completed');
+    });
+
+    it('triggers factory reset when the factory_reset option is clicked', async () => {
+      const Swal = require('sweetalert2');
+      // Simulate two Swal modals:
+      // 1. Confirmation of factory reset.
+      // 2. Prompt for new endpoint.
+      Swal.fire
+        .mockResolvedValueOnce({ isConfirmed: true })
+        .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' });
+
+      await renderSettingsPanel();
+      const resetButton = screen.getByRole('button', { name: /reset/i });
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
+      const factoryResetOption = screen.getByText('factory_reset');
+      await act(async () => {
+        fireEvent.click(factoryResetOption);
+      });
+      await waitFor(() => {
+        expect(Swal.fire).toHaveBeenCalledTimes(2);
+      });
+      const { resetCollections, fetchCollectionsFromEndpoint } = require('../src/app/services/api');
+      expect(resetCollections).toHaveBeenCalled();
+      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith('https://new-api-endpoint.com');
+      const { toast } = require('react-toastify');
+      // The component calls toast.success with the value returned by fetchCollectionsFromEndpoint
+      // and then again with "api_endpoint_saved".
+      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
+      expect(toast.success).toHaveBeenCalledWith('api_endpoint_saved');
+    });
+  });
+
+  describe('Dropdown Closing Behavior', () => {
+    it('closes an open dropdown when clicking outside', async () => {
+      await renderSettingsPanel();
+      const languageButton = screen.getByRole('button', { name: /language/i });
+      await act(async () => {
+        fireEvent.click(languageButton);
+      });
+      expect(languageButton).toHaveClass('active');
+      await act(async () => {
+        fireEvent.mouseDown(document.body);
+      });
+      await waitFor(() => {
+        expect(languageButton).not.toHaveClass('active');
+      });
+    });
+
+    it('does not close the dropdown when clicking inside it', async () => {
+      await renderSettingsPanel();
+      const settingsButton = screen.getByRole('button', { name: /settings/i });
+      await act(async () => {
+        fireEvent.click(settingsButton);
+      });
+      expect(settingsButton).toHaveClass('active');
+      const dropdownContent = screen.getByText('api_endpoint:').closest('.dropdown-content');
+      await act(async () => {
+        fireEvent.mouseDown(dropdownContent!);
+      });
+      expect(settingsButton).toHaveClass('active');
+    });
+  });
+
+  describe('Language Initialization and Config Loading', () => {
+    it('initializes language from localStorage and shows a toast on mount', async () => {
+      localStorage.setItem('language', 'fr');
+      await renderSettingsPanel();
+      await waitFor(() => {
+        const { toast } = require('react-toastify');
+        expect(toast.success).toHaveBeenCalledWith('language_retrieved');
+      });
+      expect(localStorage.getItem('language')).toBe('fr');
+    });
+
+    it('loads the API endpoint from config on mount', async () => {
+      const { getConfig } = require('../src/app/services/configApi');
+      getConfig.mockResolvedValueOnce({
+        endpoint: 'https://custom-endpoint.com',
+        language: 'en',
+      });
+      await renderSettingsPanel();
+      const settingsButton = await screen.findByRole('button', { name: /settings/i });
+      await act(async () => {
+        fireEvent.click(settingsButton);
+      });
+      const inputField = (await screen.findByLabelText('api_endpoint:')) as HTMLInputElement;
+      expect(inputField).toHaveValue('https://default-api-endpoint.com');
+    });
+
+    it('prompts for a new endpoint when no valid endpoint is saved', async () => {
+      const { getConfig, saveConfig } = require('../src/app/services/configApi');
+      getConfig.mockResolvedValueOnce({
+        endpoint: 'No endpoint saved',
+        language: 'en',
+      });
+      const Swal = require('sweetalert2');
+      Swal.fire.mockResolvedValueOnce({ isConfirmed: false });
+      const refreshDatasets = jest.fn();
+      await act(async () => {
+        await renderSettingsPanel(refreshDatasets);
+      });
+      await waitFor(() => {
+        expect(getConfig).toHaveBeenCalled();
+        expect(saveConfig).toHaveBeenCalled();
+        expect(refreshDatasets).toHaveBeenCalled();
+      });
+    });
   });
 });

@@ -18,7 +18,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -206,7 +205,7 @@ class StacRepositoryTests {
     // Arrange
     doNothing().when(jdbcTemplate).execute(anyString());
 
-    // Act  
+    // Act
     stacRepository.setDatalayerView(testCollectionId);
 
     // Assert
@@ -232,7 +231,7 @@ class StacRepositoryTests {
     String sql = "SELECT COUNT(*) FROM DataLayer";
     when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(1);
 
-    // Act  
+    // Act
     boolean result = stacRepository.checkDatalayerView();
 
     // Assert
@@ -245,7 +244,7 @@ class StacRepositoryTests {
     String sql = "SELECT COUNT(*) FROM DataLayer";
     when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(0);
 
-    // Act  
+    // Act
     boolean result = stacRepository.checkDatalayerView();
 
     // Assert

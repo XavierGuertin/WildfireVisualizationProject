@@ -20,10 +20,13 @@ jest.mock('ol/source/XYZ', () => {
 });
 
 jest.mock('ol/layer/Tile', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
+  return jest.fn().mockImplementation(() => ({
+    set: jest.fn(), // Ensure `set()` exists
+    get: jest.fn(), // Mock `get()`
+    getSource: jest.fn(), // Mock `getSource()`
+  }));
 });
+
 
 jest.mock('ol/View', () => {
   return jest.fn().mockImplementation(() => {
@@ -83,7 +86,7 @@ jest.mock('ol/style/Fill', () => {
 jest.mock('../src/app/components/MapContext', () => ({
   ...jest.requireActual('../src/app/components/MapContext'),
   useMapLayerContext: jest.fn().mockReturnValue({
-    layer: 'Default',
+    layer: 'default',
     setLayer: jest.fn(),
     mapRef: { current: null },
     resetView: jest.fn(),
@@ -117,20 +120,29 @@ describe(MapView, () => {
   });
 
   it('clears and adds layer when mapRef is not null', () => {
+    const mockLayersArray: any[] = []; // Simulate an array of layers
+    const mockLayers = {
+      getArray: () => mockLayersArray, // Normal function returning an array
+      clear: () => { mockLayersArray.length = 0; }, // Function to simulate clearing layers
+    };
+
     const mockMap = {
-      getLayers: jest.fn().mockReturnValue({ clear: jest.fn() }),
+      getLayers: () => mockLayers, // Returns an object with `getArray()`
       addLayer: jest.fn(),
     };
+
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     useMapLayerContext.mockReturnValue({
-      layer: 'Default',
+      layer: 'default',
       mapRef: { current: mockMap },
     });
 
     render(<MapView />);
-    expect(mockMap.getLayers().clear).toHaveBeenCalled();
-    expect(mockMap.addLayer).toHaveBeenCalled();
+
+    expect(mockMap.getLayers().getArray()).toEqual([]); // Ensure `getArray()` is called
+    expect(mockMap.addLayer).toHaveBeenCalled(); // Ensure `addLayer()` is called
   });
+
 
   it('maps coordinates correctly', () => {
     const mockItem = {

@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
-import { FaPlayCircle, FaPauseCircle, FaStopCircle } from 'react-icons/fa';
+import { FaPauseCircle, FaPlayCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { useMapLayerContext } from './MapContext';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
-  const {speed, setSpeed} = useMapLayerContext();
+  const { speed, setSpeed } = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -42,8 +43,11 @@ const Footer = () => {
     }
   }, [speed, speedInitialized]);
 
-const handlePlayPause = () => setIsPlaying((prev) => !prev);
-  const handleSpeedChange = (newSpeed: number) => setSpeed(newSpeed);
+  const handlePlayPause = () => setIsPlaying((prev) => !prev);
+  const handleSpeedChange = (newSpeed: number) => {
+    setSpeed(newSpeed);
+    toast.success(t('speed_changed') + newSpeed + 'x');
+  };
 
   useEffect(() => {
     if (isPlaying) {
