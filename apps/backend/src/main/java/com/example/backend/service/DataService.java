@@ -124,7 +124,7 @@ public class DataService {
     logger.info("Fetching collections from database filter by name");
     try {
       List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
-      logger.debug("Fetched collections: {}", collections);
+      logger.debug("Fetched collections ordered by name: {}", collections);
       return collections.stream()
           .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
           .collect(Collectors.toList());
@@ -138,7 +138,7 @@ public class DataService {
     logger.info("Fetching collections from database filter by date");
     try {
       List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
-      logger.debug("Fetched collections: {}", collections);
+      logger.debug("Fetched collections ordered by date: {}", collections);
       return collections.stream()
           .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
           .collect(Collectors.toList());
