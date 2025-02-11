@@ -8,7 +8,6 @@ import {
   FaFilter,
 } from 'react-icons/fa';
 import { 
-  fetchCollectionsFromEndpoint, 
   fetchCollectionsFromEndpointByName, 
   fetchCollectionsFromEndpointByDate, 
   fetchMetaData, 
@@ -150,12 +149,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             <div className="filter-icon">
               <FaFilter size={24} />
             </div>
-            {['Name', 'Date', 'Latest Added', 'Latest Updated'].map(
+            {['Name', 'Date'].map(
               (filter) => (
                 <button
                   key={filter}
                   className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                  onClick={() => sortDatasets(filter)}
+                  onClick={() => handleFilterChange(filter)}
                   data-testid={`filter-button-${filter}`}
                 >
                   {t(filter.toLowerCase().replace(/ /g, '_'))}
@@ -164,15 +163,15 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             )}
           </div>
           <div className="buttons-container" data-testid="buttons-container">
-            {datasetIds.length > 0 ? (
-              datasetIds.map((id, index) => (
+            {datasets.length > 0 ? (
+              datasets.map((dataset) => (
                 <button
-                  key={index}
-                  className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
-                  onClick={() => handleDatasetClick(id)}
-                  data-testid={`dataset-button-${index}`}
+                  key={dataset.key}
+                  className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+                  onClick={() => handleDatasetClick(dataset.id)}
+                  data-testid={`dataset-button-${dataset.id}`}
                 >
-                  {id}
+                  {dataset.id}
                 </button>
               ))
             ) : (

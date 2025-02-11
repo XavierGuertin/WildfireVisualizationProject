@@ -120,7 +120,21 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
   }
 };
 
-export const fetchCollectionsFromEndpoint = async (): Promise<{
+export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+};
+
+export const returnCollectionsFromEndpoint = async (): Promise<{
   id: string; key: number}[] | { error: string }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
