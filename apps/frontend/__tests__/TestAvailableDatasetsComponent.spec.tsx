@@ -2,34 +2,37 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AvailableDatasets, { DatasetMetadata } from '../src/app/components/AvailableDatasets';
-import axios from 'axios';
-import fetchMock from 'jest-fetch-mock';
 import * as api from '../src/app/services/api';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('../src/app/services/api');
+const mockFetchCollectionsByName = api.fetchCollectionsFromEndpointByName as jest.Mock;
+const mockFetchCollectionsByDate = api.fetchCollectionsFromEndpointByDate as jest.Mock;
+const mockFetchMetaData = api.fetchMetaData as jest.Mock;
+const mockReturnListOfCollections = api.returnListOfCollectionsFromEndpoint as jest.Mock;
 
 const mockDatasets: DatasetMetadata[] = [
   {
-    id: "test",
+    id: "dataset-1",
     name: 'Dataset A',
     date: '2023-01-01',
-    latestAdded: '2023-02-01',
-    latestUpdated: '2023-03-01',
+    enddate: '2023-01-10',
+    latestAdded: '',
+    latestUpdated: '',
     description: 'Description A',
     format: 'GeoJSON',
-    processes: 'Data analysis',
+    processes: '',
     datasetSource: 'Source A'
   },
   {
-    id: "test",
+    id: "dataset-2",
     name: 'Dataset B',
     date: '2023-02-15',
-    latestAdded: '2023-02-16',
-    latestUpdated: '2023-03-05',
+    enddate: '2023-02-25',
+    latestAdded: '',
+    latestUpdated: '',
     description: 'Description B',
     format: 'Shapefile',
-    processes: 'Data cleaning',
+    processes: '',
     datasetSource: 'Source B'
   }
 ];
@@ -40,97 +43,106 @@ describe('Test AvailableDatasets component', () => {
   beforeEach(() => {
     mockOnDatasetClick = jest.fn();
     jest.clearAllMocks();
+    mockReturnListOfCollections.mockResolvedValue(mockDatasets);
   });
 
   it('should call onDatasetClick on dataset click', async () => {
-    const singleDataset = [
-      {
-        id: "test",
-        name: 'Dataset A',
-        date: '2023-01-01',
-        latestAdded: '2023-02-01',
-        latestUpdated: '2023-03-01',
-        description: 'Description for Dataset A',
-        format: 'GeoJSON',
-        processes: 'Data analysis',
-        datasetSource: 'Source A'
-      },
-    ];
+    mockFetchMetaData.mockResolvedValue(mockDatasets[0]);
 
-    jest.spyOn(api, 'fetchMetaData').mockImplementation(() => Promise.resolve(singleDataset[0]));
-
-    fetchMock.enableMocks();
-    fetchMock.mockResponseOnce(JSON.stringify(singleDataset));
-
-    // Pass refreshKey as a required prop.
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
 
-    // Wait for the dataset button to appear after data is loaded.
-    await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument());
 
-    // Click the dataset button to trigger loading.
-    const datasetButton = screen.getByTestId('dataset-button-0');
+    const datasetButton = screen.getByTestId('dataset-button-dataset-1');
     fireEvent.click(datasetButton);
 
-    // Check if onDatasetClick is called with the correct dataset.
     await waitFor(() => {
-      expect(mockOnDatasetClick).toHaveBeenCalledWith(singleDataset[0]);
+      expect(mockOnDatasetClick).toHaveBeenCalledWith(mockDatasets[0]);
     });
   });
 
-  it('should display sorted datasets when sorting is applied', async () => {
-    const singleDataset = [
-      {
-        id: "test",
-        name: 'Dataset A',
-        date: '2023-01-01',
-        latestAdded: '2023-02-01',
-        latestUpdated: '2023-03-01',
-        description: 'Description for Dataset A',
-        format: 'GeoJSON',
-        processes: 'Data analysis',
-        datasetSource: 'Source A'
-      },
-    ];
+  it('should handle fetchMetaData failure gracefully', async () => {
+    mockFetchMetaData.mockResolvedValue({ error: 'Failed to fetch metadata' });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument());
+  
+    const datasetButton = screen.getByTestId('dataset-button-dataset-1');
+    fireEvent.click(datasetButton);
+  
+    await waitFor(() => {
+      expect(mockOnDatasetClick).not.toHaveBeenCalled(); // Ensure failure does not trigger click
+    });
+  
+    // Optionally check for error handling UI feedback, if any
+    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+  });
+  
 
-    jest.spyOn(api, 'fetchMetaData').mockImplementation(() => Promise.resolve(singleDataset[0]));
-    fetchMock.enableMocks();
-    fetchMock.mockResponseOnce(JSON.stringify(singleDataset));
-
+  it('should filter datasets by name', async () => {
+    mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
 
-    await waitFor(() => expect(screen.getByTestId('dataset-button-0')).toBeInTheDocument());
+    const filterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(filterButton);
 
-    // Click the sort button (assuming the sort button's text is 'date')
-    fireEvent.click(screen.getByText('date'));
-
-    const datasetButtons = screen.getAllByTestId(/dataset-button-/);
-    // Validate sort order (this assertion assumes the dataset id is displayed)
-    expect(datasetButtons[0]).toHaveTextContent('test');
+    await waitFor(() => {
+      expect(mockFetchCollectionsByName).toHaveBeenCalled();
+    });
   });
 
-  it('should collapse and expand the component on button click', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
+  it('should filter datasets by date', async () => {
+    mockFetchCollectionsByDate.mockResolvedValue(mockDatasets);
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+
+    const filterButton = screen.getByTestId('filter-button-Date');
+    fireEvent.click(filterButton);
+
+    await waitFor(() => {
+      expect(mockFetchCollectionsByDate).toHaveBeenCalled();
+    });
+  });
+
+  it('should collapse and expand the component when toggled', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
 
     const collapseButton = await waitFor(() => screen.getByTestId('collapse-button'));
-    fireEvent.click(collapseButton); // Collapse
+    fireEvent.click(collapseButton);
 
     expect(screen.getByTestId('datasets-container')).toHaveClass('collapsed');
 
-    fireEvent.click(collapseButton); // Expand
+    fireEvent.click(collapseButton);
     expect(screen.getByTestId('datasets-container')).not.toHaveClass('collapsed');
   });
 
   it('should toggle isToggled state when switch is clicked', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: mockDatasets });
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-    const toggleCheckbox = await waitFor(() => screen.getByTestId('toggle-checkbox'));
 
+    const toggleCheckbox = await waitFor(() => screen.getByTestId('toggle-checkbox'));
     fireEvent.click(toggleCheckbox);
     expect(toggleCheckbox).toBeChecked();
 
     fireEvent.click(toggleCheckbox);
     expect(toggleCheckbox).not.toBeChecked();
+  });
+
+  it('should show error message if datasets fail to load', async () => {
+    mockReturnListOfCollections.mockRejectedValue(new Error('Failed to load datasets'));
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
+    });
+  });
+
+  it('should display no datasets message when dataset list is empty', async () => {
+    mockReturnListOfCollections.mockResolvedValue([]); // Return an empty list
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
+    });
   });
 });

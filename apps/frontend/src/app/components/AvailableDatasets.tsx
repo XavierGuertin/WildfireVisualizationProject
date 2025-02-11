@@ -20,15 +20,16 @@ interface DatasetEntry {
 }
 
 export interface DatasetMetadata {
+  id: string;
+  name: string;
   date: string;
+  enddate?: string;
   datasetSource: string;
   description: string;
   format: string;
-  latestAdded: string;
-  latestUpdated: string;
-  name: string;
-  processes: string;
-  id: string;
+  latestAdded?: string;
+  latestUpdated?: string;
+  processes?: string;
 }
 
 interface AvailableDatasetsProps {
