@@ -41,7 +41,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   refreshKey,
 }) => {
   const { t } = useTranslation();
-  const [activeFilter, setActiveFilter] = useState<string>('Name');
+  const [activeFilter, setActiveFilter] = useState<string>('');
   const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
@@ -49,7 +49,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMetaDataDatasets = async () => {
+    const fetchDatasets = async () => {
       try {
         const datasetList: string[] = [];
         const response: any = await returnListOfCollectionsFromEndpoint();
@@ -67,7 +67,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       }
     };
 
-    fetchMetaDataDatasets();
+    fetchDatasets();
   }, [refreshKey]); // Re-fetch datasets when refresh key changes
 
   const handleFilterChange = async (filter: string) => {
