@@ -54,11 +54,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       try {
         const datasetList: string[] = [];
         const response: any = await returnListOfCollectionsFromEndpoint();
-        for (let i = 0; i < response.length; i++) {
-          const entryId = response[i].id;
-          datasetList.push(entryId);
-        }
-        
+
         setDatasets(response);
         setFetchError(null);
       } catch (error) {
@@ -167,7 +163,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             {datasets.length > 0 ? (
               datasets.map((dataset) => (
                 <button
-                  key={dataset.key}
+                  key={dataset.id}
                   className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
                   onClick={() => handleDatasetClick(dataset.id)}
                   data-testid={`dataset-button-${dataset.id}`}

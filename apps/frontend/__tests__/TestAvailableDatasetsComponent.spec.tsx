@@ -44,6 +44,12 @@ describe('Test AvailableDatasets component', () => {
     mockOnDatasetClick = jest.fn();
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
+
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should call onDatasetClick on dataset click', async () => {
@@ -145,4 +151,42 @@ describe('Test AvailableDatasets component', () => {
       expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
     });
   });
+
+  it('should call handleFilterChange and update datasets when filtering by name', async () => {
+    mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    const filterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(filterButton);
+  
+    await waitFor(() => {
+      expect(mockFetchCollectionsByName).toHaveBeenCalled();
+      expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument();
+    });
+  });
+  
+  it('should call handleFilterChange and update datasets when filtering by date', async () => {
+    mockFetchCollectionsByDate.mockResolvedValue(mockDatasets);
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    const filterButton = screen.getByTestId('filter-button-Date');
+    fireEvent.click(filterButton);
+  
+    await waitFor(() => {
+      expect(mockFetchCollectionsByDate).toHaveBeenCalled();
+      expect(screen.getByTestId('dataset-button-dataset-2')).toBeInTheDocument();
+    });
+  });
+  
+  it('should show error message when filtering datasets fails', async () => {
+    mockFetchCollectionsByName.mockRejectedValue(new Error('Failed to filter datasets'));
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    const filterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(filterButton);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
+    });
+  });  
 });
