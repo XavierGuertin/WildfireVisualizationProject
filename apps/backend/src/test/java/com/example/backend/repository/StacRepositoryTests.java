@@ -37,17 +37,17 @@ class StacRepositoryTests {
   void setUp() {
     testCollectionId = "test-collection";
     testCollectionJson = """
-      {
-          "id": "test-collection",
-          "type": "Collection"
-      }
-      """;
+        {
+            "id": "test-collection",
+            "type": "Collection"
+        }
+        """;
   }
 
   @Test
   void checkCollectionExists_ReturnsTrueWhenExists() {
     when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString()))
-      .thenReturn(1);
+        .thenReturn(1);
 
     boolean result = stacRepository.checkCollectionExists(testCollectionId);
 
@@ -57,7 +57,7 @@ class StacRepositoryTests {
   @Test
   void checkCollectionExists_ReturnsFalseWhenDoesNotExist() {
     when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString()))
-      .thenReturn(0);
+        .thenReturn(0);
 
     boolean result = stacRepository.checkCollectionExists(testCollectionId);
 
@@ -67,26 +67,25 @@ class StacRepositoryTests {
   @Test
   void checkCollectionExists_ThrowsException_WhenDatabaseError() {
     when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString()))
-      .thenThrow(new DataAccessException("Database error") {
-      });
+        .thenThrow(new DataAccessException("Database error") {
+        });
 
     assertThatThrownBy(() -> stacRepository.checkCollectionExists(testCollectionId))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error checking collection existence");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error checking collection existence");
   }
 
   @Test
   void insertCollection_Success() {
     when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString()))
-      .thenReturn(new Object());
+        .thenReturn(new Object());
 
     stacRepository.insertCollection(testCollectionJson);
 
     verify(jdbcTemplate).queryForObject(
-      anyString(),
-      any(Class.class),
-      anyString()
-    );
+        anyString(),
+        any(Class.class),
+        anyString());
   }
 
   @Test
@@ -97,55 +96,54 @@ class StacRepositoryTests {
     expectedResults.add(result);
 
     when(jdbcTemplate.queryForList(anyString(), anyString()))
-      .thenReturn(expectedResults);
+        .thenReturn(expectedResults);
 
     List<Map<String, Object>> actualResults = stacRepository.queryCollection(testCollectionId);
 
     assertThat(actualResults).hasSize(1);
     assertThat(actualResults.get(0))
-      .containsKey("id")
-      .hasFieldOrPropertyWithValue("id", testCollectionId);
+        .containsKey("id")
+        .hasFieldOrPropertyWithValue("id", testCollectionId);
   }
 
   @Test
   void queryMetaData_ReturnsResults() {
-    //Arrange
+    // Arrange
     List<Map<String, Object>> expectedResults = new ArrayList<>();
     Map<String, Object> result = new HashMap<>();
     result.put("id", testCollectionId);
     expectedResults.add(result);
 
     when(jdbcTemplate.queryForList(anyString(), anyString()))
-      .thenReturn(expectedResults);
+        .thenReturn(expectedResults);
 
-    //Act
+    // Act
     List<Map<String, Object>> actualResults = stacRepository.queryMetaData(testCollectionId);
 
-    //Assert
+    // Assert
     assertThat(actualResults).hasSize(1);
     assertThat(actualResults.get(0))
-      .containsKey("id")
-      .hasFieldOrPropertyWithValue("id", testCollectionId);
+        .containsKey("id")
+        .hasFieldOrPropertyWithValue("id", testCollectionId);
   }
 
   @Test
   void queryCollection_ThrowsException_WhenDatabaseError() {
     when(jdbcTemplate.queryForList(anyString(), anyString()))
-      .thenThrow(new DataAccessException("Database error") {
-      });
+        .thenThrow(new DataAccessException("Database error") {
+        });
 
     assertThatThrownBy(() -> stacRepository.queryCollection(testCollectionId))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error querying collection");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error querying collection");
   }
 
   @Test
   void getAllCollections_Success() {
     // Arrange
     List<Map<String, Object>> mockResults = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2")
-    );
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
     // Act
@@ -165,8 +163,8 @@ class StacRepositoryTests {
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching all collections");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching all collections");
   }
 
   @Test
@@ -181,23 +179,85 @@ class StacRepositoryTests {
   @Test
   void insertCollection_ThrowsException_WhenDatabaseError() {
     // Arrange
-    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).queryForObject(anyString(), any(Class.class), anyString());
+    doThrow(new DataAccessException("Database error") {
+    }).when(jdbcTemplate).queryForObject(anyString(), any(Class.class), anyString());
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.insertCollection(testCollectionJson))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error inserting collection");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error inserting collection");
   }
 
   @Test
   void deleteAllCollections_ThrowsException_WhenDatabaseError() {
     // Arrange
-    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).update(anyString());
+    doThrow(new DataAccessException("Database error") {
+    }).when(jdbcTemplate).update(anyString());
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.deleteAllCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error deleting collections");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error deleting collections");
+  }
+
+  @Test
+  void getAllCollectionsByName_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "collection1", "name", "A Collection"),
+        Map.of("id", "collection2", "name", "B Collection"));
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByName();
+
+    // Assert
+    assertThat(results).isNotNull();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(1)).containsEntry("id", "collection2");
+  }
+
+  @Test
+  void getAllCollectionsByName_Failure() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
+    });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllCollectionsByName())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching all collections");
+  }
+
+  @Test
+  void getAllCollectionsByDate_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("datetime", "2024-02-01T12:00:00Z", "id", "collection1"),
+        Map.of("datetime", "2024-02-02T12:00:00Z", "id", "collection2"));
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate();
+
+    // Assert
+    assertThat(results).isNotNull();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).containsEntry("datetime", "2024-02-01T12:00:00Z");
+    assertThat(results.get(1)).containsEntry("datetime", "2024-02-02T12:00:00Z");
+  }
+
+  @Test
+  void getAllCollectionsByDate_Failure() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
+    });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllCollectionsByDate())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching all collections");
   }
 
   @Test
@@ -211,18 +271,19 @@ class StacRepositoryTests {
     // Assert
     verify(jdbcTemplate, times(1)).execute("DROP VIEW IF EXISTS Datalayer");
     verify(jdbcTemplate, times(1)).execute("CREATE VIEW DataLayer AS" +
-    " SELECT geometry FROM pgstac.collections WHERE id = '" + testCollectionId.replace("'", "''") + "'");
+        " SELECT geometry FROM pgstac.collections WHERE id = '" + testCollectionId.replace("'", "''") + "'");
   }
 
   @Test
   void setDatalayerView_ThrowsException_WhenDatabaseError() {
     // Arrange
-    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).execute(anyString());
+    doThrow(new DataAccessException("Database error") {
+    }).when(jdbcTemplate).execute(anyString());
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.setDatalayerView("ID"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error inserting view");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error inserting view");
   }
 
   @Test
@@ -267,7 +328,8 @@ class StacRepositoryTests {
   void checkDatalayerView_ThrowsException_WhenDataAccessExceptionError() {
     // Arrange
     String sql = "SELECT COUNT(*) FROM DataLayer";
-    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).queryForObject(sql, Integer.class);
+    doThrow(new DataAccessException("Database error") {
+    }).when(jdbcTemplate).queryForObject(sql, Integer.class);
 
     // Act & Assert
     boolean result = stacRepository.checkDatalayerView();

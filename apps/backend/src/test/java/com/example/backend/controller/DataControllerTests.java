@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +42,7 @@ class DataControllerTests {
   void testStacEndpoint_Success() {
     // Arrange
     when(dataService.insertAndQueryCollectionTests())
-      .thenReturn("Success result");
+        .thenReturn("Success result");
 
     // Act
     ResponseEntity<String> response = dataController.testStacEndpoint();
@@ -55,7 +56,7 @@ class DataControllerTests {
   void testStacEndpoint_Failure() {
     // Arrange
     when(dataService.insertAndQueryCollectionTests())
-      .thenThrow(new RuntimeException("Test error"));
+        .thenThrow(new RuntimeException("Test error"));
 
     // Act
     ResponseEntity<String> response = dataController.testStacEndpoint();
@@ -68,13 +69,13 @@ class DataControllerTests {
   @Test
   void getMetaData_Success() throws JsonProcessingException {
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
-    //Act
+    // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
 
-    //Assert
+    // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
   }
@@ -82,13 +83,13 @@ class DataControllerTests {
   @Test
   void getMetaData_Failure() throws JsonProcessingException {
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
-    //Act
+    // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
 
-    //Assert
+    // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isEqualTo("Error processing MetaData: Entry not found");
   }
@@ -98,7 +99,7 @@ class DataControllerTests {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
     when(dataService.insertAndQueryCollectionTests(anyString()))
-      .thenReturn("Success result");
+        .thenReturn("Success result");
 
     // Act
     ResponseEntity<String> response = dataController.createCollection(testJson);
@@ -113,7 +114,7 @@ class DataControllerTests {
     // Arrange
     String testJson = "{\"id\":\"test\"}";
     when(dataService.insertAndQueryCollectionTests(anyString()))
-      .thenThrow(new RuntimeException("Test error"));
+        .thenThrow(new RuntimeException("Test error"));
 
     // Act
     ResponseEntity<String> response = dataController.createCollection(testJson);
@@ -165,9 +166,8 @@ class DataControllerTests {
   void getCollections_Success() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2")
-    );
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
     when(dataService.getCollections()).thenReturn(mockCollections);
 
     // Act
@@ -219,8 +219,66 @@ class DataControllerTests {
   }
 
   @Test
+  void getCollectionsByName_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("name", "Collection A", "id", "id1"),
+        Map.of("name", "Collection B", "id", "id2"));
+    when(dataService.getCollectionsByName()).thenReturn(mockCollections);
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockCollections);
+  }
+
+  @Test
+  void getCollectionsByName_Failure() {
+    // Arrange
+    when(dataService.getCollectionsByName()).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
+  }
+
+  @Test
+  void getCollectionsByDate_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("date", "2023-01-01", "id", "id1"),
+        Map.of("date", "2023-02-01", "id", "id2"));
+    when(dataService.getCollectionsByDate()).thenReturn(mockCollections);
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockCollections);
+  }
+
+  @Test
+  void getCollectionsByDate_Failure() {
+    // Arrange
+    when(dataService.getCollectionsByDate()).thenThrow(new RuntimeException("Test error"));
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
+  }
+
+  @Test
   void insertView_Success() {
-    //Arrange
+    // Arrange
     doNothing().when(dataService).insertView("ID");
 
     // Act
@@ -232,7 +290,7 @@ class DataControllerTests {
 
   @Test
   void insertView_Failure() {
-    //Arrange
+    // Arrange
     doThrow(new RuntimeException("Test error")).when(dataService).insertView("ID");
 
     // Act
