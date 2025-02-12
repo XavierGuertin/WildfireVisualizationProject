@@ -3,12 +3,11 @@ package com.example.backend.service;
 import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,18 +16,19 @@ import java.util.stream.Collectors;
 @Service
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
+
   private static final String DEFAULT_COLLECTION_JSON = """
-    {
-        "id": "synthetic-wildfire-collection",
-        "type": "Collection",
-        "stac_version": "1.0.0",
-        "description": "A synthetic wildfire dataset for testing.",
-        "extent": {
-            "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
-            "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
-        }
-    }
-    """;
+      {
+          "id": "synthetic-wildfire-collection",
+          "type": "Collection",
+          "stac_version": "1.0.0",
+          "description": "A synthetic wildfire dataset for testing.",
+          "extent": {
+              "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
+              "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
+          }
+      }
+      """;
 
   private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
 
@@ -55,23 +55,23 @@ public class DataService {
     int count = 0;
 
     while (!check && count < 50) {
-        check = stacRepository.checkDatalayerView();
-        count++;
-        try {
-            // Sleep to avoid overwhelming the database
-            Thread.sleep(sleepMillis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Thread interrupted while waiting for the view to be created", e);
-            break;
-        }
+      check = stacRepository.checkDatalayerView();
+      count++;
+      try {
+        // Sleep to avoid overwhelming the database
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Thread interrupted while waiting for the view to be created", e);
+        break;
+      }
     }
 
     if (check) {
-        logger.info("View successfully detected in database for collectionId: {}", collectionId);
+      logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
-        logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
-        throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
+      logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
+      throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
   }
 
@@ -98,8 +98,8 @@ public class DataService {
     try {
       List<Map<String, Object>> collections = stacRepository.getAllCollections();
       return collections.stream()
-        .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch collections: " + e.getMessage(), e);
@@ -117,6 +117,34 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error checking collections: {}", e.getMessage(), e);
       throw new RuntimeException("Error checking collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getCollectionsByName() {
+    logger.info("Fetching collections from database filter by name");
+    try {
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
+      logger.debug("Fetched collections ordered by name: {}", collections);
+      return collections.stream()
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Name: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getCollectionsByDate() {
+    logger.info("Fetching collections from database filter by date");
+    try {
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
+      logger.debug("Fetched collections ordered by date: {}", collections);
+      return collections.stream()
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Date: " + e.getMessage(), e);
     }
   }
 
@@ -146,9 +174,9 @@ public class DataService {
     logger.info("Starting insertAndQueryCollection process for collection ID: {}", collectionId);
     try {
       String finalCollectionJson = Optional.ofNullable(collectionJson)
-        .orElse(DEFAULT_COLLECTION_JSON);
+          .orElse(DEFAULT_COLLECTION_JSON);
       String finalCollectionId = Optional.ofNullable(collectionId)
-        .orElse(DEFAULT_COLLECTION_ID);
+          .orElse(DEFAULT_COLLECTION_ID);
 
       logger.debug("Using collection JSON: {}", finalCollectionJson);
       logger.info("Checking if collection exists: {}", finalCollectionId);

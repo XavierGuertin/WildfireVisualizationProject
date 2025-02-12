@@ -176,6 +176,12 @@ body {
   height: auto;
 }
 
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}
+
 /* Dataset button */
 .dataset-button {
   width: calc(100% - 40px);
@@ -205,6 +211,18 @@ body {
 }
 
 /* No datasets message */
+  .no-datasets-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    color: #555;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
 .no-datasets-message {
   display: flex;
   justify-content: center;
@@ -216,4 +234,16 @@ body {
   "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #000000;
   text-align: center;
+}
+
+.no-datasets-icon {
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
 }
