@@ -20,7 +20,7 @@ body {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   border: 1px solid #ddd;
   border-radius: 8px;
-  z-index: 1000;
+  z-index: 999;
   overflow: visible;
   transition: width 0.3s ease;
   display: flex;
