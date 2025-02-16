@@ -1,15 +1,20 @@
 package com.example.backend.service;
 
-import com.example.backend.repository.StacRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.backend.repository.StacRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +45,6 @@ class DataServiceTests {
   private Map<String, Object> mockResponse;
 
   private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
-
 
   @BeforeEach
   void setUp() {
@@ -152,15 +156,16 @@ class DataServiceTests {
 
   @Test
   void retrieveMetaData_IsValid() throws JsonProcessingException {
-    //retrieveMetaData is just a middle man between the controller and the repository, so there is not real functionality to test
+    // retrieveMetaData is just a middle man between the controller and the
+    // repository, so there is not real functionality to test
 
-    //Arrange
+    // Arrange
     when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
 
-    //Act
+    // Act
     String response = dataService.retrieveMetaData("");
 
-    //Assert
+    // Assert
     assertThat(response).isNotNull();
   }
 
@@ -203,9 +208,8 @@ class DataServiceTests {
   void getCollections_Success() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2")
-    );
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
     when(stacRepository.getAllCollections()).thenReturn(mockCollections);
 
     // Act
@@ -223,8 +227,72 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.getCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to fetch collections");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
+  }
+
+  @Test
+  void getCollectionsByName_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
+    when(stacRepository.getAllCollectionsByName()).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByName();
+
+    // Assert
+    assertThat(collections).isNotNull();
+    assertThat(collections).hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
+    verify(stacRepository, times(1)).getAllCollectionsByName();
+  }
+
+  @Test
+  void getCollectionsByName_Failure() {
+    // Arrange
+    when(stacRepository.getAllCollectionsByName()).thenThrow(new RuntimeException("Test error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getCollectionsByName())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
+
+    verify(stacRepository, times(1)).getAllCollectionsByName();
+  }
+
+  @Test
+  void getCollectionsByDate_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
+    when(stacRepository.getAllCollectionsByDate()).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByDate();
+
+    // Assert
+    assertThat(collections).isNotNull();
+    assertThat(collections).hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
+    verify(stacRepository, times(1)).getAllCollectionsByDate();
+  }
+
+  @Test
+  void getCollectionsByDate_Failure() {
+    // Arrange
+    when(stacRepository.getAllCollectionsByDate()).thenThrow(new RuntimeException("Test error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getCollectionsByDate())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to fetch collections");
+
+    verify(stacRepository, times(1)).getAllCollectionsByDate();
   }
 
   @Test
@@ -243,8 +311,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.insertAndQueryCollectionTests())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to process collection: Test exception");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to process collection: Test exception");
 
     verify(stacRepository, times(1)).checkCollectionExists(anyString());
     verify(stacRepository, times(0)).insertCollection(anyString());
@@ -258,8 +326,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.deleteAllCollections())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Failed to delete collections: Test exception");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to delete collections: Test exception");
 
     verify(stacRepository, times(1)).deleteAllCollections();
   }
@@ -286,8 +354,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.insertView("ID", 0))
-      .isInstanceOf(IllegalStateException.class)
-      .hasMessageContaining("View could not be created for collectionId: ID");
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("View could not be created for collectionId: ID");
   }
 
   @Test
@@ -301,7 +369,7 @@ class DataServiceTests {
       Thread.currentThread().interrupt(); // Simulate interruption
       dataService.insertView("ID", 0);
     }).isInstanceOf(IllegalStateException.class)
-      .hasMessageContaining("View could not be created for collectionId: ID");
+        .hasMessageContaining("View could not be created for collectionId: ID");
 
     verify(stacRepository, atLeastOnce()).setDatalayerView("ID");
     verify(stacRepository, atLeastOnce()).checkDatalayerView();
@@ -316,8 +384,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("No collections found at the provided URL");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("No collections found at the provided URL");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }
@@ -329,8 +397,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("No collections found at the provided URL");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("No collections found at the provided URL");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }
@@ -342,8 +410,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error checking collections");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error checking collections");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }

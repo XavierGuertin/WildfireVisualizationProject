@@ -7,21 +7,29 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import {
-  fetchMetaData,
+import { 
+  fetchCollectionsFromEndpointByName, 
+  fetchCollectionsFromEndpointByDate, 
+  fetchMetaData, 
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
 
+interface DatasetEntry {
+  key: number;
+  id: string;
+}
+
 export interface DatasetMetadata {
+  id: string;
+  name: string;
   date: string;
+  enddate?: string;
   datasetSource: string;
   description: string;
   format: string;
-  latestAdded: string;
-  latestUpdated: string;
-  name: string;
-  processes: string;
-  id: string;
+  latestAdded?: string;
+  latestUpdated?: string;
+  processes?: string;
 }
 
 interface AvailableDatasetsProps {
@@ -34,54 +42,56 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   refreshKey,
 }) => {
   const { t } = useTranslation();
-  const [activeFilter, setActiveFilter] = useState<string>('Name');
-  const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
-  const [datasetIds, setDatasetIds] = useState<string[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>('');
+  const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMetaDataDatasets = async () => {
+    const fetchDatasets = async () => {
       try {
         const datasetList: string[] = [];
         const response: any = await returnListOfCollectionsFromEndpoint();
-        for (let i = 0; i < response.length; i++) {
-          const entryId = response[i].id;
-          datasetList.push(entryId);
-        }
-        setDatasetIds(datasetList);
+
+        setDatasets(response);
+        setFetchError(null);
       } catch (error) {
         console.log('Error fetching datasets:', error);
+        setDatasets([]);
+        setFetchError('Failed to load datasets.');
       }
     };
 
-    fetchMetaDataDatasets();
+    fetchDatasets();
   }, [refreshKey]); // Re-fetch datasets when refresh key changes
 
-  const sortDatasets = (filter: string) => {
+  const handleFilterChange = async (filter: string) => {
     setActiveFilter(filter);
-    const sortedDatasets = [...datasets].sort((a, b) => {
-      switch (filter) {
-        case 'Date':
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'Latest Added':
-          return (
-            new Date(a.latestAdded).getTime() -
-            new Date(b.latestAdded).getTime()
-          );
-        case 'Latest Updated':
-          return (
-            new Date(a.latestUpdated).getTime() -
-            new Date(b.latestUpdated).getTime()
-          );
-        case 'Name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
+    
+    try {
+      let response;
+
+      if (filter === 'Name') {
+        response = await fetchCollectionsFromEndpointByName();
+      } else {
+        response = await fetchCollectionsFromEndpointByDate();
       }
-    });
-    setDatasets(sortedDatasets);
+
+      if (!Array.isArray(response)) {
+        setFetchError(response.error || 'Unknown error occurred');
+        setDatasets([]); 
+        return;
+      }
+
+      setDatasets(response);
+      setFetchError(null);
+    } catch (error) {
+      console.log(`Error fetching datasets for filter ${filter}:`, error);
+      setDatasets([]);
+      setFetchError('Failed to load datasets.');
+    }
   };
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
@@ -136,12 +146,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             <div className="filter-icon">
               <FaFilter size={24} />
             </div>
-            {['Name', 'Date', 'Latest Added', 'Latest Updated'].map(
+            {['Name', 'Date'].map(
               (filter) => (
                 <button
                   key={filter}
                   className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                  onClick={() => sortDatasets(filter)}
+                  onClick={() => handleFilterChange(filter)}
                   data-testid={`filter-button-${filter}`}
                 >
                   {t(filter.toLowerCase().replace(/ /g, '_'))}
@@ -150,15 +160,15 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             )}
           </div>
           <div className="buttons-container" data-testid="buttons-container">
-            {datasetIds.length > 0 ? (
-              datasetIds.map((id, index) => (
+            {datasets.length > 0 ? (
+              datasets.map((dataset) => (
                 <button
-                  key={index}
-                  className={`dataset-button ${selectedDataset === id ? 'selected' : ''}`}
-                  onClick={() => handleDatasetClick(id)}
-                  data-testid={`dataset-button-${index}`}
+                  key={dataset.id}
+                  className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+                  onClick={() => handleDatasetClick(dataset.id)}
+                  data-testid={`dataset-button-${dataset.id}`}
                 >
-                  {id}
+                  {dataset.id}
                 </button>
               ))
             ) : (

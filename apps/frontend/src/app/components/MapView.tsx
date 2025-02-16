@@ -12,7 +12,6 @@ import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
 
-// Attributions
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
 // Base layers

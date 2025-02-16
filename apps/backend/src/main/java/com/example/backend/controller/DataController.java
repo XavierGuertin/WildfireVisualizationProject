@@ -32,7 +32,7 @@ public class DataController {
     } catch (IOException e) {
       logger.error("Error reading JSON file: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error reading file: " + e.getMessage());
+          .body("Error reading file: " + e.getMessage());
     }
   }
 
@@ -46,7 +46,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing MetaData: " + e.getMessage());
+          .body("Error processing MetaData: " + e.getMessage());
     }
   }
 
@@ -60,7 +60,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error creating collection: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error creating collection: " + e.getMessage());
+          .body("Error creating collection: " + e.getMessage());
     }
   }
 
@@ -123,6 +123,32 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/get-collections-by-name")
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
+    logger.info("Received request to get collections by name");
+    try {
+      List<Map<String, Object>> collections = dataService.getCollectionsByName();
+      logger.debug("Successfully fetched collections by name");
+      return ResponseEntity.ok(collections);
+    } catch (Exception e) {
+      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
+  @GetMapping("/api/get-collections-by-date")
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate() {
+    logger.info("Received request to get collections by name");
+    try {
+      List<Map<String, Object>> collections = dataService.getCollectionsByDate();
+      logger.debug("Successfully fetched collections by name");
+      return ResponseEntity.ok(collections);
+    } catch (Exception e) {
+      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
   @GetMapping("/api/set-datalayer-geometry/{id}")
   public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
     try {
@@ -133,7 +159,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error inserting view: " + e.getMessage());
+          .body("Error inserting view: " + e.getMessage());
     }
   }
 
@@ -150,7 +176,7 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-        .body("Error processing STAC data: " + e.getMessage());
+          .body("Error processing STAC data: " + e.getMessage());
     }
   }
 }

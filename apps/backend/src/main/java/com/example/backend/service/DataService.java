@@ -6,12 +6,11 @@ import com.example.backend.exception.StacConversionException;
 import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
+
   private static final String DEFAULT_COLLECTION_JSON = """
       {
           "id": "synthetic-wildfire-collection",
@@ -133,6 +133,34 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error checking collections: {}", e.getMessage(), e);
       throw new RuntimeException("Error checking collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getCollectionsByName() {
+    logger.info("Fetching collections from database filter by name");
+    try {
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
+      logger.debug("Fetched collections ordered by name: {}", collections);
+      return collections.stream()
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Name: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getCollectionsByDate() {
+    logger.info("Fetching collections from database filter by date");
+    try {
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
+      logger.debug("Fetched collections ordered by date: {}", collections);
+      return collections.stream()
+          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch collections by Date: " + e.getMessage(), e);
     }
   }
 

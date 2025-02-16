@@ -2,7 +2,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
 export const fetchTestStacData = async (): Promise<any> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/test-stac`);
+    const response = await fetch(`${BASE_URL}api/test-stac`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -29,9 +29,9 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
   }
-};
+}; 
 
-export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
+export const getCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
     if (!response.ok) {
@@ -117,6 +117,71 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
   } catch (error: any) {
     console.error("Error fetching MetaData:", error);
     return { error: "Failed to fetch MetaData" };
+  }
+};
+
+export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    throw new Error(`Failed to fetch data: ${error.message}`);
+  }
+};
+
+export const returnCollectionsFromEndpoint = async (): Promise<{
+  id: string; key: number}[] | { error: string }> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections`);
+    console.log('Fetching from: ', `${BASE_URL}/api/get-collections`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections:', error);
+    return { error: 'Failed to fetch data' };
+  }
+}
+
+export const fetchCollectionsFromEndpointByName = async (): Promise<{
+  id: string; key: number}[] | { error: string }> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections-by-name`);
+    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-name`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections by name:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections by name:', error);
+    return { error: 'Failed to fetch data by name' };
+  }
+}
+
+export const fetchCollectionsFromEndpointByDate = async (): Promise<{
+  id: string; key: number}[] | { error: string }> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/get-collections-by-date`);
+    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-date`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Fetched collections by date:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching collections by name:', error);
+    return { error: 'Failed to fetch data by name' };
   }
 };
 
