@@ -18,6 +18,7 @@ const resources = {
       api_endpoint_saved:
         'API endpoint successfully saved under config/app-config.json',
       copied_to_clipboard: 'Copied to clipboard',
+      no_internet_access: 'No internet access',
       //Language
       english: 'English',
       french: 'French',
@@ -82,6 +83,7 @@ const resources = {
       api_endpoint_saved:
         'Endpoint enregistré avec succès sous config/app-config.json',
       copied_to_clipboard: 'Copié dans le presse-papiers',
+      no_internet_access: 'Aucune connexion',
       //Language
       english: 'Anglais',
       french: 'Français',

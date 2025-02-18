@@ -8,7 +8,7 @@ import {
   IoSettingsOutline,
   IoTrashOutline,
 } from 'react-icons/io5';
-import { PiArrowClockwiseFill } from 'react-icons/pi';
+import { PiArrowClockwiseFill, PiGlobeXLight, PiX } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
   resetCollections,
@@ -382,6 +382,28 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
               {t('factory_reset')}
             </button>
           </div>
+        )}
+      </div>
+
+      <div className="dropdown-button">
+        <button
+            className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('internet')}
+            aria-expanded={dropdownState.activeButton === 'internet'}
+            aria-label="internet"
+            data-testid="internet-dropdown-button"
+          >
+            <PiGlobeXLight size={32} />
+          </button>
+        {dropdownState.activeButton === 'internet' && (
+        <div className="dropdown-content show">
+          <div className="settings-information">
+            <label data-testid="internet-reset-button" style={{ color: '#dc143c' }}>
+              <PiX size={24} fill="red" />
+              {t('no_internet_access')}
+            </label>
+            </div>
+        </div>
         )}
       </div>
     </div>

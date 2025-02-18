@@ -201,3 +201,26 @@
   text-align: justify;
   white-space: pre-line;
 }
+
+/* Settings information styling */
+.settings-information{
+  display: flex;
+  align-items: center;
+  width: 190px;
+  margin-top: 5px;
+}
+
+/* Label for the settings information */
+.settings-information label{
+  background: none;
+  color: black;
+  border: none;
+  padding: 5px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 10px;
+}
