@@ -45,7 +45,8 @@ public class StacDataConverter {
     }
 
     private Geometry convertGeometry(GeometryDto geometryDto) throws Exception {
-        String wkt = String.format("%s(%s)",
+        // Add an extra set of parentheses for the coordinate sequence
+        String wkt = String.format("%s((%s))",
                 geometryDto.getType().toUpperCase(),
                 formatCoordinates(geometryDto.getCoordinates()));
         return wktReader.read(wkt);
@@ -54,8 +55,9 @@ public class StacDataConverter {
     private String formatCoordinates(double[][] coordinates) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < coordinates.length; i++) {
-            if (i > 0)
+            if (i > 0) {
                 sb.append(", ");
+            }
             sb.append(coordinates[i][0]).append(" ").append(coordinates[i][1]);
         }
         return sb.toString();

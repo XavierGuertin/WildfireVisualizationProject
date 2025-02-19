@@ -71,16 +71,6 @@ public class DataService {
         logger.error("Thread interrupted while waiting for the view to be created", e);
         break;
       }
-      check = stacRepository.checkDatalayerView();
-      count++;
-      try {
-        // Sleep to avoid overwhelming the database
-        Thread.sleep(sleepMillis);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        logger.error("Thread interrupted while waiting for the view to be created", e);
-        break;
-      }
     }
 
     if (check) {
