@@ -431,4 +431,44 @@ class DataServiceTests {
     verify(stacRepository, times(1)).insertCollection(anyString());
     verify(stacRepository, times(1)).queryCollection(anyString());
   }
+
+  @Test
+  void insertItem_Success(){
+
+  }
+
+  @Test
+  void insertItem_Failure(){
+
+  }
+
+  @Test
+  void getAllItems_Success(){
+
+  }
+
+  @Test
+  void getAllItems_Failure(){
+
+  }
+
+  @Test
+  void getItem_WithId_Success(){
+
+  }
+
+  @Test
+  void getItem_WithId_Failure(){
+
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Success(){
+
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Failure(){
+
+  }
 }

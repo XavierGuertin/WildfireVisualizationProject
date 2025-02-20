@@ -337,4 +337,44 @@ class StacRepositoryTests {
     // Assert
     assertThat(result).isFalse();
   }
+
+  @Test
+  void insertItem_Success(){
+
+  }
+
+  @Test
+  void insertItem_Failure(){
+
+  }
+
+  @Test
+  void getAllItems_Success(){
+
+  }
+
+  @Test
+  void getAllItems_Failure(){
+
+  }
+
+  @Test
+  void getItem_WithId_Success(){
+
+  }
+
+  @Test
+  void getItem_WithId_Failure(){
+
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Success(){
+
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Failure(){
+
+  }
 }
