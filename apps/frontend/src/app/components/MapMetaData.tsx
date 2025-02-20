@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../styles/MapMetaData.css";
 import { IoInformationCircle } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
-import { insertDatalayerView } from "../services/api";
+import { fetchItems, insertDatalayerView } from "../services/api";
 import { changeLayer } from './MapView';
 import { useMapLayerContext } from './MapContext';
 import LoadingModule from "./LoadingModule";
@@ -46,7 +46,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     }, 300); // Update every 300ms
   };
 
-  const { mapRef } = useMapLayerContext();
+  const { mapRef, setDataItems, dataItems } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     try {
@@ -55,6 +55,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       await insertDatalayerView(id);
       const map = mapRef.current as Map;
       changeLayer(map);
+
+      //Adding the items retrieved from the collection to the context (this is the endpoint that the loading bar will be waiting for)
+      const items = await fetchItems(id)
+      setDataItems(items)
 
       // Simulate a delay for loading (mocked)
       await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
