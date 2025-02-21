@@ -1,5 +1,8 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.PostGISData;
+import com.example.backend.dto.StacItemDto;
+import com.example.backend.exception.StacConversionException;
 import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +43,9 @@ public class DataService {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @Autowired
+  private StacDataConverter stacDataConverter;
 
   public String retrieveMetaData(String collectionId) throws JsonProcessingException {
     return objectMapper.writeValueAsString(stacRepository.queryMetaData(collectionId));
