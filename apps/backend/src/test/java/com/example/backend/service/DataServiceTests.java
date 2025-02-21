@@ -434,41 +434,143 @@ class DataServiceTests {
 
   @Test
   void insertItem_Success(){
-
+    //Arrange
+    doNothing().when(stacRepository).insertItem(anyString());
+    //Act
+    dataService.insertItem("Test");
   }
 
   @Test
   void insertItem_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error fetching item")).when(stacRepository).insertItem(anyString());
 
+    //Assert
+    assertThatThrownBy(() -> dataService.insertItem("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item");
   }
 
   @Test
   void getAllItems_Success(){
+    //Arrange
+    List<Map<String,Object>> mockResults = List.of(
+      Map.of("id", "test1"),
+      Map.of("id", "test2")
+    );
+    when(stacRepository.getAllItems(anyString())).thenReturn(mockResults);
+    //Act
+    List<Map<String, Object>> result = dataService.getAllItems("Test");
 
+    //Assert
+    assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
   void getAllItems_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error fetching all items")).when(stacRepository).getAllItems(anyString());
 
+    //Assert
+    assertThatThrownBy(() -> dataService.getAllItems("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching all items");
   }
 
   @Test
   void getItem_WithId_Success(){
+    //Arrange
+    List<Map<String,Object>> mockResults = List.of(
+      Map.of("id", "test1")
+    );
+    when(stacRepository.getItem(anyString())).thenReturn(mockResults);
+    //Act
+    List<Map<String, Object>> result = dataService.getItem("Test");
 
+    //Assert
+    assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
   void getItem_WithId_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error fetching item")).when(stacRepository).getItem(anyString());
 
+    //Assert
+    assertThatThrownBy(() -> dataService.getItem("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item");
   }
 
   @Test
   void getItem_WithIdAndCollectionId_Success(){
+    //Arrange
+    List<Map<String,Object>> mockResults = List.of(
+      Map.of("id", "test1")
+    );
+    when(stacRepository.getItem(anyString(), anyString())).thenReturn(mockResults);
+    //Act
+    List<Map<String, Object>> result = dataService.getItem("Test", "Test");
 
+    //Assert
+    assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
   void getItem_WithIdAndCollectionId_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error fetching item")).when(stacRepository).getItem(anyString(), anyString());
+
+    //Assert
+    assertThatThrownBy(() -> dataService.getItem("test", "test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item");
+  }
+
+  @Test
+  void removeAllItems_Success(){
 
   }
+
+  @Test
+  void removeAllItems_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error removing all items")).when(stacRepository).removeAllItems();
+
+    //Assert
+    assertThatThrownBy(() -> dataService.removeAllItems())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing all items");
+  }
+  @Test
+  void removeItemsFromCollection_Success(){
+
+  }
+
+  @Test
+  void removeItemsFromCollection_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error removing item")).when(stacRepository).removeItemsFromCollection(anyString());
+
+    //Assert
+    assertThatThrownBy(() -> dataService.removeItemsFromCollection("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing item");
+  }
+  @Test
+  void removeItem_Success(){
+
+  }
+
+  @Test
+  void removeItem_Failure(){
+    //Arrange
+    doThrow(new RuntimeException("Error removing item")).when(stacRepository).removeItem(anyString(), anyString());
+
+    //Assert
+    assertThatThrownBy(() -> dataService.removeItem("test", "test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing item");
+  }
+
 }

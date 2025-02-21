@@ -371,19 +371,6 @@ public class DataController {
     }
   }
 
-  @GetMapping("/api/get-item/{id}")
-  public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId) {
-    logger.info("Received request to get item");
-    try {
-      List<Map<String, Object>> item = dataService.getItem(itemId);
-      logger.debug("Successfully fetched item");
-      return ResponseEntity.ok(item);
-    } catch (Exception e) {
-      logger.error("Error fetching item: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError().body(null);
-    }
-  }
-
   @GetMapping("/api/get-item/{id}/{collection}")
   public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId, @PathVariable("collection") String collectionId) {
     logger.info("Received request to get item");
