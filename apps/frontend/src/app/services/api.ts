@@ -215,7 +215,6 @@ export const insertItem = async (itemJson: string) => {
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    console.log(response.status)
   }
   catch(error: any){
     console.error("Error inserting item:", error);
@@ -231,7 +230,6 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
       throw new Error(`Error: ${response.statusText}`);
     }
     const data = await response.json();
-    console.log(JSON.parse(data[0].search.value).features);
     return JSON.parse(data[0].search.value).features;
   } catch (error: any) {
     console.error("Error fetching MetaData:", error);
