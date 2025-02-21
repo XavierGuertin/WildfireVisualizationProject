@@ -337,4 +337,185 @@ class StacRepositoryTests {
     // Assert
     assertThat(result).isFalse();
   }
+
+  @Test
+  void getAllItems_Success(){
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+      Map.of("id", "testCollection1", "name", "Test Collection 1"),
+      Map.of("id", "testCollection2", "name", "Test Collection 2")
+    );
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllItems("");
+
+    // Assert
+    assertThat(results).isNotNull();
+    assertThat(results).hasSize(2);
+    assertThat(results).isEqualTo(mockResults);
+  }
+
+  @Test
+  void getAllItems_Failure(){
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Error fetching all items") {
+    });
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.getAllItems(""))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching all items");
+  }
+
+  @Test
+  void getItem_WithId_Success(){
+
+    //Arrange
+    List<Map<String, Object>> results = List.of(
+      Map.of("id", "testId", "name", "Test Name")
+    );
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(results);
+
+    //Act
+    List<Map<String, Object>> result = stacRepository.getItem(anyString());
+
+    // Assert
+    assertThat(result).hasSize(1);
+    assertThat(result).isEqualTo(results);
+  }
+
+  @Test
+  void getItem_WithId_Failure(){
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Error fetching all items") {
+    });
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.getItem("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item");
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Success(){
+
+    //Arrange
+    List<Map<String, Object>> results = List.of(
+      Map.of("id", "testId", "name", "Test Name")
+    );
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(results);
+
+    //Act
+    List<Map<String, Object>> result = stacRepository.getItem("test", "test");
+
+    // Assert
+    assertThat(result).hasSize(1);
+    assertThat(result).isEqualTo(results);
+  }
+
+  @Test
+  void getItem_WithIdAndCollectionId_Failure(){
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Error fetching item") {
+    });
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.getItem("test", "test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item");
+  }
+
+  @Test
+  void removeAllItems_Success(){
+    //Arrange
+    String expected = "Successfully Removed All Items";
+
+    doNothing().when(jdbcTemplate).execute(anyString());
+    //Act
+    String result = stacRepository.removeAllItems();
+    //Assert
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void removeAllItems_Failure(){
+    // Arrange
+    doThrow(new DataAccessException("Error removing all items") {
+    }).when(jdbcTemplate).execute(anyString());
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.removeAllItems())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing all items");
+
+  }
+
+  @Test
+  void removeItemsFromCollection_Success(){
+    //Arrange
+    String expected = "Successfully Removed All Items From Collection";
+
+    doNothing().when(jdbcTemplate).execute(anyString());
+    //Act
+    String result = stacRepository.removeItemsFromCollection("Test");
+    //Assert
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void removeItemsFromCollection_Failure(){
+    // Arrange
+    doThrow(new DataAccessException("Error removing items from collection") {
+    }).when(jdbcTemplate).execute(anyString());
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.removeItemsFromCollection("test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing items from collection");
+  }
+
+  @Test
+  void removeItem_Success(){
+    //Arrange
+    String expected = "Successfully Removed Item";
+
+    doNothing().when(jdbcTemplate).execute(anyString());
+    //Act
+    String result = stacRepository.removeItem("Test", "Test");
+    //Assert
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void removeItem_Failure(){
+    // Arrange
+    doThrow(new DataAccessException("Error removing item") {
+    }).when(jdbcTemplate).execute(anyString());
+
+    // Assert
+    assertThatThrownBy(() -> stacRepository.removeItem("test", "test"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error removing item");
+  }
+
+  @Test
+  void insertItem_Success(){
+    //Arrange
+    when(jdbcTemplate.queryForObject(anyString(), any(Class.class), anyString())).thenReturn("");
+    //Act
+    stacRepository.insertItem("Test");
+  }
+
+  @Test
+  void insertItem_Failure(){
+    //Arrange
+    doThrow(new DataAccessException("Error inserting item") {
+    }).when(jdbcTemplate).queryForObject(anyString(), any(Class.class), anyString());
+
+    //Assert
+    assertThatThrownBy(() -> stacRepository.insertItem("{id: 'test'}"))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error inserting item");
+  }
 }

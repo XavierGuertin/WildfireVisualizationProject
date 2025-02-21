@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.service.DataService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.coyote.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -295,6 +296,155 @@ class DataControllerTests {
 
     // Act
     ResponseEntity<String> response = dataController.insertView("ID");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void createItem_Success(){
+    //Arrange
+    doNothing().when(dataService).insertItem(anyString());
+    //Act
+    ResponseEntity<String> result = dataController.createItem("test");
+    //Assert
+    assertThat(result).isEqualTo(ResponseEntity.ok("Successfully inserted item"));
+  }
+
+  @Test
+  void createItem_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Insertion error")).when(dataService).insertItem(anyString());
+
+    // Act
+    ResponseEntity<String> response = dataController.createItem("Test");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void fetchItems_Success(){
+    //Arrange
+    List<Map<String, Object>> mockResult = List.of(
+      Map.of("id", "test1"),
+      Map.of("id", "test2")
+    );
+
+    when(dataService.getAllItems(anyString())).thenReturn(mockResult);
+    //Act
+    ResponseEntity<List<Map<String, Object>>> result = dataController.fetchItems("test");
+    //Assert
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(result.getBody()).isEqualTo(mockResult);
+  }
+
+  @Test
+  void fetchItems_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Error retrieving all items for collection")).when(dataService).getAllItems(anyString());
+
+    // Act
+    ResponseEntity<List<Map<String,Object>>> response = dataController.fetchItems("Test");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void getItem_Success(){
+    //Arrange
+    List<Map<String, Object>> mockResult = List.of(
+      Map.of("id", "test1")
+    );
+
+    when(dataService.getItem(anyString(), anyString())).thenReturn(mockResult);
+    //Act
+    ResponseEntity<List<Map<String, Object>>> result = dataController.getItem("test", "test");
+    //Assert
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(result.getBody()).isEqualTo(mockResult);
+  }
+
+  @Test
+  void getItem_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Item retrieval error")).when(dataService).getItem(anyString(), anyString());
+
+    // Act
+    ResponseEntity<List<Map<String,Object>>> response = dataController.getItem("Test", "Test");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void removeAllItems_Success(){
+    //Arrange
+    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
+    when(dataService.removeAllItems()).thenReturn("Success!");
+    //Act
+    ResponseEntity<String> result = dataController.removeAllItems();
+    //Assert
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void removeAllItems_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Error removing all items")).when(dataService).removeAllItems();
+
+    // Act
+    ResponseEntity<String> response = dataController.removeAllItems();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void removeItemsFromCollection_Success(){
+    //Arrange
+    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
+    when(dataService.removeItemsFromCollection(anyString())).thenReturn("Success!");
+    //Act
+    ResponseEntity<String> result = dataController.removeItemsFromCollection("test");
+    //Assert
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void removeItemsFromCollection_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Error removing items from collection")).when(dataService).removeItemsFromCollection(anyString());
+
+    // Act
+    ResponseEntity<String> response = dataController.removeItemsFromCollection("Test");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void removeItem_Success(){
+    //Arrange
+    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
+    when(dataService.removeItem(anyString(), anyString())).thenReturn("Success!");
+    //Act
+    ResponseEntity<String> result = dataController.removeItem("test", "test");
+    //Assert
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void removeItem_Failure(){
+    // Arrange
+    doThrow(new RuntimeException("Error removing item")).when(dataService).removeItem(anyString(), anyString());
+
+    // Act
+    ResponseEntity<String> response = dataController.removeItem("Test", "Test");
 
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
