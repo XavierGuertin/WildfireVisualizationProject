@@ -20,6 +20,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from './MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
+import OnlineStatus from './OnlineStatus';
 
 const MySwal = withReactContent(Swal);
 
@@ -31,13 +32,12 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
-
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
@@ -384,7 +384,8 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
           </div>
         )}
       </div>
-
+      
+      {!OnlineStatus().isOnline &&
       <div className="dropdown-button">
         <button
             className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
@@ -405,7 +406,7 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
             </div>
         </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 };

@@ -10,6 +10,8 @@ interface MapLayerContextValue{
     setSpeed : React.Dispatch<React.SetStateAction<number>>;
     dataItems : object[];
     setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
+    isOnline: boolean;
+    setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
@@ -24,6 +26,9 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     //Items for the simulation
     const [dataItems, setDataItems] = useState<object[]>([]);
 
+    //Online status
+    const [isOnline, setIsOnline] = useState<boolean>(true);
+
     //Map Specific Functions
     const resetView = () => {
         if (mapRef.current) {
@@ -35,7 +40,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     };
  
     return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems }}>
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline }}>
             {children}
         </MapLayerContext.Provider>
     )
