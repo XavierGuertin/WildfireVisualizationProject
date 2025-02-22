@@ -1,5 +1,6 @@
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
+//Methods for mock data while we wait for CRIM's data
 export const fetchTestStacData = async (): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}api/test-stac`);
@@ -14,6 +15,21 @@ export const fetchTestStacData = async (): Promise<any> => {
   }
 };
 
+export const insertMockItemData = async(): Promise<any> => {
+  try{
+    const response = await fetch(`${BASE_URL}/api/insert-mock-items`,
+      {
+        method: 'POST'
+      }
+    );
+    console.log("Successfully inserted mock data! Status: ", response.status)
+  }
+  catch(error: any){
+    console.error("Error inserting mock item data: ", error)
+  }
+}
+
+//Actual endpoint methods
 export const returnListOfCollectionsFromEndpoint = async (): Promise<{
   error: string;
 }> => {
@@ -182,6 +198,58 @@ export const fetchCollectionsFromEndpointByDate = async (): Promise<{
   } catch (error: any) {
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
+  }
+};
+
+export const insertItem = async (itemJson: string) => {
+  try{
+    const url = `${BASE_URL}/api/stac/item`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      method: "POST",
+      body: itemJson
+    });
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+  }
+  catch(error: any){
+    console.error("Error inserting item:", error);
+    return { error: "Failed to insert item" };
+  }
+}
+
+export const fetchItems = async (collectionId: string): Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/get-all-items/${collectionId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return JSON.parse(data[0].search.value).features;
+  } catch (error: any) {
+    console.error("Error fetching MetaData:", error);
+    return { error: "Failed to fetch MetaData" };
+  }
+};
+
+export const fetchItem = async (itemId: string, collectionId?: string): Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/get-item/${itemId}${collectionId !== null ? '/' + collectionId : '' }`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching MetaData:", error);
+    return { error: "Failed to fetch MetaData" };
   }
 };
 

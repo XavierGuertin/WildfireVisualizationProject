@@ -8,6 +8,8 @@ interface MapLayerContextValue{
     resetView: () => void;
     speed: number;
     setSpeed : React.Dispatch<React.SetStateAction<number>>;
+    dataItems : object[];
+    setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
@@ -18,6 +20,9 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     
     //Timeline playback speed
     const [speed, setSpeed] = useState<number>(1);
+
+    //Items for the simulation
+    const [dataItems, setDataItems] = useState<object[]>([]);
 
     //Map Specific Functions
     const resetView = () => {
@@ -30,7 +35,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     };
  
     return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed }}>
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems }}>
             {children}
         </MapLayerContext.Provider>
     )
