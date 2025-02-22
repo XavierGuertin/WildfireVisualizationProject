@@ -20,7 +20,6 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from './MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
-import OnlineStatus from './OnlineStatus';
 
 const MySwal = withReactContent(Swal);
 
@@ -385,7 +384,7 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
         )}
       </div>
       
-      {!OnlineStatus().isOnline &&
+      {!isOnline &&
       <div className="dropdown-button">
         <button
             className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}

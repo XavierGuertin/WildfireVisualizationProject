@@ -53,6 +53,7 @@ const resources = {
       loading_dataset: 'Loading Dataset...',
       //Views
       views: 'Views',
+      view_disabled: 'View disabled',
       collapse: 'Collapse',
       default_layer: 'Default Layer',
       topographical_layer: 'Topographical Layer',
@@ -118,6 +119,7 @@ const resources = {
       loading_dataset: 'Chargement du jeu de données...',
       //Views
       views: 'Vues',
+      view_disabled: 'Vue désactivée',
       collapse: 'Réduire',
       default_layer: 'Calque par Défaut',
       topographical_layer: 'Calque Topographique',
