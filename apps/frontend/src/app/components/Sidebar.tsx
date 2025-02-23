@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMapLayerContext } from './MapContext';
 import { useTranslation } from 'react-i18next';
 import "../styles/Sidebar.css";
@@ -31,6 +31,11 @@ const Sidebar = () => {
     }
     setLayer(layerName);
   };
+
+  useEffect(() => {
+    if(!isOnline)
+      handleLayerChange('default');
+  }, [isOnline]);
 
   return (
     <div>
