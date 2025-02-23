@@ -104,7 +104,7 @@ const MapView = () => {
   };
 
   useEffect(() => {
-    // insertMockItemData() //This method is to be deleted once we receive the real data
+    insertMockItemData() //This method is to be deleted once we receive the real data
     setOnlineStatus();
 
     if (!mapRef.current) {
