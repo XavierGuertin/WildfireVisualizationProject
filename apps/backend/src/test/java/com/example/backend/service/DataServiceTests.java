@@ -585,13 +585,13 @@ class DataServiceTests {
   @Test
   void verifyInternetConnection_Failure(){
     //Arrange
-    doThrow(new RuntimeException("No internet connection")).when(restTemplate).getForObject(endpointUrl, String.class);
+    doThrow(new RuntimeException("No internet connection")).when(restTemplate).getForObject(DEFAULT_ENDPOINT_URL, String.class);
 
     //Act
-    String result = internetConnectionService.verifyInternetConnection(endpointUrl);
+    String result = dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
 
     //Assert
-    assertEquals("No internet connection could be established", result);
+    assertThat(result).isEqualTo("No internet connection could be established");
   }
 
 }
