@@ -23,9 +23,10 @@ import { getConfig, saveConfig } from '../services/configApi';
 
 const MySwal = withReactContent(Swal);
 
-const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
-  refreshDatasets,
-}) => {
+const SettingsPanel: React.FC<{
+  refreshDatasets: () => void;
+  setMetadataVisible: (visible: boolean) => void;
+}> = ({ refreshDatasets, setMetadataVisible }) => {
   const { t, i18n } = useTranslation();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
@@ -74,7 +75,10 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
       setLanguageInitialized(true);
 
       // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
-      if (config.endpoint === 'No endpoint saved' || config.endpoint === undefined) {
+      if (
+        config.endpoint === 'No endpoint saved' ||
+        config.endpoint === undefined
+      ) {
         await promptForEndpoint(
           refreshDatasets,
           t,
@@ -198,6 +202,7 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
             getConfig,
             saveConfig,
           );
+          setMetadataVisible(false); // Hide metadata container
         } catch (error: any) {
           toast.error(error.message);
         }
@@ -239,7 +244,7 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
         cancelButtonColor: '#d33',
         showCancelButton: true,
         confirmButtonText: t('save'),
-        cancelButtonText: t('cancel')
+        cancelButtonText: t('cancel'),
       });
 
       if (inputResult.isConfirmed) {
@@ -377,7 +382,11 @@ const SettingsPanel: React.FC<{ refreshDatasets: () => void }> = ({
               <PiArrowClockwiseFill size={24} />
               {t('reset')}
             </button>
-            <button onClick={handleFactoryReset} data-testid="factory-reset-button" style={{ color: '#dc143c' }}>
+            <button
+              onClick={handleFactoryReset}
+              data-testid="factory-reset-button"
+              style={{ color: '#dc143c' }}
+            >
               <IoTrashOutline size={24} fill="red" />
               {t('factory_reset')}
             </button>
