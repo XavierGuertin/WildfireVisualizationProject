@@ -24,7 +24,9 @@ const Sidebar = () => {
   const handleLayerChange = (layerName: string) => {
     
     if(!isOnline && layerName != 'default'){
-      toast.error(`${t('view_disabled')} - ${t('no_internet_access')}`);
+      toast.error(`${t('view_disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'view-disabled',
+    });
       return;
     }
     setLayer(layerName);
