@@ -488,6 +488,19 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/verify-internet-connection")
+  public ResponseEntity<String> verifyInternetConnection(@RequestParam String endpointUrl) {
+    logger.info("Checking if there is an internet connection: {}", endpointUrl);
+
+    try {
+      String result = dataService.verifyInternetConnection(endpointUrl);
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      logger.error("Error verifying connection: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error verifying connection: " + e.getMessage());
+    }
+  }
+
   /*
    * Tests method
    */
