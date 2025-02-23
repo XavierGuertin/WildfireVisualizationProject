@@ -489,8 +489,7 @@ class DataControllerTests {
   @Test
   void verifyInternetConnection_Success() {
     // Arrange
-    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL))
-        .thenReturn("Success result");
+    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL)).thenReturn("Success result");
 
     // Act
     ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);

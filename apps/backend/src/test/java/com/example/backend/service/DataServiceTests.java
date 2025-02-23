@@ -573,4 +573,18 @@ class DataServiceTests {
       .hasMessageContaining("Error removing item");
   }
 
+  @Test
+  void verifyInternetConnection_Success(){
+    // Act
+    String response = dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response).isEqualTo("Internet connection established");
+  }
+
+  @Test
+  void verifyInternetConnection_Failure(){
+
+  }
+
 }
