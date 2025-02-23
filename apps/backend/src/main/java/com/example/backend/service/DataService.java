@@ -244,7 +244,6 @@ public class DataService {
     } catch (Exception e) {
       logger.info("No internet connection could be established");
       return "No internet connection could be established";
-      // throw new RuntimeException("Error checking collections: " + e.getMessage(), e);
     }
   }
 
