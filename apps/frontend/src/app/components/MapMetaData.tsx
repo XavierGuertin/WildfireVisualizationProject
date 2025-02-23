@@ -18,7 +18,7 @@ interface MapMetaDataProps {
   datasetSource?: string;
   onLoadDataset: () => Promise<void>;
   onClose: () => void;
-  visible: boolean; // Add visible prop
+  visible: boolean;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
