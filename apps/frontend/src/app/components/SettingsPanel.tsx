@@ -407,7 +407,7 @@ const SettingsPanel: React.FC<{
         {dropdownState.activeButton === 'internet' && (
         <div className="dropdown-content show">
           <div className="settings-information">
-            <label data-testid="internet-reset-button" style={{ color: '#dc143c' }}>
+            <label data-testid="internet-button" style={{ color: '#dc143c' }}>
               <PiX size={24} fill="red" />
               {t('no_internet_access')}
             </label>

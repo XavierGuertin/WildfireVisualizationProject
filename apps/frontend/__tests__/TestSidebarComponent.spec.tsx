@@ -4,6 +4,14 @@ import '@testing-library/jest-dom';
 import Sidebar from '../src/app/components/Sidebar';
 import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
 
+// Mock react-toastify.
+jest.mock('react-toastify', () => ({
+  toast: {
+    error: jest.fn(),
+  },
+  ToastContainer: () => <div data-testid="toast-container" />,
+}));
+
 describe('Test Sidebar component', () => {
   const renderSidebar = () => {
     render(
@@ -44,14 +52,14 @@ describe('Test Sidebar component', () => {
       const { layer } = useMapLayerContext();
       return <span data-testid="current-layer">{layer}</span>;
     };
-
+    
     const TestComponent = () => (
       <MapProvider>
         <Sidebar />
         <LayerChecker />
       </MapProvider>
     );
-
+    
     render(<TestComponent />);
 
     fireEvent.click(screen.getByAltText('views')); // Expand the sidebar
@@ -65,5 +73,38 @@ describe('Test Sidebar component', () => {
 
     fireEvent.click(screen.getByAltText('satellite_layer'));
     expect(screen.getByTestId('current-layer')).toHaveTextContent('satellite');
+  });
+
+  it('should not switch layers when offline', () => {
+      const LayerChecker: React.FC = () => {
+        const { layer, setIsOnline } = useMapLayerContext();
+        setIsOnline(false);
+        return <span data-testid="current-layer">{layer}</span>;
+      };
+
+      const TestComponent = () => (
+        <MapProvider>
+          <Sidebar />
+          <LayerChecker />
+        </MapProvider>
+      );
+
+      const { toast } = require('react-toastify');
+
+      render(<TestComponent />);
+
+      fireEvent.click(screen.getByAltText('views')); // Expand the sidebar
+
+      // Check each layer click updates the layer value correctly
+      fireEvent.click(screen.getByAltText('default_layer'));
+      expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
+
+      fireEvent.click(screen.getByAltText('topographical_layer'));
+      expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
+      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
+
+      fireEvent.click(screen.getByAltText('satellite_layer'));
+      expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
+      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
   });
 });
