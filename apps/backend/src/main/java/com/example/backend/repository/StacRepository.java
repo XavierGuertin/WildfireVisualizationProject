@@ -86,9 +86,10 @@ public class StacRepository {
   public List<Map<String, Object>> getAllCollectionsByName() {
     logger.debug("Fetching all collections by name");
     try {
-      String sql = "SELECT key, id FROM pgstac.collections ORDER BY id";
+      String sql = "SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox " +
+          "FROM pgstac.collections ORDER BY id;";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      logger.debug("Raw query result: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections by Name: {}", e.getMessage(), e);
@@ -99,7 +100,10 @@ public class StacRepository {
   public List<Map<String, Object>> getAllCollectionsByDate() {
     logger.debug("Fetching all collections by date");
     try {
-      String sql = "SELECT key, id FROM pgstac.collections ORDER BY datetime";
+      String sql = "SELECT key, id, " +
+          "content->'extent'->'spatial'->'bbox' AS bbox " +
+          "FROM pgstac.collections " +
+          "ORDER BY datetime;";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;

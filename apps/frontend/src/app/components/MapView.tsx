@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'ol/ol.css';
 import "../styles/map.css";
 import { Map, View } from 'ol';
@@ -11,6 +11,7 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
+import debounce from 'lodash/debounce';
 
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
@@ -68,8 +69,12 @@ export const refreshLayer = (map: Map) => {
   map.addLayer(newLayer);
 };
 
+interface MapViewProps {
+  onBboxChange: (bbox: number[]) => void;
+}
+
 // Map component
-const MapView = () => {
+const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
   const { layer, mapRef } = useMapLayerContext();
@@ -92,8 +97,11 @@ const MapView = () => {
 
 
   useEffect(() => {
+    const deebouncedBboxChange = debounce((extent: number[]) => {
+      onBboxChange(extent);
+    }, 300);
+    
     if (!mapRef.current) {
-
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
@@ -103,6 +111,10 @@ const MapView = () => {
           zoom: 1,
         }),
       });
+
+      // Log the initial extent
+      const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
+      console.log(`Initial Map extent: ${initialExtent}`);
     } else {
       const map = mapRef.current;
       const layers = map.getLayers().getArray();
@@ -113,7 +125,30 @@ const MapView = () => {
       map.addLayer(getLayer());
       refreshLayer(map);  // Ensure dataLayer is reloaded correctly
     }
-  }, [layer]);
+
+    if (mapRef.current) {
+      const map = mapRef.current;
+      const view = map.getView();
+  
+      // Log extent when zooming in/out
+      view.on('change:resolution', () => {
+        const mapExtent = view.calculateExtent(map.getSize());
+        deebouncedBboxChange(mapExtent);
+        console.log(`Updated Map extent (Zoom): ${mapExtent}`);
+      });
+  
+      // Log extent when panning
+      view.on('change:center', () => {
+        const mapExtent = view.calculateExtent(map.getSize());
+        deebouncedBboxChange(mapExtent);
+        console.log(`Updated Map extent (Pan): ${mapExtent}`);
+      });
+    }
+
+    return () => {
+      deebouncedBboxChange.cancel();
+    };
+  }, [layer, onBboxChange]);
 
   return (
     <div id="map-container" ref={mapElement}>

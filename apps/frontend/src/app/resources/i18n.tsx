@@ -34,7 +34,13 @@ const resources = {
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
+      //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
+      filtering_by_map_view: 'Filtering by map view',
+      showing_all_datasets: 'Showing all datasets',
+      only_visible_datasets_shown: 'Only datasets in current map view',
+      including_outside_map_view: 'Including datasets outside visible area',
+      map_required: 'Load map first',
       name: 'Name',
       date: 'Date',
       latest_added: 'Latest Added',
@@ -99,7 +105,7 @@ const resources = {
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
       toggle_datasets: 'Afficher les collections de données',
-      name: 'Nom',
+      // TODO: Translate the datasets strings
       date: 'Date',
       latest_added: 'Dernier Ajouté',
       latest_updated: 'Dernière Mise à Jour',

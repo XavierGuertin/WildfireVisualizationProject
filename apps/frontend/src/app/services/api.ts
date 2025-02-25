@@ -14,9 +14,9 @@ export const fetchTestStacData = async (): Promise<any> => {
   }
 };
 
-export const returnListOfCollectionsFromEndpoint = async (): Promise<{
-  error: string;
-}> => {
+export const returnListOfCollectionsFromEndpoint = async (
+  bbox?: number[]
+): Promise<{ id: string; key: number }[] | { error: string }> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
     if (!response.ok) {
@@ -151,8 +151,8 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
   }
 }
 
-export const fetchCollectionsFromEndpointByName = async (): Promise<{
-  id: string; key: number}[] | { error: string }> => {
+export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promise<{
+  id: string; key: number} [] | {error: string}> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections-by-name`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-name`);
@@ -166,10 +166,10 @@ export const fetchCollectionsFromEndpointByName = async (): Promise<{
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
   }
-}
+};
 
-export const fetchCollectionsFromEndpointByDate = async (): Promise<{
-  id: string; key: number}[] | { error: string }> => {
+export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promise<{
+  id: string; key: number} [] | {error: string}> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections-by-date`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-date`);
@@ -180,8 +180,8 @@ export const fetchCollectionsFromEndpointByDate = async (): Promise<{
     console.log('Fetched collections by date:', data);
     return data;
   } catch (error: any) {
-    console.error('Error fetching collections by name:', error);
-    return { error: 'Failed to fetch data by name' };
+    console.error('Error fetching collections by date:', error);
+    return { error: 'Failed to fetch data by date' };
   }
 };
 

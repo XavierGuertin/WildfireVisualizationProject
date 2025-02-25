@@ -128,7 +128,7 @@ public class DataController {
     logger.info("Received request to get collections by name");
     try {
       List<Map<String, Object>> collections = dataService.getCollectionsByName();
-      logger.debug("Successfully fetched collections by name");
+      logger.debug("Successfully fetched collections by name: {}", collections);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
       logger.error("Error fetching collections by name: {}", e.getMessage(), e);
