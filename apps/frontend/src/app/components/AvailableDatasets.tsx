@@ -11,6 +11,10 @@ import {
   fetchCollectionsFromEndpointByName, 
   fetchCollectionsFromEndpointByDate, 
   fetchMetaData, 
+import { 
+  fetchCollectionsFromEndpointByName, 
+  fetchCollectionsFromEndpointByDate, 
+  fetchMetaData, 
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
 import debounce from 'lodash/debounce';
@@ -21,6 +25,8 @@ interface DatasetEntry {
 }
 
 export interface DatasetMetadata {
+  id: string;
+  name: string;
   id: string;
   name: string;
   date: string;
@@ -47,11 +53,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>('');
+  const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDatasets = debounce(async () => {
@@ -179,10 +188,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
               <FaFilter size={24} />
             </div>
             {['Name', 'Date'].map(
+            {['Name', 'Date'].map(
               (filter) => (
                 <button
                   key={filter}
                   className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
+                  onClick={() => handleFilterChange(filter)}
                   onClick={() => handleFilterChange(filter)}
                   data-testid={`filter-button-${filter}`}
                 >
@@ -208,7 +219,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
                   onClick={() => handleDatasetClick(dataset.id)}
                   data-testid={`dataset-button-${dataset.id}`}
+                  key={dataset.id}
+                  className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+                  onClick={() => handleDatasetClick(dataset.id)}
+                  data-testid={`dataset-button-${dataset.id}`}
                 >
+                  {dataset.id}
                   {dataset.id}
                 </button>
               ))

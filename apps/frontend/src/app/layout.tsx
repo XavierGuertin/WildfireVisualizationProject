@@ -17,6 +17,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [progress, setProgress] = useState(0);
   const [selectedDataset, setSelectedDataset] = useState<DatasetMetadata | null>(null);
   const [refreshKey, setRefreshKey] = useState(0); // Add state for refresh key
+  const [isMetadataVisible, setMetadataVisible] = useState(false); // Add state for metadata visibility
   const [currentBbox, setCurrentBbox] = useState<number[]>();
 
   // Function to show loading bar with progress
@@ -36,6 +37,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
     setSelectedDataset(dataset); // Just update the selected dataset
+    setMetadataVisible(true); // Show metadata container
   };
 
   // Handle dataset loading from MapMetaData
@@ -65,7 +67,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <MapProvider>
         <html lang="en">
         <body>
-        <SettingsPanel refreshDatasets={refreshDatasets} />
+        <SettingsPanel refreshDatasets={refreshDatasets} setMetadataVisible={setMetadataVisible} />
         <div className="layout-container relative">
           <LoadingModule
             progress={progress}
@@ -88,6 +90,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               processes={selectedDataset.processes}
               datasetSource={selectedDataset.datasetSource}
               onLoadDataset={handleLoadDataset}
+              onClose={() => setMetadataVisible(false)}
+              visible={isMetadataVisible} // Pass visibility state
             />
           )}
           <footer className="app-footer"></footer>

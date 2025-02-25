@@ -1,5 +1,8 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.PostGISData;
+import com.example.backend.dto.StacItemDto;
+import com.example.backend.exception.StacConversionException;
 import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +34,16 @@ public class DataService {
           }
       }
       """;
+  {
+          "id": "synthetic-wildfire-collection",
+          "type": "Collection",
+          "stac_version": "1.0.0",
+          "description": "A synthetic wildfire dataset for testing.",
+          "extent": {
+              "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
+              "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
+          }
+      }""";
 
   private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
 
@@ -42,6 +55,9 @@ public class DataService {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @Autowired
+  private StacDataConverter stacDataConverter;
 
   public String retrieveMetaData(String collectionId) throws JsonProcessingException {
     return objectMapper.writeValueAsString(stacRepository.queryMetaData(collectionId));
@@ -67,11 +83,24 @@ public class DataService {
         logger.error("Thread interrupted while waiting for the view to be created", e);
         break;
       }
+      check = stacRepository.checkDatalayerView();
+      count++;
+      try {
+        // Sleep to avoid overwhelming the database
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Thread interrupted while waiting for the view to be created", e);
+        break;
+      }
     }
 
     if (check) {
       logger.info("View successfully detected in database for collectionId: {}", collectionId);
+      logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
+      logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
+      throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
       logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
       throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
@@ -187,6 +216,76 @@ public class DataService {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.info("Inserting item into database");
+    try {
+      stacRepository.insertItem(itemJson);
+    } catch (Exception e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch item: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getAllItems(String collectionId) {
+    logger.info("Fetching item from database");
+    try {
+      return stacRepository.getAllItems(collectionId);
+    } catch (Exception e) {
+      logger.error("Error fetching items: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch items: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getItem(String id) {
+    logger.info("Fetching item from database");
+    try {
+      return stacRepository.getItem(id);
+    } catch (Exception e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch item: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getItem(String id, String collection) {
+    logger.info("Fetching item from database");
+    try {
+      return stacRepository.getItem(id, collection);
+    } catch (Exception e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch item: " + e.getMessage(), e);
+    }
+  }
+
+  public String removeAllItems() {
+    logger.info("Removing all items from database");
+    try {
+      return stacRepository.removeAllItems();
+    } catch (Exception e) {
+      logger.error("Error removing all items: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to remove all items: " + e.getMessage(), e);
+    }
+  }
+
+  public String removeItemsFromCollection(String collectionId) {
+    logger.info("Removing an item from database");
+    try {
+      return stacRepository.removeItemsFromCollection(collectionId);
+    } catch (Exception e) {
+      logger.error("Error removing item: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to remove  item: " + e.getMessage(), e);
+    }
+  }
+
+  public String removeItem(String itemId, String collectionId) {
+    logger.info("Removing an item from database");
+    try {
+      return stacRepository.removeItem(itemId, collectionId);
+    } catch (Exception e) {
+      logger.error("Error removing item: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to remove item: " + e.getMessage(), e);
+    }
+  }
+
   /*
    * Tests methods
    */
@@ -203,7 +302,9 @@ public class DataService {
     try {
       String finalCollectionJson = Optional.ofNullable(collectionJson)
           .orElse(DEFAULT_COLLECTION_JSON);
+          .orElse(DEFAULT_COLLECTION_JSON);
       String finalCollectionId = Optional.ofNullable(collectionId)
+          .orElse(DEFAULT_COLLECTION_ID);
           .orElse(DEFAULT_COLLECTION_ID);
 
       logger.debug("Using collection JSON: {}", finalCollectionJson);
@@ -227,5 +328,19 @@ public class DataService {
       logger.error("Error in insertAndQueryCollection: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to process collection: " + e.getMessage(), e);
     }
+  }
+
+  public void insertMockItems(String itemListJson) throws JsonProcessingException {
+    List<Map<String, Object>> result = objectMapper.readValue(itemListJson, List.class);
+
+    for (Map<String, Object> element : result) {
+      if (!checkItemExists((String) element.get("id"))) {
+        insertItem(objectMapper.writeValueAsString(element));
+      }
+    }
+  }
+
+  private boolean checkItemExists(String itemId) {
+    return stacRepository.checkItemExists(itemId);
   }
 }

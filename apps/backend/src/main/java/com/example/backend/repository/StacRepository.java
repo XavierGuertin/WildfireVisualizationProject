@@ -31,6 +31,18 @@ public class StacRepository {
     }
   }
 
+  public boolean checkItemExists(String itemId) {
+    try {
+      String sql = "SELECT COUNT(*) FROM pgstac.items WHERE id = ?";
+      Integer count = jdbcTemplate.queryForObject(sql, Integer.class, itemId);
+      logger.debug("Item check result: count={}", count);
+      return count != null && count > 0;
+    } catch (DataAccessException e) {
+      logger.error("Error checking item existence: {}", e.getMessage(), e);
+      throw new RuntimeException("Error checking item existence: " + e.getMessage(), e);
+    }
+  }
+
   public void insertCollection(String collectionJson) {
     logger.debug("Attempting to insert collection");
     try {
@@ -131,6 +143,69 @@ public class StacRepository {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.debug("Attempting to insert item");
+    try {
+      jdbcTemplate.queryForObject(
+          "SELECT pgstac.create_item(?::jsonb)",
+          Object.class,
+          itemJson);
+      logger.info("Successfully inserted item");
+    } catch (DataAccessException e) {
+      logger.error("Error inserting item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting item: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getAllItems(String collectionId) {
+    logger.debug("Fetching items");
+    try {
+      String sql = "SELECT * FROM pgstac.search(" +
+          "    '{" +
+          "        \"filter\": {" +
+          "            \"op\": \"=\"," +
+          "            \"args\": [" +
+          "                { \"property\": \"collection\" }," +
+          "                \"" + collectionId + "\"" +
+          "            ]" +
+          "        }" +
+          "    }'::jsonb" +
+          ")";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching items: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getItem(String id) {
+    logger.debug("Fetching item");
+    try {
+      String sql = "SELECT pgstac.get_item('" + id + "');";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+    }
+  }
+
+  public List<Map<String, Object>> getItem(String id, String collection) {
+    logger.debug("Fetching item");
+    try {
+      String sql = "SELECT pgstac.get_item('" + id + "', '" + collection + "');";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+    }
+  }
+
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
     try {
@@ -169,6 +244,64 @@ public class StacRepository {
     } catch (DataAccessException e) {
       logger.error("Error querying DataLayer: {}", e.getMessage(), e);
       return false;
+    }
+  }
+
+  public String removeAllItems() {
+    logger.debug("Removing all items");
+    try {
+      String sql = "DO $$ \n" +
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id, collection FROM items LOOP\n" +
+          "        PERFORM delete_item(rec.id, rec.collection);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
+
+      jdbcTemplate.execute(sql);
+      return "Successfully Removed All Items";
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+    }
+  }
+
+  public String removeItemsFromCollection(String collectionId) {
+    logger.debug("Removing all items from collection");
+    try {
+      String sql = "DO $$ \n" +
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "    target_collection_id text := '" + collectionId + "';\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id FROM items WHERE collection = target_collection_id LOOP\n" +
+          "        PERFORM delete_item(rec.id, target_collection_id);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
+
+      jdbcTemplate.execute(sql);
+      return "Successfully Removed All Items From Collection";
+    } catch (DataAccessException e) {
+      logger.error("Error removing items from collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error removing items from collection: " + e.getMessage(), e);
+    }
+  }
+
+  public String removeItem(String itemId, String collectionId) {
+    logger.debug("Removing item");
+    try {
+      String sql = "SELECT delete_item('" + itemId + "', '" + collectionId + "');";
+
+      jdbcTemplate.execute(sql);
+      return "Successfully Removed Item";
+    } catch (DataAccessException e) {
+      logger.error("Error removing item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error removing item: " + e.getMessage(), e);
     }
   }
 }

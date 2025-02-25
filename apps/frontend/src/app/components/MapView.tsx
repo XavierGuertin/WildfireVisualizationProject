@@ -11,6 +11,7 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
+import { insertMockItemData } from '../services/api';
 import debounce from 'lodash/debounce';
 
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -97,6 +98,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
 
   useEffect(() => {
+    insertMockItemData() //This method is to be deleted once we receive the real data
     const deebouncedBboxChange = debounce((extent: number[]) => {
       onBboxChange(extent);
     }, 300);
