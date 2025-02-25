@@ -34,16 +34,6 @@ public class DataService {
           }
       }
       """;
-  {
-          "id": "synthetic-wildfire-collection",
-          "type": "Collection",
-          "stac_version": "1.0.0",
-          "description": "A synthetic wildfire dataset for testing.",
-          "extent": {
-              "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
-              "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
-          }
-      }""";
 
   private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
 
@@ -99,8 +89,6 @@ public class DataService {
       logger.info("View successfully detected in database for collectionId: {}", collectionId);
       logger.info("View successfully detected in database for collectionId: {}", collectionId);
     } else {
-      logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
-      throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
       logger.warn("View not found in database after 50 attempts for collectionId: {}", collectionId);
       throw new IllegalStateException("View could not be created for collectionId: " + collectionId);
     }
@@ -302,9 +290,7 @@ public class DataService {
     try {
       String finalCollectionJson = Optional.ofNullable(collectionJson)
           .orElse(DEFAULT_COLLECTION_JSON);
-          .orElse(DEFAULT_COLLECTION_JSON);
       String finalCollectionId = Optional.ofNullable(collectionId)
-          .orElse(DEFAULT_COLLECTION_ID);
           .orElse(DEFAULT_COLLECTION_ID);
 
       logger.debug("Using collection JSON: {}", finalCollectionJson);

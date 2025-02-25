@@ -33,7 +33,6 @@ public class DataController {
       logger.error("Error reading JSON file: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
           .body("Error reading file: " + e.getMessage());
-          .body("Error reading file: " + e.getMessage());
     }
   }
 
@@ -48,7 +47,6 @@ public class DataController {
       logger.error("Error in MetaData endpoint: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
           .body("Error processing MetaData: " + e.getMessage());
-          .body("Error processing MetaData: " + e.getMessage());
     }
   }
 
@@ -62,7 +60,6 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error creating collection: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-          .body("Error creating collection: " + e.getMessage());
           .body("Error creating collection: " + e.getMessage());
     }
   }
@@ -489,7 +486,6 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
-          .body("Error inserting view: " + e.getMessage());
           .body("Error inserting view: " + e.getMessage());
     }
   }
