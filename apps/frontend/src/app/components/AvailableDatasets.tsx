@@ -53,46 +53,46 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchDatasets = debounce(async () => {
-      setIsLoading(true);
-      try {
-        let response;
-        const params = {
-          bbox: isToggled && currentBbox ? 
-            currentBbox as [number, number, number, number] :
-            undefined
-        };
-
-        if (activeFilter === 'Name') {
-          response = await fetchCollectionsFromEndpointByName(params.bbox);
-        } else if (activeFilter === 'Date') {
-          response = await fetchCollectionsFromEndpointByDate(params.bbox);
-        } else {
-          response = await returnListOfCollectionsFromEndpoint(params.bbox);
-        }
-
-        if (!Array.isArray(response)) {
-          console.error("Invalid response format:", response);
-          setFetchError(response.error || "Failed to load datasets.");
-          setDatasets([]);
-          return;
-        }
-
-        setDatasets(response);
-        setFetchError(null);
-      } catch (error) {
-        console.log('Error fetching datasets:', error);
-        setDatasets([]);
-        setFetchError('Failed to load datasets.');
-      } finally {
-        setIsLoading(false);
+ 
+  const fetchDatasets = debounce(async () => {
+    setIsLoading(true);
+    try {
+      let response;
+      const params = {
+        bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined
+      };
+  
+      if (activeFilter === 'Name') {
+        response = await fetchCollectionsFromEndpointByName(params.bbox);
+      } else if (activeFilter === 'Date') {
+        response = await fetchCollectionsFromEndpointByDate(params.bbox);
+      } else {
+        response = await returnListOfCollectionsFromEndpoint(params.bbox); // Fetch all datasets if bbox is undefined
       }
-    }, 300);
+  
+      if (!Array.isArray(response)) {
+        console.error("Invalid response format:", response);
+        setFetchError(response.error || "Failed to load datasets.");
+        setDatasets([]);
+        return;
+      }
+  
+      setDatasets(response);
+      setFetchError(null);
+    } catch (error) {
+      console.log('Error fetching datasets:', error);
+      setDatasets([]);
+      setFetchError('Failed to load datasets.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, 300);
+  
 
+  useEffect(() => {
       fetchDatasets();
       return () => fetchDatasets.cancel();
-  }, [refreshKey, activeFilter, isToggled, currentBbox]); // Re-fetch datasets when refresh key changes
+  }, isToggled ? [refreshKey, activeFilter, currentBbox] : [refreshKey, activeFilter]); // Re-fetch datasets when refresh key changes
 
   const handleFilterChange = async (filter: string) => {
     setActiveFilter(filter);
