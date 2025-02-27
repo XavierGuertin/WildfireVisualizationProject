@@ -17,21 +17,6 @@ import java.util.stream.Collectors;
 public class DataService {
     private static final Logger logger = LoggerFactory.getLogger(DataService.class);
 
-    private static final String DEFAULT_COLLECTION_JSON = """
-            {
-                "id": "synthetic-wildfire-collection",
-                "type": "Collection",
-                "stac_version": "1.0.0",
-                "description": "A synthetic wildfire dataset for testing.",
-                "extent": {
-                    "spatial": {"bbox": [[-180.0, -90.0, 180.0, 90.0]]},
-                    "temporal": {"interval": [["2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z"]]}
-                }
-            }
-            """;
-
-    private static final String DEFAULT_COLLECTION_ID = "synthetic-wildfire-collection";
-
     @Autowired
     private StacRepository stacRepository;
 
