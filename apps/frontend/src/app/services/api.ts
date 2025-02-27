@@ -30,11 +30,18 @@ export const insertMockItemData = async(): Promise<any> => {
 }
 
 //Actual endpoint methods
-export const returnListOfCollectionsFromEndpoint = async (
-  bbox?: number[]
-): Promise<{ id: string; key: number }[] | { error: string }> => {
- try {
-    const response = await fetch(`${BASE_URL}/api/get-collections`);
+export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Promise<{
+  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
+  try {
+    const url = new URL(`${BASE_URL}/api/get-collections`);
+    if (bbox) {
+      url.searchParams.set('bbox', bbox.join(','));
+
+    } 
+    
+    const response = await fetch(url.toString());
+    console.log('Fetching from: ', url.toString());
+    
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -45,7 +52,7 @@ export const returnListOfCollectionsFromEndpoint = async (
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
   }
-}; 
+};
 
 export const getCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
@@ -168,10 +175,17 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
 }
 
 export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promise<{
-  id: string; key: number} [] | {error: string}> => {
+  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/get-collections-by-name`);
-    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-name`);
+    const url = new URL(`${BASE_URL}/api/get-collections-by-name`);
+    if (bbox) {
+      url.searchParams.set('bbox', bbox.join(','));
+
+    } 
+    
+    const response = await fetch(url.toString());
+    console.log('Fetching from: ', url.toString());
+    
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -185,10 +199,17 @@ export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promi
 };
 
 export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promise<{
-  id: string; key: number} [] | {error: string}> => {
+  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/get-collections-by-date`);
-    console.log('Fetching from: ', `${BASE_URL}/api/get-collections-by-date`);
+    const url = new URL(`${BASE_URL}/api/get-collections-by-date`);
+    if (bbox) {
+      url.searchParams.set('bbox', bbox.join(','));
+
+    } 
+    
+    const response = await fetch(url.toString());
+    console.log('Fetching from: ', url.toString());
+    
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }

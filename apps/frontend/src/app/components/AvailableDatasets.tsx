@@ -42,7 +42,7 @@ interface AvailableDatasetsProps {
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
   refreshKey,
-  currentBbox,
+  currentBbox = [],
 }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -53,7 +53,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
- 
   const fetchDatasets = debounce(async () => {
     setIsLoading(true);
     try {
@@ -87,13 +86,20 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       setIsLoading(false);
     }
   }, 300);
-  
 
   useEffect(() => {
+    // Always fetch when refreshKey or activeFilter changes
+    fetchDatasets();
+    return () => fetchDatasets.cancel();
+  }, [refreshKey, activeFilter]);
+  
+  useEffect(() => {
+    // Only fetch when isToggled is true and bbox changes
+    if (isToggled) {
       fetchDatasets();
-      return () => fetchDatasets.cancel();
-  }, isToggled ? [refreshKey, activeFilter, currentBbox] : [refreshKey, activeFilter]); // Re-fetch datasets when refresh key changes
-
+    }
+  }, [isToggled, currentBbox.join(',')]); // Ensures fixed dependency size
+  
   const handleFilterChange = async (filter: string) => {
     setActiveFilter(filter);
   };

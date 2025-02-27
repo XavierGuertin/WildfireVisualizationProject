@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -86,14 +89,37 @@ public class DataController {
   }
 
   @GetMapping("/api/get-collections")
-  public ResponseEntity<List<Map<String, Object>>> getCollections() {
-    logger.info("Received request to get collections");
+  public ResponseEntity<List<Map<String, Object>>> getCollections(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+
+    logger.info("Received request to get collections with bbox: {}", bboxStr);
     try {
-      List<Map<String, Object>> collections = dataService.getCollections();
-      logger.debug("Successfully fetched collections");
+      List<Map<String, Object>> collections;
+
+      if (bboxStr != null) {
+        bboxStr = URLDecoder.decode(bboxStr, StandardCharsets.UTF_8);
+        logger.info("Parsing bbox string: {}", bboxStr);
+
+        // Check if string is properly formatted
+        String[] bboxParts = bboxStr.split(",");
+        if (bboxParts.length != 4) {
+          logger.error("Invalid bbox format: Expected 4 values but got {}", bboxParts.length);
+          return ResponseEntity.badRequest().body(null);
+        }
+
+        // Conver bboxParts to a double array
+        double[] bbox = Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
+        logger.info("Parsed bbox successfully: {}", Arrays.toString(bbox));
+
+        collections = dataService.getCollections(bbox);
+      } else {
+        collections = dataService.getCollections(null);
+      }
+
+      logger.debug("Successfully fetched collections: {}", collections);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      logger.error("Error fetching collections by: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
@@ -451,10 +477,33 @@ public class DataController {
   }
 
   @GetMapping("/api/get-collections-by-name")
-  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
-    logger.info("Received request to get collections by name");
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+
+    logger.info("Received request to get collections by name with bbox: {}", bboxStr);
     try {
-      List<Map<String, Object>> collections = dataService.getCollectionsByName();
+      List<Map<String, Object>> collections;
+
+      if (bboxStr != null) {
+        bboxStr = URLDecoder.decode(bboxStr, StandardCharsets.UTF_8);
+        logger.info("Parsing bbox string: {}", bboxStr);
+
+        // Check if string is properly formatted
+        String[] bboxParts = bboxStr.split(",");
+        if (bboxParts.length != 4) {
+          logger.error("Invalid bbox format: Expected 4 values but got {}", bboxParts.length);
+          return ResponseEntity.badRequest().body(null);
+        }
+
+        // Conver bboxParts to a double array
+        double[] bbox = Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
+        logger.info("Parsed bbox successfully: {}", Arrays.toString(bbox));
+
+        collections = dataService.getCollectionsByName(bbox);
+      } else {
+        collections = dataService.getCollectionsByName(null);
+      }
+
       logger.debug("Successfully fetched collections by name: {}", collections);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
@@ -464,11 +513,34 @@ public class DataController {
   }
 
   @GetMapping("/api/get-collections-by-date")
-  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate() {
-    logger.info("Received request to get collections by name");
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+
+    logger.info("Received request to get collections by date with bbox: {}", bboxStr);
     try {
-      List<Map<String, Object>> collections = dataService.getCollectionsByDate();
-      logger.debug("Successfully fetched collections by name");
+      List<Map<String, Object>> collections;
+
+      if (bboxStr != null) {
+        bboxStr = URLDecoder.decode(bboxStr, StandardCharsets.UTF_8);
+        logger.info("Parsing bbox string: {}", bboxStr);
+
+        // Check if string is properly formatted
+        String[] bboxParts = bboxStr.split(",");
+        if (bboxParts.length != 4) {
+          logger.error("Invalid bbox format: Expected 4 values but got {}", bboxParts.length);
+          return ResponseEntity.badRequest().body(null);
+        }
+
+        // Conver bboxParts to a double array
+        double[] bbox = Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
+        logger.info("Parsed bbox successfully: {}", Arrays.toString(bbox));
+
+        collections = dataService.getCollectionsByDate(bbox);
+      } else {
+        collections = dataService.getCollectionsByDate(null);
+      }
+
+      logger.debug("Successfully fetched collections by name: {}", collections);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
       logger.error("Error fetching collections by name: {}", e.getMessage(), e);

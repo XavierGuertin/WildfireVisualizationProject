@@ -112,37 +112,22 @@ public class DataService {
     }
   }
 
-  public List<Map<String, Object>> getCollections() {
-    logger.info("Fetching collections from database");
+  public List<Map<String, Object>> getCollections(double[] bbox) {
+    logger.info("Fetching collections from database and bbox: {}", Arrays.toString(bbox)); // have
+                                                                                           // different
+                                                                                           // log for if
+                                                                                           // you have
+    // bbox or not
     try {
-      List<Map<String, Object>> collections = stacRepository.getAllCollections();
-      logger.debug("Fetched collections: {}", collections);
+      List<Map<String, Object>> collections = stacRepository.getAllCollections(bbox);
 
-      ObjectMapper objectMapper = new ObjectMapper();
+      logger.debug("Fetched raw data collections: {}", collections);
 
       return collections.stream()
-          .map(collection -> {
-            Object bbox = List.of();
-
-            Object content = collection.get("content");
-            logger.debug("Content Type: {}", content.getClass().getName());
-            if (content instanceof String) {
-              try {
-                Map<String, Object> contentMap = objectMapper.readValue((String) content, Map.class);
-                Map<String, Object> extent = (Map<String, Object>) contentMap.get("extent");
-                Map<String, Object> spatial = extent != null ? (Map<String, Object>) extent.get("spatial") : null;
-                bbox = spatial != null ? spatial.get("bbox") : List.of();
-                logger.debug("Parsed bbox successfully: {}", bbox);
-              } catch (Exception e) {
-                logger.error("Failed to parse bbox from content JSON: {}", content, e);
-              }
-            }
-
-            return Map.of(
-                "key", collection.get("key"),
-                "id", collection.get("id"),
-                "bbox", bbox != null ? bbox : List.of());
-          })
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "bbox", collection.getOrDefault("bbox", "[]")))
           .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -164,14 +149,22 @@ public class DataService {
     }
   }
 
-  public List<Map<String, Object>> getCollectionsByName() {
-    logger.info("Fetching collections from database filter by name");
+  public List<Map<String, Object>> getCollectionsByName(double[] bbox) {
+    logger.info("Fetching collections from database filter by name and bbox: {}", Arrays.toString(bbox)); // have
+                                                                                                          // different
+                                                                                                          // log for if
+                                                                                                          // you have
+    // bbox or not
     try {
-      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
-      logger.debug("Fetched collections ordered by Name: {}", collections);
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName(bbox);
+
+      logger.debug("Fetched raw data collections ordered by Name: {}", collections);
+
       return collections.stream()
-          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id"), "bbox",
-              collection.get("bbox")))
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "bbox", collection.getOrDefault("bbox", "[]")))
           .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
@@ -179,13 +172,22 @@ public class DataService {
     }
   }
 
-  public List<Map<String, Object>> getCollectionsByDate() {
-    logger.info("Fetching collections from database filter by date");
+  public List<Map<String, Object>> getCollectionsByDate(double[] bbox) {
+    logger.info("Fetching collections from database filter by name and bbox: {}", Arrays.toString(bbox)); // have
+                                                                                                          // different
+                                                                                                          // log for if
+                                                                                                          // you have
+    // bbox or not
     try {
-      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
-      logger.debug("Fetched collections ordered by date: {}", collections);
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate(bbox);
+
+      logger.debug("Fetched raw data collections ordered by Date: {}", collections);
+
       return collections.stream()
-          .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "bbox", collection.getOrDefault("bbox", "[]")))
           .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Date: {}", e.getMessage(), e);

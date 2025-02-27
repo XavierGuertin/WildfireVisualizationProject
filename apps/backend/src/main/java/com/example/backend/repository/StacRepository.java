@@ -8,6 +8,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -70,12 +71,37 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollections() {
-    logger.debug("Fetching all collections");
+  public List<Map<String, Object>> getAllCollections(double[] bbox) {
+    logger.debug("Fetching all collections with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+
     try {
-      String sql = "SELECT * FROM pgstac.collections";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      String sql = "WITH bbox_data AS ( " +
+          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array " +
+          "  FROM pgstac.collections " +
+          ") " +
+          "SELECT key, id, bbox_array AS bbox " +
+          "FROM bbox_data ";
+
+      if (bbox != null) {
+        sql += "WHERE ST_Intersects( " +
+            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+            "  ST_SetSRID(ST_MakeEnvelope( " +
+            "    (bbox_array->0->>0)::double precision, " +
+            "    (bbox_array->0->>1)::double precision, " +
+            "    (bbox_array->0->>2)::double precision, " +
+            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+            ") ";
+      }
+
+      List<Map<String, Object>> results;
+
+      if (bbox != null) {
+        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
+      } else {
+        results = jdbcTemplate.queryForList(sql);
+      }
+
+      logger.debug("Raw query result: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections: {}", e.getMessage(), e);
@@ -95,33 +121,83 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollectionsByName() {
-    logger.debug("Fetching all collections by name");
+  public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
+    logger.debug("Fetching all collections by name with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+
     try {
-      String sql = "SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox " +
-          "FROM pgstac.collections ORDER BY id;";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+      String sql = "WITH bbox_data AS ( " +
+          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array " +
+          "  FROM pgstac.collections " +
+          ") " +
+          "SELECT key, id, bbox_array AS bbox " +
+          "FROM bbox_data ";
+
+      if (bbox != null) {
+        sql += "WHERE ST_Intersects( " +
+            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+            "  ST_SetSRID(ST_MakeEnvelope( " +
+            "    (bbox_array->0->>0)::double precision, " +
+            "    (bbox_array->0->>1)::double precision, " +
+            "    (bbox_array->0->>2)::double precision, " +
+            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+            ") ";
+      }
+
+      sql += "ORDER BY id;"; // Ensure results are always ordered by ID
+
+      List<Map<String, Object>> results;
+
+      if (bbox != null) {
+        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
+      } else {
+        results = jdbcTemplate.queryForList(sql);
+      }
+
       logger.debug("Raw query result: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections by Name: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections Name: " + e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections by Name: " + e.getMessage(), e);
     }
   }
 
-  public List<Map<String, Object>> getAllCollectionsByDate() {
-    logger.debug("Fetching all collections by date");
+  public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
+    logger.debug("Fetching all collections by date with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+
     try {
-      String sql = "SELECT key, id, " +
-          "content->'extent'->'spatial'->'bbox' AS bbox " +
-          "FROM pgstac.collections " +
-          "ORDER BY datetime;";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      String sql = "WITH bbox_data AS ( " +
+          "  SELECT key, id, datetime, content->'extent'->'spatial'->'bbox' AS bbox_array " +
+          "  FROM pgstac.collections " +
+          ") " +
+          "SELECT key, id, bbox_array AS bbox " +
+          "FROM bbox_data ";
+
+      if (bbox != null) {
+        sql += "WHERE ST_Intersects( " +
+            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+            "  ST_SetSRID(ST_MakeEnvelope( " +
+            "    (bbox_array->0->>0)::double precision, " +
+            "    (bbox_array->0->>1)::double precision, " +
+            "    (bbox_array->0->>2)::double precision, " +
+            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+            ") ";
+      }
+
+      sql += "ORDER BY datetime;"; // Ensure results are always ordered by ID
+
+      List<Map<String, Object>> results;
+
+      if (bbox != null) {
+        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
+      } else {
+        results = jdbcTemplate.queryForList(sql);
+      }
+
+      logger.debug("Raw query result: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections by Date: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections Date: " + e.getMessage(), e);
+      throw new RuntimeException("Error fetching all collections by Date: " + e.getMessage(), e);
     }
   }
 
