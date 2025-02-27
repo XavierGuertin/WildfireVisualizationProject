@@ -30,6 +30,7 @@ services:
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
       - MAPTILER_API_KEY=${MAPTILER_API_KEY}
+      - REACT_APP_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
       - "3000:3000"
