@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,12 +82,18 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollections() {
-        logger.info("Fetching collections from database");
+    public List<Map<String, Object>> getCollections(double[] bbox) {
+        logger.info("Fetching collections from database and bbox: {}", Arrays.toString(bbox));
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollections();
+            List<Map<String, Object>> collections = stacRepository.getAllCollections(bbox);
+
+            logger.debug("Fetched raw data collections: {}", collections);
+
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]")))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -108,13 +115,18 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollectionsByName() {
-        logger.info("Fetching collections from database filter by name");
+    public List<Map<String, Object>> getCollectionsByName(double[] bbox) {
+        logger.info("Fetching collections from database filter by name and bbox: {}", Arrays.toString(bbox));
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
-            logger.debug("Fetched collections ordered by name: {}", collections);
+            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName(bbox);
+
+            logger.debug("Fetched raw data collections ordered by Name: {}", collections);
+
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]")))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
@@ -122,13 +134,19 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollectionsByDate() {
-        logger.info("Fetching collections from database filter by date");
+    public List<Map<String, Object>> getCollectionsByDate(double[] bbox) {
+        logger.info("Fetching collections from database filter by name and bbox: {}", Arrays.toString(bbox));
+        // bbox or not
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
-            logger.debug("Fetched collections ordered by date: {}", collections);
+            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate(bbox);
+
+            logger.debug("Fetched raw data collections ordered by Date: {}", collections);
+
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]")))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections by Date: {}", e.getMessage(), e);

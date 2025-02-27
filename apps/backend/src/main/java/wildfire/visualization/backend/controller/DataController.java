@@ -356,23 +356,6 @@ public class DataController {
     }
   }
 
-<<<<<<< HEAD:apps/backend/src/main/java/com/example/backend/controller/DataController.java
-  @PostMapping("/api/stac/item")
-  public ResponseEntity<String> createItem(@RequestBody String itemJson) {
-    logger.info("Received request to create item");
-    try {
-      dataService.insertItem(itemJson);
-      logger.debug("Successfully processed custom item");
-      return ResponseEntity.ok("Successfully inserted item");
-    } catch (Exception e) {
-      logger.error("Error creating item: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-          .body("Error creating item: " + e.getMessage());
-    }
-  }
-
-=======
->>>>>>> origin/dev:apps/backend/src/main/java/wildfire/visualization/backend/controller/DataController.java
   @GetMapping("/api/get-all-items/{collectionId}")
   public ResponseEntity<List<Map<String, Object>>> fetchItems(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to fetch items");
