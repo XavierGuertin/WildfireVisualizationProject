@@ -23,9 +23,7 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
@@ -143,9 +141,7 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
@@ -160,9 +156,7 @@ export const fetchCollectionsFromEndpointByName = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections by name:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
@@ -177,9 +171,7 @@ export const fetchCollectionsFromEndpointByDate = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections by date:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
