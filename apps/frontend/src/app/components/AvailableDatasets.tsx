@@ -15,7 +15,7 @@ import {
 } from '../services/api';
 import debounce from 'lodash/debounce';
 
-interface DatasetEntry {
+export interface DatasetEntry {
   key: number;
   id: string;
 }
@@ -36,7 +36,7 @@ export interface DatasetMetadata {
 interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
-  currentBbox?: number[]; // [west, south, east, north]
+  currentBbox?: [number, number, number, number]; // [west, south, east, north]
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
@@ -134,13 +134,19 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       ) : (
         <>
           <div className="top-bar" data-testid="top-bar">
-            <h2 className="sidebar-title">{t('available_datasets')}</h2>
+            <h2 className="sidebar-title" data-testid="sidebar-title">{t('available_datasets')}</h2>
             <div className="toggle-control-group">
               <label
                 className="toggle-label"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 aria-label={t('toggle_datasets')}
               >
+                <span className="toggle-status-text" data-testid="toggle-status-text">
+                  {currentBbox 
+                    ? t(isToggled ? 'filtering_by_map_view' : 'showing_all_datasets')
+                    : t('map_required')
+                  }
+                </span>
                 <input
                   type="checkbox"
                   checked={isToggled}
@@ -160,28 +166,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                     <span className="toggle-warning">{t('Load map first')}</span>
                   )}
                 </div>
-                <span className="toggle-status-text">
-                  {currentBbox 
-                    ? t(isToggled 
-                      ? 'filtering_by_map_view' 
-                      : 'showing_all_datasets'
-                    )
-                    : t('map_required')
-                  }
-                </span>
-                {currentBbox && (
-                  <span className="toggle-hint">
-                    {t(isToggled 
-                      ? 'only_visible_datasets_shown'
-                      : 'including_outside_map_view'
-                    )}
-                  </span>
-                )}
               </label>
             </div>
           </div>
           <div className="filter-container" data-testid="filter-container">
-            <div className="filter-icon">
+            <div className="filter-icon" data-testid="filter-icon">
               <FaFilter size={24} />
             </div>
             {['Name', 'Date'].map(
@@ -206,7 +195,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
           <div className="buttons-container" data-testid="buttons-container">
             {isLoading ? (
-              <p className="loading-message">{t('loading_datasets')}</p>
+              <p className="loading-message" data-testid="loading-message">
+                {t('loading_datasets')}
+              </p>
             ) : datasets.length > 0 ? (
               datasets.map((dataset) => (
                 <button
@@ -219,9 +210,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 </button>
               ))
             ) : (
-              <p className="no-datasets-message" data-testid="no-datasets-message">
-                {t('no_datasets_available')}
-              </p>
+              <div className="no-datasets-container" data-testid="no-datasets-container">
+                <p className="no-datasets-message" data-testid="no-datasets-message">
+                  {t('no_datasets_available')}
+                </p>
+              </div>
             )}
           </div>
         </>

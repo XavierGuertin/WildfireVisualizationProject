@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
 import MapView from '../src/app/components/MapView';
 import { MapProvider } from '../src/app/components/MapContext';
@@ -13,73 +13,55 @@ jest.mock('react', () => ({
   useRef: jest.fn(),
 }));
 
-jest.mock('ol/source/XYZ', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
+jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/layer/Tile', () => jest.fn().mockImplementation(() => ({
+  set: jest.fn(),
+  get: jest.fn(),
+  getSource: jest.fn(),
+})));
 
-jest.mock('ol/layer/Tile', () => {
-  return jest.fn().mockImplementation(() => ({
-    set: jest.fn(), // Ensure `set()` exists
-    get: jest.fn(), // Mock `get()`
-    getSource: jest.fn(), // Mock `getSource()`
-  }));
-});
-
-
-jest.mock('ol/View', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
+jest.mock('ol/View', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('ol/control.js', () => ({
   ...jest.requireActual('ol/control.js'),
-  defaults: jest.fn(() => ({
-    extend: jest.fn(),
-  })),
+  defaults: jest.fn(() => ({ extend: jest.fn() })),
 }));
 
-jest.mock('ol/source/Vector', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
+jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/layer/Vector', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/geom/Polygon', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/Feature', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/style/Style', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/style/Stroke', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/style/Fill', () => jest.fn().mockImplementation(() => ({})));
 
-jest.mock('ol/layer/Vector', () => {
+jest.mock('ol/Map', () => {
   return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
+    const eventListeners: Record<string, Function[]> = {};
 
-jest.mock('ol/geom/Polygon', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
-
-jest.mock('ol/Feature', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
-
-jest.mock('ol/style/Style', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
-
-jest.mock('ol/style/Stroke', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
-  });
-});
-
-jest.mock('ol/style/Fill', () => {
-  return jest.fn().mockImplementation(() => {
-    return {};
+    return {
+      getView: jest.fn(() => ({
+        calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
+        setCenter: jest.fn(),
+        setZoom: jest.fn(),
+        on: jest.fn((event: string, callback: () => void) => {
+          if (!eventListeners[event]) {
+            eventListeners[event] = [];
+          }
+          eventListeners[event].push(callback);
+        }),
+        trigger: (event: string) => {
+          (eventListeners[event] || []).forEach((callback) => callback());
+        }
+      })),
+      getSize: jest.fn(() => [800, 600]),
+      getLayers: jest.fn(() => ({
+        getArray: jest.fn(() => []),
+        clear: jest.fn(),
+      })),
+      addLayer: jest.fn(),
+      removeLayer: jest.fn(),
+    };
   });
 });
 
@@ -93,8 +75,21 @@ jest.mock('../src/app/components/MapContext', () => ({
   }),
 }));
 
+jest.mock('../src/app/services/api', () => ({
+  insertMockItemData: jest.fn(),
+}));
+
+jest.mock('lodash/debounce', () => {
+  return jest.fn((fn: (...args: any[]) => void) => {
+    const mockDebounce = (...args: any[]) => fn(...args);
+    (mockDebounce as any).cancel = jest.fn();
+    return mockDebounce;
+  });
+});
+
+
 describe(MapView, () => {
-  let mapRef;
+  let mapRef: { current: any };
 
   beforeEach(() => {
     mapRef = { current: null };
@@ -110,71 +105,83 @@ describe(MapView, () => {
   });
 
   it('renders with null mapRef', () => {
-    const MapViewComponent = () => (
-      <MapProvider>
-        <MapView />
-      </MapProvider>
-    );
-    fetchMock.mockResponseOnce(JSON.stringify({ ok: true }));
-    render(<MapViewComponent />);
-  });
-
-  it('clears and adds layer when mapRef is not null', () => {
-    const mockLayersArray: any[] = []; // Simulate an array of layers
-    const mockLayers = {
-      getArray: () => mockLayersArray, // Normal function returning an array
-      clear: () => { mockLayersArray.length = 0; }, // Function to simulate clearing layers
-    };
-
-    const mockMap = {
-      getLayers: () => mockLayers, // Returns an object with `getArray()`
-      addLayer: jest.fn(),
-    };
+    const mockOnBboxChange = jest.fn();
+    const mockMapInstance = new (require('ol/Map'))();
 
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     useMapLayerContext.mockReturnValue({
       layer: 'default',
-      mapRef: { current: mockMap },
+      setLayer: jest.fn(),
+      mapRef: { current: mockMapInstance },
+      resetView: jest.fn(),
     });
 
-    render(<MapView />);
+    render(
+      <MapProvider>
+        <MapView onBboxChange={mockOnBboxChange} />
+      </MapProvider>
+    );
 
-    expect(mockMap.getLayers().getArray()).toEqual([]); // Ensure `getArray()` is called
-    expect(mockMap.addLayer).toHaveBeenCalled(); // Ensure `addLayer()` is called
+    expect(mockMapInstance.getView).toHaveBeenCalled();
   });
 
+  it('calls insertMockItemData on mount', () => {
+    const { insertMockItemData } = require('../src/app/services/api');
+    render(<MapView onBboxChange={jest.fn()} />);
+    expect(insertMockItemData).toHaveBeenCalled();
+  });
 
-  it('maps coordinates correctly', () => {
-    const mockItem = {
-      geometry: {
-        coordinates: [
-          [
-            [1, 2],
-            [3, 4],
-          ],
-        ],
-      },
-    };
-    const coordinates = mockItem.geometry.coordinates[0].map((coord) => coord);
-    expect(coordinates).toEqual([
-      [1, 2],
-      [3, 4],
+  it('removes and adds the correct base layer when layer changes', () => {
+    const mockMapInstance = new (require('ol/Map'))();
+    const mockGetArray = jest.fn(() => [
+      { get: jest.fn(() => 'baseLayer'), set: jest.fn() },
     ]);
+
+    mockMapInstance.getLayers.mockReturnValue({ getArray: mockGetArray });
+
+    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    useMapLayerContext.mockReturnValue({
+      layer: 'topographical',
+      mapRef: { current: mockMapInstance },
+    });
+
+    render(<MapView onBboxChange={jest.fn()} />);
+
+    expect(mockMapInstance.removeLayer).toHaveBeenCalled();
+    expect(mockMapInstance.addLayer).toHaveBeenCalled();
   });
 
-  it('creates feature correctly', () => {
-    const { Feature } = require('ol');
-    const mockCoordinates = [
-      [1, 2],
-      [3, 4],
-    ];
-    const feature = new Feature({ geometry: new Polygon([mockCoordinates]) });
-    expect(feature).toBeInstanceOf(Feature);
-  });
+  it('calls onBboxChange when the view changes (zoom/pan)', () => {
+    const mockMapInstance = new (require('ol/Map'))();
+    const mockOnBboxChange = jest.fn();
+  
+    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    useMapLayerContext.mockReturnValue({
+      layer: 'default',
+      mapRef: { current: mockMapInstance },
+    });
+  
+    render(<MapView onBboxChange={mockOnBboxChange} />);
+  
+    act(() => {
+      const view = mockMapInstance.getView();
+      view.trigger('change:resolution');
+      view.trigger('change:center');
+    });
+  
+    expect(mockOnBboxChange).toHaveBeenCalledTimes(2);
+  });  
 
-  it('returns feature correctly', () => {
-    const { Feature } = require('ol');
-    const feature = new Feature();
-    expect(feature).toBeInstanceOf(Feature);
+  it('cancels debounced bbox change on unmount', () => {
+    const debounce = require('lodash/debounce');
+    const cancelMock = jest.fn();
+  
+    // Ensure the mock debounce function includes `cancel`
+    debounce.mockReturnValue(Object.assign(jest.fn(), { cancel: cancelMock }));
+  
+    const { unmount } = render(<MapView onBboxChange={jest.fn()} />);
+    unmount();
+  
+    expect(cancelMock).toHaveBeenCalled();
   });
 });

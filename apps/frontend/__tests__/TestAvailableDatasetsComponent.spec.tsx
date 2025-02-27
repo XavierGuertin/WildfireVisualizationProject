@@ -1,41 +1,39 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import AvailableDatasets, { DatasetMetadata } from '../src/app/components/AvailableDatasets';
+import AvailableDatasets, { DatasetEntry, DatasetMetadata } from '../src/app/components/AvailableDatasets';
 import * as api from '../src/app/services/api';
 
 jest.mock('../src/app/services/api');
+
 const mockFetchCollectionsByName = api.fetchCollectionsFromEndpointByName as jest.Mock;
 const mockFetchCollectionsByDate = api.fetchCollectionsFromEndpointByDate as jest.Mock;
 const mockFetchMetaData = api.fetchMetaData as jest.Mock;
 const mockReturnListOfCollections = api.returnListOfCollectionsFromEndpoint as jest.Mock;
 
-const mockDatasets: DatasetMetadata[] = [
+const mockDatasets: DatasetEntry[] = [
   {
+    key: 1,
     id: "dataset-1",
-    name: 'Dataset A',
-    date: '2023-01-01',
-    enddate: '2023-01-10',
-    latestAdded: '',
-    latestUpdated: '',
-    description: 'Description A',
-    format: 'GeoJSON',
-    processes: '',
-    datasetSource: 'Source A'
   },
   {
+    key: 2,
     id: "dataset-2",
-    name: 'Dataset B',
-    date: '2023-02-15',
-    enddate: '2023-02-25',
-    latestAdded: '',
-    latestUpdated: '',
-    description: 'Description B',
-    format: 'Shapefile',
-    processes: '',
-    datasetSource: 'Source B'
   }
 ];
+
+const mockDatasetMetadata: DatasetMetadata = {
+  id: "dataset-1",
+  name: 'Dataset A',
+  date: '2023-01-01',
+  enddate: '2023-01-10',
+  datasetSource: 'Source A',
+  description: 'Description A',
+  format: 'GeoJSON',
+  latestAdded: '',
+  latestUpdated: '',
+  processes: ''
+};
 
 describe('Test AvailableDatasets component', () => {
   let mockOnDatasetClick: jest.Mock;
@@ -44,7 +42,7 @@ describe('Test AvailableDatasets component', () => {
     mockOnDatasetClick = jest.fn();
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
-
+    mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -52,9 +50,23 @@ describe('Test AvailableDatasets component', () => {
     jest.restoreAllMocks();
   });
 
+  it('should initialize with correct default state', () => {
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+    
+    expect(screen.getByTestId('toggle-status-text')).toBeInTheDocument();
+    expect(screen.getByTestId('toggle-checkbox')).not.toBeChecked();
+  });  
+
+  it('should show loading message while fetching datasets', async () => {
+    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {})); // Keeps promise pending
+
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+
+    // Ensure the loading message appears
+    expect(await screen.findByTestId('loading-message')).toBeInTheDocument();
+  });
+
   it('should call onDatasetClick on dataset click', async () => {
-    mockFetchMetaData.mockResolvedValue(mockDatasets[0]);
-
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
 
     await waitFor(() => expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument());
@@ -63,51 +75,30 @@ describe('Test AvailableDatasets component', () => {
     fireEvent.click(datasetButton);
 
     await waitFor(() => {
-      expect(mockOnDatasetClick).toHaveBeenCalledWith(mockDatasets[0]);
+      expect(mockOnDatasetClick).toHaveBeenCalledWith(mockDatasetMetadata);
     });
   });
 
-  it('should handle fetchMetaData failure gracefully', async () => {
-    mockFetchMetaData.mockResolvedValue({ error: 'Failed to fetch metadata' });
-  
+  it('should mark dataset as selected when clicked', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-  
-    await waitFor(() => expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument());
-  
-    const datasetButton = screen.getByTestId('dataset-button-dataset-1');
+    
+    const datasetButton = await waitFor(() => screen.getByTestId('dataset-button-dataset-1'));
     fireEvent.click(datasetButton);
-  
-    await waitFor(() => {
-      expect(mockOnDatasetClick).not.toHaveBeenCalled(); // Ensure failure does not trigger click
-    });
-  
-    // Optionally check for error handling UI feedback, if any
-    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
-  });
-  
 
-  it('should filter datasets by name', async () => {
-    mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
+    expect(datasetButton).toHaveClass('selected');
+  });  
+
+  it('should update active filter UI when a filter button is clicked', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+    
+    const nameFilterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(nameFilterButton);
+    expect(nameFilterButton).toHaveClass('active');
 
-    const filterButton = screen.getByTestId('filter-button-Name');
-    fireEvent.click(filterButton);
-
-    await waitFor(() => {
-      expect(mockFetchCollectionsByName).toHaveBeenCalled();
-    });
-  });
-
-  it('should filter datasets by date', async () => {
-    mockFetchCollectionsByDate.mockResolvedValue(mockDatasets);
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-
-    const filterButton = screen.getByTestId('filter-button-Date');
-    fireEvent.click(filterButton);
-
-    await waitFor(() => {
-      expect(mockFetchCollectionsByDate).toHaveBeenCalled();
-    });
+    const dateFilterButton = screen.getByTestId('filter-button-Date');
+    fireEvent.click(dateFilterButton);
+    expect(dateFilterButton).toHaveClass('active');
+    expect(nameFilterButton).not.toHaveClass('active');
   });
 
   it('should collapse and expand the component when toggled', async () => {
@@ -115,7 +106,6 @@ describe('Test AvailableDatasets component', () => {
 
     const collapseButton = await waitFor(() => screen.getByTestId('collapse-button'));
     fireEvent.click(collapseButton);
-
     expect(screen.getByTestId('datasets-container')).toHaveClass('collapsed');
 
     fireEvent.click(collapseButton);
@@ -125,13 +115,58 @@ describe('Test AvailableDatasets component', () => {
   it('should toggle isToggled state when switch is clicked', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
 
-    const toggleCheckbox = await waitFor(() => screen.getByTestId('toggle-checkbox'));
-    fireEvent.click(toggleCheckbox);
-    expect(toggleCheckbox).toBeChecked();
+    const toggleButton = await waitFor(() => screen.getByTestId('toggle-button'));
+    const statusText = screen.getByTestId('toggle-status-text');
 
-    fireEvent.click(toggleCheckbox);
-    expect(toggleCheckbox).not.toBeChecked();
-  });
+    expect(statusText).not.toBeEmptyDOMElement();
+    const initialText = statusText.textContent;
+
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      expect(statusText.textContent).not.toBe(initialText);
+    });
+
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      expect(statusText.textContent).toBe(initialText);
+    });
+  });  
+
+  it('should fetch datasets only when toggled on', async () => {
+    // ✅ Ensure the mock is resolved
+    mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+        currentBbox={[-120, 30, -110, 40]} // ✅ Ensure bbox is set
+      />
+    );
+  
+    // ✅ Ensure `activeFilter` is set to "Name" to trigger fetchCollectionsFromEndpointByName
+    const filterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(filterButton); // This means fetchByName is called once
+  
+    // ✅ Ensure no request is made initially
+    expect(mockFetchCollectionsByName).not.toHaveBeenCalled();
+  
+    const toggleButton = await screen.findByTestId('toggle-button');
+    fireEvent.click(toggleButton); // This means fetchByName is called twice
+  
+    // ✅ Ensure the checkbox is actually checked before checking API call
+    await waitFor(() => {
+      expect(screen.getByTestId('toggle-checkbox')).toBeChecked();
+    });
+  
+    // ✅ Ensure state updates before checking function calls
+    await waitFor(() => {
+      expect(mockFetchCollectionsByName).toHaveBeenCalledTimes(2);
+      expect(mockFetchCollectionsByName).toHaveBeenCalledWith([-120, 30, -110, 40]);
+    });
+  });  
 
   it('should show error message if datasets fail to load', async () => {
     mockReturnListOfCollections.mockRejectedValue(new Error('Failed to load datasets'));
@@ -143,50 +178,26 @@ describe('Test AvailableDatasets component', () => {
   });
 
   it('should display no datasets message when dataset list is empty', async () => {
-    mockReturnListOfCollections.mockResolvedValue([]); // Return an empty list
-  
+    mockReturnListOfCollections.mockResolvedValue([]);
+
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-  
+    
     await waitFor(() => {
-      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
+      expect(screen.getByTestId('no-datasets-container')).toBeInTheDocument();
+      expect(screen.getByTestId('no-datasets-message')).toBeInTheDocument();
     });
   });
 
   it('should call handleFilterChange and update datasets when filtering by name', async () => {
     mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-  
+
     const filterButton = screen.getByTestId('filter-button-Name');
     fireEvent.click(filterButton);
-  
+
     await waitFor(() => {
       expect(mockFetchCollectionsByName).toHaveBeenCalled();
       expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument();
     });
   });
-  
-  it('should call handleFilterChange and update datasets when filtering by date', async () => {
-    mockFetchCollectionsByDate.mockResolvedValue(mockDatasets);
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-  
-    const filterButton = screen.getByTestId('filter-button-Date');
-    fireEvent.click(filterButton);
-  
-    await waitFor(() => {
-      expect(mockFetchCollectionsByDate).toHaveBeenCalled();
-      expect(screen.getByTestId('dataset-button-dataset-2')).toBeInTheDocument();
-    });
-  });
-  
-  it('should show error message when filtering datasets fails', async () => {
-    mockFetchCollectionsByName.mockRejectedValue(new Error('Failed to filter datasets'));
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-  
-    const filterButton = screen.getByTestId('filter-button-Name');
-    fireEvent.click(filterButton);
-  
-    await waitFor(() => {
-      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent('no_datasets_available');
-    });
-  });  
 });

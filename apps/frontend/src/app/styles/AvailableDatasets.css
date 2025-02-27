@@ -268,14 +268,16 @@ body {
 
 .toggle-control-group {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
 }
 
 .toggle-label {
   display: flex;
   align-items: center;
-  cursor: pointer;
+  gap: 2px;
+  padding-right: 6px;
 }
 
 .toggle-button.toggled {
@@ -283,8 +285,9 @@ body {
 }
 
 .toggle-status-text {
-  font-size: 0.9rem;
-  color: #616161;
+ white-space: nowrap;
+ margin-left: 2px;
+ font-size: 0.95em;
 }
 
 .toggle-hint {
