@@ -231,8 +231,6 @@ public class StacRepository {
       // Ensure correct case and schema handling
       String sql = "SELECT COUNT(*) FROM DataLayer";
 
-      logger.info("Executing SQL: {}", sql);
-
       int result = jdbcTemplate.queryForObject(sql, Integer.class);
 
       return result == 1; // If ID exists, return true
