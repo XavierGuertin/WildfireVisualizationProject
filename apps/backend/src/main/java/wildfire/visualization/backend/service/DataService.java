@@ -230,4 +230,16 @@ public class DataService {
     private boolean checkItemExists(String itemId) {
         return stacRepository.checkItemExists(itemId);
     }
+
+    public String verifyInternetConnection(String endpointUrl) {
+        logger.info("Verifying internet connection");
+        try {
+            restTemplate.getForObject(endpointUrl, String.class);
+            logger.info("Internet connection established");
+            return "Internet connection established";
+        } catch (Exception e) {
+            logger.info("No internet connection could be established");
+            return "No internet connection could be established";
+        }
+    }
 }
