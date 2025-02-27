@@ -1,15 +1,14 @@
 package wildfire.visualization.backend.service;
 
-import com.example.backend.dto.*;
-import wildfire.visualization.backend.dto.GeometryDto;
-import wildfire.visualization.backend.dto.PostGISData;
-import wildfire.visualization.backend.dto.StacItemDto;
-import wildfire.visualization.backend.exception.StacConversionException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import wildfire.visualization.backend.dto.GeometryDto;
+import wildfire.visualization.backend.dto.PostGISData;
+import wildfire.visualization.backend.dto.StacItemDto;
+import wildfire.visualization.backend.exception.StacConversionException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
