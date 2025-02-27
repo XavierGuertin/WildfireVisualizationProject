@@ -220,3 +220,17 @@ export const insertDatalayerView = async (collectionId: string): Promise<any> =>
     return { error: "Failed to insert View" };
   }
 }
+
+export const verifyInternetConnection = async (endpoint_url: string): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Failed to verify connection: ', error);
+    throw new Error(`Failed to verify connection: ${error.message}`);
+  }
+};

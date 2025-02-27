@@ -8,7 +8,7 @@ import {
   IoSettingsOutline,
   IoTrashOutline,
 } from 'react-icons/io5';
-import { PiArrowClockwiseFill } from 'react-icons/pi';
+import { PiArrowClockwiseFill, PiGlobeXLight, PiX } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
   resetCollections,
@@ -32,13 +32,12 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
-
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
@@ -393,6 +392,29 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
+      
+      {!isOnline &&
+      <div className="dropdown-button">
+        <button
+            className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('internet')}
+            aria-expanded={dropdownState.activeButton === 'internet'}
+            aria-label="internet"
+            data-testid="internet-dropdown-button"
+          >
+            <PiGlobeXLight size={32} />
+          </button>
+        {dropdownState.activeButton === 'internet' && (
+        <div className="dropdown-content show">
+          <div className="settings-information">
+            <label data-testid="internet-button" style={{ color: '#dc143c' }}>
+              <PiX size={24} fill="red" />
+              {t('no_internet_access')}
+            </label>
+            </div>
+        </div>
+        )}
+      </div>}
     </div>
   );
 };

@@ -12,6 +12,7 @@ import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
 import { insertMockItemData } from '../services/api';
+import { verifyInternetConnection } from '../services/api';
 
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
@@ -74,7 +75,7 @@ export const refreshLayer = (map: Map) => {
 const MapView = () => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef } = useMapLayerContext();
+  const { layer, mapRef, setIsOnline } = useMapLayerContext();
 
   const getLayer = (): TileLayer => {
     const layerMap: Record<string, TileLayer> = {
@@ -91,12 +92,23 @@ const MapView = () => {
 
     return selectedLayer;
   };
-
+  
+  const setOnlineStatus = async () => {
+    try {
+        const response = await verifyInternetConnection("https://hirondelle.crim.ca/stac/collections");
+        setIsOnline(response === "Internet connection established")
+    } 
+    catch (error) {
+      setIsOnline(false);
+      console.log('No connection to the URL:', error);
+    }
+  };
 
   useEffect(() => {
     insertMockItemData() //This method is to be deleted once we receive the real data
-    if (!mapRef.current) {
+    setOnlineStatus();
 
+    if (!mapRef.current) {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),

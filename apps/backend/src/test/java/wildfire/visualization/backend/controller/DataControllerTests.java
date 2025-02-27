@@ -404,4 +404,30 @@ class DataControllerTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).contains("Error checking collections: Test error");
     }
+
+    @Test
+    void verifyInternetConnection_Success() {
+        // Arrange
+        when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL)).thenReturn("Success result");
+
+        // Act
+        ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("Success result");
+    }
+
+    @Test
+    void verifyInternetConnection_ShouldHandleException() {
+        // Arrange
+        when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL)).thenThrow(new RuntimeException("Test error"));
+
+        // Act
+        ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).contains("Error verifying connection: Test error");
+    }
 }

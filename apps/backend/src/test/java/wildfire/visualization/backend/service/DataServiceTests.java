@@ -469,4 +469,24 @@ class DataServiceTests {
                 .hasMessageContaining("Error removing item");
     }
 
+    @Test
+    void verifyInternetConnection_Success(){
+        //Act
+        String response = dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+        //Assert
+        assertThat(response).isEqualTo("Internet connection established");
+    }
+
+    @Test
+    void verifyInternetConnection_Failure(){
+        //Arrange
+        doThrow(new RuntimeException("No internet connection")).when(restTemplate).getForObject(DEFAULT_ENDPOINT_URL, String.class);
+
+        //Act
+        String result = dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+        //Assert
+        assertThat(result).isEqualTo("No internet connection could be established");
+    }
 }

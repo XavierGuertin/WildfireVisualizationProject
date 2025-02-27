@@ -90,6 +90,7 @@ jest.mock('../src/app/components/MapContext', () => ({
     setLayer: jest.fn(),
     mapRef: { current: null },
     resetView: jest.fn(),
+    setIsOnline: jest.fn(),
   }),
 }));
 
@@ -135,6 +136,7 @@ describe(MapView, () => {
     useMapLayerContext.mockReturnValue({
       layer: 'default',
       mapRef: { current: mockMap },
+      setIsOnline: jest.fn(),
     });
 
     render(<MapView />);
