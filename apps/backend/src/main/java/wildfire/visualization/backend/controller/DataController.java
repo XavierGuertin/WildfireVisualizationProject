@@ -50,20 +50,6 @@ public class DataController {
     }
   }
 
-  @PostMapping("/api/stac/collection")
-  public ResponseEntity<String> createCollection(@RequestBody String collectionJson) {
-    logger.info("Received request to create collection");
-    try {
-      String result = dataService.insertAndQueryCollectionTests(collectionJson);
-      logger.debug("Successfully processed custom collection");
-      return ResponseEntity.ok(result);
-    } catch (Exception e) {
-      logger.error("Error creating collection: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-          .body("Error creating collection: " + e.getMessage());
-    }
-  }
-
   @GetMapping("/api/fetch-collections")
   public ResponseEntity<String> fetchCollections(@RequestParam String endpointUrl) {
     logger.info("Fetching collections from URL: {}", endpointUrl);
@@ -344,20 +330,6 @@ public class DataController {
     }
   }
 
-  @PostMapping("/api/stac/item")
-  public ResponseEntity<String> createItem(@RequestBody String itemJson) {
-    logger.info("Received request to create item");
-    try {
-      dataService.insertItem(itemJson);
-      logger.debug("Successfully processed custom item");
-      return ResponseEntity.ok("Successfully inserted item");
-    } catch (Exception e) {
-      logger.error("Error creating item: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-        .body("Error creating item: " + e.getMessage());
-    }
-  }
-
   @GetMapping("/api/get-all-items/{collectionId}")
   public ResponseEntity<List<Map<String, Object>>> fetchItems(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to fetch items");
@@ -485,23 +457,6 @@ public class DataController {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
           .body("Error inserting view: " + e.getMessage());
-    }
-  }
-
-  /*
-   * Tests method
-   */
-  @GetMapping("/api/test-stac")
-  public ResponseEntity<String> testStacEndpoint() {
-    logger.info("Received request to /api/test-stac");
-    try {
-      String result = dataService.insertAndQueryCollectionTests();
-      logger.debug("Successfully processed STAC data");
-      return ResponseEntity.ok(result);
-    } catch (Exception e) {
-      logger.error("Error in STAC endpoint: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError()
-          .body("Error processing STAC data: " + e.getMessage());
     }
   }
 }
