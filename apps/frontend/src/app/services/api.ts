@@ -1,20 +1,5 @@
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
-//Methods for mock data while we wait for CRIM's data
-export const fetchTestStacData = async (): Promise<any> => {
-  try {
-    const response = await fetch(`${BASE_URL}api/test-stac`);
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error: any) {
-    console.error('Error fetching test STAC data:', error);
-    return { error: 'Failed to fetch data' };
-  }
-};
-
 export const insertMockItemData = async(): Promise<any> => {
   try{
     const response = await fetch(`${BASE_URL}/api/insert-mock-items`,
@@ -38,14 +23,12 @@ export const returnListOfCollectionsFromEndpoint = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
   }
-}; 
+};
 
 export const getCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
@@ -158,9 +141,7 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
@@ -175,9 +156,7 @@ export const fetchCollectionsFromEndpointByName = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections by name:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
@@ -192,35 +171,12 @@ export const fetchCollectionsFromEndpointByDate = async (): Promise<{
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Fetched collections by date:', data);
-    return data;
+    return await response.json();
   } catch (error: any) {
     console.error('Error fetching collections by name:', error);
     return { error: 'Failed to fetch data by name' };
   }
 };
-
-export const insertItem = async (itemJson: string) => {
-  try{
-    const url = `${BASE_URL}/api/stac/item`;
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      method: "POST",
-      body: itemJson
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-  }
-  catch(error: any){
-    console.error("Error inserting item:", error);
-    return { error: "Failed to insert item" };
-  }
-}
 
 export const fetchItems = async (collectionId: string): Promise<any> => {
   try {

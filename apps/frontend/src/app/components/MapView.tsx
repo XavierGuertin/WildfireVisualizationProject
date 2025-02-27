@@ -40,9 +40,10 @@ const topographicLayer = new TileLayer({
 
 // Dynamic Data Layer (STAC Item)
 const createDataLayer = () => {
+  const geoserverUrl = process.env.REACT_APP_GEOSERVER_URL;
   const newLayer = new TileLayer({
     source: new TileWMS({
-      url: 'http://localhost:8090/geoserver/Default/wms',
+      url: geoserverUrl,
       params: {
         'LAYERS': 'Default:datalayer',
         'TILED': true,
