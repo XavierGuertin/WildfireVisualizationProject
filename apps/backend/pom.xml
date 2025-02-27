@@ -9,7 +9,7 @@
     <version>3.3.4</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
-  <groupId>com.example</groupId>
+  <groupId>wildfire.visualization</groupId>
   <artifactId>backend</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>backend</name>
@@ -71,7 +71,7 @@
         <artifactId>jts-core</artifactId>
         <version>1.18.2</version>
     </dependency>
-    
+
     <!-- Jackson for JSON processing -->
     <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>

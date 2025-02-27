@@ -1,6 +1,5 @@
 package wildfire.visualization.backend.service;
 
-import com.example.backend.repository.StacRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,8 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import wildfire.visualization.backend.repository.StacRepository;
 
 import java.util.HashMap;
@@ -20,8 +17,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 

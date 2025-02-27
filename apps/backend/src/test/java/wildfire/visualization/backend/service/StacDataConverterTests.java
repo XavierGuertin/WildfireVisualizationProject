@@ -15,7 +15,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class StacDataConverterTest {
+class StacDataConverterTests {
 
     private StacDataConverter converter;
     private ObjectMapper objectMapper;
