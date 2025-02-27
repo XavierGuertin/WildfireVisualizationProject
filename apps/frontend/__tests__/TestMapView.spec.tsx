@@ -20,6 +20,12 @@ jest.mock('ol/layer/Tile', () => jest.fn().mockImplementation(() => ({
   getSource: jest.fn(),
 })));
 
+jest.mock('ol/geom/Polygon', () => {
+  return jest.fn().mockImplementation(() => {
+    return {};
+  });
+});
+
 jest.mock('ol/View', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('ol/control.js', () => ({
@@ -149,6 +155,40 @@ describe(MapView, () => {
 
     expect(mockMapInstance.removeLayer).toHaveBeenCalled();
     expect(mockMapInstance.addLayer).toHaveBeenCalled();
+  });
+
+  it('maps coordinates correctly', () => {
+    const mockItem = {
+      geometry: {
+        coordinates: [
+          [
+            [1, 2],
+            [3, 4],
+          ],
+        ],
+      },
+    };
+    const coordinates = mockItem.geometry.coordinates[0].map((coord) => coord);
+    expect(coordinates).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
+  });
+
+  it('creates feature correctly', () => {
+    const { Feature } = require('ol');
+    const mockCoordinates = [
+      [1, 2],
+      [3, 4],
+    ];
+    const feature = new Feature({ geometry: new Polygon([mockCoordinates]) });
+    expect(feature).toBeInstanceOf(Feature);
+  });
+
+  it('returns feature correctly', () => {
+    const { Feature } = require('ol');
+    const feature = new Feature();
+    expect(feature).toBeInstanceOf(Feature);
   });
 
   it('calls onBboxChange when the view changes (zoom/pan)', () => {

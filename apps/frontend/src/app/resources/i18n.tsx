@@ -18,6 +18,7 @@ const resources = {
       api_endpoint_saved:
         'API endpoint successfully saved under config/app-config.json',
       copied_to_clipboard: 'Copied to clipboard',
+      no_internet_access: 'No internet access',
       //Language
       english: 'English',
       french: 'French',
@@ -58,6 +59,7 @@ const resources = {
       loading_dataset: 'Loading Dataset...',
       //Views
       views: 'Views',
+      view_disabled: 'View disabled',
       collapse: 'Collapse',
       default_layer: 'Default Layer',
       topographical_layer: 'Topographical Layer',
@@ -88,6 +90,7 @@ const resources = {
       api_endpoint_saved:
         'Endpoint enregistré avec succès sous config/app-config.json',
       copied_to_clipboard: 'Copié dans le presse-papiers',
+      no_internet_access: 'Aucune connexion',
       //Language
       english: 'Anglais',
       french: 'Français',
@@ -122,6 +125,7 @@ const resources = {
       loading_dataset: 'Chargement du jeu de données...',
       //Views
       views: 'Vues',
+      view_disabled: 'Vue désactivée',
       collapse: 'Réduire',
       default_layer: 'Calque par Défaut',
       topographical_layer: 'Calque Topographique',

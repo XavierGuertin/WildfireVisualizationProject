@@ -3,7 +3,7 @@ import React from 'react';
 import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import { MapProvider } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
 
 // --- Mocks ---
 
@@ -318,5 +318,44 @@ describe('SettingsPanel Component', () => {
         expect(refreshDatasets).toHaveBeenCalled();
       });
     });
+  });
+
+  describe('Offline Behavior', () =>{
+    it('Internet button is not visible when online', () => {
+      const OnlineComponent = () => {
+        const { setIsOnline } = useMapLayerContext(); 
+        setIsOnline(true);
+        return <></>
+      };
+  
+      const TestComponent = () => (
+        <MapProvider>
+          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn}/>
+          <OnlineComponent />
+        </MapProvider>
+      );
+      
+      render(<TestComponent />);
+      expect(screen.queryByRole('button', { name: /internet/i })).not.toBeInTheDocument();
+    });
+
+    it('Internet button is visible when offline', () => {
+      const OnlineComponent = () => {
+        const { setIsOnline } = useMapLayerContext(); 
+        setIsOnline(false);
+        return <></>
+      };
+  
+      const TestComponent = () => (
+        <MapProvider>
+          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn}/>
+          <OnlineComponent />
+        </MapProvider>
+      );
+      
+      render(<TestComponent />);
+      expect(screen.queryByRole('button', { name: /internet/i })).toBeInTheDocument();
+    });
+
   });
 });
