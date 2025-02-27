@@ -200,94 +200,171 @@ class DataServiceTests {
   }
 
   @Test
-  void getCollections_Success() {
+  void getCollections_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-        Map.of("key", "value1", "id", "id1"),
-        Map.of("key", "value2", "id", "id2"));
-    when(stacRepository.getAllCollections()).thenReturn(mockCollections);
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollections(null)).thenReturn(mockCollections);
 
     // Act
-    List<Map<String, Object>> collections = dataService.getCollections();
+    List<Map<String, Object>> collections = dataService.getCollections(null);
 
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
-    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollections(null);
+  }
+
+  @Test
+  void getCollections_Success_WithBbox() {
+    // Arrange
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollections(eq(bbox))).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollections(bbox);
+
+    // Assert
+    assertThat(collections).isNotNull().hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollections(eq(bbox));
   }
 
   @Test
   void getCollections_Failure() {
     // Arrange
-    when(stacRepository.getAllCollections()).thenThrow(new RuntimeException("Test error"));
+    when(stacRepository.getAllCollections(any())).thenThrow(new RuntimeException("Test error"));
 
     // Act & Assert
-    assertThatThrownBy(() -> dataService.getCollections())
+    assertThatThrownBy(() -> dataService.getCollections(null))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Failed to fetch collections");
+
+    verify(stacRepository, times(1)).getAllCollections(null);
   }
 
   @Test
-  void getCollectionsByName_Success() {
+  void getCollectionsByName_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-        Map.of("key", "value1", "id", "id1"),
-        Map.of("key", "value2", "id", "id2"));
-    when(stacRepository.getAllCollectionsByName()).thenReturn(mockCollections);
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollectionsByName(null)).thenReturn(mockCollections);
 
     // Act
-    List<Map<String, Object>> collections = dataService.getCollectionsByName();
+    List<Map<String, Object>> collections = dataService.getCollectionsByName(null);
 
     // Assert
-    assertThat(collections).isNotNull();
-    assertThat(collections).hasSize(2);
-    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
-    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
-    verify(stacRepository, times(1)).getAllCollectionsByName();
+    assertThat(collections).isNotNull().hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollectionsByName(null);
+  }
+
+  @Test
+  void getCollectionsByName_Success_WithBbox() {
+    // Arrange
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollectionsByName(eq(bbox))).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox);
+
+    // Assert
+    assertThat(collections).isNotNull().hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollectionsByName(eq(bbox));
   }
 
   @Test
   void getCollectionsByName_Failure() {
     // Arrange
-    when(stacRepository.getAllCollectionsByName()).thenThrow(new RuntimeException("Test error"));
+    when(stacRepository.getAllCollectionsByName(any())).thenThrow(new RuntimeException("Test error"));
 
     // Act & Assert
-    assertThatThrownBy(() -> dataService.getCollectionsByName())
+    assertThatThrownBy(() -> dataService.getCollectionsByName(null))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Failed to fetch collections");
+        .hasMessageContaining("Failed to fetch collections by Name");
 
-    verify(stacRepository, times(1)).getAllCollectionsByName();
+    verify(stacRepository, times(1)).getAllCollectionsByName(null);
   }
 
   @Test
-  void getCollectionsByDate_Success() {
+  void getCollectionsByDate_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-        Map.of("key", "value1", "id", "id1"),
-        Map.of("key", "value2", "id", "id2"));
-    when(stacRepository.getAllCollectionsByDate()).thenReturn(mockCollections);
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollectionsByDate(null)).thenReturn(mockCollections);
 
     // Act
-    List<Map<String, Object>> collections = dataService.getCollectionsByDate();
+    List<Map<String, Object>> collections = dataService.getCollectionsByDate(null);
 
     // Assert
-    assertThat(collections).isNotNull();
-    assertThat(collections).hasSize(2);
-    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1");
-    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2");
-    verify(stacRepository, times(1)).getAllCollectionsByDate();
+    assertThat(collections).isNotNull().hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollectionsByDate(null);
+  }
+
+  @Test
+  void getCollectionsByDate_Success_WithBbox() {
+    // Arrange
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
+    List<Map<String, Object>> mockCollections = List.of(
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+    when(stacRepository.getAllCollectionsByDate(eq(bbox))).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox);
+
+    // Assert
+    assertThat(collections).isNotNull().hasSize(2);
+    assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry("bbox",
+        "[10,20,30,40]");
+    assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry("bbox",
+        "[50,60,70,80]");
+
+    verify(stacRepository, times(1)).getAllCollectionsByDate(eq(bbox));
   }
 
   @Test
   void getCollectionsByDate_Failure() {
     // Arrange
-    when(stacRepository.getAllCollectionsByDate()).thenThrow(new RuntimeException("Test error"));
+    when(stacRepository.getAllCollectionsByDate(any())).thenThrow(new RuntimeException("Test error"));
 
     // Act & Assert
-    assertThatThrownBy(() -> dataService.getCollectionsByDate())
+    assertThatThrownBy(() -> dataService.getCollectionsByDate(null))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Failed to fetch collections");
+        .hasMessageContaining("Failed to fetch collections by Date");
 
-    verify(stacRepository, times(1)).getAllCollectionsByDate();
+    verify(stacRepository, times(1)).getAllCollectionsByDate(null);
   }
 
   @Test
@@ -428,144 +505,143 @@ class DataServiceTests {
   }
 
   @Test
-  void insertItem_Success(){
-    //Arrange
+  void insertItem_Success() {
+    // Arrange
     doNothing().when(stacRepository).insertItem(anyString());
-    //Act
+    // Act
     dataService.insertItem("Test");
   }
 
   @Test
-  void insertItem_Failure(){
-    //Arrange
+  void insertItem_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error fetching item")).when(stacRepository).insertItem(anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.insertItem("test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching item");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching item");
   }
 
   @Test
-  void getAllItems_Success(){
-    //Arrange
-    List<Map<String,Object>> mockResults = List.of(
-      Map.of("id", "test1"),
-      Map.of("id", "test2")
-    );
+  void getAllItems_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "test1"),
+        Map.of("id", "test2"));
     when(stacRepository.getAllItems(anyString())).thenReturn(mockResults);
-    //Act
+    // Act
     List<Map<String, Object>> result = dataService.getAllItems("Test");
 
-    //Assert
+    // Assert
     assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
-  void getAllItems_Failure(){
-    //Arrange
+  void getAllItems_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error fetching all items")).when(stacRepository).getAllItems(anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.getAllItems("test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching all items");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching all items");
   }
 
   @Test
-  void getItem_WithId_Success(){
-    //Arrange
-    List<Map<String,Object>> mockResults = List.of(
-      Map.of("id", "test1")
-    );
+  void getItem_WithId_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "test1"));
     when(stacRepository.getItem(anyString())).thenReturn(mockResults);
-    //Act
+    // Act
     List<Map<String, Object>> result = dataService.getItem("Test");
 
-    //Assert
+    // Assert
     assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
-  void getItem_WithId_Failure(){
-    //Arrange
+  void getItem_WithId_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error fetching item")).when(stacRepository).getItem(anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.getItem("test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching item");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching item");
   }
 
   @Test
-  void getItem_WithIdAndCollectionId_Success(){
-    //Arrange
-    List<Map<String,Object>> mockResults = List.of(
-      Map.of("id", "test1")
-    );
+  void getItem_WithIdAndCollectionId_Success() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "test1"));
     when(stacRepository.getItem(anyString(), anyString())).thenReturn(mockResults);
-    //Act
+    // Act
     List<Map<String, Object>> result = dataService.getItem("Test", "Test");
 
-    //Assert
+    // Assert
     assertThat(result).isEqualTo(mockResults);
   }
 
   @Test
-  void getItem_WithIdAndCollectionId_Failure(){
-    //Arrange
+  void getItem_WithIdAndCollectionId_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error fetching item")).when(stacRepository).getItem(anyString(), anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.getItem("test", "test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching item");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching item");
   }
 
   @Test
-  void removeAllItems_Success(){
+  void removeAllItems_Success() {
 
   }
 
   @Test
-  void removeAllItems_Failure(){
-    //Arrange
+  void removeAllItems_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error removing all items")).when(stacRepository).removeAllItems();
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.removeAllItems())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error removing all items");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error removing all items");
   }
+
   @Test
-  void removeItemsFromCollection_Success(){
+  void removeItemsFromCollection_Success() {
 
   }
 
   @Test
-  void removeItemsFromCollection_Failure(){
-    //Arrange
+  void removeItemsFromCollection_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error removing item")).when(stacRepository).removeItemsFromCollection(anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.removeItemsFromCollection("test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error removing item");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error removing item");
   }
+
   @Test
-  void removeItem_Success(){
+  void removeItem_Success() {
 
   }
 
   @Test
-  void removeItem_Failure(){
-    //Arrange
+  void removeItem_Failure() {
+    // Arrange
     doThrow(new RuntimeException("Error removing item")).when(stacRepository).removeItem(anyString(), anyString());
 
-    //Assert
+    // Assert
     assertThatThrownBy(() -> dataService.removeItem("test", "test"))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error removing item");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error removing item");
   }
 
 }
