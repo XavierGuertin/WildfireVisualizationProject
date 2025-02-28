@@ -3,10 +3,9 @@ import '@testing-library/jest-dom';
 import { act, render } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
 import MapView from '../src/app/components/MapView';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider } from '../src/app/components/MapContext';
 import Polygon from 'ol/geom/Polygon';
 import ol from 'ol/dist/ol';
-import layer = ol.layer;
 
 jest.mock('react', () => ({
   ...jest.requireActual('react'),

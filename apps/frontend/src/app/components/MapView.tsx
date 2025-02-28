@@ -49,9 +49,7 @@ const topographicLayer = new TileLayer({
 
 // Dynamic Data Layer (STAC Item)
 const createDataLayer = () => {
-  console.log("Creating data layer");
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
-  console.log(geoserverUrl)
   const newLayer = new TileLayer({
     source: new TileWMS({
       url: geoserverUrl,
