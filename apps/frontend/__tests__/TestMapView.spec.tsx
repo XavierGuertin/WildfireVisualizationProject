@@ -78,6 +78,8 @@ jest.mock('../src/app/components/MapContext', () => ({
     setLayer: jest.fn(),
     mapRef: { current: null },
     resetView: jest.fn(),
+    isOnline: true,
+    setIsOnline: jest.fn(),
   }),
 }));
 

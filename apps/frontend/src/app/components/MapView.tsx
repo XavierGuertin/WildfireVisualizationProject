@@ -80,7 +80,7 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, setIsOnline } = useMapLayerContext();
+  const { layer, mapRef, setIsOnline = () => {} } = useMapLayerContext();
 
   const getLayer = (): TileLayer => {
     const layerMap: Record<string, TileLayer> = {
