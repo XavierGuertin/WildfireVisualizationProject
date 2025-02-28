@@ -60,11 +60,11 @@ jobs:
           done
 
       # Wait for TileServer Initialization (MBTiles Download)
-      - name: Wait for TileServer Init to Complete
+      - name: Wait for TileServer
         run: |
           for i in {1..30}; do
-            if docker inspect --format='{{json .State.Status}}' $(docker ps -q -f name=tileserver-init) | grep -q "exited"; then
-              echo "✅ TileServer Init completed!";
+            if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=tileserver) | grep -q "healthy"; then
+              echo "✅ TileServer is ready!";
               break;
             fi;
             echo "⏳ Waiting for TileServer to download MBTiles...";
