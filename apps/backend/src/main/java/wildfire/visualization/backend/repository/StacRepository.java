@@ -15,6 +15,9 @@ import java.util.Map;
 @Repository
 public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
+  private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
+  private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
+  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -72,7 +75,11 @@ public class StacRepository {
   }
 
   public List<Map<String, Object>> getAllCollections(double[] bbox) {
-    logger.debug("Fetching all collections with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+    String bboxMessage = (bbox == null)
+        ? FETCHING_ALL_COLLECTIONS + NO_BBOX
+        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
+
+    logger.debug(bboxMessage);
 
     try {
       String sql = "WITH bbox_data AS ( " +
@@ -101,7 +108,7 @@ public class StacRepository {
         results = jdbcTemplate.queryForList(sql);
       }
 
-      logger.debug("Raw query result: {}", results);
+      logger.debug("Raw query result fetching collections: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections: {}", e.getMessage(), e);
@@ -122,7 +129,11 @@ public class StacRepository {
   }
 
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
-    logger.debug("Fetching all collections by name with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+    String bboxMessage = (bbox == null)
+        ? FETCHING_ALL_COLLECTIONS + " sorted by Name" + NO_BBOX
+        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
+
+    logger.debug(bboxMessage);
 
     try {
       String sql = "WITH bbox_data AS ( " +
@@ -153,7 +164,7 @@ public class StacRepository {
         results = jdbcTemplate.queryForList(sql);
       }
 
-      logger.debug("Raw query result: {}", results);
+      logger.debug("Raw query result for collections by Name: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections by Name: {}", e.getMessage(), e);
@@ -162,7 +173,11 @@ public class StacRepository {
   }
 
   public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
-    logger.debug("Fetching all collections by date with bbox: {}", bbox != null ? Arrays.toString(bbox) : "No bbox");
+    String bboxMessage = (bbox == null)
+        ? FETCHING_ALL_COLLECTIONS + " sorted by Date" + NO_BBOX
+        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
+
+    logger.debug(bboxMessage);
 
     try {
       String sql = "WITH bbox_data AS ( " +
@@ -193,7 +208,7 @@ public class StacRepository {
         results = jdbcTemplate.queryForList(sql);
       }
 
-      logger.debug("Raw query result: {}", results);
+      logger.debug("Raw query result for collections by Date: {}", results);
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching all collections by Date: {}", e.getMessage(), e);
