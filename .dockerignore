@@ -1,0 +1,7 @@
+apps/db/data/
+node_modules/
+dist/
+.git/
+.github
+.gitignore
+Dockerfile

@@ -17,6 +17,15 @@ import { verifyInternetConnection } from '../services/api';
 
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 
+const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
+
+const offlineLayer = new TileLayer({
+  source: new XYZ({
+    url: `${tileserverUrl}/{z}/{x}/{y}.jpg`,
+    attributions: attributions
+  })
+});
+
 // Base layers
 const defaultLayer = new TileLayer({
   source: new XYZ({
@@ -41,7 +50,7 @@ const topographicLayer = new TileLayer({
 
 // Dynamic Data Layer (STAC Item)
 const createDataLayer = () => {
-  const geoserverUrl = process.env.REACT_APP_GEOSERVER_URL;
+  const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
   const newLayer = new TileLayer({
     source: new TileWMS({
       url: geoserverUrl,
@@ -80,7 +89,7 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, setIsOnline = () => {} } = useMapLayerContext();
+  const { layer, mapRef, setIsOnline, isOnline } = useMapLayerContext();
 
   const getLayer = (): TileLayer => {
     const layerMap: Record<string, TileLayer> = {
@@ -89,20 +98,22 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       default: defaultLayer,
     };
 
+    offlineLayer.set("offline", true);
+
     // Ensure `layer` is always a valid string before accessing the object
-    const selectedLayer = layerMap[layer ?? "default"];
+    const selectedLayer = isOnline ? layerMap[layer ?? "default"] : offlineLayer;
     if (!selectedLayer.get('id')) {
       selectedLayer.set('id', 'baseLayer');
     }
 
     return selectedLayer;
   };
-  
+
   const setOnlineStatus = async () => {
     try {
         const response = await verifyInternetConnection("https://hirondelle.crim.ca/stac/collections");
         setIsOnline(response === "Internet connection established")
-    } 
+    }
     catch (error) {
       setIsOnline(false);
       console.log('No connection to the URL:', error);

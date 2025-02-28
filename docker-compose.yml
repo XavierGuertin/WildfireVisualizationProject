@@ -20,6 +20,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/health || exit 1" ]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "512M"
+          cpus: "0.5"
 
   frontend:
     build:
@@ -29,15 +39,26 @@ services:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
-      - MAPTILER_API_KEY=${MAPTILER_API_KEY}
-      - REACT_APP_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
+      - NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
+      - NEXT_PUBLIC_TILESERVER_URL=http://localhost:8081/data/OAM-World-1-8-min-J80
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
       - "3000:3000"
     networks:
       - app-network
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: "256M"
+          cpus: "0.25"
 
   db:
     image: ghcr.io/stac-utils/pgstac:v0.9.2
@@ -59,6 +80,43 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "1G"
+          cpus: "1"
+
+  tileserver-init:
+    image: curlimages/curl
+    container_name: tileserver-init
+    user: root
+    volumes:
+      - ./apps/tileserver/layers:/tileserver
+    entrypoint: [ "/bin/sh", "-c", "sh /tileserver/download_tiles.sh" ]
+    networks:
+      - app-network
+
+  tileserver:
+    image: maptiler/tileserver-gl
+    container_name: tileserver
+    restart: always
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./apps/tileserver/layers:/data
+    depends_on:
+      tileserver-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: curl --fail http://localhost:8080 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "512M"
+          cpus: "0.5"
 
   geoserver:
     image: kartoza/geoserver:latest
@@ -81,6 +139,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "1G"
+          cpus: "1"
 
 networks:
   app-network:
