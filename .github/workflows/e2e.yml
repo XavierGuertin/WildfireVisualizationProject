@@ -71,22 +71,6 @@ jobs:
             sleep 5;
           done
 
-      # Start the Frontend Application
-      - name: Start Frontend
-        run: docker-compose up -d frontend
-
-      # Wait for Frontend to be Ready
-      - name: Wait for Frontend
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:3000 | grep -q "<title>"; then
-              echo "✅ Frontend is ready!";
-              break;
-            fi;
-            echo "⏳ Waiting for the frontend to start...";
-            sleep 5;
-          done
-
       # Set up Node.js
       - uses: actions/setup-node@v4
         with:
