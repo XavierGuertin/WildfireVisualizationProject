@@ -1,10 +1,11 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
 import MapView from '../src/app/components/MapView';
 import { MapProvider } from '../src/app/components/MapContext';
 import Polygon from 'ol/geom/Polygon';
+import ol from 'ol/dist/ol';
 
 jest.mock('react', () => ({
   ...jest.requireActual('react'),
@@ -20,12 +21,22 @@ jest.mock('ol/source/XYZ', () => {
 });
 
 jest.mock('ol/layer/Tile', () => {
-  return jest.fn().mockImplementation(() => ({
-    set: jest.fn(), // Ensure `set()` exists
-    get: jest.fn(), // Mock `get()`
-    getSource: jest.fn(), // Mock `getSource()`
-  }));
+  return jest.fn().mockImplementation(() => {
+    const properties: Record<string, any> = {}; // Store layer properties
+
+    return {
+      set: jest.fn((key: string, value: any) => {
+        properties[key] = value; // Store key-value pairs
+      }),
+      get: jest.fn((key: string) => properties[key]), // Retrieve stored values
+      getSource: jest.fn(), // Mock `getSource()`
+      on: jest.fn(), // Mock event handling (e.g., 'tileloaderror')
+      once: jest.fn(), // Mock one-time event handling
+      un: jest.fn(), // Mock event unbinding
+    }
+  });
 });
+
 
 
 jest.mock('ol/View', () => {
@@ -91,6 +102,7 @@ jest.mock('../src/app/components/MapContext', () => ({
     mapRef: { current: null },
     resetView: jest.fn(),
     setIsOnline: jest.fn(),
+    isOnline: true,
   }),
 }));
 
@@ -178,5 +190,45 @@ describe(MapView, () => {
     const { Feature } = require('ol');
     const feature = new Feature();
     expect(feature).toBeInstanceOf(Feature);
+  });
+
+  it('renders the offline layer when isOnline is false', () => {
+    let mockLayersArray: any[] = []; // Simulate an array of layers
+    const mockLayers = {
+      getArray: () => mockLayersArray, // Retrieve layers
+      clear: () => { mockLayersArray.length = 0; }, // Clear layers
+    };
+
+    const mockMap = {
+      getLayers: () => mockLayers,
+      addLayer: jest.fn((layer) => {
+        mockLayersArray.push(layer); // Track added layers
+      }),
+      removeLayer: jest.fn((layer) => {
+        mockLayersArray = mockLayersArray.filter(l => l !== layer);
+      }),
+    };
+
+    // Mock `useRef` to return our mock map
+    jest.spyOn(React, 'useRef').mockReturnValue({ current: mockMap });
+
+    const { useMapLayerContext } = require('../src/app/components/MapContext');
+
+    useMapLayerContext.mockReturnValue({
+      layer: 'default',
+      mapRef: { current: mockMap },
+      setIsOnline: jest.fn(),
+      isOnline: false, // Simulating offline mode
+    });
+
+    // Render inside `act()` to ensure updates are applied
+    act(() => {
+      render(<MapView />);
+    });
+
+    // Ensure `offlineLayer` is added and has `id: 'baseLayer'`
+    const offlineLayer = mockMap.getLayers().getArray().find(layer => layer.get && layer.get('offline') === true);
+    expect(offlineLayer).toBeTruthy(); // ✅ Ensure offline layer is added
+    expect(offlineLayer.get('id')).toBe('baseLayer'); // ✅ Ensure it is set as base layer
   });
 });

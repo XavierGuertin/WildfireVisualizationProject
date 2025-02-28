@@ -24,7 +24,7 @@ RUN npm install --ignore-scripts
 COPY . .
 
 # Remove unnecessary folders to keep only the backend app
-RUN rm -rf apps/frontend apps/frontend-e2e
+RUN rm -rf apps/frontend apps/frontend-e2e apps/geoserver_data apps/tileserver
 
 # Install Nx globally to ensure it's available
 RUN npm install -g nx
