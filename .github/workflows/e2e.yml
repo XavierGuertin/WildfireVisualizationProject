@@ -23,6 +23,12 @@ jobs:
           sudo apt-get install -y docker-compose
           docker-compose --version
 
+      - name: Fix Permissions for Tileserver on GitHub Runner
+        run: |
+          sudo mkdir -p ./apps/tileserver/layers
+          sudo chmod -R 777 ./apps/tileserver/layers
+          ls -lah ./apps/tileserver/layers
+
       # Start All Required Services (DB, Backend, Geoserver, TileServer)
       - name: Start Services
         run: docker-compose up -d db backend geoserver tileserver-init tileserver

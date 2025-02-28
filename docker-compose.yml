@@ -89,6 +89,7 @@ services:
   tileserver-init:
     image: curlimages/curl
     container_name: tileserver-init
+    user: root
     volumes:
       - ./apps/tileserver/layers:/tileserver
     entrypoint: [ "/bin/sh", "-c", "sh /tileserver/download_tiles.sh" ]
