@@ -45,8 +45,9 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: password
+          NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
+          NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
-          MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
           CONFIG_FILE_PATH: /var/config/app-config.json
 
       # Push Docker images to Docker Hub

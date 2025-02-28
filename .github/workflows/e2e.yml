@@ -23,19 +23,21 @@ jobs:
           sudo apt-get install -y docker-compose
           docker-compose --version
 
-      # Start PostgreSQL, Backend, and Geoserver using Docker Compose
+      # Start All Required Services (DB, Backend, Geoserver, TileServer)
       - name: Start Services
-        run: docker-compose up -d db backend geoserver
+        run: docker-compose up -d db backend geoserver tileserver-init tileserver
+        env:
+          CONFIG_FILE_PATH: /var/config/app-config.json
 
       # Wait for Database to be Ready using Health Check
       - name: Wait for Database
         run: |
           for i in {1..30}; do
             if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=db) | grep -q "healthy"; then
-              echo "Database is ready!";
+              echo "✅ Database is ready!";
               break;
             fi;
-            echo "Waiting for the database...";
+            echo "⏳ Waiting for the database...";
             sleep 5;
           done
 
@@ -44,10 +46,38 @@ jobs:
         run: |
           for i in {1..30}; do
             if docker inspect --format='{{json .State.Health.Status}}' $(docker ps -q -f name=geoserver) | grep -q "healthy"; then
-              echo "Geoserver is ready!";
+              echo "✅ Geoserver is ready!";
               break;
             fi;
-            echo "Waiting for Geoserver...";
+            echo "⏳ Waiting for Geoserver...";
+            sleep 5;
+          done
+
+      # Wait for TileServer Initialization (MBTiles Download)
+      - name: Wait for TileServer Init to Complete
+        run: |
+          for i in {1..30}; do
+            if docker inspect --format='{{json .State.Status}}' $(docker ps -q -f name=tileserver-init) | grep -q "exited"; then
+              echo "✅ TileServer Init completed!";
+              break;
+            fi;
+            echo "⏳ Waiting for TileServer to download MBTiles...";
+            sleep 5;
+          done
+
+      # Start the Frontend Application
+      - name: Start Frontend
+        run: docker-compose up -d frontend
+
+      # Wait for Frontend to be Ready
+      - name: Wait for Frontend
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 | grep -q "<title>"; then
+              echo "✅ Frontend is ready!";
+              break;
+            fi;
+            echo "⏳ Waiting for the frontend to start...";
             sleep 5;
           done
 
@@ -66,14 +96,24 @@ jobs:
         run: npx nx build frontend
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+          NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
+          NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
         run: npx nx e2e frontend-e2e
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
-          CYPRESS_BASE_URL: http://localhost:3000
-          CONFIG_FILE_PATH: /var/config/app-config.json
+          NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
+          NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
+
+      # Collect logs if tests fail (for debugging)
+      - name: Collect Logs on Failure
+        if: failure()
+        run: |
+          echo "🔍 Collecting logs..."
+          docker-compose logs > docker-logs.txt
+          cat docker-logs.txt
 
       # Post-Test Cleanup
       - name: Cleanup
