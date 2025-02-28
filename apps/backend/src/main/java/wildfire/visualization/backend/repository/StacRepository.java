@@ -74,16 +74,16 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollections(double[] bbox) {
+  private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
     String bboxMessage = (bbox == null)
-        ? FETCHING_ALL_COLLECTIONS + NO_BBOX
+        ? FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? NO_BBOX : " sorted by " + orderBy + NO_BBOX)
         : FETCHING_WITH_BBOX + Arrays.toString(bbox);
 
     logger.debug(bboxMessage);
 
     try {
       String sql = "WITH bbox_data AS ( " +
-          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array " +
+          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
           "  FROM pgstac.collections " +
           ") " +
           "SELECT key, id, bbox_array AS bbox " +
@@ -100,6 +100,10 @@ public class StacRepository {
             ") ";
       }
 
+      if (!orderBy.isEmpty()) {
+        sql += "ORDER BY " + orderBy + ";";
+      }
+
       List<Map<String, Object>> results;
 
       if (bbox != null) {
@@ -111,9 +115,13 @@ public class StacRepository {
       logger.debug("Raw query result fetching collections: {}", results);
       return results;
     } catch (DataAccessException e) {
-      logger.error("Error fetching all collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching collections: " + e.getMessage(), e);
     }
+  }
+
+  public List<Map<String, Object>> getAllCollections(double[] bbox) {
+    return fetchCollections(bbox, ""); // No ordering applied
   }
 
   public void deleteAllCollections() {
@@ -129,91 +137,11 @@ public class StacRepository {
   }
 
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
-    String bboxMessage = (bbox == null)
-        ? FETCHING_ALL_COLLECTIONS + " sorted by Name" + NO_BBOX
-        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
-
-    logger.debug(bboxMessage);
-
-    try {
-      String sql = "WITH bbox_data AS ( " +
-          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array " +
-          "  FROM pgstac.collections " +
-          ") " +
-          "SELECT key, id, bbox_array AS bbox " +
-          "FROM bbox_data ";
-
-      if (bbox != null) {
-        sql += "WHERE ST_Intersects( " +
-            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
-            "  ST_SetSRID(ST_MakeEnvelope( " +
-            "    (bbox_array->0->>0)::double precision, " +
-            "    (bbox_array->0->>1)::double precision, " +
-            "    (bbox_array->0->>2)::double precision, " +
-            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
-            ") ";
-      }
-
-      sql += "ORDER BY id;"; // Ensure results are always ordered by ID
-
-      List<Map<String, Object>> results;
-
-      if (bbox != null) {
-        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
-      } else {
-        results = jdbcTemplate.queryForList(sql);
-      }
-
-      logger.debug("Raw query result for collections by Name: {}", results);
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error fetching all collections by Name: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections by Name: " + e.getMessage(), e);
-    }
+    return fetchCollections(bbox, "id"); // Order by Name (ID)
   }
 
   public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
-    String bboxMessage = (bbox == null)
-        ? FETCHING_ALL_COLLECTIONS + " sorted by Date" + NO_BBOX
-        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
-
-    logger.debug(bboxMessage);
-
-    try {
-      String sql = "WITH bbox_data AS ( " +
-          "  SELECT key, id, datetime, content->'extent'->'spatial'->'bbox' AS bbox_array " +
-          "  FROM pgstac.collections " +
-          ") " +
-          "SELECT key, id, bbox_array AS bbox " +
-          "FROM bbox_data ";
-
-      if (bbox != null) {
-        sql += "WHERE ST_Intersects( " +
-            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
-            "  ST_SetSRID(ST_MakeEnvelope( " +
-            "    (bbox_array->0->>0)::double precision, " +
-            "    (bbox_array->0->>1)::double precision, " +
-            "    (bbox_array->0->>2)::double precision, " +
-            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
-            ") ";
-      }
-
-      sql += "ORDER BY datetime;"; // Ensure results are always ordered by ID
-
-      List<Map<String, Object>> results;
-
-      if (bbox != null) {
-        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
-      } else {
-        results = jdbcTemplate.queryForList(sql);
-      }
-
-      logger.debug("Raw query result for collections by Date: {}", results);
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error fetching all collections by Date: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections by Date: " + e.getMessage(), e);
-    }
+    return fetchCollections(bbox, "datetime"); // Order by Date
   }
 
   public List<Map<String, Object>> queryMetaData(String collectionId) {
