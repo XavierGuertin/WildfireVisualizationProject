@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
 import "../styles/map.css";
 import { Map, View } from 'ol';
@@ -178,7 +178,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
   }, [layer, onBboxChange]);
 
   return (
-    <div id="map-container" ref={mapElement}>
+    <div id="map-container" ref={mapElement} data-testid="map-container">
       <Footer />
     </div>
   );
