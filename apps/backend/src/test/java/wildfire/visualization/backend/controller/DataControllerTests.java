@@ -126,7 +126,7 @@ class DataControllerTests {
     void getCollections_Success_WithValidBbox() {
         // Arrange
         String bboxStr = "10,20,30,40";
-        double[] expectedBbox = { 10.0, 20.0, 30.0, 40.0 };
+        double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
         List<Map<String, Object>> mockCollections = List.of(
                 Map.of("key", "value3", "id", "id3"),
                 Map.of("key", "value4", "id", "id4"));
@@ -153,7 +153,7 @@ class DataControllerTests {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNull();
-        verifyNoInteractions(dataService); // Ensure dataService is not called due to bad input
+        verifyNoInteractions(dataService);
     }
 
     @Test
@@ -219,7 +219,7 @@ class DataControllerTests {
     void getCollectionsByName_Success_WithValidBbox() {
         // Arrange
         String bboxStr = "10,20,30,40";
-        double[] expectedBbox = { 10.0, 20.0, 30.0, 40.0 };
+        double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
         List<Map<String, Object>> mockCollections = List.of(
                 Map.of("name", "Collection C", "id", "id3"),
                 Map.of("name", "Collection D", "id", "id4"));
@@ -246,7 +246,7 @@ class DataControllerTests {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNull();
-        verifyNoInteractions(dataService); // Ensure dataService is not called due to bad input
+        verifyNoInteractions(dataService);
     }
 
     @Test
@@ -285,7 +285,7 @@ class DataControllerTests {
     void getCollectionsByDate_Success_WithValidBbox() {
         // Arrange
         String bboxStr = "10,20,30,40";
-        double[] expectedBbox = { 10.0, 20.0, 30.0, 40.0 };
+        double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
         List<Map<String, Object>> mockCollections = List.of(
                 Map.of("date", "2023-03-01", "id", "id3"),
                 Map.of("date", "2023-04-01", "id", "id4"));
@@ -312,7 +312,7 @@ class DataControllerTests {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNull();
-        verifyNoInteractions(dataService); // Ensure dataService is not called due to bad input
+        verifyNoInteractions(dataService);
     }
 
     @Test
