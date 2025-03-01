@@ -112,7 +112,7 @@ public class StacRepository {
         results = jdbcTemplate.queryForList(sql);
       }
 
-      logger.debug("Raw query result fetching collections: {}", results);
+      logger.debug("Fetched {} collections", results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);

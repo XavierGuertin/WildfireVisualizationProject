@@ -21,11 +21,9 @@ export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Prom
     const url = new URL(`${BASE_URL}/api/get-collections`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-
     } 
-    
+
     const response = await fetch(url.toString());
-    console.log('Fetching from: ', url.toString());
     
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -161,12 +159,10 @@ export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promi
     const url = new URL(`${BASE_URL}/api/get-collections-by-name`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-
     } 
     
     const response = await fetch(url.toString());
-    console.log('Fetching from: ', url.toString());
-    
+
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -183,12 +179,10 @@ export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promi
     const url = new URL(`${BASE_URL}/api/get-collections-by-date`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-
     } 
     
     const response = await fetch(url.toString());
-    console.log('Fetching from: ', url.toString());
-    
+
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
