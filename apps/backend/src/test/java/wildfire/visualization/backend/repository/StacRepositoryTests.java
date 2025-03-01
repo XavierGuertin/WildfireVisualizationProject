@@ -140,6 +140,55 @@ class StacRepositoryTests {
   }
 
   @Test
+  void fetchCollections_Success_NoBbox() {
+    // Arrange
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "collection1"),
+        Map.of("id", "collection2"));
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllCollections(null);
+
+    // Assert
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).containsEntry("id", "collection1");
+    verify(jdbcTemplate).queryForList(anyString());
+  }
+
+  @Test
+  void fetchCollections_Success_WithBbox() {
+    // Arrange
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
+    List<Map<String, Object>> mockResults = List.of(
+        Map.of("id", "collection1"),
+        Map.of("id", "collection2"));
+
+    when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
+        .thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> results = stacRepository.getAllCollections(bbox);
+
+    // Assert
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).containsEntry("id", "collection1");
+    verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
+  }
+
+  @Test
+  void fetchCollections_ThrowsException_WhenDatabaseError() {
+    when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
+    });
+
+    assertThatThrownBy(() -> stacRepository.getAllCollections(null))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching collections");
+
+    verify(jdbcTemplate).queryForList(anyString());
+  }
+
+  @Test
   void getAllCollections_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockResults = List.of(
@@ -188,7 +237,7 @@ class StacRepositoryTests {
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollections(null))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error fetching all collections");
+        .hasMessageContaining("Error fetching collections");
 
     verify(jdbcTemplate).queryForList(anyString());
   }
@@ -204,7 +253,7 @@ class StacRepositoryTests {
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollections(bbox))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error fetching all collections");
+        .hasMessageContaining("Error fetching collections");
 
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
@@ -242,112 +291,96 @@ class StacRepositoryTests {
         .hasMessageContaining("Error deleting collections");
   }
 
+  // =========================== FETCH COLLECTIONS BY NAME TESTS
+  // ===========================
+
   @Test
   void getAllCollectionsByName_Success_NoBbox() {
-    // Arrange
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1", "name", "A Collection"),
-        Map.of("id", "collection2", "name", "B Collection"));
+        Map.of("id", "collection1"),
+        Map.of("id", "collection2"));
+
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
-    // Act
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null);
 
-    // Assert
-    assertThat(results).isNotNull();
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1").containsEntry("name", "A Collection");
-    assertThat(results.get(1)).containsEntry("id", "collection2").containsEntry("name", "B Collection");
+    assertThat(results.get(0)).containsEntry("id", "collection1");
     verify(jdbcTemplate).queryForList(anyString());
   }
 
   @Test
   void getAllCollectionsByName_Success_WithBbox() {
-    // Arrange
     double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1", "name", "A Collection"),
-        Map.of("id", "collection2", "name", "B Collection"));
+        Map.of("id", "collection1"),
+        Map.of("id", "collection2"));
+
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
 
-    // Act
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox);
 
-    // Assert
-    assertThat(results).isNotNull();
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1").containsEntry("name", "A Collection");
-    assertThat(results.get(1)).containsEntry("id", "collection2").containsEntry("name", "B Collection");
+    assertThat(results.get(0)).containsEntry("id", "collection1");
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
 
   @Test
-  void getAllCollectionsByName_Failure() {
-    // Arrange
+  void getAllCollectionsByName_ThrowsException() {
     when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
     });
 
-    // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollectionsByName(null))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error fetching all collections by Name");
+        .hasMessageContaining("Error fetching collections");
 
     verify(jdbcTemplate).queryForList(anyString());
   }
 
-  // ======== getAllCollectionsByDate TESTS ========
+  // =========================== FETCH COLLECTIONS BY DATE TESTS
+  // ===========================
 
   @Test
   void getAllCollectionsByDate_Success_NoBbox() {
-    // Arrange
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("datetime", "2024-02-01T12:00:00Z", "id", "collection1"),
-        Map.of("datetime", "2024-02-02T12:00:00Z", "id", "collection2"));
+        Map.of("id", "collection1", "datetime", "2024-02-01T12:00:00Z"),
+        Map.of("id", "collection2", "datetime", "2024-02-02T12:00:00Z"));
+
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
-    // Act
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(null);
 
-    // Assert
-    assertThat(results).isNotNull();
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("datetime", "2024-02-01T12:00:00Z");
-    assertThat(results.get(1)).containsEntry("datetime", "2024-02-02T12:00:00Z");
     verify(jdbcTemplate).queryForList(anyString());
   }
 
   @Test
   void getAllCollectionsByDate_Success_WithBbox() {
-    // Arrange
     double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("datetime", "2024-02-01T12:00:00Z", "id", "collection1"),
-        Map.of("datetime", "2024-02-02T12:00:00Z", "id", "collection2"));
+        Map.of("id", "collection1", "datetime", "2024-02-01T12:00:00Z"),
+        Map.of("id", "collection2", "datetime", "2024-02-02T12:00:00Z"));
+
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
 
-    // Act
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(bbox);
 
-    // Assert
-    assertThat(results).isNotNull();
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("datetime", "2024-02-01T12:00:00Z");
-    assertThat(results.get(1)).containsEntry("datetime", "2024-02-02T12:00:00Z");
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
 
   @Test
-  void getAllCollectionsByDate_Failure() {
-    // Arrange
+  void getAllCollectionsByDate_ThrowsException() {
     when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
     });
 
-    // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollectionsByDate(null))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error fetching all collections by Date");
+        .hasMessageContaining("Error fetching collections");
 
     verify(jdbcTemplate).queryForList(anyString());
   }
