@@ -14,23 +14,27 @@ export const insertMockItemData = async(): Promise<any> => {
   }
 }
 
-//Actual endpoint methods
-export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Promise<{
-  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
+/**
+ * Fetches collections from the backend, optionally filtered by bounding box (BBOX).
+ *
+ * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
+ * @returns A promise resolving to an array of collections or an error object.
+ */
+export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-    } 
+    }
 
     const response = await fetch(url.toString());
-    
     if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching collections:', error);
+    console.error('Failed to fetch collections:', error.message);
     return { error: 'Failed to fetch data' };
   }
 };
@@ -153,42 +157,52 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
   }
 }
 
-export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promise<{
-  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
+/**
+ * Fetches collections from the backend, optionally filtered by bounding box (BBOX), and sorted by name.
+ *
+ * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
+ * @returns A promise resolving to an array of collections or an error object.
+ */
+export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections-by-name`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-    } 
-    
-    const response = await fetch(url.toString());
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
     }
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching collections by name:', error);
+    console.error('Failed to fetch collections sorted by name:', error.message);
     return { error: 'Failed to fetch data by name' };
   }
 };
 
-export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promise<{
-  id: string; key: number; bbox:number[][]} [] | {error: string}> => {
+/**
+ * Fetches collections from the backend, optionally filtered by bounding box (BBOX), and sorted by date.
+ *
+ * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
+ * @returns A promise resolving to an array of collections or an error object.
+ */
+export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections-by-date`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
-    } 
-    
-    const response = await fetch(url.toString());
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
     }
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching collections by date:', error);
+    console.error('Failed to fetch collections sorted by date:', error.message);
     return { error: 'Failed to fetch data by date' };
   }
 };

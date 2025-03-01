@@ -21,9 +21,17 @@ import java.util.Map;
 public class DataController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
-  private static final String INVALID_BBOX_FORMAT = "Invalid bbox format: Expected 4 values but got {}";
-  private static final String PARSED_BBOX_SUCCESSFULLY = "Parsed bbox successfully: {}";
+  @Autowired
+  private DataService dataService;
 
+  /**
+   * Parses a bounding box (BBOX) string from a request parameter.
+   * The BBOX format is "minX,minY,maxX,maxY".
+   *
+   * @param bboxStr The bounding box string to be parsed.
+   * @return A double array representing the bounding box values, or null if
+   *         parsing fails.
+   */
   private double[] parseBbox(String bboxStr) {
     try {
       if (bboxStr == null) {
@@ -31,26 +39,20 @@ public class DataController {
       }
 
       bboxStr = URLDecoder.decode(bboxStr, StandardCharsets.UTF_8);
-      logger.info("Parsing bbox string: {}", bboxStr);
+      logger.debug("Parsing BBOX input...");
 
       String[] bboxParts = bboxStr.split(",");
       if (bboxParts.length != 4) {
-        logger.error(INVALID_BBOX_FORMAT, bboxParts.length);
+        logger.warn("Invalid BBOX format: Expected 4 values but received {}", bboxParts.length);
         return null;
       }
 
-      double[] bbox = Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
-      logger.info(PARSED_BBOX_SUCCESSFULLY, Arrays.toString(bbox));
-
-      return bbox;
+      return Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
     } catch (Exception e) {
-      logger.error("Error parsing bbox: {}", e.getMessage(), e);
+      logger.error("Error parsing BBOX: {}", e.getMessage(), e);
       return null;
     }
   }
-
-  @Autowired
-  private DataService dataService;
 
   @GetMapping("/api/data")
   public ResponseEntity<String> getData() {
@@ -102,13 +104,22 @@ public class DataController {
     }
   }
 
+  /**
+   * Fetches collections from the database, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections or an error
+   *         message.
+   */
   @GetMapping("/api/get-collections")
   public ResponseEntity<List<Map<String, Object>>> getCollections(
       @RequestParam(value = "bbox", required = false) String bboxStr) {
-    logger.info("Received request to get collections with bbox: {}", bboxStr);
+    logger.info("Processing request to fetch collections.");
 
     double[] bbox = parseBbox(bboxStr);
-    if (bboxStr != null && bbox == null) { // If bboxStr was given but parsing failed
+    if (bboxStr != null && bbox == null) {
       return ResponseEntity.badRequest().body(null);
     }
 
@@ -116,7 +127,7 @@ public class DataController {
       List<Map<String, Object>> collections = dataService.getCollections(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
@@ -459,10 +470,18 @@ public class DataController {
     }
   }
 
+  /**
+   * Fetches collections sorted by name, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections sorted by name.
+   */
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName(
       @RequestParam(value = "bbox", required = false) String bboxStr) {
-    logger.info("Received request to get collections by name with bbox: {}", bboxStr);
+    logger.info("Processing request to fetch collections sorted by name.");
 
     double[] bbox = parseBbox(bboxStr);
     if (bboxStr != null && bbox == null) {
@@ -473,15 +492,23 @@ public class DataController {
       List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections by name: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
 
+  /**
+   * Fetches collections sorted by date, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections sorted by date.
+   */
   @GetMapping("/api/get-collections-by-date")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate(
       @RequestParam(value = "bbox", required = false) String bboxStr) {
-    logger.info("Received request to get collections by date with bbox: {}", bboxStr);
+    logger.info("Processing request to fetch collections sorted by date.");
 
     double[] bbox = parseBbox(bboxStr);
     if (bboxStr != null && bbox == null) {
@@ -492,7 +519,7 @@ public class DataController {
       List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections by date: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections by date: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }

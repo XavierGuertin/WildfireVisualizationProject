@@ -74,14 +74,36 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Fetches a list of collections from the database, optionally filtered by a
+   * bounding box (BBOX)
+   * and sorted by a specified column.
+   *
+   * @param bbox    An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                null, no filter is applied.
+   * @param orderBy The column by which to order results (e.g., "id" or
+   *                "datetime"). If empty, no ordering is applied.
+   * @return A list of collections as key-value maps, containing collection
+   *         metadata.
+   * @throws IllegalArgumentException If `bbox` is not null and does not contain
+   *                                  exactly 4 elements.
+   * @throws RuntimeException         If a database error occurs.
+   */
   private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
-    String bboxMessage = (bbox == null)
-        ? FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? NO_BBOX : " sorted by " + orderBy + NO_BBOX)
-        : FETCHING_WITH_BBOX + Arrays.toString(bbox);
+    // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
+    if (bbox != null && bbox.length != 4) {
+      throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+    }
 
-    logger.debug(bboxMessage);
+    // Log query type (bbox filtering or not)
+    if (bbox == null) {
+      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+    } else {
+      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+    }
 
     try {
+      // Base SQL query for fetching collections
       String sql = "WITH bbox_data AS ( " +
           "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
           "  FROM pgstac.collections " +
@@ -89,6 +111,7 @@ public class StacRepository {
           "SELECT key, id, bbox_array AS bbox " +
           "FROM bbox_data ";
 
+      // Apply bounding box filtering if provided
       if (bbox != null) {
         sql += "WHERE ST_Intersects( " +
             "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
@@ -100,26 +123,35 @@ public class StacRepository {
             ") ";
       }
 
+      // Validate and apply ordering if provided
       if (!orderBy.isEmpty()) {
-        sql += "ORDER BY " + orderBy + ";";
+        if (!Arrays.asList("id", "datetime").contains(orderBy)) {
+          throw new IllegalArgumentException("Invalid orderBy column: " + orderBy);
+        }
+        sql += " ORDER BY " + orderBy;
       }
 
-      List<Map<String, Object>> results;
+      // Execute query and fetch results
+      List<Map<String, Object>> results = (bbox != null)
+          ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
+          : jdbcTemplate.queryForList(sql);
 
-      if (bbox != null) {
-        results = jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3]);
-      } else {
-        results = jdbcTemplate.queryForList(sql);
-      }
-
-      logger.debug("Fetched {} collections", results.size());
+      logger.info("Successfully fetched {} collections.", results.size());
       return results;
     } catch (DataAccessException e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      logger.error("Database error while fetching collections: {}", e.getMessage(), e);
       throw new RuntimeException("Error fetching collections: " + e.getMessage(), e);
     }
   }
 
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX).
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of all collections in the database.
+   */
   public List<Map<String, Object>> getAllCollections(double[] bbox) {
     return fetchCollections(bbox, ""); // No ordering applied
   }
@@ -136,12 +168,30 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX),
+   * and sorted by collection name (ID).
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of collections sorted by name.
+   */
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
-    return fetchCollections(bbox, "id"); // Order by Name (ID)
+    return fetchCollections(bbox, "id"); // Order by collection name (ID)
   }
 
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX),
+   * and sorted by date.
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of collections sorted by date.
+   */
   public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
-    return fetchCollections(bbox, "datetime"); // Order by Date
+    return fetchCollections(bbox, "datetime"); // Order by date
   }
 
   public List<Map<String, Object>> queryMetaData(String collectionId) {

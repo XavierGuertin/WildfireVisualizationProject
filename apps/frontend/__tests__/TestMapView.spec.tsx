@@ -67,8 +67,8 @@ jest.mock('ol/Map', () => {
 
     const mockView = {
       calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
-      setCenter: jest.fn(), // ✅ NOW A JEST MOCK
-      setZoom: jest.fn(),   // ✅ NOW A JEST MOCK
+      setCenter: jest.fn(),
+      setZoom: jest.fn(), 
       on: jest.fn((event: string, callback: () => void) => {
         if (!eventListeners[event]) {
           eventListeners[event] = [];
@@ -81,7 +81,7 @@ jest.mock('ol/Map', () => {
     };
 
     return {
-      getView: jest.fn(() => mockView), // ✅ RETURNING A CONSISTENT MOCKED VIEW OBJECT
+      getView: jest.fn(() => mockView),
       getSize: jest.fn(() => [800, 600]),
       getLayers: jest.fn(() => ({
         getArray: jest.fn(() => []),
@@ -373,7 +373,6 @@ describe(MapView, () => {
       </MapProvider>
     );
   
-    // ✅ Ensure an online layer was added
     expect(mapMock.addLayer).toHaveBeenCalled();
     expect(contextMock.isOnline).toBe(true);
   
@@ -385,7 +384,6 @@ describe(MapView, () => {
       </MapProvider>
     );
   
-    // ✅ Ensure an offline layer was added
     expect(mapMock.addLayer).toHaveBeenCalledTimes(2);
     expect(contextMock.isOnline).toBe(false);
   });  

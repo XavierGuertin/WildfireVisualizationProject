@@ -7,10 +7,10 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { 
-  fetchCollectionsFromEndpointByName, 
-  fetchCollectionsFromEndpointByDate, 
-  fetchMetaData, 
+import {
+  fetchCollectionsFromEndpointByName,
+  fetchCollectionsFromEndpointByDate,
+  fetchMetaData,
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
 import debounce from 'lodash/debounce';
@@ -53,6 +53,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  /**
+   * Fetches dataset collections based on the selected filter and bounding box.
+   * Uses debounce to limit frequent API calls.
+   */
   const fetchDatasets = debounce(async () => {
     setIsLoading(true);
     try {
@@ -60,7 +64,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       const params = {
         bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined
       };
-  
+
       if (activeFilter === 'Name') {
         response = await fetchCollectionsFromEndpointByName(params.bbox);
       } else if (activeFilter === 'Date') {
@@ -68,18 +72,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       } else {
         response = await returnListOfCollectionsFromEndpoint(params.bbox); // Fetch all datasets if bbox is undefined
       }
-  
+
       if (!Array.isArray(response)) {
         console.error("Invalid response format:", response);
         setFetchError(response.error || "Failed to load datasets.");
         setDatasets([]);
         return;
       }
-  
+
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
-      console.log('Error fetching datasets:', error);
+      console.error('Error fetching datasets:', error);
       setDatasets([]);
       setFetchError('Failed to load datasets.');
     } finally {
@@ -87,30 +91,49 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, 300);
 
+  /**
+   * Fetches datasets when the refresh key or filter changes.
+   */
   useEffect(() => {
-    // Always fetch when refreshKey or activeFilter changes
     fetchDatasets();
     return () => fetchDatasets.cancel();
   }, [refreshKey, activeFilter]);
-  
+
+  /**
+   * Fetches datasets when toggling filtering by map view.
+   */
   useEffect(() => {
-    // Only fetch when isToggled is true and bbox changes
     if (isToggled) {
       fetchDatasets();
     }
-  }, [isToggled, currentBbox.join(',')]); // Ensures fixed dependency size
-  
-  const handleFilterChange = async (filter: string) => {
+  }, [isToggled, currentBbox.join(',')]);
+
+  /**
+   * Handles changes to the dataset sorting filter.
+   * @param filter - The selected sorting filter.
+   */
+  const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
   };
 
+  /**
+   * Toggles dataset sidebar collapse state.
+   */
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
+  /**
+   * Toggles dataset filtering based on the visible map region.
+   */
   const handleToggle = () => setIsToggled((prev) => !prev);
 
+  /**
+   * Handles dataset selection and fetches metadata.
+   * @param id - The dataset ID.
+   */
   const handleDatasetClick = async (id: string) => {
-    setSelectedDataset(id); // Update selected dataset
+    setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
-    onDatasetClick(dataset); // Pass dataset to parent component
+    onDatasetClick(dataset);
   };
 
   return (
@@ -171,7 +194,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           </div>
           <div className="filter-container" data-testid="filter-container">
             <div className="filter-icon" data-testid="filter-icon">
-              <FaFilter size={24} />
+            <FaFilter size={24} />
             </div>
             {['Name', 'Date'].map(
               (filter) => (
@@ -181,8 +204,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   onClick={() => handleFilterChange(filter)}
                   data-testid={`filter-button-${filter}`}
                 >
-                  {t(filter.toLowerCase().replace(/ /g, '_'))}
-                </button>
+                {t(filter.toLowerCase().replace(/ /g, '_'))}
+              </button>
               ),
             )}
           </div>

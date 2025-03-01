@@ -135,33 +135,28 @@ describe('Test AvailableDatasets component', () => {
   });  
 
   it('should fetch datasets only when toggled on', async () => {
-    // ✅ Ensure the mock is resolved
     mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
   
     render(
       <AvailableDatasets
         onDatasetClick={mockOnDatasetClick}
         refreshKey={0}
-        currentBbox={[-120, 30, -110, 40]} // ✅ Ensure bbox is set
+        currentBbox={[-120, 30, -110, 40]}
       />
     );
   
-    // ✅ Ensure `activeFilter` is set to "Name" to trigger fetchCollectionsFromEndpointByName
     const filterButton = screen.getByTestId('filter-button-Name');
     fireEvent.click(filterButton); // This means fetchByName is called once
   
-    // ✅ Ensure no request is made initially
     expect(mockFetchCollectionsByName).not.toHaveBeenCalled();
   
     const toggleButton = await screen.findByTestId('toggle-button');
     fireEvent.click(toggleButton); // This means fetchByName is called twice
   
-    // ✅ Ensure the checkbox is actually checked before checking API call
     await waitFor(() => {
       expect(screen.getByTestId('toggle-checkbox')).toBeChecked();
     });
   
-    // ✅ Ensure state updates before checking function calls
     await waitFor(() => {
       expect(mockFetchCollectionsByName).toHaveBeenCalledTimes(2);
       expect(mockFetchCollectionsByName).toHaveBeenCalledWith([-120, 30, -110, 40]);
