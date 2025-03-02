@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,12 +82,36 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollections() {
-        logger.info("Fetching collections from database");
+    /**
+     * Retrieves all collections from the database, optionally filtered by a
+     * bounding box (BBOX).
+     *
+     * This method fetches collections from the repository, applies an optional BBOX
+     * filter,
+     * and restructures the data for easy consumption by clients.
+     *
+     * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+     *             null, no filter is applied.
+     * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
+     * @throws RuntimeException If an error occurs while fetching collections.
+     */
+    public List<Map<String, Object>> getCollections(double[] bbox) {
+        logger.debug("Fetching collections from database with bbox: {}",
+                bbox != null ? Arrays.toString(bbox) : "No bbox");
+
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollections();
+            // Fetch collections from repository
+            List<Map<String, Object>> collections = stacRepository.getAllCollections(bbox);
+
+            logger.info("Successfully fetched {} collections.", collections.size());
+
+            // Transform collections into a structured format
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+                    ))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections: {}", e.getMessage(), e);
@@ -108,13 +133,36 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollectionsByName() {
-        logger.info("Fetching collections from database filter by name");
+    /**
+     * Retrieves all collections from the database, sorted by name, optionally
+     * filtered by a bounding box (BBOX).
+     *
+     * This method queries collections ordered by their name (`id` field) and
+     * restructures
+     * the response for client consumption.
+     *
+     * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+     *             null, no filter is applied.
+     * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
+     * @throws RuntimeException If an error occurs while fetching collections.
+     */
+    public List<Map<String, Object>> getCollectionsByName(double[] bbox) {
+        logger.debug("Fetching collections from database sorted by name with bbox: {}",
+                bbox != null ? Arrays.toString(bbox) : "No bbox");
+
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName();
-            logger.debug("Fetched collections ordered by name: {}", collections);
+            // Fetch collections sorted by name (id) from repository
+            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName(bbox);
+
+            logger.info("Successfully fetched {} collections sorted by name.", collections.size());
+
+            // Transform collections into a structured format
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+                    ))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
@@ -122,13 +170,36 @@ public class DataService {
         }
     }
 
-    public List<Map<String, Object>> getCollectionsByDate() {
-        logger.info("Fetching collections from database filter by date");
+    /**
+     * Retrieves all collections from the database, sorted by date, optionally
+     * filtered by a bounding box (BBOX).
+     *
+     * This method queries collections ordered by their creation or modification
+     * date and
+     * restructures the response for client consumption.
+     *
+     * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+     *             null, no filter is applied.
+     * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
+     * @throws RuntimeException If an error occurs while fetching collections.
+     */
+    public List<Map<String, Object>> getCollectionsByDate(double[] bbox) {
+        logger.debug("Fetching collections from database sorted by date with bbox: {}",
+                bbox != null ? Arrays.toString(bbox) : "No bbox");
+
         try {
-            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate();
-            logger.debug("Fetched collections ordered by date: {}", collections);
+            // Fetch collections sorted by date from repository
+            List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate(bbox);
+
+            logger.info("Successfully fetched {} collections sorted by date.", collections.size());
+
+            // Transform collections into a structured format
             return collections.stream()
-                    .map(collection -> Map.of("key", collection.get("key"), "id", collection.get("id")))
+                    .map(collection -> Map.of(
+                            "key", collection.get("key"),
+                            "id", collection.get("id"),
+                            "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+                    ))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Error fetching collections by Date: {}", e.getMessage(), e);

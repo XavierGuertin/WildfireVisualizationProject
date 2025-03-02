@@ -8,12 +8,16 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @Repository
 public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
+  private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
+  private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
+  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -31,8 +35,8 @@ public class StacRepository {
     }
   }
 
-  public boolean checkItemExists(String itemId){
-    try{
+  public boolean checkItemExists(String itemId) {
+    try {
       String sql = "SELECT COUNT(*) FROM pgstac.items WHERE id = ?";
       Integer count = jdbcTemplate.queryForObject(sql, Integer.class, itemId);
       logger.debug("Item check result: count={}", count);
@@ -70,17 +74,86 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollections() {
-    logger.debug("Fetching all collections");
+  /**
+   * Fetches a list of collections from the database, optionally filtered by a
+   * bounding box (BBOX)
+   * and sorted by a specified column.
+   *
+   * @param bbox    An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                null, no filter is applied.
+   * @param orderBy The column by which to order results (e.g., "id" or
+   *                "datetime"). If empty, no ordering is applied.
+   * @return A list of collections as key-value maps, containing collection
+   *         metadata.
+   * @throws IllegalArgumentException If `bbox` is not null and does not contain
+   *                                  exactly 4 elements.
+   * @throws RuntimeException         If a database error occurs.
+   */
+  private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
+    // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
+    if (bbox != null && bbox.length != 4) {
+      throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+    }
+
+    // Log query type (bbox filtering or not)
+    if (bbox == null) {
+      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+    } else {
+      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+    }
+
     try {
-      String sql = "SELECT * FROM pgstac.collections";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      // Base SQL query for fetching collections
+      String sql = "WITH bbox_data AS ( " +
+          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
+          "  FROM pgstac.collections " +
+          ") " +
+          "SELECT key, id, bbox_array AS bbox " +
+          "FROM bbox_data ";
+
+      // Apply bounding box filtering if provided
+      if (bbox != null) {
+        sql += "WHERE ST_Intersects( " +
+            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+            "  ST_SetSRID(ST_MakeEnvelope( " +
+            "    (bbox_array->0->>0)::double precision, " +
+            "    (bbox_array->0->>1)::double precision, " +
+            "    (bbox_array->0->>2)::double precision, " +
+            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+            ") ";
+      }
+
+      // Validate and apply ordering if provided
+      if (!orderBy.isEmpty()) {
+        if (!Arrays.asList("id", "datetime").contains(orderBy)) {
+          throw new IllegalArgumentException("Invalid orderBy column: " + orderBy);
+        }
+        sql += " ORDER BY " + orderBy;
+      }
+
+      // Execute query and fetch results
+      List<Map<String, Object>> results = (bbox != null)
+          ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
+          : jdbcTemplate.queryForList(sql);
+
+      logger.info("Successfully fetched {} collections.", results.size());
       return results;
     } catch (DataAccessException e) {
-      logger.error("Error fetching all collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections: " + e.getMessage(), e);
+      logger.error("Database error while fetching collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching collections: " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX).
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of all collections in the database.
+   */
+  public List<Map<String, Object>> getAllCollections(double[] bbox) {
+    return fetchCollections(bbox, ""); // No ordering applied
   }
 
   public void deleteAllCollections() {
@@ -95,30 +168,30 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getAllCollectionsByName() {
-    logger.debug("Fetching all collections by name");
-    try {
-      String sql = "SELECT key, id FROM pgstac.collections ORDER BY id";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error fetching all collections by Name: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections Name: " + e.getMessage(), e);
-    }
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX),
+   * and sorted by collection name (ID).
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of collections sorted by name.
+   */
+  public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
+    return fetchCollections(bbox, "id"); // Order by collection name (ID)
   }
 
-  public List<Map<String, Object>> getAllCollectionsByDate() {
-    logger.debug("Fetching all collections by date");
-    try {
-      String sql = "SELECT key, id FROM pgstac.collections ORDER BY datetime";
-      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
-      return results;
-    } catch (DataAccessException e) {
-      logger.error("Error fetching all collections by Date: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching all collections Date: " + e.getMessage(), e);
-    }
+  /**
+   * Retrieves all collections from the database, optionally filtered by a
+   * bounding box (BBOX),
+   * and sorted by date.
+   *
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
+   * @return A list of collections sorted by date.
+   */
+  public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
+    return fetchCollections(bbox, "datetime"); // Order by date
   }
 
   public List<Map<String, Object>> queryMetaData(String collectionId) {
@@ -143,9 +216,9 @@ public class StacRepository {
     logger.debug("Attempting to insert item");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_item(?::jsonb)",
-        Object.class,
-        itemJson);
+          "SELECT pgstac.create_item(?::jsonb)",
+          Object.class,
+          itemJson);
       logger.info("Successfully inserted item");
     } catch (DataAccessException e) {
       logger.error("Error inserting item: {}", e.getMessage(), e);
@@ -153,21 +226,20 @@ public class StacRepository {
     }
   }
 
-
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.debug("Fetching items");
     try {
       String sql = "SELECT * FROM pgstac.search(" +
-        "    '{" +
-        "        \"filter\": {" +
-        "            \"op\": \"=\"," +
-        "            \"args\": [" +
-        "                { \"property\": \"collection\" }," +
-        "                \"" + collectionId + "\"" +
-        "            ]" +
-        "        }" +
-        "    }'::jsonb" +
-        ")";
+          "    '{" +
+          "        \"filter\": {" +
+          "            \"op\": \"=\"," +
+          "            \"args\": [" +
+          "                { \"property\": \"collection\" }," +
+          "                \"" + collectionId + "\"" +
+          "            ]" +
+          "        }" +
+          "    }'::jsonb" +
+          ")";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;
@@ -177,7 +249,7 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getItem(String id){
+  public List<Map<String, Object>> getItem(String id) {
     logger.debug("Fetching item");
     try {
       String sql = "SELECT pgstac.get_item('" + id + "');";
@@ -190,7 +262,7 @@ public class StacRepository {
     }
   }
 
-  public List<Map<String, Object>> getItem(String id, String collection){
+  public List<Map<String, Object>> getItem(String id, String collection) {
     logger.debug("Fetching item");
     try {
       String sql = "SELECT pgstac.get_item('" + id + "', '" + collection + "');";
@@ -202,7 +274,6 @@ public class StacRepository {
       throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
     }
   }
-
 
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
@@ -245,40 +316,40 @@ public class StacRepository {
 
   public String removeAllItems() {
     logger.debug("Removing all items");
-    try{
+    try {
       String sql = "DO $$ \n" +
-        "DECLARE\n" +
-        "    rec RECORD;\n" +
-        "BEGIN\n" +
-        "    SET search_path = pgstac, public;\n" +
-        "\n" +
-        "    FOR rec IN SELECT id, collection FROM items LOOP\n" +
-        "        PERFORM delete_item(rec.id, rec.collection);\n" +
-        "    END LOOP;\n" +
-        "END $$;\n";
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id, collection FROM items LOOP\n" +
+          "        PERFORM delete_item(rec.id, rec.collection);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
 
       jdbcTemplate.execute(sql);
       return "Successfully Removed All Items";
-  } catch (DataAccessException e) {
-    logger.error("Error fetching item: {}", e.getMessage(), e);
-    throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
-  }
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+    }
   }
 
   public String removeItemsFromCollection(String collectionId) {
     logger.debug("Removing all items from collection");
-    try{
+    try {
       String sql = "DO $$ \n" +
-        "DECLARE\n" +
-        "    rec RECORD;\n" +
-        "    target_collection_id text := '" + collectionId + "';\n" +
-        "BEGIN\n" +
-        "    SET search_path = pgstac, public;\n" +
-        "\n" +
-        "    FOR rec IN SELECT id FROM items WHERE collection = target_collection_id LOOP\n" +
-        "        PERFORM delete_item(rec.id, target_collection_id);\n" +
-        "    END LOOP;\n" +
-        "END $$;\n";
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "    target_collection_id text := '" + collectionId + "';\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id FROM items WHERE collection = target_collection_id LOOP\n" +
+          "        PERFORM delete_item(rec.id, target_collection_id);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
 
       jdbcTemplate.execute(sql);
       return "Successfully Removed All Items From Collection";
@@ -290,7 +361,7 @@ public class StacRepository {
 
   public String removeItem(String itemId, String collectionId) {
     logger.debug("Removing item");
-    try{
+    try {
       String sql = "SELECT delete_item('" + itemId + "', '" + collectionId + "');";
 
       jdbcTemplate.execute(sql);
