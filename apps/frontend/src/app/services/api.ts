@@ -1,19 +1,5 @@
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
-export const insertMockItemData = async(): Promise<any> => {
-  try{
-    const response = await fetch(`${BASE_URL}/api/insert-mock-items`,
-      {
-        method: 'POST'
-      }
-    );
-    console.log("Successfully inserted mock data! Status: ", response.status)
-  }
-  catch(error: any){
-    console.error("Error inserting mock item data: ", error)
-  }
-}
-
 /**
  * Fetches collections from the backend, optionally filtered by bounding box (BBOX).
  *
@@ -39,7 +25,7 @@ export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Prom
   }
 };
 
-export const getCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
+export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
     if (!response.ok) {
@@ -89,9 +75,9 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     }
     const data = await response.json();
 
-    const links = JSON.parse(data[0].links.value)
-    let items = {rel: "", href: "", type: ""};
-    let parent = {rel: "", href: "", type: ""};
+    const links = JSON.parse(data[0].links.value);
+    let items = { rel: '', href: '', type: '' };
+    let parent = { rel: '', href: '', type: '' };
     for (const element of links) {
       if (element.rel === 'items') {
         items = element;
@@ -100,14 +86,14 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
       }
     }
 
-    const format = items.type.split('/').pop()
+    const format = items.type.split('/').pop();
 
-    const sourceLink = parent.href
-    let truncatedSource = ""
-    if(sourceLink.charAt(sourceLink.length - 1) === '/')
+    const sourceLink = parent.href;
+    let truncatedSource = '';
+    if (sourceLink.charAt(sourceLink.length - 1) === '/')
       truncatedSource = sourceLink.substring(0, sourceLink.length - 1);
 
-    const source = truncatedSource.split('/').pop()?.toUpperCase()
+    const source = truncatedSource.split('/').pop()?.toUpperCase();
 
     const metadata = {
       id: collectionId,
@@ -116,29 +102,15 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
       datasetSource: source,
       description: data[0].description,
       format: format,
-      latestAdded: "",
-      latestUpdated: "",
+      latestAdded: '',
+      latestUpdated: '',
       name: data[0].title,
-      processes: "",
-    }
+      processes: '',
+    };
     return metadata;
   } catch (error: any) {
-    console.error("Error fetching MetaData:", error);
-    return { error: "Failed to fetch MetaData" };
-  }
-};
-
-export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
-  try {
-    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-    const message = await response.text();
-    return message;
-  } catch (error: any) {
-    console.error('Error fetching collections:', error);
-    throw new Error(`Failed to fetch data: ${error.message}`);
+    console.error('Error fetching MetaData:', error);
+    return { error: 'Failed to fetch MetaData' };
   }
 };
 
@@ -217,8 +189,8 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
     const data = await response.json();
     return JSON.parse(data[0].search.value).features;
   } catch (error: any) {
-    console.error("Error fetching MetaData:", error);
-    return { error: "Failed to fetch MetaData" };
+    console.error('Error fetching MetaData:', error);
+    return { error: 'Failed to fetch MetaData' };
   }
 };
 
