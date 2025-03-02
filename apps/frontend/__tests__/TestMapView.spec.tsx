@@ -1,12 +1,13 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { act, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
-import MapView from '../src/app/components/MapView';
+import MapView, {
+  changeLayer,
+  refreshLayer,
+} from '../src/app/components/MapView';
 import { MapProvider } from '../src/app/components/MapContext';
 import Polygon from 'ol/geom/Polygon';
-import ol from 'ol/dist/ol';
-import { changeLayer, refreshLayer } from '../src/app/components/MapView';
 
 jest.mock('react', () => ({
   ...jest.requireActual('react'),
@@ -14,7 +15,6 @@ jest.mock('react', () => ({
   useContext: jest.fn(),
   useRef: jest.fn(),
 }));
-
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 jest.mock('ol/geom/Polygon', () => {
@@ -36,11 +36,9 @@ jest.mock('ol/layer/Tile', () => {
       on: jest.fn(), // Mock event handling (e.g., 'tileloaderror')
       once: jest.fn(), // Mock one-time event handling
       un: jest.fn(), // Mock event unbinding
-    }
+    };
   });
 });
-
-
 
 jest.mock('ol/View', () => {
   return jest.fn().mockImplementation(() => {
@@ -63,12 +61,12 @@ jest.mock('ol/style/Fill', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('ol/Map', () => {
   return jest.fn().mockImplementation(() => {
-    const eventListeners: Record<string, Function[]> = {};
+    const eventListeners: Record<string, (() => void)[]> = {};
 
     const mockView = {
       calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
       setCenter: jest.fn(),
-      setZoom: jest.fn(), 
+      setZoom: jest.fn(),
       on: jest.fn((event: string, callback: () => void) => {
         if (!eventListeners[event]) {
           eventListeners[event] = [];
@@ -98,10 +96,10 @@ jest.mock('../src/app/components/MapContext', () => ({
   useMapLayerContext: jest.fn().mockReturnValue({
     layer: 'default',
     setLayer: jest.fn(),
-    mapRef: { 
-      current: { 
-        getView: jest.fn(() => ({ 
-          setCenter: jest.fn(), 
+    mapRef: {
+      current: {
+        getView: jest.fn(() => ({
+          setCenter: jest.fn(),
           setZoom: jest.fn(),
           on: jest.fn(),
           trigger: jest.fn(),
@@ -113,7 +111,7 @@ jest.mock('../src/app/components/MapContext', () => ({
         })),
         removeLayers: jest.fn(),
         addLayer: jest.fn(),
-    }
+      },
     },
     resetView: jest.fn(),
     setIsOnline: jest.fn(),
@@ -134,7 +132,6 @@ jest.mock('lodash/debounce', () => {
   });
 });
 
-
 describe(MapView, () => {
   let mapRef: { current: any };
 
@@ -149,12 +146,6 @@ describe(MapView, () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('calls insertMockItemData on mount', () => {
-    const { insertMockItemData } = require('../src/app/services/api');
-    render(<MapView onBboxChange={jest.fn()} />);
-    expect(insertMockItemData).toHaveBeenCalled();
   });
 
   it('maps coordinates correctly', () => {
@@ -180,7 +171,7 @@ describe(MapView, () => {
     const { container } = render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
     expect(container).toBeTruthy();
   });
@@ -190,12 +181,11 @@ describe(MapView, () => {
     const { getByTestId } = render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     expect(getByTestId('footer-container')).toBeInTheDocument();
   });
-  
 
   it('creates feature correctly', () => {
     const { Feature } = require('ol');
@@ -216,13 +206,13 @@ describe(MapView, () => {
   it('cancels debounced bbox change on unmount', () => {
     const debounce = require('lodash/debounce');
     const cancelMock = jest.fn();
-  
+
     // Ensure the mock debounce function includes `cancel`
     debounce.mockReturnValue(Object.assign(jest.fn(), { cancel: cancelMock }));
-  
+
     const { unmount } = render(<MapView onBboxChange={jest.fn()} />);
     unmount();
-  
+
     expect(cancelMock).toHaveBeenCalled();
   });
 
@@ -238,28 +228,27 @@ describe(MapView, () => {
     expect(() => changeLayer(mockMapInstance as any)).not.toThrow();
   });
 
-
   it('renders the map container div', () => {
     const mockOnBboxChange = jest.fn();
     const { getByTestId } = render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     expect(getByTestId('map-container')).toBeInTheDocument();
-  });  
+  });
 
   it('refreshes the map layer correctly', () => {
-  const mockMap = {
-    getLayers: jest.fn(() => ({
-      getArray: jest.fn(() => [
-        { get: jest.fn(() => 'dataLayer'), set: jest.fn() },
-      ]),
-      clear: jest.fn(),
-    })),
-    removeLayer: jest.fn(),
-    addLayer: jest.fn(),
+    const mockMap = {
+      getLayers: jest.fn(() => ({
+        getArray: jest.fn(() => [
+          { get: jest.fn(() => 'dataLayer'), set: jest.fn() },
+        ]),
+        clear: jest.fn(),
+      })),
+      removeLayer: jest.fn(),
+      addLayer: jest.fn(),
     };
 
     refreshLayer(mockMap as any);
@@ -271,63 +260,68 @@ describe(MapView, () => {
 
   it('initializes the map with the correct default view', () => {
     const mockOnBboxChange = jest.fn();
-  
+
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
-  
+
     // Mock `getView()`
     const mockView = {
       on: jest.fn(),
       calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
     };
     mapInstance.getView.mockReturnValue(mockView);
-  
+
     render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     // Ensure `getView()` was accessed
     expect(mapInstance.getView).toHaveBeenCalled();
-  
+
     // Ensure event listeners were registered
     expect(mockView.on).toHaveBeenCalled();
-  });   
+  });
 
   it('calls verifyInternetConnection on mount', async () => {
     const mockOnBboxChange = jest.fn();
-    const verifyInternetConnectionMock = jest.spyOn(require('../src/app/services/api'), 'verifyInternetConnection');
-  
+    const verifyInternetConnectionMock = jest.spyOn(
+      require('../src/app/services/api'),
+      'verifyInternetConnection',
+    );
+
     render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     // Ensure `verifyInternetConnection` was called
-    expect(verifyInternetConnectionMock).toHaveBeenCalledWith("https://hirondelle.crim.ca/stac/collections");
-  });  
+    expect(verifyInternetConnectionMock).toHaveBeenCalledWith(
+      'https://hirondelle.crim.ca/stac/collections',
+    );
+  });
 
   it('initializes the map with the correct layers', () => {
     const mockOnBboxChange = jest.fn();
-  
+
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
-  
+
     // Mock getLayers() to return the array function
     const mockLayers = {
       getArray: jest.fn(() => []),
       clear: jest.fn(),
     };
     mapInstance.getLayers.mockReturnValue(mockLayers);
-  
+
     render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     // Ensure layers were accessed and set
     expect(mapInstance.getLayers).toHaveBeenCalled();
     expect(mapInstance.addLayer).toHaveBeenCalled();
@@ -335,7 +329,7 @@ describe(MapView, () => {
 
   it('selects the correct base layer based on isOnline state', () => {
     const mockOnBboxChange = jest.fn();
-  
+
     // Fully mock `mapRef.current`
     const mockView = {
       calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
@@ -343,7 +337,7 @@ describe(MapView, () => {
       setZoom: jest.fn(),
       on: jest.fn(),
     };
-  
+
     const mapMock = {
       getView: jest.fn(() => mockView),
       getSize: jest.fn(() => [800, 600]),
@@ -354,7 +348,7 @@ describe(MapView, () => {
       addLayer: jest.fn(),
       removeLayer: jest.fn(),
     };
-  
+
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     const contextMock = {
       layer: 'default',
@@ -364,33 +358,33 @@ describe(MapView, () => {
       setIsOnline: jest.fn(),
       isOnline: true, // Initially online
     };
-  
+
     useMapLayerContext.mockReturnValue(contextMock);
-  
+
     const { rerender } = render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     expect(mapMock.addLayer).toHaveBeenCalled();
     expect(contextMock.isOnline).toBe(true);
-  
+
     // Simulate offline mode
     contextMock.isOnline = false;
     rerender(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     expect(mapMock.addLayer).toHaveBeenCalledTimes(2);
     expect(contextMock.isOnline).toBe(false);
-  });  
+  });
 
   it('calls onBboxChange when zoom or pan events trigger', () => {
     const mockOnBboxChange = jest.fn();
-  
+
     const mapMock = {
       getView: jest.fn(() => ({
         calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
@@ -403,11 +397,14 @@ describe(MapView, () => {
         }),
       })),
       getSize: jest.fn(() => [800, 600]),
-      getLayers: jest.fn(() => ({ getArray: jest.fn(() => []), clear: jest.fn() })),
+      getLayers: jest.fn(() => ({
+        getArray: jest.fn(() => []),
+        clear: jest.fn(),
+      })),
       addLayer: jest.fn(),
       removeLayer: jest.fn(),
     };
-  
+
     const { useMapLayerContext } = require('../src/app/components/MapContext');
     useMapLayerContext.mockReturnValue({
       layer: 'default',
@@ -417,14 +414,14 @@ describe(MapView, () => {
       setIsOnline: jest.fn(),
       isOnline: true,
     });
-  
+
     render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>
+      </MapProvider>,
     );
-  
+
     // Expect `onBboxChange` to have been triggered zero times since toggle is off
     expect(mockOnBboxChange).toHaveBeenCalledTimes(0);
-  });  
+  });
 });

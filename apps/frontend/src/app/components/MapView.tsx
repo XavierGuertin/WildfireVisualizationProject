@@ -2,66 +2,73 @@
 
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
-import "../styles/map.css";
+import '../styles/map.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { FullScreen, defaults as defaultControls } from 'ol/control.js';
+import { defaults as defaultControls, FullScreen } from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
-import { insertMockItemData, verifyInternetConnection } from '../services/api';
+import { verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
 
-const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const attributions =
+  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
+const DEFAULT_ENDPOINT_URL = 'https://hirondelle.crim.ca/stac/collections';
+const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
+const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+
 
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
   source: new XYZ({
-    url: `${tileserverUrl}/{z}/{x}/{y}.jpg`,
-    attributions: attributions
-  })
+    url: OFFLINE_LAYER_URL,
+    attributions: attributions,
+  }),
 });
 
 // Default base layers
 const defaultLayer = new TileLayer({
   source: new XYZ({
-    url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
-    attributions: attributions
-  })
+    url: DEFAULT_LAYER_URL,
+    attributions: attributions,
+  }),
 });
 
 const satelliteLayer = new TileLayer({
   source: new XYZ({
-    url: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
-    attributions: attributions
-  })
+    url: SATELLITE_LAYER_URL,
+    attributions: attributions,
+  }),
 });
 
 const topographicLayer = new TileLayer({
   source: new XYZ({
-    url: `https://tile.opentopomap.org/{z}/{x}/{y}.png`,
-    attributions: attributions
-  })
+    url: TOPOGRAPHIC_LAYER_URL,
+    attributions: attributions,
+  }),
 });
 
 /**
  * Creates a dynamic data layer that pulls STAC item data from GeoServer.
- * 
+ *
  * @returns {TileLayer} The generated data layer for the map.
  */
-const createDataLayer = () => {
+const createDataLayer = (): TileLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
   const newLayer = new TileLayer({
     source: new TileWMS({
       url: geoserverUrl,
       params: {
-        'LAYERS': 'Default:datalayer',
-        'TILED': true,
-        'CACHED': false,
-        '_t': Date.now(),  // Cache busting
+        LAYERS: 'Default:datalayer',
+        TILED: true,
+        CACHED: false,
+        _t: Date.now(), // Cache busting
       },
       serverType: 'geoserver',
     }),
@@ -72,12 +79,12 @@ const createDataLayer = () => {
 
 /**
  * Refreshes the data layer on the map by removing the old layer and adding a new one.
- * 
+ *
  * @param {Map} map - The OpenLayers map instance.
  */
 export const refreshLayer = (map: Map) => {
   const layers = map.getLayers().getArray();
-  const dataLayer = layers.find(layer => layer.get('id') === 'dataLayer');
+  const dataLayer = layers.find((layer) => layer.get('id') === 'dataLayer');
 
   if (dataLayer) {
     map.removeLayer(dataLayer);
@@ -93,7 +100,7 @@ interface MapViewProps {
 
 /**
  * Main map component using OpenLayers, responsible for rendering and updating the map.
- * 
+ *
  * @param {MapViewProps} props - Component props including bbox change handler.
  * @returns {JSX.Element} The rendered map component.
  */
@@ -104,7 +111,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
   /**
    * Determines which base layer to use based on network connectivity.
-   * 
+   *
    * @returns {TileLayer} The appropriate base layer.
    */
   const getLayer = (): TileLayer => {
@@ -114,10 +121,12 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       default: defaultLayer,
     };
 
-    offlineLayer.set("offline", true);
+    offlineLayer.set('offline', true);
 
     // Select the appropriate layer based on network connectivity
-    const selectedLayer = isOnline ? layerMap[layer ?? "default"] : offlineLayer;
+    const selectedLayer = isOnline
+      ? layerMap[layer ?? 'default']
+      : offlineLayer;
     if (!selectedLayer.get('id')) {
       selectedLayer.set('id', 'baseLayer');
     }
@@ -130,8 +139,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
    */
   const setOnlineStatus = async () => {
     try {
-      const response = await verifyInternetConnection("https://hirondelle.crim.ca/stac/collections");
-      setIsOnline(response === "Internet connection established");
+      const response = await verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+      setIsOnline(response === 'Internet connection established');
     } catch (error) {
       setIsOnline(false);
       console.warn('No internet connection detected.');
@@ -139,7 +148,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
   };
 
   useEffect(() => {
-    insertMockItemData(); // Temporary: To be removed once real data is received
     setOnlineStatus();
 
     const debouncedBboxChange = debounce((extent: number[]) => {
@@ -159,12 +167,14 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       });
 
       // Calculate and update the initial bounding box
-      const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
+      const initialExtent = mapRef.current
+        .getView()
+        .calculateExtent(mapRef.current.getSize());
       console.debug(`Initial Map Extent: ${initialExtent}`);
     } else {
       const map = mapRef.current;
       const layers = map.getLayers().getArray();
-      const baseLayer = layers.find(layer => layer.get('id') === 'baseLayer');
+      const baseLayer = layers.find((layer) => layer.get('id') === 'baseLayer');
       if (baseLayer) {
         map.removeLayer(baseLayer);
       }
@@ -205,7 +215,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
 /**
  * Utility function to trigger a refresh of the data layer.
- * 
+ *
  * @param {Map} map - The OpenLayers map instance.
  */
 export const changeLayer = (map: Map) => {
