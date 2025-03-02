@@ -11,13 +11,13 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
-import { insertMockItemData } from '../services/api';
-import { verifyInternetConnection } from '../services/api';
+import { insertMockItemData, verifyInternetConnection } from '../services/api';
+import debounce from 'lodash/debounce';
 
 const attributions = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
-
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
 
+// Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
   source: new XYZ({
     url: `${tileserverUrl}/{z}/{x}/{y}.jpg`,
@@ -25,7 +25,7 @@ const offlineLayer = new TileLayer({
   })
 });
 
-// Base layers
+// Default base layers
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
@@ -47,7 +47,11 @@ const topographicLayer = new TileLayer({
   })
 });
 
-// Dynamic Data Layer (STAC Item)
+/**
+ * Creates a dynamic data layer that pulls STAC item data from GeoServer.
+ * 
+ * @returns {TileLayer} The generated data layer for the map.
+ */
 const createDataLayer = () => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
   const newLayer = new TileLayer({
@@ -57,7 +61,7 @@ const createDataLayer = () => {
         'LAYERS': 'Default:datalayer',
         'TILED': true,
         'CACHED': false,
-        '_t': Date.now(),  // Ensures cache busting
+        '_t': Date.now(),  // Cache busting
       },
       serverType: 'geoserver',
     }),
@@ -66,26 +70,43 @@ const createDataLayer = () => {
   return newLayer;
 };
 
+/**
+ * Refreshes the data layer on the map by removing the old layer and adding a new one.
+ * 
+ * @param {Map} map - The OpenLayers map instance.
+ */
 export const refreshLayer = (map: Map) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find(layer => layer.get('id') === 'dataLayer');
 
   if (dataLayer) {
-    // Remove old data layer
     map.removeLayer(dataLayer);
   }
 
-  // Create new layer and add it to map
   const newLayer = createDataLayer();
   map.addLayer(newLayer);
 };
 
-// Map component
-const MapView = () => {
+interface MapViewProps {
+  onBboxChange: (bbox: number[]) => void;
+}
+
+/**
+ * Main map component using OpenLayers, responsible for rendering and updating the map.
+ * 
+ * @param {MapViewProps} props - Component props including bbox change handler.
+ * @returns {JSX.Element} The rendered map component.
+ */
+const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
   const { layer, mapRef, setIsOnline, isOnline } = useMapLayerContext();
 
+  /**
+   * Determines which base layer to use based on network connectivity.
+   * 
+   * @returns {TileLayer} The appropriate base layer.
+   */
   const getLayer = (): TileLayer => {
     const layerMap: Record<string, TileLayer> = {
       satellite: satelliteLayer,
@@ -95,7 +116,7 @@ const MapView = () => {
 
     offlineLayer.set("offline", true);
 
-    // Ensure `layer` is always a valid string before accessing the object
+    // Select the appropriate layer based on network connectivity
     const selectedLayer = isOnline ? layerMap[layer ?? "default"] : offlineLayer;
     if (!selectedLayer.get('id')) {
       selectedLayer.set('id', 'baseLayer');
@@ -104,22 +125,29 @@ const MapView = () => {
     return selectedLayer;
   };
 
+  /**
+   * Checks internet connectivity by verifying a connection to a remote STAC server.
+   */
   const setOnlineStatus = async () => {
     try {
-        const response = await verifyInternetConnection("https://hirondelle.crim.ca/stac/collections");
-        setIsOnline(response === "Internet connection established")
-    }
-    catch (error) {
+      const response = await verifyInternetConnection("https://hirondelle.crim.ca/stac/collections");
+      setIsOnline(response === "Internet connection established");
+    } catch (error) {
       setIsOnline(false);
-      console.log('No connection to the URL:', error);
+      console.warn('No internet connection detected.');
     }
   };
 
   useEffect(() => {
-    insertMockItemData() //This method is to be deleted once we receive the real data
+    insertMockItemData(); // Temporary: To be removed once real data is received
     setOnlineStatus();
 
+    const debouncedBboxChange = debounce((extent: number[]) => {
+      onBboxChange(extent);
+    }, 300);
+
     if (!mapRef.current) {
+      // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
@@ -129,6 +157,10 @@ const MapView = () => {
           zoom: 1,
         }),
       });
+
+      // Calculate and update the initial bounding box
+      const initialExtent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
+      console.debug(`Initial Map Extent: ${initialExtent}`);
     } else {
       const map = mapRef.current;
       const layers = map.getLayers().getArray();
@@ -137,19 +169,47 @@ const MapView = () => {
         map.removeLayer(baseLayer);
       }
       map.addLayer(getLayer());
-      refreshLayer(map);  // Ensure dataLayer is reloaded correctly
+      refreshLayer(map); // Ensure data layer is refreshed
     }
-  }, [layer]);
+
+    if (mapRef.current) {
+      const map = mapRef.current;
+      const view = map.getView();
+
+      // Listen for zoom events and update bounding box
+      view.on('change:resolution', () => {
+        const mapExtent = view.calculateExtent(map.getSize());
+        debouncedBboxChange(mapExtent);
+        console.debug('Map extent updated due to zoom change.');
+      });
+
+      // Listen for pan events and update bounding box
+      view.on('change:center', () => {
+        const mapExtent = view.calculateExtent(map.getSize());
+        debouncedBboxChange(mapExtent);
+        console.debug('Map extent updated due to pan movement.');
+      });
+    }
+
+    return () => {
+      debouncedBboxChange.cancel();
+    };
+  }, [layer, onBboxChange]);
 
   return (
-    <div id="map-container" ref={mapElement}>
+    <div id="map-container" ref={mapElement} data-testid="map-container">
       <Footer />
     </div>
   );
 };
 
+/**
+ * Utility function to trigger a refresh of the data layer.
+ * 
+ * @param {Map} map - The OpenLayers map instance.
+ */
 export const changeLayer = (map: Map) => {
-  refreshLayer(map)
-}
+  refreshLayer(map);
+};
 
 export default MapView;

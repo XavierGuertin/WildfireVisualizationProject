@@ -18,6 +18,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedDataset, setSelectedDataset] = useState<DatasetMetadata | null>(null);
   const [refreshKey, setRefreshKey] = useState(0); // Add state for refresh key
   const [isMetadataVisible, setMetadataVisible] = useState(false); // Add state for metadata visibility
+  const [currentBbox, setCurrentBbox] = useState<[number, number, number, number] | undefined>(undefined);
 
   // Function to show loading bar with progress
   const showLoadingBar = () => {
@@ -74,8 +75,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             datasetBeingLoaded={selectedDataset?.name}
           />
           <main className="app-main">{children}</main>
-          <AvailableDatasets onDatasetClick={handleDatasetClick} refreshKey={refreshKey} />
-          <MapView />
+          <AvailableDatasets 
+              onDatasetClick={handleDatasetClick}
+              refreshKey={refreshKey} 
+              currentBbox={currentBbox ?? undefined} />
+          <MapView onBboxChange={(bbox) => {
+              if (bbox && bbox.length === 4) {
+                setCurrentBbox(bbox as [number, number, number, number]);
+              }
+            }} />
           <Sidebar />
           {selectedDataset && (
             <MapMetaData

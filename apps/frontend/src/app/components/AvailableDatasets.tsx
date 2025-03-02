@@ -7,14 +7,15 @@ import {
   FaDatabase,
   FaFilter,
 } from 'react-icons/fa';
-import { 
-  fetchCollectionsFromEndpointByName, 
-  fetchCollectionsFromEndpointByDate, 
-  fetchMetaData, 
+import {
+  fetchCollectionsFromEndpointByName,
+  fetchCollectionsFromEndpointByDate,
+  fetchMetaData,
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
+import debounce from 'lodash/debounce';
 
-interface DatasetEntry {
+export interface DatasetEntry {
   key: number;
   id: string;
 }
@@ -34,12 +35,14 @@ export interface DatasetMetadata {
 
 interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
-  refreshKey: number; // Add refresh key prop
+  refreshKey: number;
+  currentBbox?: [number, number, number, number]; // [west, south, east, north]
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
   refreshKey,
+  currentBbox = [],
 }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -48,59 +51,89 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchDatasets = async () => {
-      try {
-        const datasetList: string[] = [];
-        const response: any = await returnListOfCollectionsFromEndpoint();
-
-        setDatasets(response);
-        setFetchError(null);
-      } catch (error) {
-        console.log('Error fetching datasets:', error);
-        setDatasets([]);
-        setFetchError('Failed to load datasets.');
-      }
-    };
-
-    fetchDatasets();
-  }, [refreshKey]); // Re-fetch datasets when refresh key changes
-
-  const handleFilterChange = async (filter: string) => {
-    setActiveFilter(filter);
-    
+  /**
+   * Fetches dataset collections based on the selected filter and bounding box.
+   * Uses debounce to limit frequent API calls.
+   */
+  const fetchDatasets = debounce(async () => {
+    setIsLoading(true);
     try {
       let response;
+      const params = {
+        bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined
+      };
 
-      if (filter === 'Name') {
-        response = await fetchCollectionsFromEndpointByName();
+      if (activeFilter === 'Name') {
+        response = await fetchCollectionsFromEndpointByName(params.bbox);
+      } else if (activeFilter === 'Date') {
+        response = await fetchCollectionsFromEndpointByDate(params.bbox);
       } else {
-        response = await fetchCollectionsFromEndpointByDate();
+        response = await returnListOfCollectionsFromEndpoint(params.bbox); // Fetch all datasets if bbox is undefined
       }
 
       if (!Array.isArray(response)) {
-        setFetchError(response.error || 'Unknown error occurred');
-        setDatasets([]); 
+        console.error("Invalid response format:", response);
+        setFetchError(response.error || "Failed to load datasets.");
+        setDatasets([]);
         return;
       }
 
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
-      console.log(`Error fetching datasets for filter ${filter}:`, error);
+      console.error('Error fetching datasets:', error);
       setDatasets([]);
       setFetchError('Failed to load datasets.');
+    } finally {
+      setIsLoading(false);
     }
+  }, 300);
+
+  /**
+   * Fetches datasets when the refresh key or filter changes.
+   */
+  useEffect(() => {
+    fetchDatasets();
+    return () => fetchDatasets.cancel();
+  }, [refreshKey, activeFilter]);
+
+  /**
+   * Fetches datasets when toggling filtering by map view.
+   */
+  useEffect(() => {
+    if (isToggled) {
+      fetchDatasets();
+    }
+  }, [isToggled, currentBbox.join(',')]);
+
+  /**
+   * Handles changes to the dataset sorting filter.
+   * @param filter - The selected sorting filter.
+   */
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
   };
 
+  /**
+   * Toggles dataset sidebar collapse state.
+   */
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
+  /**
+   * Toggles dataset filtering based on the visible map region.
+   */
   const handleToggle = () => setIsToggled((prev) => !prev);
 
+  /**
+   * Handles dataset selection and fetches metadata.
+   * @param id - The dataset ID.
+   */
   const handleDatasetClick = async (id: string) => {
-    setSelectedDataset(id); // Update selected dataset
+    setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
-    onDatasetClick(dataset); // Pass dataset to parent component
+    onDatasetClick(dataset);
   };
 
   return (
@@ -124,27 +157,44 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       ) : (
         <>
           <div className="top-bar" data-testid="top-bar">
-            <h2 className="sidebar-title">{t('available_datasets')}</h2>
-            <label
-              style={{ display: 'flex', alignItems: 'center' }}
-              aria-label={t('toggle_datasets')}
-            >
-              <input
-                type="checkbox"
-                checked={isToggled}
-                onChange={handleToggle}
-                style={{ display: 'none' }}
-                data-testid="toggle-checkbox"
-              />
-              <div
-                className={`toggle-button ${isToggled ? 'toggled' : ''}`}
-                data-testid="toggle-button"
-              ></div>
-            </label>
+            <h2 className="sidebar-title" data-testid="sidebar-title">{t('available_datasets')}</h2>
+            <div className="toggle-control-group">
+              <label
+                className="toggle-label"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                aria-label={t('toggle_datasets')}
+              >
+                <span className="toggle-status-text" data-testid="toggle-status-text">
+                  {currentBbox 
+                    ? t(isToggled ? 'filtering_by_map_view' : 'showing_all_datasets')
+                    : t('map_required')
+                  }
+                </span>
+                <input
+                  type="checkbox"
+                  checked={isToggled}
+                  onChange={handleToggle}
+                  disabled={!currentBbox}
+                  style={{ display: 'none' }}
+                  data-testid="toggle-checkbox"
+                  aria-describedby="toggle-status"
+                />
+                <div
+                  className={`toggle-button ${isToggled ? 'toggled' : ''}`}
+                  data-testid="toggle-button"
+                  role="switch"
+                  aria-checked={isToggled}
+                >
+                  {!currentBbox && (
+                    <span className="toggle-warning">{t('Load map first')}</span>
+                  )}
+                </div>
+              </label>
+            </div>
           </div>
           <div className="filter-container" data-testid="filter-container">
-            <div className="filter-icon">
-              <FaFilter size={24} />
+            <div className="filter-icon" data-testid="filter-icon">
+            <FaFilter size={24} />
             </div>
             {['Name', 'Date'].map(
               (filter) => (
@@ -154,13 +204,24 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   onClick={() => handleFilterChange(filter)}
                   data-testid={`filter-button-${filter}`}
                 >
-                  {t(filter.toLowerCase().replace(/ /g, '_'))}
-                </button>
+                {t(filter.toLowerCase().replace(/ /g, '_'))}
+              </button>
               ),
             )}
           </div>
+
+          {fetchError && (
+            <div className="error-message" data-testid="error-message">
+              {fetchError}
+            </div>
+          )}
+
           <div className="buttons-container" data-testid="buttons-container">
-            {datasets.length > 0 ? (
+            {isLoading ? (
+              <p className="loading-message" data-testid="loading-message">
+                {t('loading_datasets')}
+              </p>
+            ) : datasets.length > 0 ? (
               datasets.map((dataset) => (
                 <button
                   key={dataset.id}
@@ -172,9 +233,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 </button>
               ))
             ) : (
-              <p className="no-datasets-message" data-testid="no-datasets-message">
-                {t('no_datasets_available')}
-              </p>
+              <div className="no-datasets-container" data-testid="no-datasets-container">
+                <p className="no-datasets-message" data-testid="no-datasets-message">
+                  {t('no_datasets_available')}
+                </p>
+              </div>
             )}
           </div>
         </>

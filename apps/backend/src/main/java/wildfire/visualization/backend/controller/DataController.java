@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +23,36 @@ public class DataController {
 
   @Autowired
   private DataService dataService;
+
+  /**
+   * Parses a bounding box (BBOX) string from a request parameter.
+   * The BBOX format is "minX,minY,maxX,maxY".
+   *
+   * @param bboxStr The bounding box string to be parsed.
+   * @return A double array representing the bounding box values, or null if
+   *         parsing fails.
+   */
+  private double[] parseBbox(String bboxStr) {
+    try {
+      if (bboxStr == null) {
+        return null;
+      }
+
+      bboxStr = URLDecoder.decode(bboxStr, StandardCharsets.UTF_8);
+      logger.debug("Parsing BBOX input...");
+
+      String[] bboxParts = bboxStr.split(",");
+      if (bboxParts.length != 4) {
+        logger.warn("Invalid BBOX format: Expected 4 values but received {}", bboxParts.length);
+        return null;
+      }
+
+      return Arrays.stream(bboxParts).mapToDouble(Double::parseDouble).toArray();
+    } catch (Exception e) {
+      logger.error("Error parsing BBOX: {}", e.getMessage(), e);
+      return null;
+    }
+  }
 
   @GetMapping("/api/data")
   public ResponseEntity<String> getData() {
@@ -71,260 +104,275 @@ public class DataController {
     }
   }
 
+  /**
+   * Fetches collections from the database, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections or an error
+   *         message.
+   */
   @GetMapping("/api/get-collections")
-  public ResponseEntity<List<Map<String, Object>>> getCollections() {
-    logger.info("Received request to get collections");
+  public ResponseEntity<List<Map<String, Object>>> getCollections(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+    logger.info("Processing request to fetch collections.");
+
+    double[] bbox = parseBbox(bboxStr);
+    if (bboxStr != null && bbox == null) {
+      return ResponseEntity.badRequest().body(null);
+    }
+
     try {
-      List<Map<String, Object>> collections = dataService.getCollections();
-      logger.debug("Successfully fetched collections");
+      List<Map<String, Object>> collections = dataService.getCollections(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
 
   @PostMapping("/api/insert-mock-items")
-  public ResponseEntity<String> insertMockItems(){
-    //This whole endpoint and data is temporary until the CRIM get back to us with the data we need to complete the application
+  public ResponseEntity<String> insertMockItems() {
+    // This whole endpoint and data is temporary until the CRIM get back to us with
+    // the data we need to complete the application
     String itemListJson = "[\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-01-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-01-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 15.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-01-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-02-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-02-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 10.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-02-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-03-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-03-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 8.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-03-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-04-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-04-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 5.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-04-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-05-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-05-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 12.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-05-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-06-01\",\n" +
-      "        \"collection\": \"EuroSAT-subset-train\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-06-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 9.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-06-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"type\": \"Feature\",\n" +
-      "        \"stac_version\": \"1.0.0\",\n" +
-      "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
-      "        \"id\": \"image_2025-06-05\",\n" +
-      "        \"collection\": \"EuroSAT-subset-validate\",\n" +
-      "        \"geometry\": {\n" +
-      "          \"type\": \"Polygon\",\n" +
-      "          \"coordinates\": [\n" +
-      "            [\n" +
-      "              [-102.0, 40.0],\n" +
-      "              [-101.0, 40.0],\n" +
-      "              [-101.0, 41.0],\n" +
-      "              [-102.0, 41.0],\n" +
-      "              [-102.0, 40.0]\n" +
-      "            ]\n" +
-      "          ]\n" +
-      "        },\n" +
-      "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
-      "        \"properties\": {\n" +
-      "          \"datetime\": \"2025-06-01T10:00:00Z\",\n" +
-      "          \"platform\": \"satellite-1\",\n" +
-      "          \"instruments\": [\"camera\"],\n" +
-      "          \"cloud_cover\": 9.0\n" +
-      "        },\n" +
-      "        \"assets\": {\n" +
-      "          \"visual\": {\n" +
-      "            \"href\": \"https://example.com/2025-06-01/visual.tif\",\n" +
-      "            \"type\": \"image/tiff; application=geotiff\",\n" +
-      "            \"title\": \"Visual Band\"\n" +
-      "          }\n" +
-      "        }\n" +
-      "      }\n" +
-      "    ]";
-    try{
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-01-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-01-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 15.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-01-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-02-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-02-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 10.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-02-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-03-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-03-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 8.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-03-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-04-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-04-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 5.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-04-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-05-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-05-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 12.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-05-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-06-01\",\n" +
+        "        \"collection\": \"EuroSAT-subset-train\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-06-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 9.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-06-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"type\": \"Feature\",\n" +
+        "        \"stac_version\": \"1.0.0\",\n" +
+        "        \"stac_extensions\": [\"https://stac-extensions.github.io/projection/v1.0.0/schema.json\"],\n" +
+        "        \"id\": \"image_2025-06-05\",\n" +
+        "        \"collection\": \"EuroSAT-subset-validate\",\n" +
+        "        \"geometry\": {\n" +
+        "          \"type\": \"Polygon\",\n" +
+        "          \"coordinates\": [\n" +
+        "            [\n" +
+        "              [-102.0, 40.0],\n" +
+        "              [-101.0, 40.0],\n" +
+        "              [-101.0, 41.0],\n" +
+        "              [-102.0, 41.0],\n" +
+        "              [-102.0, 40.0]\n" +
+        "            ]\n" +
+        "          ]\n" +
+        "        },\n" +
+        "        \"bbox\": [-102.0, 40.0, -101.0, 41.0],\n" +
+        "        \"properties\": {\n" +
+        "          \"datetime\": \"2025-06-01T10:00:00Z\",\n" +
+        "          \"platform\": \"satellite-1\",\n" +
+        "          \"instruments\": [\"camera\"],\n" +
+        "          \"cloud_cover\": 9.0\n" +
+        "        },\n" +
+        "        \"assets\": {\n" +
+        "          \"visual\": {\n" +
+        "            \"href\": \"https://example.com/2025-06-01/visual.tif\",\n" +
+        "            \"type\": \"image/tiff; application=geotiff\",\n" +
+        "            \"title\": \"Visual Band\"\n" +
+        "          }\n" +
+        "        }\n" +
+        "      }\n" +
+        "    ]";
+    try {
       dataService.insertMockItems(itemListJson);
       return ResponseEntity.ok("Successful Insertion of Mock Data!");
-    }
-    catch (Exception e){
+    } catch (Exception e) {
       logger.error("Error creating item: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
@@ -344,7 +392,8 @@ public class DataController {
   }
 
   @GetMapping("/api/get-item/{id}/{collection}")
-  public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId, @PathVariable("collection") String collectionId) {
+  public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId,
+      @PathVariable("collection") String collectionId) {
     logger.info("Received request to get item");
     try {
       List<Map<String, Object>> item = dataService.getItem(itemId, collectionId);
@@ -357,7 +406,7 @@ public class DataController {
   }
 
   @DeleteMapping("/api/remove-all-items")
-  public ResponseEntity<String> removeAllItems(){
+  public ResponseEntity<String> removeAllItems() {
     logger.info("Received request to remove all items");
     try {
       String result = dataService.removeAllItems();
@@ -370,7 +419,7 @@ public class DataController {
   }
 
   @DeleteMapping("/api/remove-items-from-collection/{collectionId}")
-  public ResponseEntity<String> removeItemsFromCollection(@PathVariable("collectionId") String collectionId){
+  public ResponseEntity<String> removeItemsFromCollection(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to remove all items");
     try {
       String result = dataService.removeItemsFromCollection(collectionId);
@@ -383,7 +432,8 @@ public class DataController {
   }
 
   @DeleteMapping("/api/remove-item/{id}/{collection}")
-  public ResponseEntity<String> removeItem(@PathVariable("id") String itemId, @PathVariable("collection")String collectionId){
+  public ResponseEntity<String> removeItem(@PathVariable("id") String itemId,
+      @PathVariable("collection") String collectionId) {
     logger.info("Received request to remove all items");
     try {
       String result = dataService.removeItem(itemId, collectionId);
@@ -420,28 +470,56 @@ public class DataController {
     }
   }
 
+  /**
+   * Fetches collections sorted by name, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections sorted by name.
+   */
   @GetMapping("/api/get-collections-by-name")
-  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName() {
-    logger.info("Received request to get collections by name");
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByName(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+    logger.info("Processing request to fetch collections sorted by name.");
+
+    double[] bbox = parseBbox(bboxStr);
+    if (bboxStr != null && bbox == null) {
+      return ResponseEntity.badRequest().body(null);
+    }
+
     try {
-      List<Map<String, Object>> collections = dataService.getCollectionsByName();
-      logger.debug("Successfully fetched collections by name");
+      List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections by name: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
 
+  /**
+   * Fetches collections sorted by date, optionally filtering by a bounding box
+   * (BBOX).
+   *
+   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
+   *                (optional).
+   * @return A ResponseEntity containing a list of collections sorted by date.
+   */
   @GetMapping("/api/get-collections-by-date")
-  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate() {
-    logger.info("Received request to get collections by name");
+  public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate(
+      @RequestParam(value = "bbox", required = false) String bboxStr) {
+    logger.info("Processing request to fetch collections sorted by date.");
+
+    double[] bbox = parseBbox(bboxStr);
+    if (bboxStr != null && bbox == null) {
+      return ResponseEntity.badRequest().body(null);
+    }
+
     try {
-      List<Map<String, Object>> collections = dataService.getCollectionsByDate();
-      logger.debug("Successfully fetched collections by name");
+      List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox);
       return ResponseEntity.ok(collections);
     } catch (Exception e) {
-      logger.error("Error fetching collections by name: {}", e.getMessage(), e);
+      logger.error("Failed to fetch collections by date: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
     }
   }
