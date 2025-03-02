@@ -34,6 +34,9 @@ jobs:
         run: docker-compose up -d db backend geoserver tileserver-init tileserver
         env:
           CONFIG_FILE_PATH: /var/config/app-config.json
+          SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: password
 
       # Wait for Database to be Ready using Health Check
       - name: Wait for Database
