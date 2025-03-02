@@ -53,23 +53,33 @@ describe('MapMetaDataCompleteCoverage', () => {
   it('calls onLoadDataset successfully and covers loading bar', async () => {
     (insertDatalayerView as jest.Mock).mockResolvedValue({});
     (fetchItems as jest.Mock).mockResolvedValue([{ id: '1' }]);
+  
     const setDataItemsMock = jest.fn();
     (useMapLayerContext as jest.Mock).mockReturnValue({
       mapRef: { current: {} },
       setDataItems: setDataItemsMock,
       dataItems: [],
     });
-    const { getByTestId } = render(<MapMetaData id='123' visible={true} onLoadDataset={jest.fn()} onClose={jest.fn()} />);
-    fireEvent.click(getByTestId('load-dataset-button'));
-    for (let i = 0; i < 15; i++) {
-      jest.advanceTimersByTime(300);
-      await act(async () => {});
-    }
+  
+    const { getByTestId } = render(
+      <MapMetaData id="123" visible={true} onLoadDataset={jest.fn()} onClose={jest.fn()} />
+    );
+  
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+  
+      for (let i = 0; i < 15; i++) {
+        jest.advanceTimersByTime(300);
+        await Promise.resolve(); // Ensures all pending promises are resolved
+      }
+    });
+  
     expect(insertDatalayerView).toHaveBeenCalledWith('123');
     expect(changeLayer).toHaveBeenCalled();
     expect(fetchItems).toHaveBeenCalledWith('123');
     expect(setDataItemsMock).toHaveBeenCalledWith([{ id: '1' }]);
   });
+  
 
   it('handles onLoadDataset error path fully', async () => {
     const errorMock = new Error('API failure');
