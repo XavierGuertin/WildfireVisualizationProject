@@ -76,7 +76,7 @@ describe('MapMetaDataCompleteCoverage', () => {
   
     expect(insertDatalayerView).toHaveBeenCalledWith('123');
     expect(changeLayer).toHaveBeenCalled();
-    expect(fetchItems).toHaveBeenCalledWith('123');
+    expect(fetchItems).toHaveBeenCalledWith('123', expect.any(Function));
     expect(setDataItemsMock).toHaveBeenCalledWith([{ id: '1' }]);
   });
   
@@ -84,12 +84,22 @@ describe('MapMetaDataCompleteCoverage', () => {
   it('handles onLoadDataset error path fully', async () => {
     const errorMock = new Error('API failure');
     (insertDatalayerView as jest.Mock).mockRejectedValue(errorMock);
+  
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  
     const { getByTestId } = render(
       <MapMetaData id='123' visible={true} onLoadDataset={jest.fn()} onClose={jest.fn()} />
     );
+  
     fireEvent.click(getByTestId('load-dataset-button'));
+  
     jest.advanceTimersByTime(4000);
+  
     await act(async () => {});
+  
     expect(insertDatalayerView).toHaveBeenCalledWith('123');
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading dataset:", errorMock);
+  
+    consoleErrorSpy.mockRestore();
   });
 });
