@@ -73,35 +73,12 @@ public class DataService {
         if (!stacRepository.checkCollectionExists(id)) {
           String collectionJson = objectMapper.writeValueAsString(collection);
           stacRepository.insertCollection(collectionJson);
-          fetchAndSaveItems(endpointUrl + "/" + id + "/items", id);
         }
       }
       logger.info("Successfully fetched and saved collections");
     } catch (Exception e) {
       logger.error("Error fetching or saving collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch or save collections: " + e.getMessage(), e);
-    }
-  }
-
-  public void fetchAndSaveItems(String endpointUrl, String dataset_id) {
-    try {
-      Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
-      List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("features");
-      for (Map<String, Object> item : items) {
-        item.put("collection_id", dataset_id);
-        String id = (String) item.get("id");
-        if (!stacRepository.checkCollectionExists(id)) {
-          String itemJson = objectMapper.writeValueAsString(item);
-          stacRepository.insertItem(itemJson);
-          logger.info("{} id", dataset_id);
-          logger.info("TCHOUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPY");
-        }
-      }
-
-      logger.info("Successfully fetched and saved items");
-    } catch (Exception e) {
-      logger.error("Error fetching or saving items: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch or save items: " + e.getMessage(), e);
     }
   }
 
