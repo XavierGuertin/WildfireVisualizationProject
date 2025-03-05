@@ -90,9 +90,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         }
       });
     } catch (error) {
-      console.error('Error loading dataset:', error);
-    } finally {
-      setLoading(false); // Ensure loading overlay is hidden
+      console.error("Error loading dataset:", error);
+      setLoading(false);
     }
   };
 
