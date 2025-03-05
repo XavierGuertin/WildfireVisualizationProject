@@ -72,8 +72,8 @@ public class DataService {
         String id = (String) collection.get("id");
         if (!stacRepository.checkCollectionExists(id)) {
           String collectionJson = objectMapper.writeValueAsString(collection);
-          fetchAndSaveItems(endpointUrl + "/" + id + "/items", id);
           stacRepository.insertCollection(collectionJson);
+          fetchAndSaveItems(endpointUrl + "/" + id + "/items", id);
         }
       }
       logger.info("Successfully fetched and saved collections");
