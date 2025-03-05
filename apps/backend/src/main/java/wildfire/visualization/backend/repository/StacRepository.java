@@ -15,9 +15,6 @@ import java.util.Map;
 @Repository
 public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
-  private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
-  private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
-  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
