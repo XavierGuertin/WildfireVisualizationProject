@@ -423,31 +423,6 @@ class DataServiceTests {
     }
 
     @Test
-    void getAllItems_Success() {
-        // Arrange
-        List<Map<String, Object>> mockResults = List.of(
-                Map.of("id", "test1"),
-                Map.of("id", "test2"));
-        when(stacRepository.getAllItems(anyString())).thenReturn(mockResults);
-        // Act
-        List<Map<String, Object>> result = dataService.getAllItems("Test");
-
-        // Assert
-        assertThat(result).isEqualTo(mockResults);
-    }
-
-    @Test
-    void getAllItems_Failure() {
-        // Arrange
-        doThrow(new RuntimeException("Error fetching all items")).when(stacRepository).getAllItems(anyString());
-
-        // Assert
-        assertThatThrownBy(() -> dataService.getAllItems("test"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Error fetching all items");
-    }
-
-    @Test
     void getItem_WithId_Success() {
         // Arrange
         List<Map<String, Object>> mockResults = List.of(

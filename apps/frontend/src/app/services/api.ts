@@ -67,6 +67,20 @@ export const resetCollections = async (): Promise<string> => {
   }
 };
 
+export const resetItems = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-items`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error resetting items:', error);
+    throw new Error(`Error resetting items: ${error.message}`);
+  }
+};
+
 export const fetchMetaData = async (collectionId: string): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}/api/metadata/${collectionId}`);
@@ -181,13 +195,12 @@ export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promi
 
 export const fetchItems = async (collectionId: string): Promise<any> => {
   try {
-    const url = `${BASE_URL}/api/get-all-items/${collectionId}`;
+    const url = `${BASE_URL}/api/fetch-collections-items/${collectionId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    const data = await response.json();
-    return JSON.parse(data[0].search.value).features;
+    return await response.text();
   } catch (error: any) {
     console.error('Error fetching MetaData:', error);
     return { error: 'Failed to fetch MetaData' };

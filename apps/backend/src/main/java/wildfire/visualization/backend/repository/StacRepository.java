@@ -17,7 +17,6 @@ public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
   private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
   private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
-  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -111,9 +110,9 @@ public class StacRepository {
 
     // Log query type (bbox filtering or not)
     if (bbox == null) {
-      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
     } else {
-      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox));
     }
 
     try {
@@ -181,6 +180,19 @@ public class StacRepository {
       throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
     }
   }
+
+  public void deleteAllItems() {
+    logger.info("Deleting all items from pgstac.items");
+    try {
+      String sql = "DELETE FROM pgstac.items";
+      jdbcTemplate.update(sql);
+      logger.info("All items deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+    }
+  }
+
 
   /**
    * Retrieves all collections from the database, optionally filtered by a

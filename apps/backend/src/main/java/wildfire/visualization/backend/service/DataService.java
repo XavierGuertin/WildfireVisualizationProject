@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import wildfire.visualization.backend.controller.ConfigController;
 import wildfire.visualization.backend.repository.StacRepository;
 
 import java.util.Arrays;
@@ -29,6 +31,9 @@ public class DataService {
 
   @Autowired
   private StacDataConverter stacDataConverter;
+
+  @Autowired
+  private ConfigController configController;
 
   public String retrieveMetaData(String collectionId) throws JsonProcessingException {
     return objectMapper.writeValueAsString(stacRepository.queryMetaData(collectionId));
@@ -73,35 +78,12 @@ public class DataService {
         if (!stacRepository.checkCollectionExists(id)) {
           String collectionJson = objectMapper.writeValueAsString(collection);
           stacRepository.insertCollection(collectionJson);
-          fetchAndSaveItems(endpointUrl + "/" + id + "/items", id);
         }
       }
       logger.info("Successfully fetched and saved collections");
     } catch (Exception e) {
       logger.error("Error fetching or saving collections: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch or save collections: " + e.getMessage(), e);
-    }
-  }
-
-  public void fetchAndSaveItems(String endpointUrl, String dataset_id) {
-    try {
-      Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
-      List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("features");
-      for (Map<String, Object> item : items) {
-        item.put("collection_id", dataset_id);
-        String id = (String) item.get("id");
-        if (!stacRepository.checkCollectionExists(id)) {
-          String itemJson = objectMapper.writeValueAsString(item);
-          stacRepository.insertItem(itemJson);
-          logger.info("{} id", dataset_id);
-          logger.info("TCHOUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPY");
-        }
-      }
-
-      logger.info("Successfully fetched and saved items");
-    } catch (Exception e) {
-      logger.error("Error fetching or saving items: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch or save items: " + e.getMessage(), e);
     }
   }
 
@@ -238,6 +220,17 @@ public class DataService {
     }
   }
 
+  public void deleteAllItems() {
+    logger.info("Deleting all collections");
+    try {
+      stacRepository.deleteAllItems();
+      logger.info("All collections deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to delete collections: " + e.getMessage(), e);
+    }
+  }
+
   public void insertItem(String itemJson) {
     logger.info("Inserting item into database");
     try {
@@ -248,13 +241,30 @@ public class DataService {
     }
   }
 
-  public List<Map<String, Object>> getAllItems(String collectionId) {
-    logger.info("Fetching item from database");
+  public void fetchAndSaveItems(String collectionId) {
     try {
-      return stacRepository.getAllItems(collectionId);
+      ResponseEntity<Map<String, Object>> responseEntity = configController.getConfig();
+      Map<String, Object> config = responseEntity.getBody();
+      assert config != null;
+      String endpointUrl = config.get("endpoint").toString();
+      endpointUrl = (endpointUrl + "/" + collectionId + "/items");
+
+      Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
+      List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("features");
+      for (Map<String, Object> item : items) {
+        item.put("collection_id", collectionId);
+        String id = (String) item.get("id");
+        if (!stacRepository.checkCollectionExists(id)) {
+          String itemJson = objectMapper.writeValueAsString(item);
+          stacRepository.insertItem(itemJson);
+          logger.info("{} id", collectionId);
+        }
+      }
+
+      logger.info("Successfully fetched and saved items");
     } catch (Exception e) {
-      logger.error("Error fetching items: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch items: " + e.getMessage(), e);
+      logger.error("Error fetching or saving items: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch or save items: " + e.getMessage(), e);
     }
   }
 

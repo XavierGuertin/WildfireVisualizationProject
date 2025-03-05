@@ -344,28 +344,13 @@ class DataControllerTests {
   }
 
   @Test
-  void fetchItems_Success() {
-    // Arrange
-    List<Map<String, Object>> mockResult = List.of(
-      Map.of("id", "test1"),
-      Map.of("id", "test2"));
-
-    when(dataService.getAllItems(anyString())).thenReturn(mockResult);
-    // Act
-    ResponseEntity<List<Map<String, Object>>> result = dataController.fetchItems("test");
-    // Assert
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(result.getBody()).isEqualTo(mockResult);
-  }
-
-  @Test
   void fetchItems_Failure() {
     // Arrange
     doThrow(new RuntimeException("Error retrieving all items for collection")).when(dataService)
-      .getAllItems(anyString());
+      .fetchAndSaveItems(anyString());
 
     // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.fetchItems("Test");
+    ResponseEntity<String> response = dataController.fetchItems("Test");
 
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);

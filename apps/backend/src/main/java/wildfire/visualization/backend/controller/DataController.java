@@ -114,13 +114,13 @@ public class DataController {
     }
   }
 
-  @GetMapping("/api/get-all-items/{collectionId}")
-  public ResponseEntity<List<Map<String, Object>>> fetchItems(@PathVariable("collectionId") String collectionId) {
+  @GetMapping("/api/fetch-collections-items/{collectionId}")
+  public ResponseEntity<String> fetchItems(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to fetch items");
     try {
-      List<Map<String, Object>> items = dataService.getAllItems(collectionId);
+      dataService.fetchAndSaveItems(collectionId);
       logger.debug("Successfully fetched items");
-      return ResponseEntity.ok(items);
+      return ResponseEntity.ok("Items fetched and saved successfully");
     } catch (Exception e) {
       logger.error("Error fetching items: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body(null);
@@ -203,6 +203,18 @@ public class DataController {
     } catch (Exception e) {
       logger.error("Error resetting collections: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError().body("Error resetting collections: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/reset-items")
+  public ResponseEntity<String> resetItems() {
+    logger.info("Received request to reset items");
+    try {
+      dataService.deleteAllItems();
+      return ResponseEntity.ok("Items deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error resetting items: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error resetting items: " + e.getMessage());
     }
   }
 
