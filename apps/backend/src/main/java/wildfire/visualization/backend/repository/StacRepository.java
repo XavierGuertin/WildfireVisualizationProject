@@ -182,6 +182,19 @@ public class StacRepository {
     }
   }
 
+  public void deleteAllItems() {
+    logger.info("Deleting all items from pgstac.items");
+    try {
+      String sql = "DELETE FROM pgstac.items";
+      jdbcTemplate.update(sql);
+      logger.info("All items deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+    }
+  }
+
+
   /**
    * Retrieves all collections from the database, optionally filtered by a
    * bounding box (BBOX),
