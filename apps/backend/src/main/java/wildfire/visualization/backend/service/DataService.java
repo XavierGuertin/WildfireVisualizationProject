@@ -92,7 +92,7 @@ public class DataService {
         String id = (String) item.get("id");
         if (!stacRepository.checkCollectionExists(id)) {
           String itemJson = objectMapper.writeValueAsString(item);
-          stacRepository.insertCollection(itemJson);
+          stacRepository.insertItem(itemJson);
           logger.info("{} id", dataset_id);
           logger.info("TCHOUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPY");
         }
@@ -123,17 +123,14 @@ public class DataService {
       bbox != null ? Arrays.toString(bbox) : "No bbox");
 
     try {
-      // Fetch collections from repository
       List<Map<String, Object>> collections = stacRepository.getAllCollections(bbox);
-
       logger.info("Successfully fetched {} collections.", collections.size());
 
-      // Transform collections into a structured format
       return collections.stream()
         .map(collection -> Map.of(
-          "key", collection.get("key"),
-          "id", collection.get("id"),
-          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+          "key", collection.get("key") == null ? "" : collection.get("key"),
+          "id", collection.get("id") == null ? "" : collection.get("id"),
+          "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")
         ))
         .collect(Collectors.toList());
     } catch (Exception e) {

@@ -61,6 +61,20 @@ public class StacRepository {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.debug("Attempting to insert item");
+    try {
+      jdbcTemplate.queryForObject(
+        "SELECT pgstac.create_item(?::jsonb)",
+        Object.class,
+        itemJson);
+      logger.info("Successfully inserted item");
+    } catch (DataAccessException e) {
+      logger.error("Error inserting collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+    }
+  }
+
   public List<Map<String, Object>> queryCollection(String collectionId) {
     logger.debug("Querying collection: {}", collectionId);
     try {
@@ -209,20 +223,6 @@ public class StacRepository {
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
-    }
-  }
-
-  public void insertItem(String itemJson) {
-    logger.debug("Attempting to insert item");
-    try {
-      jdbcTemplate.queryForObject(
-          "SELECT pgstac.create_item(?::jsonb)",
-          Object.class,
-          itemJson);
-      logger.info("Successfully inserted item");
-    } catch (DataAccessException e) {
-      logger.error("Error inserting item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting item: " + e.getMessage(), e);
     }
   }
 
