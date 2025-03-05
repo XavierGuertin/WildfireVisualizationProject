@@ -3,11 +3,14 @@ import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
-import { fetchItems, insertDatalayerView } from '../services/api';
+import { fetchItems, insertDatalayerView, resetItems } from '../services/api';
 import { changeLayer } from './MapView';
 import { useMapLayerContext } from './MapContext';
 import LoadingModule from './LoadingModule';
 import { Map } from 'ol';
+import { toast } from 'react-toastify';
+import withReactContent from 'sweetalert2-react-content';
+import Swal from 'sweetalert2';
 
 interface MapMetaDataProps {
   id?: string;
@@ -50,23 +53,39 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     }, 300); // Update every 300ms
   };
 
-  const { mapRef, setDataItems, dataItems } = useMapLayerContext();
+  const { mapRef } = useMapLayerContext();
+  const MySwal = withReactContent(Swal);
 
   const onLoadDataset = async () => {
     try {
-      setLoading(true); // Show loading overlay
-      showLoadingBar(); // Start progress simulation
-      await insertDatalayerView(id);
-      const map = mapRef.current as Map;
-      changeLayer(map);
+      MySwal.fire({
+        title: t('reset'),
+        text: t('confirm_reset_properties'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: t('yes'),
+        customClass: {
+          popup: 'custom-swal-popup',
+        },
+      }).then(async (result: { isConfirmed: any }) => {
+        if (result.isConfirmed) {
+          setLoading(true); // Show loading overlay
+          showLoadingBar(); // Start progress simulation
+          await insertDatalayerView(id);
+          const map = mapRef.current as Map;
+          changeLayer(map);
 
       //Adding the items retrieved from the collection to the context (this is the endpoint that the loading bar will be waiting for)
       const items = await fetchItems(id);
       setDataItems(items);
 
-      // Simulate a delay for loading (mocked)
-      await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-      console.log('Dataset loaded successfully (mock)');
+          // Simulate a delay for loading (mocked)
+          await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
+          console.log('Dataset loaded successfully');
+        }
+      });
     } catch (error) {
       console.error('Error loading dataset:', error);
     } finally {
