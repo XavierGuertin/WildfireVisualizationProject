@@ -150,10 +150,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
   useEffect(() => {
     setOnlineStatus();
 
-    const debouncedBboxChange = debounce((extent: number[]) => {
-      onBboxChange(extent);
-    }, 300);
-
     if (!mapRef.current) {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
@@ -179,8 +175,14 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
         map.removeLayer(baseLayer);
       }
       map.addLayer(getLayer());
-      refreshLayer(map); // Ensure data layer is refreshed
+      refreshLayer(map); // Ensure data layer is reloaded correctly
     }
+  }, [layer]);
+
+  useEffect(() => {
+    const debouncedBboxChange = debounce((extent: number[]) => {
+      onBboxChange(extent);
+    }, 300);
 
     if (mapRef.current) {
       const map = mapRef.current;
@@ -204,7 +206,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     return () => {
       debouncedBboxChange.cancel();
     };
-  }, [layer, onBboxChange]);
+  }, [onBboxChange]);
 
   return (
     <div id="map-container" ref={mapElement} data-testid="map-container">
