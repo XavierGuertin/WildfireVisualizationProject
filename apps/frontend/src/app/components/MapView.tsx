@@ -13,6 +13,10 @@ import Footer from './Footer';
 import { TileWMS } from 'ol/source';
 import { verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
+import { Vector as VectorLayer } from 'ol/layer';
+import { Vector as VectorSource } from 'ol/source';
+import { GeoJSON } from 'ol/format';
+import { Style, Stroke, Fill } from 'ol/style';
 
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -77,12 +81,32 @@ const createDataLayer = (): TileLayer => {
   return newLayer;
 };
 
+const createWFSDataLayer = (timestamp: string): VectorLayer => {
+  const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
+  
+  const vectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: `${geoserverUrl}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Default:items&cql_filter=datetime='${timestamp}'&outputFormat=application/json`,
+  });
+
+  const newLayer = new VectorLayer({
+    source: vectorSource,
+    style: new Style({
+      fill: new Fill({ color: 'rgba(255, 0, 0, 0.5)' }),
+      stroke: new Stroke({ color: 'red', width: 2 })
+    })
+  });
+
+  newLayer.set('id', 'dataLayer');
+  return newLayer;
+};
+
 /**
  * Refreshes the data layer on the map by removing the old layer and adding a new one.
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const refreshLayer = (map: Map) => {
+export const refreshLayer = (map: Map, timestamp: string) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find((layer) => layer.get('id') === 'dataLayer');
 
@@ -90,7 +114,7 @@ export const refreshLayer = (map: Map) => {
     map.removeLayer(dataLayer);
   }
 
-  const newLayer = createDataLayer();
+  const newLayer = createWFSDataLayer(timestamp);
   map.addLayer(newLayer);
 };
 
@@ -155,7 +179,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer(), createDataLayer()],
+        layers: [getLayer(), createWFSDataLayer('2024-06-21T12:00:00Z')],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -175,7 +199,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
         map.removeLayer(baseLayer);
       }
       map.addLayer(getLayer());
-      refreshLayer(map); // Ensure data layer is reloaded correctly
+      refreshLayer(map, "2024-06-21T12:00:00Z"); // Ensure data layer is reloaded correctly
     }
   }, [layer]);
 
@@ -220,8 +244,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const changeLayer = (map: Map) => {
-  refreshLayer(map);
+export const changeLayer = (map: Map, timestamp: string) => {
+  refreshLayer(map, timestamp);
 };
 
 export default MapView;

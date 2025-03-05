@@ -75,7 +75,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           showLoadingBar(); // Start progress simulation
           await insertDatalayerView(id);
           const map = mapRef.current as Map;
-          changeLayer(map);
+          changeLayer(map, "2024-06-21T12:00:00Z");
 
           await resetItems();
 
