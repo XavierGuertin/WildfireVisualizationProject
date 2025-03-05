@@ -54,23 +54,24 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const onLoadDataset = async () => {
     try {
-      setLoading(true); // Show loading overlay
-      showLoadingBar(); // Start progress simulation
+      setLoading(true);
+      setProgress(0);
+  
       await insertDatalayerView(id);
       const map = mapRef.current as Map;
       changeLayer(map);
-
-      //Adding the items retrieved from the collection to the context (this is the endpoint that the loading bar will be waiting for)
-      const items = await fetchItems(id);
+  
+      // Fetch items with progress updates
+      const items = await fetchItems(id, (progress) => {
+        setProgress(progress); // Update progress in real time
+      });
+  
       setDataItems(items);
-
-      // Simulate a delay for loading (mocked)
-      await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-      console.log('Dataset loaded successfully (mock)');
+      setProgress(100); // Ensure it hits 100% when complete
+      setTimeout(() => setLoading(false), 1000); // Hide loading after short delay
     } catch (error) {
-      console.error('Error loading dataset:', error);
-    } finally {
-      setLoading(false); // Ensure loading overlay is hidden
+      console.error("Error loading dataset:", error);
+      setLoading(false);
     }
   };
 
