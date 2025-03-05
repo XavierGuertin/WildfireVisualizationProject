@@ -77,9 +77,12 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           const map = mapRef.current as Map;
           changeLayer(map);
 
-      //Adding the items retrieved from the collection to the context (this is the endpoint that the loading bar will be waiting for)
-      const items = await fetchItems(id);
-      setDataItems(items);
+          await resetItems();
+
+          const response = await fetchItems(id);
+          response == 'Items fetched and saved successfully'
+            ? toast.success(t('items_fetch_success'))
+            : toast.error(t('items_fetch_error'));
 
           // Simulate a delay for loading (mocked)
           await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay

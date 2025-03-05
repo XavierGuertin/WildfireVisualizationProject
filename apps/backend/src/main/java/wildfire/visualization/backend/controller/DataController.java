@@ -206,6 +206,18 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/reset-items")
+  public ResponseEntity<String> resetItems() {
+    logger.info("Received request to reset items");
+    try {
+      dataService.deleteAllItems();
+      return ResponseEntity.ok("Items deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error resetting items: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error resetting items: " + e.getMessage());
+    }
+  }
+
   /**
    * Fetches collections sorted by name, optionally filtering by a bounding box
    * (BBOX).

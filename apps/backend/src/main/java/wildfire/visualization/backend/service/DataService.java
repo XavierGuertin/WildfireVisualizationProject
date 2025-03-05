@@ -238,6 +238,17 @@ public class DataService {
     }
   }
 
+  public void deleteAllItems() {
+    logger.info("Deleting all collections");
+    try {
+      stacRepository.deleteAllItems();
+      logger.info("All collections deleted successfully");
+    } catch (Exception e) {
+      logger.error("Error deleting collections: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to delete collections: " + e.getMessage(), e);
+    }
+  }
+
   public void insertItem(String itemJson) {
     logger.info("Inserting item into database");
     try {
