@@ -136,6 +136,52 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     onDatasetClick(dataset);
   };
 
+  /**
+   * Renders dataset content based on loading state and available datasets
+   */
+  const renderDatasetContent = () => {
+    if (isLoading) {
+      return (
+        <p className="loading-message" data-testid="loading-message">
+          {t('loading_datasets')}
+        </p>
+      );
+    }
+    
+    if (datasets.length > 0) {
+      return datasets.map((dataset) => (
+        <button
+          key={dataset.id}
+          className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+          onClick={() => handleDatasetClick(dataset.id)}
+          data-testid={`dataset-button-${dataset.id}`}
+        >
+          {dataset.id}
+        </button>
+      ));
+    }
+    
+    return (
+      <div className="no-datasets-container" data-testid="no-datasets-container">
+        <p className="no-datasets-message" data-testid="no-datasets-message">
+          {t('no_datasets_available')}
+        </p>
+      </div>
+    );
+  };
+
+  /**
+   * Gets the appropriate toggle status text based on current state
+   * @returns The translation key for the toggle status
+   */
+  const getToggleStatusText = () => {
+    if (!currentBbox || currentBbox.length === 0) {
+      return t('map_required');
+    }
+    
+    return isToggled ? t('filtering_by_map_view') : t('showing_all_datasets');
+  };
+
   return (
     <div
       className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
@@ -165,10 +211,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 aria-label={t('toggle_datasets')}
               >
                 <span className="toggle-status-text" data-testid="toggle-status-text">
-                  {currentBbox 
-                    ? t(isToggled ? 'filtering_by_map_view' : 'showing_all_datasets')
-                    : t('map_required')
-                  }
+                  {getToggleStatusText()}
                 </span>
                 <input
                   type="checkbox"
@@ -217,28 +260,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           )}
 
           <div className="buttons-container" data-testid="buttons-container">
-            {isLoading ? (
-              <p className="loading-message" data-testid="loading-message">
-                {t('loading_datasets')}
-              </p>
-            ) : datasets.length > 0 ? (
-              datasets.map((dataset) => (
-                <button
-                  key={dataset.id}
-                  className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
-                  onClick={() => handleDatasetClick(dataset.id)}
-                  data-testid={`dataset-button-${dataset.id}`}
-                >
-                  {dataset.id}
-                </button>
-              ))
-            ) : (
-              <div className="no-datasets-container" data-testid="no-datasets-container">
-                <p className="no-datasets-message" data-testid="no-datasets-message">
-                  {t('no_datasets_available')}
-                </p>
-              </div>
-            )}
+            {renderDatasetContent()}
           </div>
         </>
       )}

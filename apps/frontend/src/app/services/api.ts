@@ -90,7 +90,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
 
     const sourceLink = parent.href;
     let truncatedSource = '';
-    if (sourceLink.charAt(sourceLink.length - 1) === '/')
+    if (sourceLink.endsWith('/'))
       truncatedSource = sourceLink.substring(0, sourceLink.length - 1);
 
     const source = truncatedSource.split('/').pop()?.toUpperCase();

@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState, PropsWithChildren, useRef  } from "react";
+import React, { createContext, useContext, useState, PropsWithChildren, useRef, useMemo } from "react";
 import { Map } from 'ol';
 
-interface MapLayerContextValue{
+interface MapLayerContextValue {
     layer: string | null;
     setLayer: React.Dispatch<React.SetStateAction<string | null>>;
     mapRef: React.MutableRefObject<Map | null>;
     resetView: () => void;
     speed: number;
-    setSpeed : React.Dispatch<React.SetStateAction<number>>;
-    dataItems : object[];
+    setSpeed: React.Dispatch<React.SetStateAction<number>>;
+    dataItems: object[];
     setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
     isOnline: boolean;
     setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
@@ -19,14 +19,8 @@ const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefine
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
     const mapRef = useRef<Map | null>(null);  
-    
-    //Timeline playback speed
     const [speed, setSpeed] = useState<number>(1);
-
-    //Items for the simulation
     const [dataItems, setDataItems] = useState<object[]>([]);
-
-    //Online status
     const [isOnline, setIsOnline] = useState<boolean>(true);
 
     //Map Specific Functions
@@ -38,13 +32,27 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
         });
         }
     };
+    
+    // Memoize the context value to prevent unnecessary re-renders
+    const contextValue = useMemo(() => ({
+        layer, 
+        setLayer, 
+        mapRef, 
+        resetView, 
+        speed, 
+        setSpeed, 
+        dataItems, 
+        setDataItems, 
+        isOnline, 
+        setIsOnline
+    }), [layer, speed, dataItems, isOnline]);
  
     return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline }}>
+        <MapLayerContext.Provider value={contextValue}>
             {children}
         </MapLayerContext.Provider>
-    )
-}
+    );
+};
 
 export const useMapLayerContext = () => {
     const mapLayerContext = useContext(MapLayerContext);
@@ -52,5 +60,4 @@ export const useMapLayerContext = () => {
       throw new Error('useMapLayerContext must be inside a MapProvider');
     }
     return mapLayerContext;
-  };
-
+};
