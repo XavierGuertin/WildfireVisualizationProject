@@ -181,6 +181,18 @@ public class StacRepository {
     }
   }
 
+  public List<String> getItemsTimestamps() {
+    String sql = "SELECT to_char(datetime, 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as iso FROM pgstac.items";
+    try {
+      List<String> timestamps = jdbcTemplate.queryForList(sql, String.class);
+      logger.info("Fetched {} item timestamps", timestamps.size());
+      return timestamps;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item timestamps: " + e.getMessage(), e);
+    }
+  }
+
   public void deleteAllItems() {
     logger.info("Deleting all items from pgstac.items");
     try {
