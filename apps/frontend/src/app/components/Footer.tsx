@@ -7,17 +7,16 @@ import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
+import { fetchTimestamps } from '../services/api';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sliderValue, setSliderValue] = useState(0);
   const { speed, setSpeed } = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { mapRef } = useMapLayerContext();
-  const { timeStamps } = useMapLayerContext();
+  const { mapRef, timeStamps, sliderValue, setSliderValue, setTimeStamps } = useMapLayerContext();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -31,6 +30,7 @@ const Footer = () => {
           toast.info(t('default_speed_retrieved'));
         }
         setSpeedInitialized(true);
+        intitializeTimestampIfItemsPresent();
       } catch (error) {
         console.error('Error reading playback speed from localStorage:', error);
       }
@@ -56,24 +56,37 @@ const Footer = () => {
 
   useEffect(() => {
     const map = mapRef.current as Map;
-    let count = 0;
+  
     if (isPlaying && timeStamps.length > 0) {
       intervalRef.current = setInterval(() => {
-        setSliderValue((prev) => (prev < timeStamps.length ? prev + 1 : 0));
-        changeLayer(map, timeStamps[count++])
+        setSliderValue((prev) => {
+          const newValue = prev < timeStamps.length - 1 ? prev + 1 : 0;
+          changeLayer(map, false, timeStamps[newValue]);
+          localStorage.setItem("sliderValue", newValue.toString())
+          return newValue;
+        });
       }, 1000 / speed);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+    } else {
+      clearInterval(intervalRef.current!);
     }
+  
     return () => clearInterval(intervalRef.current!);
-  }, [isPlaying, speed]);
+  }, [isPlaying, speed, sliderValue, timeStamps]);
+  
 
-  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const map = mapRef.current as Map;
     setSliderValue(Number(event.target.value));
+    changeLayer(map, false, timeStamps[Number(event.target.value)])
+    localStorage.setItem("sliderValue", event.target.value)
+  }
 
   const handleStopPress = () => {
+    const map = mapRef.current as Map;
     setIsPlaying(false);
     setSliderValue(0);
+    localStorage.setItem("timestamp", "0")
+    changeLayer(map, false, timeStamps[0])
   };
 
   useEffect(() => {
@@ -88,6 +101,27 @@ const Footer = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  const intitializeTimestampIfItemsPresent = async () => {
+    const timestampsResponse = await fetchTimestamps();
+    if (timestampsResponse) {
+      setTimeStamps(timestampsResponse);
+      let stringCurrentSliderValue = localStorage.getItem("sliderValue");
+  
+      // Check if there's a saved slider value in localStorage, otherwise default to 0
+      let currentSliderValue = stringCurrentSliderValue ? parseInt(stringCurrentSliderValue) : 0;
+      
+      setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
+    }
+  };
+  
+  useEffect(() => {
+    if (timeStamps.length > 0) {
+      const map = mapRef.current as Map;
+      changeLayer(map, false, timeStamps[sliderValue]);
+    }
+  }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
+  
 
   return (
     <div className="footerContainer" data-testid="footer-container">
@@ -111,7 +145,7 @@ const Footer = () => {
           className="simulationSlider"
           type="range"
           min="0"
-          max={timeStamps.length}
+          max={timeStamps.length-1}
           value={sliderValue}
           onChange={handleSliderChange}
           data-testid="slider"

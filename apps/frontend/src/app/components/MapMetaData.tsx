@@ -73,11 +73,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         if (result.isConfirmed) {
           setLoading(true); // Show loading overlay
           showLoadingBar(); // Start progress simulation
-          await insertDatalayerView(id);
-          const map = mapRef.current as Map;
-          changeLayer(map, '2024-06-25T12:00:00Z');
 
           await resetItems();
+          localStorage.setItem('sliderValue', '0')
 
           const response = await fetchItems(id);
           response == 'Items fetched and saved successfully'

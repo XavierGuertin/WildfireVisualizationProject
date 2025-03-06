@@ -14,6 +14,10 @@ import {
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
 import debounce from 'lodash/debounce';
+import { useMapLayerContext } from './MapContext';
+import { insertDatalayerView } from '../services/api';
+import { changeLayer } from './MapView';
+import { Map } from 'ol';
 
 export interface DatasetEntry {
   key: number;
@@ -52,6 +56,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {mapRef} = useMapLayerContext();
 
   /**
    * Fetches dataset collections based on the selected filter and bounding box.
@@ -131,6 +136,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleDatasetClick = async (id: string) => {
+    await insertDatalayerView(id);
+    const map = mapRef.current as Map;
+    changeLayer(map, true);
     setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);

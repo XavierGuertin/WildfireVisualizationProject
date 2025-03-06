@@ -11,12 +11,13 @@ import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { TileWMS } from 'ol/source';
-import { verifyInternetConnection } from '../services/api';
+import { fetchTimestamps, verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { GeoJSON } from 'ol/format';
 import { Style, Stroke, Fill } from 'ol/style';
+import { timeStamp } from 'console';
 
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -63,25 +64,27 @@ const topographicLayer = new TileLayer({
  *
  * @returns {TileLayer} The generated data layer for the map.
  */
-const createDataLayer = (): TileLayer => {
+const createCollectionDataLayer = (): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
-  const newLayer = new TileLayer({
-    source: new TileWMS({
-      url: geoserverUrl,
-      params: {
-        LAYERS: 'Default:datalayer',
-        TILED: true,
-        CACHED: false,
-        _t: Date.now(), // Cache busting
-      },
-      serverType: 'geoserver',
-    }),
+
+  const vectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: `${geoserverUrl}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Default:datalayer&outputFormat=application/json`,
   });
+
+  const newLayer = new VectorLayer({
+    source: vectorSource,
+    style: new Style({
+      fill: new Fill({ color: 'rgba(0, 0, 255, 0.1)' }), // Keeping blue for distinction
+      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 })
+    })
+  });
+
   newLayer.set('id', 'dataLayer');
   return newLayer;
 };
 
-const createWFSDataLayer = (timestamp: string): VectorLayer => {
+const createItemDataLayer = (timestamp: string): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
   
   const vectorSource = new VectorSource({
@@ -92,12 +95,12 @@ const createWFSDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(255, 0, 0, 0.5)' }),
-      stroke: new Stroke({ color: 'red', width: 2 })
+      fill: new Fill({ color: 'rgba(255, 0, 0, 0.1)' }),
+      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 })
     })
   });
 
-  newLayer.set('id', 'dataLayer');
+  newLayer.set('id', 'itemLayer');
   return newLayer;
 };
 
@@ -106,16 +109,26 @@ const createWFSDataLayer = (timestamp: string): VectorLayer => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const refreshLayer = (map: Map, timestamp: string) => {
+export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find((layer) => layer.get('id') === 'dataLayer');
+  const itemLayer = layers.find((layer) => layer.get('id') === 'itemLayer');
 
-  if (dataLayer) {
-    map.removeLayer(dataLayer);
+  if(collection){
+    if (dataLayer) {
+      map.removeLayer(dataLayer);
+    }
+    const newLayer = createCollectionDataLayer()
+    map.addLayer(newLayer);
   }
 
-  const newLayer = createWFSDataLayer(timestamp);
-  map.addLayer(newLayer);
+  if(timestamp){
+    if (itemLayer) {
+      map.removeLayer(itemLayer);
+    }
+    const newLayer = createItemDataLayer(timestamp);
+    map.addLayer(newLayer);
+  }
 };
 
 interface MapViewProps {
@@ -179,7 +192,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer(), createWFSDataLayer('2024-06-21T12:00:00Z')],
+        layers: [getLayer(), createCollectionDataLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -199,7 +212,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
         map.removeLayer(baseLayer);
       }
       map.addLayer(getLayer());
-      refreshLayer(map, "2024-06-21T12:00:00Z"); // Ensure data layer is reloaded correctly
     }
   }, [layer]);
 
@@ -244,8 +256,13 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const changeLayer = (map: Map, timestamp: string) => {
-  refreshLayer(map, timestamp);
+export const changeLayer = (map: Map, collection: boolean, timestamp?: string) => {
+  if(collection){
+    refreshLayer(map, collection=true)
+  }
+  if(timestamp){
+    refreshLayer(map, collection=false, timestamp);
+  }
 };
 
 export default MapView;
