@@ -37,12 +37,14 @@ interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
   currentBbox?: [number, number, number, number]; // [west, south, east, north]
+  loadedDatasetName?: string | null;
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
   refreshKey,
   currentBbox = [],
+  loadedDatasetName
 }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -91,6 +93,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, 300);
 
+  useEffect(() => {
+    console.log("[DEBUG] AvailableDatasets received loadedDatasetName:", loadedDatasetName);
+  }, [loadedDatasetName]);
+
   /**
    * Fetches datasets when the refresh key or filter changes.
    */
@@ -131,8 +137,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleDatasetClick = async (id: string) => {
+    console.log(`[DEBUG] Dataset clicked:`, id)
     setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
+    console.log(`[DEBUG] Fetched metadata for dataset:`, dataset);
     onDatasetClick(dataset);
   };
 
@@ -230,6 +238,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   data-testid={`dataset-button-${dataset.id}`}
                 >
                   {dataset.id}
+                  {dataset.id === loadedDatasetName && (
+                    <span className="loaded-tag" data-testid="loaded-indicator">{t('dataset_loaded')}</span>
+                  )}
                 </button>
               ))
             ) : (

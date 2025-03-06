@@ -16,7 +16,7 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
-  onLoadDataset: () => Promise<void>;
+  onDatasetLoaded: (datasetId: string) => void;
   onClose: () => void;
   visible: boolean;
 }
@@ -29,6 +29,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   processes = '',
   datasetSource = '',
   visible,
+  onDatasetLoaded,
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -52,10 +53,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const { mapRef, setDataItems, dataItems } = useMapLayerContext();
 
-  const onLoadDataset = async () => {
+  const handleInternalLoadDataset = async () => {
     try {
       setLoading(true);
       setProgress(0);
+      showLoadingBar();
   
       await insertDatalayerView(id);
       const map = mapRef.current as Map;
@@ -68,7 +70,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   
       setDataItems(items);
       setProgress(100); // Ensure it hits 100% when complete
-      setTimeout(() => setLoading(false), 1000); // Hide loading after short delay
+      setTimeout(() => {
+        setLoading(false);
+        console.log("[DEBUG] Notifying Layout that dataset is loaded:", id)
+        onDatasetLoaded(id);
+      }, 1000); // Hide loading after short delay
     } catch (error) {
       console.error("Error loading dataset:", error);
       setLoading(false);
@@ -122,13 +128,13 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         ))}
         <button
           className="load-dataset-button"
-          onClick={onLoadDataset}
+          onClick={handleInternalLoadDataset}
           data-testid="load-dataset-button"
         >
           <LoadingModule
             progress={progress}
             isVisible={loading}
-            datasetBeingLoaded={name}
+            datasetBeingLoaded={id}
             data-testid="loading-module"
           />
           {t('load_dataset')}

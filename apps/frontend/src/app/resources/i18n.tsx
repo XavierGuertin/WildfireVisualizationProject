@@ -35,13 +35,13 @@ const resources = {
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
+      dataset_loaded: 'Loaded', 
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
       filtering_by_map_view: 'Filtering datasets by region',
       showing_all_datasets: 'Showing all datasets',
-      only_visible_datasets_shown: 'Only datasets in current map view',
-      including_outside_map_view: 'Including datasets outside visible area',
       map_required: 'Load map first',
+      // Filters
       name: 'Name',
       date: 'Date',
       latest_added: 'Latest Added',
@@ -107,8 +107,14 @@ const resources = {
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
-      toggle_datasets: 'Afficher les collections de données',
-      // TODO: Translate the datasets strings
+      dataset_loaded: 'Chargé',
+      //Datasets - Toggle
+      toggle_datasets: "Basculer les jeux de données",
+      filtering_by_map_view: "Filtrer les données par région",
+      showing_all_datasets: "Affichage de toutes les données",
+      map_required: "Charger la carte d'abord",
+      // Filters
+      name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',
       latest_updated: 'Dernière Mise à Jour',
