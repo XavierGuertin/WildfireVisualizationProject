@@ -127,6 +127,19 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/fetch-items-timestamps")
+  public ResponseEntity<List<String>> fetchItemsTimestamps() {
+    logger.info("Received request to fetch items' timestamps");
+    try {
+      dataService.fetchItemsTimestamps();
+      logger.debug("Successfully fetched items's timestamps");
+      return ResponseEntity.ok(dataService.fetchItemsTimestamps());
+    } catch (Exception e) {
+      logger.error("Error fetching items' timestamps: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
   @GetMapping("/api/get-item/{id}/{collection}")
   public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId,
                                                            @PathVariable("collection") String collectionId) {

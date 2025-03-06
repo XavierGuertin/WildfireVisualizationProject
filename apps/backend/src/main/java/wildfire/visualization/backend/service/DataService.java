@@ -268,6 +268,16 @@ public class DataService {
     }
   }
 
+  public List<String> fetchItemsTimestamps() {
+    logger.debug("Fetching item timestamps from database");
+    try {
+      return stacRepository.getItemsTimestamps();
+    } catch (Exception e) {
+      logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch item timestamps: " + e.getMessage(), e);
+    }
+  }
+
   public List<Map<String, Object>> getItem(String id) {
     logger.info("Fetching item from database");
     try {
