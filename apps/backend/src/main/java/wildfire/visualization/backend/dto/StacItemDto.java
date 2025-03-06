@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DTO class responsible for defining the data in a StacItem object
+ */
 @Data
 @Builder
 @NoArgsConstructor

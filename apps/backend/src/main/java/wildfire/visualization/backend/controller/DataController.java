@@ -14,6 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller class responsible for API Endpoints that interact with fetching, inserting and removing data from pgSTAC database
+ */
 @RestController
 public class DataController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
@@ -51,11 +54,17 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for retrieving MetaData from a collection
+   *
+   * @param collectionId Database ID of the given collection
+   * @return ResponseEntity object containing the MetaData of the collection
+   */
   @GetMapping("/api/metadata/{id}")
   public ResponseEntity<String> getMetaData(@PathVariable("id") String collectionId) {
     logger.info("Received request to /api/metadata");
     try {
-      String result = dataService.retrieveMetaData(collectionId);
+      String result = dataService.retrieveCollectionMetaData(collectionId);
       logger.debug("Successfully processed MetaData");
       return ResponseEntity.ok(result);
     } catch (Exception e) {
@@ -65,6 +74,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for fetching pgSTAC collections from a given endpoint
+   *
+   * @param endpointUrl String object containing the URL to the collections to be retrieved
+   * @return ResponseEntity object with a status code of 200 and a message indicating the the collections were fetched and saved successfully
+   */
   @GetMapping("/api/fetch-collections")
   public ResponseEntity<String> fetchCollections(@RequestParam String endpointUrl) {
     logger.info("Fetching collections from URL: {}", endpointUrl);
@@ -114,6 +129,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for fetching items from a given collection
+   *
+   * @param collectionId Database ID for the collection in which to retrieve items from
+   * @return ResponseEntity object containing a list of all the items associated with that collection
+   */
   @GetMapping("/api/get-all-items/{collectionId}")
   public ResponseEntity<List<Map<String, Object>>> fetchItems(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to fetch items");
@@ -127,6 +148,13 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for retrieving an item given a specific id and collection id
+   *
+   * @param itemId Database ID of the given item to be retrieved
+   * @param collectionId Database ID of the given collection
+   * @return ResponseEntity object containing the specified item
+   */
   @GetMapping("/api/get-item/{id}/{collection}")
   public ResponseEntity<List<Map<String, Object>>> getItem(@PathVariable("id") String itemId,
                                                            @PathVariable("collection") String collectionId) {
@@ -141,6 +169,11 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for removing all items from the database
+   *
+   * @return ResponseEntity object containing a String object indicating if the removal was successful
+   */
   @DeleteMapping("/api/remove-all-items")
   public ResponseEntity<String> removeAllItems() {
     logger.info("Received request to remove all items");
@@ -154,6 +187,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for removing all items from a specified collection from the database
+   *
+   * @param collectionId Database ID for the collection
+   * @return ResponseEntity object containing a String object indicating if the removal was successful
+   */
   @DeleteMapping("/api/remove-items-from-collection/{collectionId}")
   public ResponseEntity<String> removeItemsFromCollection(@PathVariable("collectionId") String collectionId) {
     logger.info("Received request to remove all items");
@@ -167,6 +206,13 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for removing a single item with a given item id and collection id
+   *
+   * @param itemId Database ID of item to be removed
+   * @param collectionId Database ID of given collection
+   * @return ResponseEntity object containing a String object indicating if the removal was successful
+   */
   @DeleteMapping("/api/remove-item/{id}/{collection}")
   public ResponseEntity<String> removeItem(@PathVariable("id") String itemId,
                                            @PathVariable("collection") String collectionId) {
@@ -181,6 +227,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for verifying if a given URL contains any pgSTAC collections
+   *
+   * @param endpointUrl String object representing the URL to be verified
+   * @return ResponseEntity object containing a String object indicating if there are any collections at the given URL
+   */
   @GetMapping("/api/verify-collections")
   public ResponseEntity<String> verifyIfEndpointHasCollections(@RequestParam String endpointUrl) {
     logger.info("Checking if there exist at least one collection from Endpoint URL: {}", endpointUrl);
@@ -194,6 +246,11 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for removing all collections from the database
+   *
+   * @return ResponseEntity object containing a String object indicating if the removal was successful
+   */
   @GetMapping("/api/reset-collections")
   public ResponseEntity<String> resetCollections() {
     logger.info("Received request to reset collections");
@@ -260,6 +317,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for inserting a view using a given collection
+   *
+   * @param collectionId Database ID of given collection
+   * @return ResponseEntity containing a String object indicating if the insertion was successful
+   */
   @GetMapping("/api/set-datalayer-geometry/{id}")
   public ResponseEntity<String> insertView(@PathVariable("id") String collectionId) {
     try {
@@ -274,6 +337,12 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for checking if the user is connected to the internet
+   *
+   * @param endpointUrl String object representing a URL that the endpoint will attempt to connect to
+   * @return ResponseEntity containg a String object indicating if the user is connected to the internet
+   */
   @GetMapping("/api/verify-internet-connection")
   public ResponseEntity<String> verifyInternetConnection(@RequestParam String endpointUrl) {
     logger.info("Checking if there is an internet connection: {}", endpointUrl);

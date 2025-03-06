@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO class responsible for defining the data in a Geometry object
+ */
 @Data
 @Builder
 @NoArgsConstructor
