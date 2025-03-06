@@ -34,6 +34,8 @@ const resources = {
       factory_reset_initiated: 'Factory reset initiated',
       items_fetch_success: 'Collection\'s items have been fetched successfully',
       items_fetch_error: 'Error fetching collection\'s items',
+      timestamps_fetch_success: 'Timestamps have been fetched successfully',
+      timestamps_fetch_error: 'Error fetching timestamps',
       confirm_deletion_items_from_previous_collection: "Items from the previous collection will be deleted and overwritten by the new one. \nDo you want to proceed?",
       //Datasets
       available_datasets: 'Available Datasets',
@@ -109,6 +111,8 @@ const resources = {
       factory_reset_initiated: "Réinitialisation d'Usine démarrée",
       items_fetch_success: "Les items de la collection ont été récupérés avec succès",
       items_fetch_error: "Erreur lors de la récupération des items de la collection",
+      timestamps_fetch_success: "Les timestamps ont été récupérés avec succès",
+      timestamps_fetch_error: "Erreur lors de la récupération des timestamps",
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Datasets
       available_datasets: 'Collections disponibles',
