@@ -14,10 +14,10 @@ const Footer = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const { speed, setSpeed } = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
-  const [ timeStamps, setTimeStamps] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { mapRef } = useMapLayerContext();
+  const { timeStamps } = useMapLayerContext();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -56,20 +56,8 @@ const Footer = () => {
 
   useEffect(() => {
     const map = mapRef.current as Map;
-    setTimeStamps([
-      "2024-06-21T12:00:00Z",
-      "2024-06-22T12:00:00Z",
-      "2024-06-23T12:00:00Z",
-      "2024-06-24T12:00:00Z",
-      "2024-06-25T12:00:00Z",
-      "2024-06-26T12:00:00Z",
-      "2024-06-27T12:00:00Z",
-      "2024-06-28T12:00:00Z",
-      "2024-06-29T12:00:00Z",
-      "2024-06-30T12:00:00Z"
-    ]);
-    var count = 0;
-    if (isPlaying) {
+    let count = 0;
+    if (isPlaying && timeStamps.length > 0) {
       intervalRef.current = setInterval(() => {
         setSliderValue((prev) => (prev < timeStamps.length ? prev + 1 : 0));
         changeLayer(map, timeStamps[count++])

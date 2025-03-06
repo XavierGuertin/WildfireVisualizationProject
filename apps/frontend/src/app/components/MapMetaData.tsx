@@ -3,7 +3,7 @@ import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
-import { fetchItems, insertDatalayerView, resetItems } from '../services/api';
+import { fetchItems, fetchTimestamps, insertDatalayerView, resetItems } from '../services/api';
 import { changeLayer } from './MapView';
 import { useMapLayerContext } from './MapContext';
 import LoadingModule from './LoadingModule';
@@ -25,14 +25,14 @@ interface MapMetaDataProps {
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  id = '',
-  name = '',
-  description = '',
-  format = '',
-  processes = '',
-  datasetSource = '',
-  visible,
-}) => {
+                                                   id = '',
+                                                   name = '',
+                                                   description = '',
+                                                   format = '',
+                                                   processes = '',
+                                                   datasetSource = '',
+                                                   visible
+                                                 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
@@ -53,8 +53,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     }, 300); // Update every 300ms
   };
 
-  const { mapRef } = useMapLayerContext();
   const MySwal = withReactContent(Swal);
+  const { mapRef, setTimeStamps } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     try {
@@ -67,15 +67,15 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         cancelButtonColor: '#d33',
         confirmButtonText: t('yes'),
         customClass: {
-          popup: 'custom-swal-popup',
-        },
+          popup: 'custom-swal-popup'
+        }
       }).then(async (result: { isConfirmed: any }) => {
         if (result.isConfirmed) {
           setLoading(true); // Show loading overlay
           showLoadingBar(); // Start progress simulation
           await insertDatalayerView(id);
           const map = mapRef.current as Map;
-          changeLayer(map, "2024-06-21T12:00:00Z");
+          changeLayer(map, '2024-06-25T12:00:00Z');
 
           await resetItems();
 
@@ -129,19 +129,19 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           {
             label: t('description'),
             value: description,
-            testId: 'dataset-description',
+            testId: 'dataset-description'
           },
           { label: t('format'), value: format, testId: 'dataset-format' },
           {
             label: t('processes'),
             value: processes,
-            testId: 'dataset-processes',
+            testId: 'dataset-processes'
           },
           {
             label: t('dataset_source'),
             value: datasetSource,
-            testId: 'dataset-datasource',
-          },
+            testId: 'dataset-datasource'
+          }
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
