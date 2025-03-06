@@ -81,6 +81,15 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           const response = await fetchItems(id);
           response == 'Items fetched and saved successfully'
+            ? toast.success(t('timestamps_fetch_success'))
+            : toast.error(t('timestamps_fetch_error'));
+
+          // fetch list of timestamps
+          const timestampsResponse = await fetchTimestamps();
+          if (timestampsResponse) {
+            setTimeStamps(timestampsResponse);
+          }
+          timestampsResponse != null
             ? toast.success(t('items_fetch_success'))
             : toast.error(t('items_fetch_error'));
 
