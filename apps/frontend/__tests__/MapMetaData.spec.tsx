@@ -98,6 +98,7 @@ describe('MapMetaDataCompleteCoverage', () => {
       mapRef: { current: {} },
       setDataItems: setDataItemsMock,
       dataItems: [],
+      setTimeStamps: jest.fn()
     });
 
     const { getByTestId } = render(

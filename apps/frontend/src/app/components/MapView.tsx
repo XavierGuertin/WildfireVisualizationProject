@@ -10,14 +10,12 @@ import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from './MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
-import { TileWMS } from 'ol/source';
-import { fetchTimestamps, verifyInternetConnection } from '../services/api';
+import { verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 import { Style, Stroke, Fill } from 'ol/style';
-import { timeStamp } from 'console';
 
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -62,7 +60,7 @@ const topographicLayer = new TileLayer({
 /**
  * Creates a dynamic data layer that pulls STAC item data from GeoServer.
  *
- * @returns {TileLayer} The generated data layer for the map.
+ * @returns {VectorLayer} The generated collection data layer for the map.
  */
 const createCollectionDataLayer = (): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
@@ -84,6 +82,11 @@ const createCollectionDataLayer = (): VectorLayer => {
   return newLayer;
 };
 
+/**
+ * Creates a dynamic data layer that pulls STAC item data from GeoServer.
+ *
+ * @returns {VectorLayer} The generated item data layer for the map.
+ */
 const createItemDataLayer = (timestamp: string): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
   
@@ -105,7 +108,8 @@ const createItemDataLayer = (timestamp: string): VectorLayer => {
 };
 
 /**
- * Refreshes the data layer on the map by removing the old layer and adding a new one.
+ * Refreshes the data layers on the map by removing the old layers and adding a new one, also depending on
+ * both the collection layer and items layer
  *
  * @param {Map} map - The OpenLayers map instance.
  */

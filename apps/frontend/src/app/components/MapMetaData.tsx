@@ -3,11 +3,9 @@ import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
-import { fetchItems, fetchTimestamps, insertDatalayerView, resetItems } from '../services/api';
-import { changeLayer } from './MapView';
+import { fetchItems, fetchTimestamps, resetItems } from '../services/api';
 import { useMapLayerContext } from './MapContext';
 import LoadingModule from './LoadingModule';
-import { Map } from 'ol';
 import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
@@ -54,7 +52,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   };
 
   const MySwal = withReactContent(Swal);
-  const { mapRef, setTimeStamps } = useMapLayerContext();
+  const { setTimeStamps } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     try {

@@ -102,6 +102,9 @@ const Footer = () => {
     };
   }, []);
 
+  /**
+ * This fetches and loads the stac items if they exist in the items table
+ */
   const intitializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
     if (timestampsResponse) {
@@ -115,6 +118,9 @@ const Footer = () => {
     }
   };
 
+  /**
+ * Add layer if the timeStamps list is populated
+ */
   useEffect(() => {
     if (timeStamps.length > 0) {
       const map = mapRef.current as Map;
