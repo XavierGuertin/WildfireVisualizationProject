@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO class responsible for defining the data in a Link object
+ */
 @Data
 @Builder
 @NoArgsConstructor
