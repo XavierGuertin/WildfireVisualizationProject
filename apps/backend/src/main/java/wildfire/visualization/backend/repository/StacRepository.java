@@ -129,7 +129,7 @@ public class StacRepository {
    *                                  exactly 4 elements.
    * @throws RuntimeException         If a database error occurs.
    */
-  private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
+  List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
     // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
     if (bbox != null && bbox.length != 4) {
       throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
