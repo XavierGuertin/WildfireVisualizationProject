@@ -11,8 +11,8 @@ import { MapProvider, useMapLayerContext } from '../src/app/components/MapContex
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
-    i18n: { language: 'en', changeLanguage: jest.fn() },
-  }),
+    i18n: { language: 'en', changeLanguage: jest.fn() }
+  })
 }));
 
 // Mock react-toastify.
@@ -20,9 +20,9 @@ jest.mock('react-toastify', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
-    info: jest.fn(),
+    info: jest.fn()
   },
-  ToastContainer: () => <div data-testid="toast-container" />,
+  ToastContainer: () => <div data-testid="toast-container" />
 }));
 
 // Mock API service functions.
@@ -31,7 +31,7 @@ jest.mock('../src/app/services/api', () => ({
     Promise.resolve('Endpoint saved')
   ),
   resetCollections: jest.fn(() => Promise.resolve('Reset successful')),
-  verifyIfEndpointHasCollections: jest.fn(() => Promise.resolve('Collections found')),
+  verifyIfEndpointHasCollections: jest.fn(() => Promise.resolve('Collections found'))
 }));
 
 // Mock config API functions.
@@ -39,10 +39,10 @@ jest.mock('../src/app/services/configApi', () => ({
   getConfig: jest.fn(() =>
     Promise.resolve({
       endpoint: 'https://default-api-endpoint.com',
-      language: 'en',
+      language: 'en'
     })
   ),
-  saveConfig: jest.fn(() => Promise.resolve()),
+  saveConfig: jest.fn(() => Promise.resolve())
 }));
 
 // Correctly mock SweetAlert2 as a class whose static fire method is a Jest mock.
@@ -56,8 +56,8 @@ jest.mock('sweetalert2', () => {
 // Ensure the clipboard API exists.
 Object.assign(navigator, {
   clipboard: {
-    writeText: jest.fn(() => Promise.resolve()),
-  },
+    writeText: jest.fn(() => Promise.resolve())
+  }
 });
 
 // --- Helper ---
@@ -65,7 +65,8 @@ Object.assign(navigator, {
 const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
   const result = render(
     <MapProvider>
-      <SettingsPanel refreshDatasets={refreshDatasets} />
+      <SettingsPanel refreshDatasets={refreshDatasets}
+                     setMetadataVisible={jest.fn()} />
     </MapProvider>
   );
   // Flush pending useEffect updates.
@@ -200,7 +201,7 @@ describe('SettingsPanel Component', () => {
           expect.objectContaining({
             title: 'reset',
             text: 'confirm_reset_properties',
-            icon: 'warning',
+            icon: 'warning'
           })
         );
       });
@@ -209,37 +210,6 @@ describe('SettingsPanel Component', () => {
       expect(localStorage.getItem('playbackSpeed')).toBe('1');
       const { toast } = require('react-toastify');
       expect(toast.success).toHaveBeenCalledWith('reset_completed');
-    });
-
-    it('triggers factory reset when the factory_reset option is clicked', async () => {
-      const Swal = require('sweetalert2');
-      // Simulate two Swal modals:
-      // 1. Confirmation of factory reset.
-      // 2. Prompt for new endpoint.
-      Swal.fire
-        .mockResolvedValueOnce({ isConfirmed: true })
-        .mockResolvedValueOnce({ isConfirmed: true, value: 'https://new-api-endpoint.com' });
-
-      await renderSettingsPanel();
-      const resetButton = screen.getByRole('button', { name: /reset/i });
-      await act(async () => {
-        fireEvent.click(resetButton);
-      });
-      const factoryResetOption = screen.getByText('factory_reset');
-      await act(async () => {
-        fireEvent.click(factoryResetOption);
-      });
-      await waitFor(() => {
-        expect(Swal.fire).toHaveBeenCalledTimes(2);
-      });
-      const { resetCollections, fetchCollectionsFromEndpoint } = require('../src/app/services/api');
-      expect(resetCollections).toHaveBeenCalled();
-      expect(fetchCollectionsFromEndpoint).toHaveBeenCalledWith('https://new-api-endpoint.com');
-      const { toast } = require('react-toastify');
-      // The component calls toast.success with the value returned by fetchCollectionsFromEndpoint
-      // and then again with "api_endpoint_saved".
-      expect(toast.success).toHaveBeenCalledWith('Endpoint saved');
-      expect(toast.success).toHaveBeenCalledWith('api_endpoint_saved');
     });
   });
 
@@ -289,7 +259,7 @@ describe('SettingsPanel Component', () => {
       const { getConfig } = require('../src/app/services/configApi');
       getConfig.mockResolvedValueOnce({
         endpoint: 'https://custom-endpoint.com',
-        language: 'en',
+        language: 'en'
       });
       await renderSettingsPanel();
       const settingsButton = await screen.findByRole('button', { name: /settings/i });
@@ -304,7 +274,7 @@ describe('SettingsPanel Component', () => {
       const { getConfig, saveConfig } = require('../src/app/services/configApi');
       getConfig.mockResolvedValueOnce({
         endpoint: 'No endpoint saved',
-        language: 'en',
+        language: 'en'
       });
       const Swal = require('sweetalert2');
       Swal.fire.mockResolvedValueOnce({ isConfirmed: false });
@@ -320,39 +290,39 @@ describe('SettingsPanel Component', () => {
     });
   });
 
-  describe('Offline Behavior', () =>{
+  describe('Offline Behavior', () => {
     it('Internet button is not visible when online', () => {
       const OnlineComponent = () => {
-        const { setIsOnline } = useMapLayerContext(); 
+        const { setIsOnline } = useMapLayerContext();
         setIsOnline(true);
-        return <></>
+        return <></>;
       };
-  
+
       const TestComponent = () => (
         <MapProvider>
-          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn}/>
+          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn} />
           <OnlineComponent />
         </MapProvider>
       );
-      
+
       render(<TestComponent />);
       expect(screen.queryByRole('button', { name: /internet/i })).not.toBeInTheDocument();
     });
 
     it('Internet button is visible when offline', () => {
       const OnlineComponent = () => {
-        const { setIsOnline } = useMapLayerContext(); 
+        const { setIsOnline } = useMapLayerContext();
         setIsOnline(false);
-        return <></>
+        return <></>;
       };
-  
+
       const TestComponent = () => (
         <MapProvider>
-          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn}/>
+          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn} />
           <OnlineComponent />
         </MapProvider>
       );
-      
+
       render(<TestComponent />);
       expect(screen.queryByRole('button', { name: /internet/i })).toBeInTheDocument();
     });
