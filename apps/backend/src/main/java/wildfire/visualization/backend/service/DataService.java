@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * The service responsible for the business logic of data retrieval from the pgSTAC database
+ */
 @Service
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
@@ -30,14 +33,32 @@ public class DataService {
   @Autowired
   private StacDataConverter stacDataConverter;
 
-  public String retrieveMetaData(String collectionId) throws JsonProcessingException {
-    return objectMapper.writeValueAsString(stacRepository.queryMetaData(collectionId));
+  /**
+   * Method responsible for retrieving metadata from a collection
+   *
+   * @param collectionId The database id of the collection
+   * @return A String object that represents the List of key value pairs from the given collection's metadata
+   * @throws JsonProcessingException Exception thrown when there's an error in the JSON Processing
+   */
+  public String retrieveCollectionMetaData(String collectionId) throws JsonProcessingException {
+    return objectMapper.writeValueAsString(stacRepository.queryCollectionMetaData(collectionId));
   }
 
+  /**
+   * Overloaded method responsible for inserting a view when only provided with collectionID
+   *
+   * @param collectionId The database id of the collection
+   */
   public void insertView(String collectionId) {
     insertView(collectionId, 50);
   }
 
+  /**
+   * Method responsible for inserting a view for a given collection. The thread sleep time can be set using sleepMillis
+   *
+   * @param collectionId The database id of the collection
+   * @param sleepMillis The thread sleep amount in milliseconds
+   */
   public void insertView(String collectionId, int sleepMillis) {
     stacRepository.setDatalayerView(collectionId);
     boolean check = false;
@@ -64,6 +85,11 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for retrieving and saving of collections into our database from a given endpoint
+   *
+   * @param endpointUrl Endpoint that we will be retrieving collections from
+   */
   public void fetchAndSaveCollections(String endpointUrl) {
     try {
       Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
@@ -119,6 +145,10 @@ public class DataService {
     }
   }
 
+  /**
+   * @param endpointUrl Endpoint that must be verified to see if it contains any collections
+   * @return A String object that clarifies whether collections were found or not
+   */
   public String verifyCollections(String endpointUrl) {
     try {
       Map<String, Object> response = restTemplate.getForObject(endpointUrl, Map.class);
@@ -207,6 +237,9 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for deleting all collections from the database
+   */
   public void deleteAllCollections() {
     logger.info("Deleting all collections");
     try {
@@ -218,6 +251,11 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for inserting a stringified JSON item into the database
+   *
+   * @param itemJson String object that contains the JSON of a pgSTAC item to be inserted into the database
+   */
   public void insertItem(String itemJson) {
     logger.info("Inserting item into database");
     try {
@@ -228,6 +266,12 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for retrieving all pgSTAC items relating to a certain collection
+   *
+   * @param collectionId String object with the value of the given collection's id
+   * @return A List object that contains all the items related to the given collection
+   */
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.info("Fetching item from database");
     try {
@@ -238,6 +282,12 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for retrieving a single pgSTAC item from the database
+   *
+   * @param id String object representing the pgSTAC item's id
+   * @return List object that contains the data of the given item
+   */
   public List<Map<String, Object>> getItem(String id) {
     logger.info("Fetching item from database");
     try {
@@ -248,6 +298,13 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for retrieving an item within a certain collection
+   *
+   * @param id String object representing the pgSTAC item's id
+   * @param collection String object representing the pgSTAC collection's id
+   * @return List object that contains the data of the given item relating to the given collection
+   */
   public List<Map<String, Object>> getItem(String id, String collection) {
     logger.info("Fetching item from database");
     try {
@@ -258,6 +315,11 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for removing all items from the database
+   *
+   * @return String object clarifying whether the removal of all items from the database was successful
+   */
   public String removeAllItems() {
     logger.info("Removing all items from database");
     try {
@@ -268,6 +330,12 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for removing all items relating to a specific collection from the database
+   *
+   * @param collectionId String object representing the id of the given collection
+   * @return String clarifying if the removal of the items from the given collection was successful
+   */
   public String removeItemsFromCollection(String collectionId) {
     logger.info("Removing an item from database");
     try {
@@ -278,6 +346,13 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for removing a specific item from a specific collection
+   *
+   * @param itemId String object representing the id of the given item
+   * @param collectionId String object representing the id of the given collection
+   * @return String object clarifying if the removal of the item was successful
+   */
   public String removeItem(String itemId, String collectionId) {
     logger.info("Removing an item from database");
     try {
@@ -288,6 +363,12 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for verifying if the user is connected to the internet
+   *
+   * @param endpointUrl String object representing the URL of a website to connect to in order to test whether user is online or not
+   * @return String object clarifying if the application is online or offline
+   */
   public String verifyInternetConnection(String endpointUrl) {
     logger.info("Verifying internet connection");
     try {

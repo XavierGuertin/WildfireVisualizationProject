@@ -9,6 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * DTO class responsible for defining the data in a StacSearch object
+ */
 @Data
 @Builder
 @NoArgsConstructor

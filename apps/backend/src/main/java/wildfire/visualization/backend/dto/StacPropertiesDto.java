@@ -7,6 +7,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+/**
+ * DTO class responsible for defining the data in a StacProperties object
+ */
 @Data
 @Builder
 @NoArgsConstructor
