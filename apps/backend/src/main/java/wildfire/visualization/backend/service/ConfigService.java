@@ -23,6 +23,11 @@ public class ConfigService {
     this.objectMapper = objectMapper;
   }
 
+  /**
+   * Method responsible for retrieving the user configuration
+   *
+   * @return Map object containing the key value pairs of the user configuration
+   */
   public Map<String, Object> getConfig() {
     try {
       File configFile = new File(CONFIG_FILE_PATH);
@@ -37,6 +42,11 @@ public class ConfigService {
     }
   }
 
+  /**
+   * Method responsible for saving user configuration
+   *
+   * @param config Map object containing the key value pairs of the user configuration
+   */
   public void saveConfig(Map<String, Object> config) {
     try {
       objectMapper.writeValue(new File(CONFIG_FILE_PATH), config);

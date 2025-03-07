@@ -108,7 +108,7 @@ class StacRepositoryTests {
   }
 
   @Test
-  void queryMetaData_ReturnsResults() {
+  void queryCollectionMetaData_ReturnsResults() {
     // Arrange
     List<Map<String, Object>> expectedResults = new ArrayList<>();
     Map<String, Object> result = new HashMap<>();
@@ -119,7 +119,7 @@ class StacRepositoryTests {
         .thenReturn(expectedResults);
 
     // Act
-    List<Map<String, Object>> actualResults = stacRepository.queryMetaData(testCollectionId);
+    List<Map<String, Object>> actualResults = stacRepository.queryCollectionMetaData(testCollectionId);
 
     // Assert
     assertThat(actualResults).hasSize(1);

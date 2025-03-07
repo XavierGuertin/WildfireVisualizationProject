@@ -32,7 +32,7 @@ class DataControllerTests {
   void getMetaData_Success() throws JsonProcessingException {
 
     // Arrange
-    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
+    when(dataService.retrieveCollectionMetaData(anyString())).thenReturn("[]");
 
     // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
@@ -46,7 +46,7 @@ class DataControllerTests {
   void getMetaData_Failure() throws JsonProcessingException {
 
     // Arrange
-    when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
+    when(dataService.retrieveCollectionMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
     // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
