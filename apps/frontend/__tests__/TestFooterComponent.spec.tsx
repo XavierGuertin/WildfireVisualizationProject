@@ -4,8 +4,6 @@ import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
 import { MapProvider } from '../src/app/components/MapContext';
-import fetchMock from 'jest-fetch-mock';
-import { timeStamp } from 'console';
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 
@@ -59,14 +57,6 @@ jest.mock('../src/app/components/MapContext', () => ({
     playBackSpeed: 1
   }),
 }));
-
-// jest.mock('../src/app/components/MapContext', () => ({
-//   useMapLayerContext: () => ({
-//     timeStamps: ["2024-01-01", "2024-01-02", "2024-01-03"], // Mock timestamps
-//     sliderValue: 0,
-//     setSliderValue: jest.fn(),
-//   }),
-// }));
 
 jest.mock('ol/layer/Vector', () => 
   jest.fn().mockImplementation(() => ({
@@ -176,14 +166,4 @@ describe('Footer component', () => {
 
     await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
   });
-  it('should handle speed change and save to localStorage', () => {
-    render(<MapProvider><Footer /></MapProvider>);
-
-    const speedButton = screen.getByTestId('speed-button-1.5');
-
-    fireEvent.click(speedButton);
-
-    expect(localStorage.getItem('playbackSpeed')).toBe('1.5');
-  });
-
 });

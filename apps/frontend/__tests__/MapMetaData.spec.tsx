@@ -3,7 +3,6 @@ import '@testing-library/jest-dom';
 import MapMetaData from '../src/app/components/MapMetaData';
 import { act, fireEvent, render } from '@testing-library/react';
 import { fetchItems, insertDatalayerView } from '../src/app/services/api';
-import { changeLayer } from '../src/app/components/MapView';
 import { useMapLayerContext } from '../src/app/components/MapContext';
 
 jest.mock('sweetalert2-react-content', () => {
