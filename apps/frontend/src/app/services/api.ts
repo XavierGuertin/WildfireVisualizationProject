@@ -67,6 +67,20 @@ export const resetCollections = async (): Promise<string> => {
   }
 };
 
+export const resetItems = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-items`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error resetting items:', error);
+    throw new Error(`Error resetting items: ${error.message}`);
+  }
+};
+
 export const fetchMetaData = async (collectionId: string): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}/api/metadata/${collectionId}`);
@@ -179,65 +193,19 @@ export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promi
   }
 };
 
-export const insertItem = async (itemJson: string) => {
-  try{
-    const url = `${BASE_URL}/api/stac/item`;
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      method: "POST",
-      body: itemJson
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-  }
-  catch(error: any){
-    console.error("Error inserting item:", error);
-    return { error: "Failed to insert item" };
-  }
-}
-
-export const fetchItems = async (
-  collectionId: string,
-  onProgress?: (progress: number) => void
-): Promise<any[]> => {
+export const fetchItems = async (collectionId: string): Promise<any> => {
   try {
-    const url = `${BASE_URL}/api/get-all-items/${collectionId}`;
+    const url = `${BASE_URL}/api/fetch-collections-items/${collectionId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    
-    const data = await response.json();
-    const allItems = JSON.parse(data[0].search.value).features;
-    
-    // Determine total items for progress tracking
-    const totalItems = allItems.length;
-    const fetchedItems: any[] = [];
-
-    for (let i = 0; i < totalItems; i++) {
-      fetchedItems.push(allItems[i]);
-
-      // Update progress percentage
-      if (onProgress) {
-        const progress = Math.round(((i + 1) / totalItems) * 100);
-        onProgress(progress);
-      }
-
-      // Simulate network processing delay (optional, for real async updates)
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    return fetchedItems;
+    return await response.text();
   } catch (error: any) {
-    console.error("Error fetching MetaData:", error);
-    return [];
+    console.error('Error fetching MetaData:', error);
+    return { error: 'Failed to fetch MetaData' };
   }
 };
-
 
 export const fetchItem = async (itemId: string, collectionId?: string): Promise<any> => {
   try {

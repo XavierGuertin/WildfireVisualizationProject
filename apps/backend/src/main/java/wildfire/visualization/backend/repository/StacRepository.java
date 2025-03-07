@@ -20,7 +20,6 @@ public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
   private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
   private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
-  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -81,6 +80,20 @@ public class StacRepository {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.debug("Attempting to insert item");
+    try {
+      jdbcTemplate.queryForObject(
+        "SELECT pgstac.create_item(?::jsonb)",
+        Object.class,
+        itemJson);
+      logger.info("Successfully inserted item");
+    } catch (DataAccessException e) {
+      logger.error("Error inserting collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Method responsible for querying a collection with a given id
    *
@@ -123,9 +136,9 @@ public class StacRepository {
 
     // Log query type (bbox filtering or not)
     if (bbox == null) {
-      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
     } else {
-      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox));
     }
 
     try {
@@ -194,6 +207,19 @@ public class StacRepository {
     }
   }
 
+  public void deleteAllItems() {
+    logger.info("Deleting all items from pgstac.items");
+    try {
+      String sql = "DELETE FROM pgstac.items";
+      jdbcTemplate.update(sql);
+      logger.info("All items deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+    }
+  }
+
+
   /**
    * Retrieves all collections from the database, optionally filtered by a
    * bounding box (BBOX),
@@ -244,31 +270,6 @@ public class StacRepository {
     }
   }
 
-  /**
-   * Method responsible for inserting an item into the pgSTAC database
-   *
-   * @param itemJson Stringified JSON object containing the data of the item to be inserted
-   */
-  public void insertItem(String itemJson) {
-    logger.debug("Attempting to insert item");
-    try {
-      jdbcTemplate.queryForObject(
-          "SELECT pgstac.create_item(?::jsonb)",
-          Object.class,
-          itemJson);
-      logger.info("Successfully inserted item");
-    } catch (DataAccessException e) {
-      logger.error("Error inserting item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting item: " + e.getMessage(), e);
-    }
-  }
-
-  /**
-   * Method responsible for retrieving all items associated with a specific collection
-   *
-   * @param collectionId Database ID of the collection we want the items from
-   * @return List object containing the items associated with the collection
-   */
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.debug("Fetching items");
     try {

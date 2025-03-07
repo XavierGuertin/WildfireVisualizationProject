@@ -11,8 +11,8 @@ import {
 import { PiArrowClockwiseFill, PiGlobeXLight, PiX } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
-  resetCollections,
-  verifyIfEndpointHasCollections,
+  resetCollections, resetItems,
+  verifyIfEndpointHasCollections
 } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -120,6 +120,7 @@ const SettingsPanel: React.FC<{
 
         // Reset collections before fetching new ones
         await resetCollections();
+        await resetItems();
 
         const message = await fetchCollectionsFromEndpoint(endpointUrl);
         toast.success(message);
@@ -218,6 +219,7 @@ const SettingsPanel: React.FC<{
 
       setLayer('default');
       await resetCollections();
+      await resetItems();
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
@@ -392,7 +394,7 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
-      
+
       {!isOnline &&
       <div className="dropdown-button">
         <button

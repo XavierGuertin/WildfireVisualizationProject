@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
 import MapView, {
   changeLayer,
@@ -423,5 +423,76 @@ describe(MapView, () => {
 
     // Expect `onBboxChange` to have been triggered zero times since toggle is off
     expect(mockOnBboxChange).toHaveBeenCalledTimes(0);
+  });
+
+  describe('MapView Extended Coverage', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      global.console.debug = jest.fn();
+      global.console.warn = jest.fn();
+
+      // Create a proper Map mock with getView implemented
+      const mockMap = {
+        getView: jest.fn().mockReturnValue({
+          calculateExtent: jest.fn().mockReturnValue([0, 0, 100, 100]),
+          on: jest.fn()
+        }),
+        getSize: jest.fn().mockReturnValue([800, 600]),
+        getLayers: jest.fn().mockReturnValue({
+          getArray: jest.fn().mockReturnValue([])
+        }),
+        addLayer: jest.fn(),
+        removeLayer: jest.fn()
+      };
+
+      // Update the Map constructor mock
+      const Map = require('ol/Map');
+      Map.mockImplementation(() => mockMap);
+    });
+
+
+    it('handles internet connection failure', async () => {
+      const mockOnBboxChange = jest.fn();
+      const { verifyInternetConnection } = require('../src/app/services/api');
+
+      // Mock connection failure
+      verifyInternetConnection.mockRejectedValueOnce(new Error('Connection failed'));
+
+      const mockSetIsOnline = jest.fn();
+      const { useMapLayerContext } = require('../src/app/components/MapContext');
+      useMapLayerContext.mockReturnValue({
+        layer: 'default',
+        setLayer: jest.fn(),
+        mapRef: {
+          current: {
+            getView: jest.fn().mockReturnValue({
+              calculateExtent: jest.fn().mockReturnValue([0, 0, 0, 0]),
+              on: jest.fn()
+            }),
+            getSize: jest.fn().mockReturnValue([800, 600]),
+            getLayers: jest.fn().mockReturnValue({
+              getArray: jest.fn().mockReturnValue([])
+            }),
+            addLayer: jest.fn(),
+            removeLayer: jest.fn()
+          }
+        },
+        resetView: jest.fn(),
+        setIsOnline: mockSetIsOnline,
+        isOnline: true
+      });
+
+      render(
+        <MapProvider>
+          <MapView onBboxChange={mockOnBboxChange} />
+        </MapProvider>
+      );
+
+      // Wait for the async function to complete
+      await waitFor(() => {
+        expect(mockSetIsOnline).toHaveBeenCalledWith(false);
+        expect(console.warn).toHaveBeenCalledWith('No internet connection detected.');
+      });
+    });
   });
 });
