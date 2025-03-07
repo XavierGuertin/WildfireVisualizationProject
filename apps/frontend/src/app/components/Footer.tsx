@@ -56,7 +56,7 @@ const Footer = () => {
 
   useEffect(() => {
     const map = mapRef.current as Map;
-  
+
     if (isPlaying && timeStamps.length > 0) {
       intervalRef.current = setInterval(() => {
         setSliderValue((prev) => {
@@ -69,10 +69,10 @@ const Footer = () => {
     } else {
       clearInterval(intervalRef.current!);
     }
-  
+
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
-  
+
 
   const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const map = mapRef.current as Map;
@@ -106,22 +106,22 @@ const Footer = () => {
     const timestampsResponse = await fetchTimestamps();
     if (timestampsResponse) {
       setTimeStamps(timestampsResponse);
-      let stringCurrentSliderValue = localStorage.getItem("sliderValue");
-  
+      const stringCurrentSliderValue = localStorage.getItem("sliderValue");
+
       // Check if there's a saved slider value in localStorage, otherwise default to 0
-      let currentSliderValue = stringCurrentSliderValue ? parseInt(stringCurrentSliderValue) : 0;
-      
+      const currentSliderValue = stringCurrentSliderValue ? parseInt(stringCurrentSliderValue) : 0;
+
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
     }
   };
-  
+
   useEffect(() => {
     if (timeStamps.length > 0) {
       const map = mapRef.current as Map;
       changeLayer(map, false, timeStamps[sliderValue]);
     }
   }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
-  
+
 
   return (
     <div className="footerContainer" data-testid="footer-container">
