@@ -149,8 +149,9 @@ public class DataController {
   }
 
   /**
-   * TODO
-   * @return
+   * Endpoint responsible for fetching timestamps of items.
+   *
+   * @return ResponseEntity containing a list of item timestamps or an error message.
    */
   @GetMapping("/api/fetch-items-timestamps")
   public ResponseEntity<List<String>> fetchItemsTimestamps() {
@@ -281,8 +282,9 @@ public class DataController {
   }
 
   /**
-   * TODO
-   * @return
+   * Endpoint responsible for removing all items from the database.
+   *
+   * @return ResponseEntity object containing a String object indicating if the removal was successful.
    */
   @GetMapping("/api/reset-items")
   public ResponseEntity<String> resetItems() {

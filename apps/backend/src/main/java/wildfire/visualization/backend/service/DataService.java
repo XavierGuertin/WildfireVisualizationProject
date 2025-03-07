@@ -257,7 +257,7 @@ public class DataService {
   }
 
   /**
-   * TODO
+   * Method responsible for deleting all items from the database.
    */
   public void deleteAllItems() {
     logger.info("Deleting all collections");
