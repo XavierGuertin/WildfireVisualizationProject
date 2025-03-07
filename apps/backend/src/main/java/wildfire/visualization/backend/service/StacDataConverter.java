@@ -15,6 +15,10 @@ import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The class responsible for converting the data of a STAC item from our database into a DTO
+ * For easier and more clear use in the backend
+ */
 @Component
 public class StacDataConverter {
     private final WKTReader wktReader;
@@ -26,6 +30,12 @@ public class StacDataConverter {
         this.objectMapper = objectMapper;
     }
 
+    /**
+    * Method used to convert an already created StacItemDTO into a PostGISData object with the necessary fields populated
+    *
+    * @param stacItem The reference to a StacItemDTO object
+    * @return The converted PostGISData object that was converted from the StacItemDTO
+    */
     public PostGISData convert(StacItemDto stacItem) {
         try {
             // Convert geometry
@@ -46,6 +56,12 @@ public class StacDataConverter {
         }
     }
 
+    /**
+    * Method used to convert geometry from an already created GeometryDto into a Geometry object with the necessary fields populated
+    *
+    * @param geometryDto The reference to a GeometryDto object
+    * @return The converted Geometry object that was converted from the GeometryDto
+    */
     private Geometry convertGeometry(GeometryDto geometryDto) throws Exception {
         // Add an extra set of parentheses for the coordinate sequence
         String wkt = String.format("%s((%s))",
@@ -54,6 +70,12 @@ public class StacDataConverter {
         return wktReader.read(wkt);
     }
 
+    /**
+    * Method used to properly format coordinates from a given 2D double array
+    *
+    * @param coordinates The 2D double array of coordinates to be formatted
+    * @return A String representation of the coordinates passed as a parameter
+    */
     private String formatCoordinates(double[][] coordinates) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < coordinates.length; i++) {
@@ -65,6 +87,12 @@ public class StacDataConverter {
         return sb.toString();
     }
 
+    /**
+    * Method used to extract metadata from a given StacItemDto object
+    *
+    * @param item A reference to a StacItemDto object that contains metadata to extract
+    * @return A Map<String, Object> object that contains the key value pairs of the metadata
+    */
     private Map<String, Object> extractMetadata(StacItemDto item) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.putAll(item.getProperties());
@@ -76,6 +104,12 @@ public class StacDataConverter {
         return metadata;
     }
 
+    /**
+    * Method used to extract metadata from a given StacItemDto object
+    *
+    * @param item A reference to a StacItemDto object that contains a timestamp to extract
+    * @return A LocalDateTime object that contains the timestamp data of the StacItemDto
+    */
     private LocalDateTime extractTimestamp(StacItemDto item) {
         if (item.getProperties() != null && item.getProperties().containsKey("datetime")) {
             String datetime = (String) item.getProperties().get("datetime");

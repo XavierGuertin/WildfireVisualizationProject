@@ -9,7 +9,7 @@ interface LoadingModuleProps {
   errorMessage?: string; // Error message to display on failure
 }
 
-const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progress, isVisible, errorMessage}) => {
+const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progress, isVisible, errorMessage }) => {
   if (!isVisible) return null;
 
   return (
@@ -26,7 +26,7 @@ const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progr
           <div className="progress-bar-background">
             <div
               className="progress-bar"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${progress}%`, transition: "width 0.3s ease-in-out" }}
             />
           </div>
         </>

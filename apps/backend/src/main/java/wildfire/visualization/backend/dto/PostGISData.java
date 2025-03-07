@@ -8,6 +8,9 @@ import org.locationtech.jts.geom.Geometry;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/**
+ * DTO class responsible for defining the data in a PostGISData object
+ */
 @Data
 @Builder
 @NoArgsConstructor

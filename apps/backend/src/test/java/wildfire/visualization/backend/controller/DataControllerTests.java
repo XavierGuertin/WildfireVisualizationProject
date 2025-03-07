@@ -32,7 +32,7 @@ class DataControllerTests {
   void getMetaData_Success() throws JsonProcessingException {
 
     // Arrange
-    when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
+    when(dataService.retrieveCollectionMetaData(anyString())).thenReturn("[]");
 
     // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
@@ -46,7 +46,7 @@ class DataControllerTests {
   void getMetaData_Failure() throws JsonProcessingException {
 
     // Arrange
-    when(dataService.retrieveMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
+    when(dataService.retrieveCollectionMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
 
     // Act
     ResponseEntity<String> response = dataController.getMetaData("ID");
@@ -489,5 +489,89 @@ class DataControllerTests {
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).contains("Error checking collections: Test error");
+  }
+  @Test
+  void getCollections_WithNonNumericBbox_ReturnsBadRequest() {
+    // Arrange - BBOX with non-numeric values
+    String invalidBboxStr = "10,20,abc,40";
+
+    // Act
+    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(invalidBboxStr);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isNull();
+    verifyNoInteractions(dataService);
+  }
+
+  @Test
+  void fetchItems_Success() {
+    // Arrange
+    doNothing().when(dataService).fetchAndSaveItems("testCollection");
+
+    // Act
+    ResponseEntity<String> response = dataController.fetchItems("testCollection");
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Items fetched and saved successfully");
+    verify(dataService).fetchAndSaveItems("testCollection");
+  }
+
+  @Test
+  void resetItems_Success() {
+    // Arrange
+    doNothing().when(dataService).deleteAllItems();
+
+    // Act
+    ResponseEntity<String> response = dataController.resetItems();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Items deleted successfully");
+    verify(dataService).deleteAllItems();
+  }
+
+  @Test
+  void resetItems_Failure() {
+    // Arrange
+    doThrow(new RuntimeException("Test error")).when(dataService).deleteAllItems();
+
+    // Act
+    ResponseEntity<String> response = dataController.resetItems();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isEqualTo("Error resetting items: Test error");
+    verify(dataService).deleteAllItems();
+  }
+
+  @Test
+  void verifyInternetConnection_Success() {
+    // Arrange
+    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL)).thenReturn("Connected");
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Connected");
+    verify(dataService).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+  }
+
+  @Test
+  void verifyInternetConnection_Failure() {
+    // Arrange
+    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL))
+      .thenThrow(new RuntimeException("Connection failed"));
+
+    // Act
+    ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).contains("Error verifying connection: Connection failed");
+    verify(dataService).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
   }
 }
