@@ -12,6 +12,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Repository responsible for directly communicating with the pgSTAC database
+ * (items and collections)
+ */
 @Repository
 public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
@@ -19,6 +23,12 @@ public class StacRepository {
   @Autowired
   private JdbcTemplate jdbcTemplate;
 
+  /**
+   * Method responsible for checking if a collection exists with a given id
+   *
+   * @param collectionId Database ID of the given collection
+   * @return boolean value that clarifies whether the collection exists or not
+   */
   public boolean checkCollectionExists(String collectionId) {
     logger.debug("Checking if collection exists: {}", collectionId);
     try {
@@ -32,6 +42,12 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for checking if an item exists with the given id
+   *
+   * @param itemId Database ID of the given item
+   * @return boolean value that clarifies whether the item exists or not
+   */
   public boolean checkItemExists(String itemId) {
     try {
       String sql = "SELECT COUNT(*) FROM pgstac.items WHERE id = ?";
@@ -44,6 +60,11 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for inserting a collection into the database
+   *
+   * @param collectionJson Stringified JSON object containing the collection data
+   */
   public void insertCollection(String collectionJson) {
     logger.debug("Attempting to insert collection");
     try {
@@ -58,6 +79,26 @@ public class StacRepository {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.debug("Attempting to insert item");
+    try {
+      jdbcTemplate.queryForObject(
+          "SELECT pgstac.create_item(?::jsonb)",
+          Object.class,
+          itemJson);
+      logger.info("Successfully inserted item");
+    } catch (DataAccessException e) {
+      logger.error("Error inserting collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Method responsible for querying a collection with a given id
+   *
+   * @param collectionId Database ID of the given collection
+   * @return List object containing the data of the given collection
+   */
   public List<Map<String, Object>> queryCollection(String collectionId) {
     logger.debug("Querying collection: {}", collectionId);
     try {
@@ -94,9 +135,9 @@ public class StacRepository {
 
     // Log query type (bbox filtering or not)
     if (bbox == null) {
-      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
     } else {
-      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox));
     }
 
     try {
@@ -165,6 +206,18 @@ public class StacRepository {
     }
   }
 
+  public void deleteAllItems() {
+    logger.info("Deleting all items from pgstac.items");
+    try {
+      String sql = "DELETE FROM pgstac.items";
+      jdbcTemplate.update(sql);
+      logger.info("All items deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Retrieves all collections from the database, optionally filtered by a
    * bounding box (BBOX),
@@ -191,7 +244,13 @@ public class StacRepository {
     return fetchCollections(bbox, "datetime"); // Order by date
   }
 
-  public List<Map<String, Object>> queryMetaData(String collectionId) {
+  /**
+   * Method responsible for fetching the metadata from a given collection
+   *
+   * @param collectionId Database ID of the given collection
+   * @return List object containing the given collection's metadata
+   */
+  public List<Map<String, Object>> queryCollectionMetaData(String collectionId) {
     logger.debug("Querying metadata for: {}", collectionId);
     try {
       String sql = "SELECT (content ->> 'title') AS title," +
@@ -206,20 +265,6 @@ public class StacRepository {
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
-    }
-  }
-
-  public void insertItem(String itemJson) {
-    logger.debug("Attempting to insert item");
-    try {
-      jdbcTemplate.queryForObject(
-          "SELECT pgstac.create_item(?::jsonb)",
-          Object.class,
-          itemJson);
-      logger.info("Successfully inserted item");
-    } catch (DataAccessException e) {
-      logger.error("Error inserting item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting item: " + e.getMessage(), e);
     }
   }
 
@@ -246,6 +291,12 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for retrieving an item from the database
+   *
+   * @param id Database ID of item to be fetched
+   * @return List object containing the item with the given id
+   */
   public List<Map<String, Object>> getItem(String id) {
     logger.debug("Fetching item");
     try {
@@ -259,6 +310,15 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for retrieving an item from the database from a given
+   * collection
+   *
+   * @param id         Database ID of item to be retrieved
+   * @param collection Database ID of collection to retrieve items from
+   * @return List object containing the item with the given id from the given
+   *         collection
+   */
   public List<Map<String, Object>> getItem(String id, String collection) {
     logger.debug("Fetching item");
     try {
@@ -272,6 +332,11 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for setting a DataLayerView in the database
+   *
+   * @param collectionId Database ID of the given collection
+   */
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
     try {
@@ -294,6 +359,11 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for checking if DataLayerView exists
+   *
+   * @return boolean value clarifying if the DataLayerView exists or not
+   */
   public boolean checkDatalayerView() {
     try {
       // Ensure correct case and schema handling
@@ -311,6 +381,11 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for removing all items from the database
+   *
+   * @return String object to clarify if removal was successful
+   */
   public String removeAllItems() {
     logger.debug("Removing all items");
     try {
@@ -333,6 +408,13 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for removing all items of a given collection from the
+   * database
+   *
+   * @param collectionId Database ID of the given collection
+   * @return String object to clarify if removal was successful
+   */
   public String removeItemsFromCollection(String collectionId) {
     logger.debug("Removing all items from collection");
     try {
@@ -356,6 +438,14 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for removing an item of a given collection from the
+   * database
+   * 
+   * @param itemId       Database ID of item to be removed
+   * @param collectionId Database ID of collection that the item pertains to
+   * @return String object to clarify if removal was successful
+   */
   public String removeItem(String itemId, String collectionId) {
     logger.debug("Removing item");
     try {

@@ -108,7 +108,7 @@ class StacRepositoryTests {
   }
 
   @Test
-  void queryMetaData_ReturnsResults() {
+  void queryCollectionMetaData_ReturnsResults() {
     // Arrange
     List<Map<String, Object>> expectedResults = new ArrayList<>();
     Map<String, Object> result = new HashMap<>();
@@ -119,7 +119,7 @@ class StacRepositoryTests {
         .thenReturn(expectedResults);
 
     // Act
-    List<Map<String, Object>> actualResults = stacRepository.queryMetaData(testCollectionId);
+    List<Map<String, Object>> actualResults = stacRepository.queryCollectionMetaData(testCollectionId);
 
     // Assert
     assertThat(actualResults).hasSize(1);
@@ -130,13 +130,15 @@ class StacRepositoryTests {
 
   @Test
   void queryCollection_ThrowsException_WhenDatabaseError() {
-    when(jdbcTemplate.queryForList(anyString(), anyString()))
-        .thenThrow(new DataAccessException("Database error") {
-        });
+    // Arrange
+    String collectionId = "test-collection";
+    when(jdbcTemplate.queryForList(anyString(), eq(collectionId)))
+      .thenThrow(new DataAccessException("Database error") {});
 
-    assertThatThrownBy(() -> stacRepository.queryCollection(testCollectionId))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error querying collection");
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.queryCollection(collectionId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error querying collection");
   }
 
   @Test
@@ -639,5 +641,82 @@ class StacRepositoryTests {
     assertThatThrownBy(() -> stacRepository.insertItem("{id: 'test'}"))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Error inserting item");
+  }
+
+  @Test
+  void checkItemExists_ReturnsTrueWhenExists() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenReturn(1);
+
+    // Act
+    boolean result = stacRepository.checkItemExists(itemId);
+
+    // Assert
+    assertThat(result).isTrue();
+    verify(jdbcTemplate).queryForObject(
+      eq("SELECT COUNT(*) FROM pgstac.items WHERE id = ?"),
+      eq(Integer.class),
+      eq(itemId));
+  }
+
+  @Test
+  void checkItemExists_ReturnsFalseWhenDoesNotExist() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenReturn(0);
+
+    // Act
+    boolean result = stacRepository.checkItemExists(itemId);
+
+    // Assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void checkItemExists_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenThrow(new DataAccessException("Database error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.checkItemExists(itemId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error checking item existence");
+  }
+
+  @Test
+  void getAllCollections_ThrowsException_WithInvalidBboxLength() {
+    // Arrange
+    double[] invalidBbox = {10.0, 20.0, 30.0}; // Only 3 elements
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllCollections(invalidBbox))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessage("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+  }
+
+  @Test
+  void deleteAllItems_Success() {
+    // Act
+    stacRepository.deleteAllItems();
+
+    // Assert
+    verify(jdbcTemplate).update("DELETE FROM pgstac.items");
+  }
+
+  @Test
+  void deleteAllItems_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {})
+      .when(jdbcTemplate).update("DELETE FROM pgstac.items");
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.deleteAllItems())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error deleting items");
   }
 }

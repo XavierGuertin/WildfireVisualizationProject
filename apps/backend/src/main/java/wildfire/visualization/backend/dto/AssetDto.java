@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+/**
+ * DTO class responsible for defining the data in an Asset object
+ */
 @Data
 @Builder
 @NoArgsConstructor

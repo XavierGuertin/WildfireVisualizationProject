@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import wildfire.visualization.backend.controller.ConfigController;
 import wildfire.visualization.backend.repository.StacRepository;
 
 import java.util.HashMap;
@@ -25,6 +27,9 @@ class DataServiceTests {
 
     @Mock
     private StacRepository stacRepository;
+
+    @Mock
+    private ConfigController configController;
 
     @Mock
     private RestTemplate restTemplate;
@@ -80,15 +85,15 @@ class DataServiceTests {
     }
 
     @Test
-    void retrieveMetaData_IsValid() throws JsonProcessingException {
+    void retrieveCollectionMetaData_IsValid() throws JsonProcessingException {
         // retrieveMetaData is just a middle man between the controller and the
         // repository, so there is not real functionality to test
 
         // Arrange
-        when(dataService.retrieveMetaData(anyString())).thenReturn("[]");
+        when(dataService.retrieveCollectionMetaData(anyString())).thenReturn("[]");
 
         // Act
-        String response = dataService.retrieveMetaData("");
+        String response = dataService.retrieveCollectionMetaData("");
 
         // Assert
         assertThat(response).isNotNull();
@@ -423,31 +428,6 @@ class DataServiceTests {
     }
 
     @Test
-    void getAllItems_Success() {
-        // Arrange
-        List<Map<String, Object>> mockResults = List.of(
-                Map.of("id", "test1"),
-                Map.of("id", "test2"));
-        when(stacRepository.getAllItems(anyString())).thenReturn(mockResults);
-        // Act
-        List<Map<String, Object>> result = dataService.getAllItems("Test");
-
-        // Assert
-        assertThat(result).isEqualTo(mockResults);
-    }
-
-    @Test
-    void getAllItems_Failure() {
-        // Arrange
-        doThrow(new RuntimeException("Error fetching all items")).when(stacRepository).getAllItems(anyString());
-
-        // Assert
-        assertThatThrownBy(() -> dataService.getAllItems("test"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Error fetching all items");
-    }
-
-    @Test
     void getItem_WithId_Success() {
         // Arrange
         List<Map<String, Object>> mockResults = List.of(
@@ -496,11 +476,6 @@ class DataServiceTests {
     }
 
     @Test
-    void removeAllItems_Success() {
-
-    }
-
-    @Test
     void removeAllItems_Failure() {
         // Arrange
         doThrow(new RuntimeException("Error removing all items")).when(stacRepository).removeAllItems();
@@ -509,11 +484,6 @@ class DataServiceTests {
         assertThatThrownBy(() -> dataService.removeAllItems())
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Error removing all items");
-    }
-
-    @Test
-    void removeItemsFromCollection_Success() {
-
     }
 
     @Test
@@ -529,11 +499,6 @@ class DataServiceTests {
     }
 
     @Test
-    void removeItem_Success() {
-
-    }
-
-    @Test
     void removeItem_Failure() {
         // Arrange
         doThrow(new RuntimeException("Error removing item")).when(stacRepository).removeItem(anyString(), anyString());
@@ -544,4 +509,147 @@ class DataServiceTests {
                 .hasMessageContaining("Error removing item");
     }
 
+  @Test
+  void getCollections_HandlesNullValues() {
+    // Arrange
+    Map<String, Object> nullValueMap = new HashMap<>();
+    nullValueMap.put("key", null);
+    nullValueMap.put("id", null);
+    nullValueMap.put("bbox", null);
+
+    List<Map<String, Object>> mockCollections = List.of(nullValueMap);
+    when(stacRepository.getAllCollections(any())).thenReturn(mockCollections);
+
+    // Act
+    List<Map<String, Object>> collections = dataService.getCollections(null);
+
+    // Assert
+    assertThat(collections).hasSize(1);
+    assertThat(collections.get(0)).containsEntry("key", "")
+      .containsEntry("id", "")
+      .containsEntry("bbox", "[]");
+  }
+
+  @Test
+  void verifyCollections_Success() {
+    // Arrange
+    List<Map<String, Object>> mockCollections = List.of(Map.of("id", "collection1"));
+    Map<String, Object> response = Map.of("collections", mockCollections);
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(response);
+
+    // Act
+    String result = dataService.verifyCollections("https://test-url.com");
+
+    // Assert
+    assertThat(result).isEqualTo("Collections found");
+  }
+
+  @Test
+  void deleteAllItems_Success() {
+    // Act
+    dataService.deleteAllItems();
+
+    // Assert
+    verify(stacRepository).deleteAllItems();
+  }
+
+  @Test
+  void deleteAllItems_ThrowsException() {
+    // Arrange
+    doThrow(new RuntimeException("Test error")).when(stacRepository).deleteAllItems();
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.deleteAllItems())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to delete collections");
+  }
+
+  @Test
+  void fetchAndSaveItems_Success() throws JsonProcessingException {
+    // Arrange
+    String collectionId = "testCollection";
+    Map<String, Object> configMap = Map.of("endpoint", "https://test-endpoint.com");
+    ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
+    when(configController.getConfig()).thenReturn(configResponse);
+
+    Map<String, Object> item = new HashMap<>();
+    item.put("id", "item1");
+    List<Map<String, Object>> features = List.of(item);
+    Map<String, Object> itemsResponse = Map.of("features", features);
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
+    when(stacRepository.checkCollectionExists("item1")).thenReturn(false);
+    when(objectMapper.writeValueAsString(any())).thenReturn("{\"id\":\"item1\"}");
+
+    // Act
+    dataService.fetchAndSaveItems(collectionId);
+
+    // Assert
+    verify(configController).getConfig();
+    verify(stacRepository).insertItem(anyString());
+  }
+
+  @Test
+  void removeAllItems_Success() {
+    // Arrange
+    when(stacRepository.removeAllItems()).thenReturn("All items removed");
+
+    // Act
+    String result = dataService.removeAllItems();
+
+    // Assert
+    assertThat(result).isEqualTo("All items removed");
+  }
+
+  @Test
+  void removeItemsFromCollection_Success() {
+    // Arrange
+    String collectionId = "testCollection";
+    when(stacRepository.removeItemsFromCollection(collectionId)).thenReturn("Items removed");
+
+    // Act
+    String result = dataService.removeItemsFromCollection(collectionId);
+
+    // Assert
+    assertThat(result).isEqualTo("Items removed");
+  }
+
+  @Test
+  void removeItem_Success() {
+    // Arrange
+    String itemId = "item1";
+    String collectionId = "collection1";
+    when(stacRepository.removeItem(itemId, collectionId)).thenReturn("Item removed");
+
+    // Act
+    String result = dataService.removeItem(itemId, collectionId);
+
+    // Assert
+    assertThat(result).isEqualTo("Item removed");
+  }
+
+  @Test
+  void verifyInternetConnection_Success() {
+    // Arrange
+    String endpointUrl = "https://test-url.com";
+    when(restTemplate.getForObject(endpointUrl, String.class)).thenReturn("Response");
+
+    // Act
+    String result = dataService.verifyInternetConnection(endpointUrl);
+
+    // Assert
+    assertThat(result).isEqualTo("Internet connection established");
+  }
+
+  @Test
+  void verifyInternetConnection_Failure() {
+    // Arrange
+    String endpointUrl = "https://test-url.com";
+    when(restTemplate.getForObject(endpointUrl, String.class)).thenThrow(new RuntimeException("Failed"));
+
+    // Act
+    String result = dataService.verifyInternetConnection(endpointUrl);
+
+    // Assert
+    assertThat(result).isEqualTo("No internet connection could be established");
+  }
 }

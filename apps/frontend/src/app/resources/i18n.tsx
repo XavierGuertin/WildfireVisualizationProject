@@ -16,7 +16,7 @@ const resources = {
       default_speed_retrieved: 'Default speed has been retrieved.',
       speed_changed: 'Speed has been changed to: ',
       api_endpoint_saved:
-        'API endpoint successfully saved under config/app-config.json',
+        'API endpoint successfully saved',
       copied_to_clipboard: 'Copied to clipboard',
       no_internet_access: 'No internet access',
       //Language
@@ -32,6 +32,9 @@ const resources = {
       reset_initiated: 'Reset initiated',
       reset_completed: 'Properties have been reset to default values.',
       factory_reset_initiated: 'Factory reset initiated',
+      items_fetch_success: 'Collection\'s items have been fetched successfully',
+      items_fetch_error: 'Error fetching collection\'s items',
+      confirm_deletion_items_from_previous_collection: "Items from the previous collection will be deleted and overwritten by the new one. \nDo you want to proceed?",
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
@@ -88,7 +91,7 @@ const resources = {
       default_speed_retrieved: 'La vitesse par défaut a été récupérée.',
       speed_changed: 'La vitesse a été changée à: ',
       api_endpoint_saved:
-        'Endpoint enregistré avec succès sous config/app-config.json',
+        'Endpoint enregistré avec succès',
       copied_to_clipboard: 'Copié dans le presse-papiers',
       no_internet_access: 'Aucune connexion',
       //Language
@@ -104,6 +107,9 @@ const resources = {
       reset_initiated: 'Réinitialisation démarrée',
       reset_completed: 'Les propriétés ont été réinitialisées aux valeurs par défaut.',
       factory_reset_initiated: "Réinitialisation d'Usine démarrée",
+      items_fetch_success: "Les items de la collection ont été récupérés avec succès",
+      items_fetch_error: "Erreur lors de la récupération des items de la collection",
+      confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
