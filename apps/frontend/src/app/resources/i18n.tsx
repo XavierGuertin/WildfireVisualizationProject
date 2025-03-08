@@ -18,6 +18,8 @@ const resources = {
       api_endpoint_saved:
         'API endpoint successfully saved',
       copied_to_clipboard: 'Copied to clipboard',
+      online: 'Online',
+      offline: 'Offline',
       no_internet_access: 'No internet access',
       //Language
       english: 'English',
@@ -95,6 +97,8 @@ const resources = {
       api_endpoint_saved:
         'Endpoint enregistré avec succès',
       copied_to_clipboard: 'Copié dans le presse-papiers',
+      online: 'En ligne',
+      offline: 'Hors ligne',
       no_internet_access: 'Aucune connexion',
       //Language
       english: 'Anglais',
