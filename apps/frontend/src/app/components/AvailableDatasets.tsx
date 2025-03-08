@@ -14,7 +14,7 @@ import {
   returnListOfCollectionsFromEndpoint,
 } from '../services/api';
 import debounce from 'lodash/debounce';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import { insertDatalayerView } from '../services/api';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
