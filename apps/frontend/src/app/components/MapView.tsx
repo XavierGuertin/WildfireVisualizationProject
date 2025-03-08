@@ -10,7 +10,6 @@ import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
-import { verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
@@ -148,7 +147,7 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, setIsOnline, isOnline } = useMapLayerContext();
+  const { layer, mapRef, isOnline } = useMapLayerContext();
 
   /**
    * Determines which base layer to use based on network connectivity.
@@ -174,23 +173,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
     return selectedLayer;
   };
-
-  /**
-   * Checks internet connectivity by verifying a connection to a remote STAC server.
-   */
-  const setOnlineStatus = async () => {
-    try {
-      const response = await verifyInternetConnection(DEFAULT_ENDPOINT_URL);
-      setIsOnline(response === 'Internet connection established');
-    } catch (error) {
-      setIsOnline(false);
-      console.warn('No internet connection detected.');
-    }
-  };
-
+  
   useEffect(() => {
-    setOnlineStatus();
-
     if (!mapRef.current) {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
@@ -217,7 +201,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       }
       map.addLayer(getLayer());
     }
-  }, [layer]);
+  }, [layer, isOnline]);
 
   useEffect(() => {
     const debouncedBboxChange = debounce((extent: number[]) => {
