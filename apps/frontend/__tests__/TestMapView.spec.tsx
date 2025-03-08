@@ -6,7 +6,7 @@ import MapView, {
   changeLayer,
   refreshLayer,
 } from '../src/app/components/MapView';
-import { MapProvider } from '../src/context/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 import Polygon from 'ol/geom/Polygon';
 
 jest.mock('react', () => ({

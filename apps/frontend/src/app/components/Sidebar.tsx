@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useMapLayerContext } from '../../context/MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import { useTranslation } from 'react-i18next';
 import "../styles/Sidebar.css";
 

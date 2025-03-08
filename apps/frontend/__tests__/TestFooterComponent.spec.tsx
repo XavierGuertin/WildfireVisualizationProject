@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
-import { MapProvider } from '../src/context/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 
 jest.mock('react-toastify');
 beforeEach(() => {
