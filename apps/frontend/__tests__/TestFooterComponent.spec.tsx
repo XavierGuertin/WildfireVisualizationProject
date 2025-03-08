@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
@@ -46,11 +46,15 @@ describe('Footer component', () => {
 
     // Click to start playing
     const playPauseButton = screen.getByTestId('play-pause-button');
+    act(() => {
     fireEvent.click(playPauseButton);
+    })
     expect(screen.getByTestId('pause-icon')).toBeInTheDocument(); // Verify it shows pause icon
 
     // Click again to pause
+    act(() => {
     fireEvent.click(playPauseButton);
+    })
     expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Verify it shows play icon
   });
 
@@ -59,15 +63,18 @@ describe('Footer component', () => {
 
     // Start playback
     const playPauseButton = screen.getByTestId('play-pause-button');
+    act(() => {
     fireEvent.click(playPauseButton);
-
+    })
     // Advance timer to move slider
+    act(() => {
     jest.advanceTimersByTime(2000);
-
+    })
     // Stop playback
     const stopButton = screen.getByTestId('stop-button');
+    act(() => {
     fireEvent.click(stopButton);
-
+    })
     // Verify slider reset and play icon is visible
     expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Should show play icon again
     const slider = screen.getByTestId('slider');
@@ -78,8 +85,9 @@ describe('Footer component', () => {
     render(<MapProvider><Footer /></MapProvider>);
 
     const slider = screen.getByTestId('slider');
+    act(() => {
     fireEvent.change(slider, { target: { value: '50' } });
-
+    })
     // Verify slider value changed
     expect(slider.getAttribute('value')).toBe('50');
     // Verify localStorage updated
@@ -104,8 +112,9 @@ describe('Footer component', () => {
 
     const speedButton = screen.getByTestId('speed-button-1.5');
 
+    act(() => {
     fireEvent.click(speedButton);
-
+    })
     expect(localStorage.getItem('playbackSpeed')).toBe('1.5');
   });
 

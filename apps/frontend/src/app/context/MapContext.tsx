@@ -32,10 +32,10 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     //Map Specific Functions
     const resetView = () => {
         if (mapRef.current) {
-        mapRef.current.getView().animate({
-            center: [-75.6972, 45.4215],
-            zoom: 1,
-        });
+            mapRef.current.getView().animate({
+                center: [-75.6972, 45.4215],
+                zoom: 1,
+            });
         }
     };
  

@@ -1,5 +1,5 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import React, { useEffect } from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Sidebar from '../src/app/components/Sidebar';
 import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
@@ -76,9 +76,11 @@ describe('Test Sidebar component', () => {
   });
 
   it('should not switch layers when offline', () => {
-      const LayerChecker: React.FC = () => {
+    const LayerChecker: React.FC = () => {
         const { layer, setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
+        useEffect(() => {
+          setIsOnline(false);
+        }, [setIsOnline])
         return <span data-testid="current-layer">{layer}</span>;
       };
 
@@ -88,11 +90,10 @@ describe('Test Sidebar component', () => {
           <LayerChecker />
         </MapProvider>
       );
-
-      const { toast } = require('react-toastify');
-
+      
       render(<TestComponent />);
 
+      const { toast } = require('react-toastify');
       fireEvent.click(screen.getByAltText('views')); // Expand the sidebar
 
       // Check each layer click updates the layer value correctly
