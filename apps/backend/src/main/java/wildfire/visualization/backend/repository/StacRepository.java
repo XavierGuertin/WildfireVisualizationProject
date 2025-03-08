@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Repository responsible for directly communicating with the pgSTAC database (items and collections)
@@ -128,7 +129,7 @@ public class StacRepository {
    *                                  exactly 4 elements.
    * @throws RuntimeException         If a database error occurs.
    */
-  private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
+  List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
     // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
     if (bbox != null && bbox.length != 4) {
       throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
@@ -196,14 +197,32 @@ public class StacRepository {
   }
 
   public void deleteAllCollections() {
-    logger.info("Deleting all collections from pgstac.collections");
     try {
-      String sql = "DELETE FROM pgstac.collections";
+      String sql = "DELETE FROM pgstac.datalayer";
+      logger.info("Deleting Datalayer view from pgstac.collections");
+      jdbcTemplate.update(sql);
+      logger.info("Datalayer view deleted successfully");
+
+      sql = "DELETE FROM pgstac.collections";
+      logger.info("Deleting all collections from pgstac.collections");
       jdbcTemplate.update(sql);
       logger.info("All collections deleted successfully");
     } catch (DataAccessException e) {
       logger.error("Error deleting collections: {}", e.getMessage(), e);
       throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
+    }
+  }
+
+  public List<String> getItemsTimestamps() {
+    String sql = "SELECT to_char(datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as iso FROM pgstac.items ORDER BY datetime ASC";
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+      List<String> timestamps = jdbcTemplate.queryForList(sql, String.class);
+      logger.info("Fetched {} item timestamps", timestamps.size());
+      return timestamps;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item timestamps: " + e.getMessage(), e);
     }
   }
 

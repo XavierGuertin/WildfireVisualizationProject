@@ -35,6 +35,28 @@ const mockDatasetMetadata: DatasetMetadata = {
   processes: ''
 };
 
+jest.mock('ol/Map', () => {
+  return jest.fn().mockImplementation(() => ({
+    setTarget: jest.fn(),
+    addLayer: jest.fn(),
+    getView: jest.fn(() => ({
+      setCenter: jest.fn(),
+      setZoom: jest.fn()
+    })),
+    dispose: jest.fn(),
+  }));
+});
+
+jest.mock('../src/app/components/MapView', () => ({
+  changeLayer: jest.fn().mockResolvedValue(true) // Mocks a successful layer change
+}));
+
+jest.mock('../src/app/components/MapContext', () => ({
+  useMapLayerContext: jest.fn(() => ({
+    mapRef: { current: {} },
+  })),
+}));
+
 describe('Test AvailableDatasets component', () => {
   let mockOnDatasetClick: jest.Mock;
 
@@ -43,7 +65,7 @@ describe('Test AvailableDatasets component', () => {
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
     mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {}); 
   });
 
   afterEach(() => {
@@ -85,7 +107,9 @@ describe('Test AvailableDatasets component', () => {
     const datasetButton = await waitFor(() => screen.getByTestId('dataset-button-dataset-1'));
     fireEvent.click(datasetButton);
 
-    expect(datasetButton).toHaveClass('selected');
+    await waitFor(() => {
+      expect(datasetButton).toHaveClass('selected');
+    });
   });  
 
   it('should update active filter UI when a filter button is clicked', async () => {

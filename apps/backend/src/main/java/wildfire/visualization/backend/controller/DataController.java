@@ -149,6 +149,24 @@ public class DataController {
   }
 
   /**
+   * Endpoint responsible for fetching timestamps of items.
+   *
+   * @return ResponseEntity containing a list of item timestamps or an error message.
+   */
+  @GetMapping("/api/fetch-items-timestamps")
+  public ResponseEntity<List<String>> fetchItemsTimestamps() {
+    logger.info("Received request to fetch items' timestamps");
+    try {
+      dataService.fetchItemsTimestamps();
+      logger.debug("Successfully fetched items's timestamps");
+      return ResponseEntity.ok(dataService.fetchItemsTimestamps());
+    } catch (Exception e) {
+      logger.error("Error fetching items' timestamps: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body(null);
+    }
+  }
+
+  /**
    * Endpoint responsible for retrieving an item given a specific id and collection id
    *
    * @param itemId Database ID of the given item to be retrieved
@@ -264,8 +282,9 @@ public class DataController {
   }
 
   /**
-   * TODO
-   * @return
+   * Endpoint responsible for removing all items from the database.
+   *
+   * @return ResponseEntity object containing a String object indicating if the removal was successful.
    */
   @GetMapping("/api/reset-items")
   public ResponseEntity<String> resetItems() {

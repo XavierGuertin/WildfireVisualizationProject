@@ -52,7 +52,13 @@ jest.mock('ol/control.js', () => ({
 }));
 
 jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
-jest.mock('ol/layer/Vector', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('ol/layer/Vector', () => 
+  jest.fn().mockImplementation(() => ({
+    set: jest.fn(),
+  }))
+);
+
 jest.mock('ol/geom/Polygon', () => jest.fn().mockImplementation(() => ({})));
 jest.mock('ol/Feature', () => jest.fn().mockImplementation(() => ({})));
 jest.mock('ol/style/Style', () => jest.fn().mockImplementation(() => ({})));
@@ -116,12 +122,17 @@ jest.mock('../src/app/context/MapContext', () => ({
     resetView: jest.fn(),
     setIsOnline: jest.fn(),
     isOnline: true,
+    sliderValue: 0,
+    setSliderValue: jest.fn(),
+    timeStamps: [],
+    setTimeStamps: jest.fn(),
   }),
 }));
 
 jest.mock('../src/app/services/api', () => ({
   insertMockItemData: jest.fn(),
   verifyInternetConnection: jest.fn().mockResolvedValue({}),
+  fetchTimestamps: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('lodash/debounce', () => {
@@ -225,7 +236,7 @@ describe(MapView, () => {
       addLayer: jest.fn(),
     };
 
-    expect(() => changeLayer(mockMapInstance as any)).not.toThrow();
+    expect(() => changeLayer(mockMapInstance as any, true)).not.toThrow();
   });
 
   it('renders the map container div', () => {
@@ -251,7 +262,7 @@ describe(MapView, () => {
       addLayer: jest.fn(),
     };
 
-    refreshLayer(mockMap as any);
+    refreshLayer(mockMap as any, true);
 
     expect(mockMap.getLayers).toHaveBeenCalled();
     expect(mockMap.removeLayer).toHaveBeenCalled();
@@ -357,6 +368,10 @@ describe(MapView, () => {
       resetView: jest.fn(),
       setIsOnline: jest.fn(),
       isOnline: true, // Initially online
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: [],
+      setTimeStamps: jest.fn(),
     };
 
     useMapLayerContext.mockReturnValue(contextMock);
@@ -378,7 +393,7 @@ describe(MapView, () => {
       </MapProvider>,
     );
 
-    expect(mapMock.addLayer).toHaveBeenCalledTimes(2);
+    expect(mapMock.addLayer).toHaveBeenCalledTimes(1);
     expect(contextMock.isOnline).toBe(false);
   });
 
@@ -413,6 +428,10 @@ describe(MapView, () => {
       resetView: jest.fn(),
       setIsOnline: jest.fn(),
       isOnline: true,
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: [],
+      setTimeStamps: jest.fn(),
     });
 
     render(
@@ -479,7 +498,11 @@ describe(MapView, () => {
         },
         resetView: jest.fn(),
         setIsOnline: mockSetIsOnline,
-        isOnline: true
+        isOnline: true,
+        sliderValue: 0,
+        setSliderValue: jest.fn(),
+        timeStamps: [],
+        setTimeStamps: jest.fn(),
       });
 
       render(

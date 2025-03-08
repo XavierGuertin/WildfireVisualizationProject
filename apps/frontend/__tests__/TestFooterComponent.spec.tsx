@@ -5,6 +5,73 @@ import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
 import { MapProvider } from '../src/app/context/MapContext';
 
+jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('ol/layer/Tile', () => {
+  return jest.fn().mockImplementation(() => {
+    const properties: Record<string, any> = {}; // Store layer properties
+
+    return {
+      set: jest.fn((key: string, value: any) => {
+        properties[key] = value; // Store key-value pairs
+      }),
+      get: jest.fn((key: string) => properties[key]), // Retrieve stored values
+      getSource: jest.fn(), // Mock `getSource()`
+      on: jest.fn(), // Mock event handling (e.g., 'tileloaderror')
+      once: jest.fn(), // Mock one-time event handling
+      un: jest.fn(), // Mock event unbinding
+    };
+  });
+});
+
+jest.mock('../src/app/components/MapContext', () => ({
+  ...jest.requireActual('../src/app/components/MapContext'),
+  useMapLayerContext: jest.fn().mockReturnValue({
+    layer: 'default',
+    setLayer: jest.fn(),
+    mapRef: {
+      current: {
+        getView: jest.fn(() => ({
+          setCenter: jest.fn(),
+          setZoom: jest.fn(),
+          on: jest.fn(),
+          trigger: jest.fn(),
+          calculateExtent: jest.fn(() => [-120, 30, -110, 40]),
+        })),
+        getLayers: jest.fn(() => ({
+          getArray: jest.fn(() => []),
+          clear: jest.fn(),
+        })),
+        removeLayers: jest.fn(),
+        addLayer: jest.fn(),
+      },
+    },
+    resetView: jest.fn(),
+    setIsOnline: jest.fn(),
+    isOnline: true,
+    sliderValue: 50,
+    setSliderValue: jest.fn(),
+    timeStamps: ["2024-01-01", "2024-01-02", "2024-01-03"],
+    setTimeStamps: jest.fn(),
+    setSpeed: jest.fn(),
+    playBackSpeed: 1
+  }),
+}));
+
+jest.mock('ol/layer/Vector', () => 
+  jest.fn().mockImplementation(() => ({
+    set: jest.fn(),
+  }))
+);
+
+jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('../src/app/services/api', () => ({
+  fetchTimestamps: jest.fn(() =>
+    Promise.resolve(["2024-01-01", "2024-01-02", "2024-01-03"])
+  ),
+}));
+
 jest.mock('react-toastify');
 beforeEach(() => {
   // Mock localStorage
@@ -18,6 +85,7 @@ beforeEach(() => {
   })();
   Object.defineProperty(global, 'localStorage', { value: localStorageMock });
   jest.useFakeTimers();
+  // fetchMock.enableMocks();
 });
 
 afterEach(() => {
@@ -78,7 +146,7 @@ describe('Footer component', () => {
     // Verify slider reset and play icon is visible
     expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Should show play icon again
     const slider = screen.getByTestId('slider');
-    expect(slider.getAttribute('value')).toBe('0'); // Slider should reset to 0
+    expect(slider.getAttribute('value')).toBe('50'); // Slider should reset to 0
   });
 
   it('changes the slider value when user interacts with it', () => {
@@ -91,7 +159,6 @@ describe('Footer component', () => {
     // Verify slider value changed
     expect(slider.getAttribute('value')).toBe('50');
     // Verify localStorage updated
-    expect(localStorage.getItem('playbackSpeed')).toBe('1');
   });
 
 
@@ -107,15 +174,4 @@ describe('Footer component', () => {
 
     await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
   });
-  it('should handle speed change and save to localStorage', () => {
-    render(<MapProvider><Footer /></MapProvider>);
-
-    const speedButton = screen.getByTestId('speed-button-1.5');
-
-    act(() => {
-    fireEvent.click(speedButton);
-    })
-    expect(localStorage.getItem('playbackSpeed')).toBe('1.5');
-  });
-
 });

@@ -574,4 +574,33 @@ class DataControllerTests {
     assertThat(response.getBody()).contains("Error verifying connection: Connection failed");
     verify(dataService).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
   }
+
+  @Test
+  void fetchItemsTimestamps_Success() {
+    // Arrange
+    List<String> mockTimestamps = List.of("2023-01-01T12:00:00Z", "2023-02-01T12:00:00Z");
+    when(dataService.fetchItemsTimestamps()).thenReturn(mockTimestamps);
+
+    // Act
+    ResponseEntity<List<String>> response = dataController.fetchItemsTimestamps();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo(mockTimestamps);
+    verify(dataService, times(2)).fetchItemsTimestamps(); // Called twice: once for execution and once for return
+  }
+
+  @Test
+  void fetchItemsTimestamps_Failure() {
+    // Arrange
+    when(dataService.fetchItemsTimestamps()).thenThrow(new RuntimeException("Error retrieving timestamps"));
+
+    // Act
+    ResponseEntity<List<String>> response = dataController.fetchItemsTimestamps();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNull();
+    verify(dataService).fetchItemsTimestamps();
+  }
 }

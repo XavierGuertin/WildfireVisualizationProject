@@ -12,14 +12,20 @@ interface MapLayerContextValue{
     setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
     isOnline: boolean;
     setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
+    timeStamps: string[];
+    setTimeStamps: (ts: string[]) => void;
+    sliderValue: number;
+    setSliderValue: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
 
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     const [layer, setLayer] = useState<string | null>(null);
-    const mapRef = useRef<Map | null>(null);  
-    
+    const mapRef = useRef<Map | null>(null);
+    const [timeStamps, setTimeStamps] = useState<string[]>([]);
+    const [sliderValue, setSliderValue] = useState<number>(0);
+
     //Timeline playback speed
     const [speed, setSpeed] = useState<number>(1);
 
@@ -40,10 +46,10 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     };
  
     return useMemo(() => (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline }}>
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue }}>
             {children}
         </MapLayerContext.Provider>
-    ),[layer, mapRef, speed, dataItems, isOnline])
+    ),[layer, mapRef, speed, dataItems, isOnline, timeStamps, sliderValue])
 }
 
 export const useMapLayerContext = () => {
