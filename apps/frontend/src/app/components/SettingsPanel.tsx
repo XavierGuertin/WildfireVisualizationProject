@@ -32,7 +32,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setSliderValue } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -169,6 +169,8 @@ const SettingsPanel: React.FC<{
         // reset localStorage properties to default properties
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
+        localStorage.setItem('sliderValue', '0')
+        setSliderValue(0)
 
         toast.success(t('reset_completed'));
       }
@@ -216,6 +218,8 @@ const SettingsPanel: React.FC<{
     try {
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
+      localStorage.setItem('sliderValue', '0');
+      setSliderValue(0);
 
       setLayer('default');
       await resetCollections();

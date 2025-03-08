@@ -257,7 +257,7 @@ public class DataService {
   }
 
   /**
-   * TODO
+   * Method responsible for deleting all items from the database.
    */
   public void deleteAllItems() {
     logger.info("Deleting all collections");
@@ -315,6 +315,16 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error fetching or saving items: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch or save items: " + e.getMessage(), e);
+    }
+  }
+
+  public List<String> fetchItemsTimestamps() {
+    logger.debug("Fetching item timestamps from database");
+    try {
+      return stacRepository.getItemsTimestamps();
+    } catch (Exception e) {
+      logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to fetch item timestamps: " + e.getMessage(), e);
     }
   }
 

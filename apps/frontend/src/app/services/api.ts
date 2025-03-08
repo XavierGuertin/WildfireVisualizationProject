@@ -202,8 +202,22 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
     }
     return await response.text();
   } catch (error: any) {
-    console.error('Error fetching MetaData:', error);
-    return { error: 'Failed to fetch MetaData' };
+    console.error('Error fetching Items:', error);
+    return { error: 'Failed to fetch Items' };
+  }
+};
+
+export const fetchTimestamps = async (): Promise<string[]> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-items-timestamps`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching timestamps:', error.message);
+    throw new Error(`Failed to fetch timestamps: ${error.message}`);
   }
 };
 

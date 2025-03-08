@@ -652,4 +652,64 @@ class DataServiceTests {
     // Assert
     assertThat(result).isEqualTo("No internet connection could be established");
   }
+
+  @Test
+  void fetchItemsTimestamps_Success() {
+    // Arrange
+    List<String> mockTimestamps = List.of("2023-01-01T12:00:00Z", "2023-02-01T12:00:00Z");
+    when(stacRepository.getItemsTimestamps()).thenReturn(mockTimestamps);
+
+    // Act
+    List<String> result = dataService.fetchItemsTimestamps();
+
+    // Assert
+    assertThat(result).isEqualTo(mockTimestamps);
+    verify(stacRepository).getItemsTimestamps();
+  }
+
+  @Test
+  void fetchItemsTimestamps_ThrowsException() {
+    // Arrange
+    when(stacRepository.getItemsTimestamps()).thenThrow(new RuntimeException("Database error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.fetchItemsTimestamps())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to fetch item timestamps");
+  }
+
+  @Test
+  void fetchAndSaveItems_SkipsExistingItems() throws JsonProcessingException {
+    // Arrange
+    String collectionId = "testCollection";
+    Map<String, Object> configMap = Map.of("endpoint", "https://test-endpoint.com");
+    ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
+    when(configController.getConfig()).thenReturn(configResponse);
+
+    Map<String, Object> item = new HashMap<>();
+    item.put("id", "existingItem");
+    List<Map<String, Object>> features = List.of(item);
+    Map<String, Object> itemsResponse = Map.of("features", features);
+    when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
+    when(stacRepository.checkCollectionExists("existingItem")).thenReturn(true);
+
+    // Act
+    dataService.fetchAndSaveItems(collectionId);
+
+    // Assert
+    verify(stacRepository).checkCollectionExists("existingItem");
+    verify(stacRepository, never()).insertItem(anyString());
+  }
+
+  @Test
+  void fetchAndSaveItems_HandlesException() {
+    // Arrange
+    String collectionId = "testCollection";
+    when(configController.getConfig()).thenThrow(new RuntimeException("Config error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.fetchAndSaveItems(collectionId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Failed to fetch or save items");
+  }
 }

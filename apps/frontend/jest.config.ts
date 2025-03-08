@@ -12,7 +12,7 @@ module.exports = {
     '<rootDir>/src/app/components/*.{js,jsx,ts,tsx}',
   ],
   transformIgnorePatterns: [
-    "/node_modules/(?!(ol)/).*/",
+    // "/node_modules/(?!(ol)/).*/",
     "node_modules/(?!(ol)/)",
   ],
   coveragePathIgnorePatterns:[
@@ -39,5 +39,7 @@ module.exports = {
     "^ol/style/Fill$": "<rootDir>/__mocks__/ol/style/Fill.js",
     "^ol/geom/Polygon.js$": "<rootDir>/__mocks__/ol/geom/Polygon.js",
     '^react-i18next$': '<rootDir>/__mocks__/react-i18next.js',
+    "^ol/format$": "<rootDir>/__mocks__/ol/format.js",
+    "^ol/style$": "<rootDir>/__mocks__/ol/style.js",
   },
 };

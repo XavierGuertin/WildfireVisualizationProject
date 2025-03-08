@@ -58,6 +58,7 @@ module.exports = [
     files: ['apps/frontend/**/*.{ts,tsx,js,jsx}'],
     rules: {
       '@typescript-eslint/no-unused-expressions': 'off',
+      "@typescript-eslint/no-empty-function": "off"
     },
   },
 
