@@ -72,6 +72,10 @@ const SettingsPanel: React.FC<{
         toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
+      
+      if(config.onlineMode != undefined){
+        setIsOnline(config.onlineMode);
+      }
 
       // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
       if (
@@ -216,6 +220,9 @@ const SettingsPanel: React.FC<{
 
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
     setIsOnline(onlineMode);
+    const config = await getConfig();
+    config.onlineMode = onlineMode;
+    await saveConfig(config);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
