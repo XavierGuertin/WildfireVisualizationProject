@@ -49,7 +49,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
         <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue }}>
             {children}
         </MapLayerContext.Provider>
-    ),[layer, mapRef, speed, dataItems, isOnline, timeStamps, sliderValue])
+    ),[layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue])
 }
 
 export const useMapLayerContext = () => {
