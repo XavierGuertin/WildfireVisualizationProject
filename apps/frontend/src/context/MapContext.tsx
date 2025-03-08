@@ -39,11 +39,11 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
         }
     };
  
-    return useMemo(() =>(
+    return useMemo(() => (
         <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline }}>
             {children}
         </MapLayerContext.Provider>
-    ),[layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline ])
+    ),[layer, mapRef, speed, dataItems, isOnline])
 }
 
 export const useMapLayerContext = () => {
