@@ -38,7 +38,7 @@ const mockSetTimeStamps = jest.fn((newTimeStamps) => {
   }
 });
 
-jest.mock('../src/app/components/MapContext', () => ({
+jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     layer: null,
     setLayer: jest.fn(),

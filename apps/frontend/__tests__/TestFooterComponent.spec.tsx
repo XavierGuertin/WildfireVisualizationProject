@@ -24,8 +24,8 @@ jest.mock('ol/layer/Tile', () => {
   });
 });
 
-jest.mock('../src/app/components/MapContext', () => ({
-  ...jest.requireActual('../src/app/components/MapContext'),
+jest.mock('../src/app/context/MapContext', () => ({
+  ...jest.requireActual('../src/app/context/MapContext'),
   useMapLayerContext: jest.fn().mockReturnValue({
     layer: 'default',
     setLayer: jest.fn(),

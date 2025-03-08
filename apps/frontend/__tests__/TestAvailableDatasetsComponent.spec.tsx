@@ -51,7 +51,7 @@ jest.mock('../src/app/components/MapView', () => ({
   changeLayer: jest.fn().mockResolvedValue(true) // Mocks a successful layer change
 }));
 
-jest.mock('../src/app/components/MapContext', () => ({
+jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
   })),
