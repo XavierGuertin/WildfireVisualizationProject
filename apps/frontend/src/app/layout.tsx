@@ -10,7 +10,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
 import './layout.css';
 import LoadingModule from './components/LoadingModule';
-import { MapProvider } from './components/MapContext';
+import { MapProvider } from '../context/MapContext';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);

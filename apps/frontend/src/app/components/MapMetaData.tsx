@@ -5,7 +5,7 @@ import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 import { fetchItems, insertDatalayerView, resetItems } from '../services/api';
 import { changeLayer } from './MapView';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../../context/MapContext';
 import LoadingModule from './LoadingModule';
 import { Map } from 'ol';
 import { toast } from 'react-toastify';

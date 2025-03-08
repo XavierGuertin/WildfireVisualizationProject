@@ -3,7 +3,7 @@ import React from 'react';
 import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/context/MapContext';
 
 // --- Mocks ---
 

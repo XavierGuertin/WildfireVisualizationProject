@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, PropsWithChildren, useRef  } from "react";
+import React, { createContext, useContext, useState, PropsWithChildren, useRef, useMemo  } from "react";
 import { Map } from 'ol';
 
 interface MapLayerContextValue{
@@ -39,11 +39,11 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
         }
     };
  
-    return (
+    return useMemo(() =>(
         <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline }}>
             {children}
         </MapLayerContext.Provider>
-    )
+    ),[layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline ])
 }
 
 export const useMapLayerContext = () => {

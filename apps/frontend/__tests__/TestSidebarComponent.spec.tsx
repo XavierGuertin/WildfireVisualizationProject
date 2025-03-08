@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Sidebar from '../src/app/components/Sidebar';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/context/MapContext';
 
 // Mock react-toastify.
 jest.mock('react-toastify', () => ({
