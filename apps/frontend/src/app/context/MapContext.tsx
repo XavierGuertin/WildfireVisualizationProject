@@ -1,4 +1,4 @@
-import React, { createContext, PropsWithChildren, useContext, useRef, useState } from 'react';
+import React, { createContext, useContext, useState, PropsWithChildren, useRef, useMemo  } from "react";
 import { Map } from 'ol';
 
 interface MapLayerContextValue{
@@ -38,18 +38,18 @@ export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
     //Map Specific Functions
     const resetView = () => {
         if (mapRef.current) {
-        mapRef.current.getView().animate({
-            center: [-75.6972, 45.4215],
-            zoom: 1,
-        });
+            mapRef.current.getView().animate({
+                center: [-75.6972, 45.4215],
+                zoom: 1,
+            });
         }
     };
-
-    return (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue}}>
+ 
+    return useMemo(() => (
+        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue }}>
             {children}
         </MapLayerContext.Provider>
-    )
+    ),[layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue])
 }
 
 export const useMapLayerContext = () => {

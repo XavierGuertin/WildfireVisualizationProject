@@ -7,7 +7,7 @@ import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import { defaults as defaultControls, FullScreen } from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
 import { verifyInternetConnection } from '../services/api';

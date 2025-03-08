@@ -1,9 +1,9 @@
 // SettingsPanel.test.tsx
-import React from 'react';
+import React, {useEffect} from 'react';
 import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
 
 // --- Mocks ---
 
@@ -298,7 +298,9 @@ describe('SettingsPanel Component', () => {
     it('Internet button is not visible when online', () => {
       const OnlineComponent = () => {
         const { setIsOnline } = useMapLayerContext();
-        setIsOnline(true);
+        useEffect(() => {
+          setIsOnline(true);
+      }, [setIsOnline]);
         return <></>;
       };
 
@@ -316,7 +318,9 @@ describe('SettingsPanel Component', () => {
     it('Internet button is visible when offline', () => {
       const OnlineComponent = () => {
         const { setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
+        useEffect(() => {
+          setIsOnline(false);
+        }, [setIsOnline])
         return <></>;
       };
 
@@ -443,7 +447,6 @@ describe('SettingsPanel Component', () => {
 
   it('calls resetItems when factory reset is triggered', async () => {
     const { resetItems, resetCollections } = require('../src/app/services/api');
-    const { setLayer, setSpeed } = require('../src/app/components/MapContext');
     const Swal = require('sweetalert2');
     Swal.fire.mockResolvedValueOnce({ isConfirmed: true });
 
@@ -470,7 +473,9 @@ describe('SettingsPanel Component', () => {
     it('shows internet status when internet dropdown is clicked', async () => {
       const OfflineComponent = () => {
         const { setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
+        useEffect(() => {
+          setIsOnline(false);
+        }, [setIsOnline])
         return <></>;
       };
 

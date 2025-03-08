@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import MapMetaData from '../src/app/components/MapMetaData';
 import { act, fireEvent, render } from '@testing-library/react';
 import { fetchItems, insertDatalayerView } from '../src/app/services/api';
-import { useMapLayerContext } from '../src/app/components/MapContext';
+import { useMapLayerContext } from '../src/app/context/MapContext';
 
 jest.mock('sweetalert2-react-content', () => {
   return jest.fn().mockImplementation(() => ({
@@ -38,7 +38,7 @@ const mockSetTimeStamps = jest.fn((newTimeStamps) => {
   }
 });
 
-jest.mock('../src/app/components/MapContext', () => ({
+jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     layer: null,
     setLayer: jest.fn(),

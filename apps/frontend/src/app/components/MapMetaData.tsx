@@ -4,7 +4,7 @@ import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 import { fetchItems, fetchTimestamps, resetItems } from '../services/api';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
 import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';

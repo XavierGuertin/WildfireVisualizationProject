@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
 import { FaPauseCircle, FaPlayCircle, FaStopCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';

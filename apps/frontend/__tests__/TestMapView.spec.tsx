@@ -6,7 +6,7 @@ import MapView, {
   changeLayer,
   refreshLayer,
 } from '../src/app/components/MapView';
-import { MapProvider } from '../src/app/components/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 import Polygon from 'ol/geom/Polygon';
 
 jest.mock('react', () => ({
@@ -97,8 +97,8 @@ jest.mock('ol/Map', () => {
   });
 });
 
-jest.mock('../src/app/components/MapContext', () => ({
-  ...jest.requireActual('../src/app/components/MapContext'),
+jest.mock('../src/app/context/MapContext', () => ({
+  ...jest.requireActual('../src/app/context/MapContext'),
   useMapLayerContext: jest.fn().mockReturnValue({
     layer: 'default',
     setLayer: jest.fn(),
@@ -272,7 +272,7 @@ describe(MapView, () => {
   it('initializes the map with the correct default view', () => {
     const mockOnBboxChange = jest.fn();
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
 
     // Mock `getView()`
@@ -317,7 +317,7 @@ describe(MapView, () => {
   it('initializes the map with the correct layers', () => {
     const mockOnBboxChange = jest.fn();
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
 
     // Mock getLayers() to return the array function
@@ -360,7 +360,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const contextMock = {
       layer: 'default',
       setLayer: jest.fn(),
@@ -420,7 +420,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     useMapLayerContext.mockReturnValue({
       layer: 'default',
       setLayer: jest.fn(),
@@ -478,7 +478,7 @@ describe(MapView, () => {
       verifyInternetConnection.mockRejectedValueOnce(new Error('Connection failed'));
 
       const mockSetIsOnline = jest.fn();
-      const { useMapLayerContext } = require('../src/app/components/MapContext');
+      const { useMapLayerContext } = require('../src/app/context/MapContext');
       useMapLayerContext.mockReturnValue({
         layer: 'default',
         setLayer: jest.fn(),
