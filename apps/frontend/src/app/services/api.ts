@@ -249,6 +249,9 @@ export const insertDatalayerView = async (collectionId: string): Promise<any> =>
   }
 }
 
+/**
+ * Resets datalayer view
+ */
 export const resetDatalayerView = async (): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}/api/reset-datalayer-view`);

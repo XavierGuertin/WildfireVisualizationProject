@@ -49,6 +49,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   };
 
+  // Handles loading the metadata if dataset is already selected on load
   useEffect(() => {
     const onLoadDataset = async () => {
       let selectedDatasetId = localStorage.getItem('selectedDatasetId')

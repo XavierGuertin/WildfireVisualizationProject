@@ -353,7 +353,7 @@ public class DataController {
   }
 
   /**
-   * Endpoint responsible for inserting a view using a given collection
+   * Endpoint responsible for inserting a view using a given collectionId
    *
    * @param collectionId Database ID of given collection
    * @return ResponseEntity containing a String object indicating if the insertion was successful
@@ -372,6 +372,11 @@ public class DataController {
     }
   }
 
+  /**
+   * Endpoint responsible for resetting the Datalayer view
+   *
+   * @return ResponseEntity containing a String object indicating if the reset was successful
+   */
   @GetMapping("/api/reset-datalayer-view")
   public ResponseEntity<String> resetView() {
     try {
