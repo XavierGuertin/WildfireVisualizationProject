@@ -12,10 +12,11 @@ import {
   fetchCollectionsFromEndpointByDate,
   fetchMetaData,
   returnListOfCollectionsFromEndpoint,
+  insertDatalayerView,
+  resetDatalayerView
 } from '../services/api';
 import debounce from 'lodash/debounce';
 import { useMapLayerContext } from '../context/MapContext';
-import { insertDatalayerView } from '../services/api';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 
@@ -100,6 +101,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when the refresh key or filter changes.
    */
   useEffect(() => {
+    let selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId !== null){
+      setSelectedDataset(selectedDatasetId)
+    }
     fetchDatasets();
     return () => fetchDatasets.cancel();
   }, [refreshKey, activeFilter]);
@@ -136,13 +141,31 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleDatasetClick = async (id: string) => {
-    await insertDatalayerView(id);
-    const map = mapRef.current as Map;
-    changeLayer(map, true);
-    setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);
+    handleLocalStorageOnDatasetClick(id)
+    const map = mapRef.current as Map;
+    changeLayer(map, true);
   };
+
+  /**
+   * Handles local storage when user selects a dataset
+   * @param id - The dataset ID.
+   */
+  const handleLocalStorageOnDatasetClick = async (id: string) => {
+    let selectedId = localStorage.getItem('selectedDatasetId')
+    if(selectedId === null || selectedId !== id){
+      await insertDatalayerView(id);
+      console.log("changing selectedDatasetId in localStorage")
+      localStorage.setItem('selectedDatasetId',id)
+      setSelectedDataset(id);
+    } else {
+      await resetDatalayerView()
+      console.log("resetting selectedDatasetId in localStorage")
+      localStorage.setItem('selectedDatasetId', '')
+      setSelectedDataset(null)
+    }
+  }
 
   return (
     <div

@@ -249,6 +249,18 @@ export const insertDatalayerView = async (collectionId: string): Promise<any> =>
   }
 }
 
+export const resetDatalayerView = async (): Promise<any> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-datalayer-view`);
+    if(!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+  } catch (error: any) {
+    console.error("Error resetting Datalayer View:", error);
+    return { error: "Failed to reset Datalayer View" };
+  }
+}
+
 export const verifyInternetConnection = async (endpoint_url: string): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`);

@@ -92,6 +92,20 @@ public class DataService {
   }
 
   /**
+   * Method responsible for reseting the Datalayer view
+   */
+  public void resetView() {
+    logger.info("Resetting Datalayer View");
+    try {
+      stacRepository.resetDatalayerView();
+      logger.info("Datalayer View successfully reset");
+    } catch (Exception e) {
+      logger.error("Error resetting Datalayer View: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to reset Datalayer View: " + e.getMessage(), e);
+    }
+  }
+
+  /**
    * Method responsible for retrieving and saving of collections into our database from a given endpoint
    *
    * @param endpointUrl Endpoint that we will be retrieving collections from

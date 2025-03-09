@@ -372,6 +372,20 @@ public class DataController {
     }
   }
 
+  @GetMapping("/api/reset-datalayer-view")
+  public ResponseEntity<String> resetView() {
+    try {
+      logger.info("Received request to /api/reset-datalayer-view");
+      dataService.resetView();
+      logger.info("Successfully processed resetting Datalayer View");
+      return ResponseEntity.ok("Successfully reset Datalayer view");
+    } catch(Exception e) {
+      logger.error("Error resetting Datalayer View: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error resetting Datalayer View: " + e.getMessage());
+    }
+  }
+
   /**
    * Endpoint responsible for checking if the user is connected to the internet
    *

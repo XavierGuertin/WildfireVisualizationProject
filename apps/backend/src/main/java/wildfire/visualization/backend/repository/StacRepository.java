@@ -379,6 +379,23 @@ public class StacRepository {
   }
 
   /**
+   * Method responsible for resetting the Datalayer View
+   *
+   * @param collectionId Database ID of the given collection
+   */
+  public void resetDatalayerView() {
+    try {
+      logger.info("Attempting to reset Datalayer view");
+      String sql = "DROP VIEW IF EXISTS Datalayer";
+      jdbcTemplate.execute(sql);
+      logger.info("Successfully reset the Datalayer view");
+    } catch(DataAccessException e) {
+      logger.error("Error resetting Datalayer view: {}", e.getMessage(), e);
+      throw new RuntimeException("Error resting Datalayer view: " + e.getMessage(), e);
+    }
+  }
+
+  /**
    * Method responsible for checking if DataLayerView exists
    *
    * @return boolean value clarifying if the DataLayerView exists or not

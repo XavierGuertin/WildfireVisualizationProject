@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
@@ -11,6 +11,7 @@ import i18n from './resources/i18n';
 import './layout.css';
 import LoadingModule from './components/LoadingModule';
 import { MapProvider } from './context/MapContext';
+import { fetchMetaData } from './services/api';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -36,9 +37,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
-    setSelectedDataset(dataset); // Just update the selected dataset
-    setMetadataVisible(true); // Show metadata container
+    let selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    console.log("selectedDatasetId: " + selectedDataset)
+    if(selectedDatasetId !== dataset.id){
+      console.log("metadata will open")
+      setSelectedDataset(dataset); // Just update the selected dataset
+      setMetadataVisible(true); // Show metadata container
+    } else {
+      console.log("metadata should close")
+      setMetadataVisible(false)
+    }
   };
+
+  useEffect(() => {
+    const onLoadDataset = async () => {
+      let selectedDatasetId = localStorage.getItem('selectedDatasetId')
+      console.log("selectedDatasetId = " + selectedDatasetId)
+      if(selectedDatasetId !== null && selectedDatasetId !== ''){
+        const dataset = await fetchMetaData(selectedDatasetId)
+        setSelectedDataset(dataset)
+        setMetadataVisible(true)
+      }
+    }
+
+    onLoadDataset();
+  }, [])
 
   // Handle dataset loading from MapMetaData
   const handleLoadDataset = async () => {
