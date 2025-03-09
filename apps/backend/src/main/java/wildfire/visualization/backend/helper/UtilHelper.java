@@ -3,6 +3,7 @@ package wildfire.visualization.backend.helper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -70,15 +71,22 @@ public class UtilHelper {
     try {
       if (metadata.isEmpty()) return null;
 
-      String startTimeStr = (String) metadata.get(0).get("datetime");
-      if (startTimeStr == null) return null;
+      Object datetimeObj = metadata.get(0).get("datetime");
 
-      return LocalDateTime.parse(startTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+      if (datetimeObj instanceof Timestamp) {
+        return ((Timestamp) datetimeObj).toLocalDateTime();
+      } else if (datetimeObj instanceof String) {
+        return LocalDateTime.parse((String) datetimeObj, DateTimeFormatter.ISO_DATE_TIME);
+      } else {
+        logger.warn("Unexpected datetime format: {}", datetimeObj);
+        return null;
+      }
     } catch (Exception e) {
       logger.warn("Failed to extract start timestamp from DB metadata: {}", e.getMessage());
       return null;
     }
   }
+
 
   /**
    * Extracts the temporal end timestamp from the DB metadata.
@@ -87,10 +95,16 @@ public class UtilHelper {
     try {
       if (metadata.isEmpty()) return null;
 
-      String endTimeStr = (String) metadata.get(0).get("end_datetime");
-      if (endTimeStr == null) return null;
+      Object datetimeObj = metadata.get(0).get("end_datetime");
 
-      return LocalDateTime.parse(endTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+      if (datetimeObj instanceof Timestamp) {
+        return ((Timestamp) datetimeObj).toLocalDateTime();
+      } else if (datetimeObj instanceof String) {
+        return LocalDateTime.parse((String) datetimeObj, DateTimeFormatter.ISO_DATE_TIME);
+      } else {
+        logger.warn("Unexpected datetime format: {}", datetimeObj);
+        return null;
+      }
     } catch (Exception e) {
       logger.warn("Failed to extract end timestamp from DB metadata: {}", e.getMessage());
       return null;

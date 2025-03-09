@@ -67,12 +67,18 @@ public class DataService {
     fetchProgress.put(collectionId, new AtomicInteger(0)); // Initialize progress
 
     ResponseEntity<Map<String, Object>> response = fetchData(collectionId);
+    Map<String, Object> responseBody = response.getBody();
 
-    int progress = (int) response.getBody().get("progress");
-    fetchProgress.get(collectionId).set(progress);
+    if (responseBody != null && responseBody.containsKey("progress")) {
+      int progress = ((Number) responseBody.get("progress")).intValue();
+    } else {
+      logger.error("Progress not found in response body for collection: {}", collectionId);
+      fetchProgress.get(collectionId).set(-1); // Set error state
+    }
 
     logger.info("Fetching completed for collection: {}", collectionId);
   }
+
 
   /**
    * Method responsible for retrieving the progress of a given collection
@@ -342,10 +348,14 @@ public class DataService {
         throw new RuntimeException("No metadata found for collection: " + collectionId);
       }
 
-      // Extract item count from metadata
-      Integer itemCount = (Integer) collectionMetadata.get(0).get("item_count"); // Ensure it exists
-      if (itemCount == null || itemCount == 0) {
-        throw new RuntimeException("No item count found for collection: " + collectionId);
+      // Extract item count from metadata (if available)
+      Integer itemCount = (Integer) collectionMetadata.get(0).get("item_count"); // May be missing
+
+      // Extract start & end dates (for time-based progress if needed)
+      LocalDateTime startDate = UtilHelper.extractTemporalStartFromDB(collectionMetadata);
+      LocalDateTime endDate = UtilHelper.extractTemporalEndFromDB(collectionMetadata);
+      if (startDate == null || endDate == null) {
+        throw new RuntimeException("Failed to extract temporal extent for " + collectionId);
       }
 
       // Base items endpoint
@@ -377,14 +387,23 @@ public class DataService {
           }
         }
 
-        // Calculate progress based on item count
-        progress = (int) Math.floor(((double) totalFetched / itemCount) * 100);
+        // Determine progress calculation method
+        if (itemCount != null && itemCount > 0) {
+          // Use `item_count` if available
+          progress = (int) Math.floor(((double) totalFetched / itemCount) * 100);
+        } else {
+          // Use timestamp-based progress if `item_count` is missing
+          progress = (int) Math.floor(UtilHelper.computeProgressFromItems(items, endDate, startDate));
+        }
 
         // Update progress in the database
         fetchProgress.put(collectionId, new AtomicInteger(progress));
 
         nextUrl = UtilHelper.extractNextUrl(response);
       }
+
+      // Update progress when done
+      fetchProgress.put(collectionId, new AtomicInteger(100));
 
       // Construct API response body
       responseBody.put("collectionId", collectionId);
@@ -401,9 +420,6 @@ public class DataService {
       return ResponseEntity.status(500).body(responseBody);
     }
   }
-
-
-
 
   public List<String> fetchItemsTimestamps() {
     logger.debug("Fetching item timestamps from database");
