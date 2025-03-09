@@ -391,7 +391,11 @@ const SettingsPanel: React.FC<{
             aria-label="internet"
             data-testid="internet-dropdown-button"
           >
-            {isOnline ? (<PiGlobeLight size={32} />) : (<PiGlobeXLight size={32} />)}
+            {isOnline ? (
+              <PiGlobeLight size={32} data-testid="online-icon"/>
+              ) : (
+              <PiGlobeXLight size={32} data-testid="offline-icon"/>
+              )}
           </button>
         {dropdownState.activeButton === 'internet' && (
         <div className="dropdown-content show">
