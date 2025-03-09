@@ -31,6 +31,7 @@ const offlineLayer = new TileLayer({
     url: OFFLINE_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 // Default base layers
@@ -39,6 +40,7 @@ const defaultLayer = new TileLayer({
     url: DEFAULT_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 const satelliteLayer = new TileLayer({
@@ -46,6 +48,7 @@ const satelliteLayer = new TileLayer({
     url: SATELLITE_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 const topographicLayer = new TileLayer({
@@ -53,6 +56,7 @@ const topographicLayer = new TileLayer({
     url: TOPOGRAPHIC_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 /**
