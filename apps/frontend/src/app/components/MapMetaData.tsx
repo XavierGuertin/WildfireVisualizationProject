@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
+import { IoMdClose } from 'react-icons/io'; // Added close icon
 import { useTranslation } from 'react-i18next';
 import { fetchItems, insertDatalayerView } from '../services/api';
 import { changeLayer } from './MapView';
@@ -16,7 +17,6 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
-  onLoadDataset: () => Promise<void>;
   onClose: () => void;
   visible: boolean;
 }
@@ -29,30 +29,18 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   processes = '',
   datasetSource = '',
   visible,
-}) => {
+  onClose, 
+})  => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Function to show loading bar with progress
-  const showLoadingBar = () => {
-    setProgress(0); // Reset progress
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval); // Stop auto-progress at 100%
-          return 100;
-        }
-        return prevProgress + 10; // Increment progress
-      });
-    }, 300); // Update every 300ms
-  };
+  const { mapRef, setDataItems } = useMapLayerContext();
 
-  const { mapRef, setDataItems, dataItems } = useMapLayerContext();
-
-  const onLoadDataset = async () => {
+  // Renamed to handleLoadDataset to avoid confusion with the prop name
+  const handleLoadDataset = async () => {
     try {
       setLoading(true);
       setProgress(0);
@@ -90,9 +78,19 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const NonCollapsedMetaData = (
     <div className="metadata-container">
-      <div className="header" onClick={toggleCollapse} data-testid="name-div">
-        {name || t('unknown_name')}
-        <RiCollapseDiagonalFill size={20} />
+      <div className="header" data-testid="name-div">
+        <div className="header-left" onClick={toggleCollapse}>
+          {name || t('unknown_name')}
+          <RiCollapseDiagonalFill size={20} />
+        </div>
+        <div className="header-right">
+          <IoMdClose 
+            size={20} 
+            onClick={onClose} 
+            data-testid="close-button"
+            className="close-button"
+          />
+        </div>
       </div>
       <div className="content">
         {[
@@ -122,7 +120,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         ))}
         <button
           className="load-dataset-button"
-          onClick={onLoadDataset}
+          onClick={handleLoadDataset}
           data-testid="load-dataset-button"
         >
           <LoadingModule

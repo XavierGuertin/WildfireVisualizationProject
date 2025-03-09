@@ -40,24 +40,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setMetadataVisible(true); // Show metadata container
   };
 
-  // Handle dataset loading from MapMetaData
-  const handleLoadDataset = async () => {
-    if (!selectedDataset) return;
-
-    try {
-      setLoading(true); // Show loading overlay
-      showLoadingBar(); // Start progress simulation
-
-      // Simulate a delay for loading (mocked)
-      await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-      console.log('Dataset loaded successfully (mock)');
-    } catch (error) {
-      console.error('Error loading dataset:', error);
-    } finally {
-      setLoading(false); // Ensure loading overlay is hidden
-    }
-  };
-
   const refreshDatasets = () => {
     setRefreshKey((prevKey) => prevKey + 1); // Increment refresh key to trigger re-render
   };
@@ -93,11 +75,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               format={selectedDataset.format}
               processes={selectedDataset.processes}
               datasetSource={selectedDataset.datasetSource}
-              onLoadDataset={handleLoadDataset}
               onClose={() => setMetadataVisible(false)}
               visible={isMetadataVisible} // Pass visibility state
             />
           )}
+          
           <footer className="app-footer"></footer>
         </div>
         </body>
