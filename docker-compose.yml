@@ -24,7 +24,7 @@ services:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
       interval: 20s
       timeout: 10s
-      retries: 10
+      retries: 20
     deploy:
       resources:
         limits:
@@ -37,6 +37,8 @@ services:
       dockerfile: ./apps/frontend/Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+        NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
+        NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
       - NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms

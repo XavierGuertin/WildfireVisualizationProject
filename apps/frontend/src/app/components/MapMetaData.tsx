@@ -52,9 +52,16 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   };
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps } = useMapLayerContext();
+  const { setTimeStamps, isOnline } = useMapLayerContext();
 
   const onLoadDataset = async () => {
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
+      });
+      return;
+    }
+    
     try {
       MySwal.fire({
         title: t('reset'),

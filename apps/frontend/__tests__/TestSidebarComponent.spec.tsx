@@ -102,10 +102,10 @@ describe('Test Sidebar component', () => {
 
       fireEvent.click(screen.getByAltText('topographical_layer'));
       expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
-      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
+      expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {"toastId": "online-disabled"});
 
       fireEvent.click(screen.getByAltText('satellite_layer'));
       expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
-      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
+      expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {"toastId": "online-disabled"});
   });
 });
