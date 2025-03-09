@@ -579,7 +579,8 @@ class DataServiceTests {
     // Mock Collection Metadata (from DB)
     List<Map<String, Object>> collectionMetadata = List.of(Map.of(
       "datetime", "2023-08-01T12:00:00Z",
-      "end_datetime", "2023-08-31T12:00:00Z"
+      "end_datetime", "2023-08-31T12:00:00Z",
+      "item_count", 2
     ));
     when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
 
@@ -629,7 +630,7 @@ class DataServiceTests {
 
     // Assert progress is updated
     int progress = dataService.getProgress(collectionId);
-    assertTrue(progress > 0 && progress <= 100, "Progress should be a valid percentage");
+    assertTrue(progress > 90 && progress <= 100, "Progress should be a valid percentage");
   }
 
 
@@ -737,7 +738,8 @@ class DataServiceTests {
     // Mock Collection Metadata (from DB)
     List<Map<String, Object>> collectionMetadata = List.of(Map.of(
       "datetime", "2023-08-01T12:00:00Z",
-      "end_datetime", "2023-08-31T12:00:00Z"
+      "end_datetime", "2023-08-31T12:00:00Z",
+      "item_count", 1
     ));
     when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
 

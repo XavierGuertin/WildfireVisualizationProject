@@ -323,7 +323,7 @@ public class DataService {
    * Method responsible for fetching and saving items from a given collection
    *
    * @param collectionId String object representing the id of the collection
-   * @return A ResponseEntity object that contains a map of key value pairs
+   * @return A ResponseEntity object that contains a map of key-value pairs
    */
   public ResponseEntity<Map<String, Object>> fetchData(String collectionId) {
     Map<String, Object> responseBody = new HashMap<>();
@@ -342,11 +342,10 @@ public class DataService {
         throw new RuntimeException("No metadata found for collection: " + collectionId);
       }
 
-      // Extract start & end dates from the database metadata
-      LocalDateTime startDate = UtilHelper.extractTemporalStartFromDB(collectionMetadata);
-      LocalDateTime endDate = UtilHelper.extractTemporalEndFromDB(collectionMetadata);
-      if (startDate == null || endDate == null) {
-        throw new RuntimeException("Failed to extract temporal extent for " + collectionId);
+      // Extract item count from metadata
+      Integer itemCount = (Integer) collectionMetadata.get(0).get("item_count"); // Ensure it exists
+      if (itemCount == null || itemCount == 0) {
+        throw new RuntimeException("No item count found for collection: " + collectionId);
       }
 
       // Base items endpoint
@@ -378,8 +377,8 @@ public class DataService {
           }
         }
 
-        // Update progress based on the first item timestamp
-        progress = (int) Math.floor(UtilHelper.computeProgressFromItems(items, startDate, endDate));
+        // Calculate progress based on item count
+        progress = (int) Math.floor(((double) totalFetched / itemCount) * 100);
 
         // Update progress in the database
         fetchProgress.put(collectionId, new AtomicInteger(progress));
@@ -402,6 +401,7 @@ public class DataService {
       return ResponseEntity.status(500).body(responseBody);
     }
   }
+
 
 
 
