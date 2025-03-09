@@ -38,13 +38,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
     let selectedDatasetId = localStorage.getItem('selectedDatasetId')
-    console.log("selectedDatasetId: " + selectedDataset)
     if(selectedDatasetId !== dataset.id){
-      console.log("metadata will open")
       setSelectedDataset(dataset); // Just update the selected dataset
       setMetadataVisible(true); // Show metadata container
     } else {
-      console.log("metadata should close")
       setMetadataVisible(false)
     }
   };
@@ -53,7 +50,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     const onLoadDataset = async () => {
       let selectedDatasetId = localStorage.getItem('selectedDatasetId')
-      console.log("selectedDatasetId = " + selectedDatasetId)
       if(selectedDatasetId !== null && selectedDatasetId !== ''){
         const dataset = await fetchMetaData(selectedDatasetId)
         setSelectedDataset(dataset)

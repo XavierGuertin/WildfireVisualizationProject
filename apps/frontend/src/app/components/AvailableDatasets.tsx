@@ -156,12 +156,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     let selectedId = localStorage.getItem('selectedDatasetId')
     if(selectedId === null || selectedId !== id){
       await insertDatalayerView(id);
-      console.log("changing selectedDatasetId in localStorage")
       localStorage.setItem('selectedDatasetId',id)
       setSelectedDataset(id);
     } else {
       await resetDatalayerView()
-      console.log("resetting selectedDatasetId in localStorage")
       localStorage.setItem('selectedDatasetId', '')
       setSelectedDataset(null)
     }
