@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Repository responsible for directly communicating with the pgSTAC database (items and collections)
@@ -20,7 +21,6 @@ public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
   private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
   private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
-  private static final String NO_BBOX = " (no bbox filter applied)";
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -81,6 +81,20 @@ public class StacRepository {
     }
   }
 
+  public void insertItem(String itemJson) {
+    logger.debug("Attempting to insert item");
+    try {
+      jdbcTemplate.queryForObject(
+        "SELECT pgstac.create_item(?::jsonb)",
+        Object.class,
+        itemJson);
+      logger.info("Successfully inserted item");
+    } catch (DataAccessException e) {
+      logger.error("Error inserting collection: {}", e.getMessage(), e);
+      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Method responsible for querying a collection with a given id
    *
@@ -115,7 +129,7 @@ public class StacRepository {
    *                                  exactly 4 elements.
    * @throws RuntimeException         If a database error occurs.
    */
-  private List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
+  List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
     // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
     if (bbox != null && bbox.length != 4) {
       throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
@@ -123,9 +137,9 @@ public class StacRepository {
 
     // Log query type (bbox filtering or not)
     if (bbox == null) {
-      logger.debug("Fetching all collections" + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
     } else {
-      logger.debug("Fetching collections with bbox: [{}]", Arrays.toString(bbox));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox));
     }
 
     try {
@@ -183,9 +197,14 @@ public class StacRepository {
   }
 
   public void deleteAllCollections() {
-    logger.info("Deleting all collections from pgstac.collections");
     try {
-      String sql = "DELETE FROM pgstac.collections";
+      String sql = "DELETE FROM pgstac.datalayer";
+      logger.info("Deleting Datalayer view from pgstac.collections");
+      jdbcTemplate.update(sql);
+      logger.info("Datalayer view deleted successfully");
+
+      sql = "DELETE FROM pgstac.collections";
+      logger.info("Deleting all collections from pgstac.collections");
       jdbcTemplate.update(sql);
       logger.info("All collections deleted successfully");
     } catch (DataAccessException e) {
@@ -193,6 +212,32 @@ public class StacRepository {
       throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
     }
   }
+
+  public List<String> getItemsTimestamps() {
+    String sql = "SELECT to_char(datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as iso FROM pgstac.items ORDER BY datetime ASC";
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+      List<String> timestamps = jdbcTemplate.queryForList(sql, String.class);
+      logger.info("Fetched {} item timestamps", timestamps.size());
+      return timestamps;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
+      throw new RuntimeException("Error fetching item timestamps: " + e.getMessage(), e);
+    }
+  }
+
+  public void deleteAllItems() {
+    logger.info("Deleting all items from pgstac.items");
+    try {
+      String sql = "DELETE FROM pgstac.items";
+      jdbcTemplate.update(sql);
+      logger.info("All items deleted successfully");
+    } catch (DataAccessException e) {
+      logger.error("Error deleting items: {}", e.getMessage(), e);
+      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+    }
+  }
+
 
   /**
    * Retrieves all collections from the database, optionally filtered by a
@@ -244,31 +289,6 @@ public class StacRepository {
     }
   }
 
-  /**
-   * Method responsible for inserting an item into the pgSTAC database
-   *
-   * @param itemJson Stringified JSON object containing the data of the item to be inserted
-   */
-  public void insertItem(String itemJson) {
-    logger.debug("Attempting to insert item");
-    try {
-      jdbcTemplate.queryForObject(
-          "SELECT pgstac.create_item(?::jsonb)",
-          Object.class,
-          itemJson);
-      logger.info("Successfully inserted item");
-    } catch (DataAccessException e) {
-      logger.error("Error inserting item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting item: " + e.getMessage(), e);
-    }
-  }
-
-  /**
-   * Method responsible for retrieving all items associated with a specific collection
-   *
-   * @param collectionId Database ID of the collection we want the items from
-   * @return List object containing the items associated with the collection
-   */
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.debug("Fetching items");
     try {

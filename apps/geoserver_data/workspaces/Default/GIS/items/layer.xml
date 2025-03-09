@@ -1,17 +1,16 @@
 <layer>
-  <name>datalayer</name>
-  <id>LayerInfoImpl-72972593:1948a67d39b:-7fe6</id>
+  <name>items</name>
+  <id>LayerInfoImpl--75a9e4a8:1956719363f:-7ff2</id>
   <type>VECTOR</type>
   <defaultStyle>
     <id>StyleInfoImpl-72972593:1948a67d39b:-7fd9</id>
   </defaultStyle>
   <resource class="featureType">
-    <id>FeatureTypeInfoImpl-72972593:1948a67d39b:-7fe7</id>
+    <id>FeatureTypeInfoImpl--75a9e4a8:1956719363f:-7ff3</id>
   </resource>
   <attribution>
     <logoWidth>0</logoWidth>
     <logoHeight>0</logoHeight>
   </attribution>
-  <dateCreated>2025-01-21 22:21:06.267 UTC</dateCreated>
-  <dateModified>2025-03-05 16:39:47.165 UTC</dateModified>
+  <dateCreated>2025-03-05 16:36:25.212 UTC</dateCreated>
 </layer>

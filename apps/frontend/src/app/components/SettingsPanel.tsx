@@ -11,14 +11,14 @@ import {
 import { PiArrowClockwiseFill, PiGlobeXLight, PiX } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
-  resetCollections,
-  verifyIfEndpointHasCollections,
+  resetCollections, resetItems,
+  verifyIfEndpointHasCollections
 } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { useMapLayerContext } from './MapContext';
+import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 
 const MySwal = withReactContent(Swal);
@@ -32,7 +32,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setSliderValue } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -120,6 +120,7 @@ const SettingsPanel: React.FC<{
 
         // Reset collections before fetching new ones
         await resetCollections();
+        await resetItems();
 
         const message = await fetchCollectionsFromEndpoint(endpointUrl);
         toast.success(message);
@@ -168,6 +169,8 @@ const SettingsPanel: React.FC<{
         // reset localStorage properties to default properties
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
+        localStorage.setItem('sliderValue', '0')
+        setSliderValue(0)
 
         toast.success(t('reset_completed'));
       }
@@ -215,9 +218,12 @@ const SettingsPanel: React.FC<{
     try {
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
+      localStorage.setItem('sliderValue', '0');
+      setSliderValue(0);
 
       setLayer('default');
       await resetCollections();
+      await resetItems();
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
@@ -392,7 +398,7 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
-      
+
       {!isOnline &&
       <div className="dropdown-button">
         <button

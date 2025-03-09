@@ -130,13 +130,15 @@ class StacRepositoryTests {
 
   @Test
   void queryCollection_ThrowsException_WhenDatabaseError() {
-    when(jdbcTemplate.queryForList(anyString(), anyString()))
-        .thenThrow(new DataAccessException("Database error") {
-        });
+    // Arrange
+    String collectionId = "test-collection";
+    when(jdbcTemplate.queryForList(anyString(), eq(collectionId)))
+      .thenThrow(new DataAccessException("Database error") {});
 
-    assertThatThrownBy(() -> stacRepository.queryCollection(testCollectionId))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error querying collection");
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.queryCollection(collectionId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error querying collection");
   }
 
   @Test
@@ -264,6 +266,7 @@ class StacRepositoryTests {
     stacRepository.deleteAllCollections();
 
     // Assert
+    verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.datalayer");
     verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.collections");
   }
 
@@ -639,5 +642,161 @@ class StacRepositoryTests {
     assertThatThrownBy(() -> stacRepository.insertItem("{id: 'test'}"))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Error inserting item");
+  }
+
+  @Test
+  void checkItemExists_ReturnsTrueWhenExists() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenReturn(1);
+
+    // Act
+    boolean result = stacRepository.checkItemExists(itemId);
+
+    // Assert
+    assertThat(result).isTrue();
+    verify(jdbcTemplate).queryForObject(
+      eq("SELECT COUNT(*) FROM pgstac.items WHERE id = ?"),
+      eq(Integer.class),
+      eq(itemId));
+  }
+
+  @Test
+  void checkItemExists_ReturnsFalseWhenDoesNotExist() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenReturn(0);
+
+    // Act
+    boolean result = stacRepository.checkItemExists(itemId);
+
+    // Assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void checkItemExists_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenThrow(new DataAccessException("Database error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.checkItemExists(itemId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error checking item existence");
+  }
+
+  @Test
+  void getAllCollections_ThrowsException_WithInvalidBboxLength() {
+    // Arrange
+    double[] invalidBbox = {10.0, 20.0, 30.0}; // Only 3 elements
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllCollections(invalidBbox))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessage("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+  }
+
+  @Test
+  void deleteAllItems_Success() {
+    // Act
+    stacRepository.deleteAllItems();
+
+    // Assert
+    verify(jdbcTemplate).update("DELETE FROM pgstac.items");
+  }
+
+  @Test
+  void deleteAllItems_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {})
+      .when(jdbcTemplate).update("DELETE FROM pgstac.items");
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.deleteAllItems())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error deleting items");
+  }
+
+  @Test
+  void checkItemExists_HandlesNullCount() {
+    // Arrange
+    String itemId = "test-item";
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
+      .thenReturn(null);
+
+    // Act
+    boolean result = stacRepository.checkItemExists(itemId);
+
+    // Assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void fetchCollections_ThrowsException_WithInvalidOrderBy() {
+    // Arrange
+    String invalidOrderBy = "invalid_column";
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.fetchCollections(null, invalidOrderBy))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Invalid orderBy column");
+  }
+
+  @Test
+  void fetchCollections_AcceptsValidOrderBy() {
+    // Arrange
+    List<Map<String, Object>> mockResults = new ArrayList<>();
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+
+    // Act - Should not throw exception
+    List<Map<String, Object>> result1 = stacRepository.fetchCollections(null, "id");
+    List<Map<String, Object>> result2 = stacRepository.fetchCollections(null, "datetime");
+
+    // Assert
+    verify(jdbcTemplate, times(2)).queryForList(anyString());
+  }
+
+  @Test
+  void getItemsTimestamps_Success() {
+    // Arrange
+    List<String> expectedTimestamps = List.of("2023-01-01T12:00:00Z", "2023-01-02T12:00:00Z");
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class))).thenReturn(expectedTimestamps);
+
+    // Act
+    List<String> result = stacRepository.getItemsTimestamps();
+
+    // Assert
+    assertThat(result).isEqualTo(expectedTimestamps);
+  }
+
+  @Test
+  void getItemsTimestamps_Failure() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class)))
+      .thenThrow(new DataAccessException("Database error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getItemsTimestamps())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching item timestamps");
+  }
+
+  @Test
+  void queryCollectionMetaData_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    String collectionId = "test-collection";
+
+    // Use doThrow() syntax which handles overloaded methods better
+    doThrow(new DataAccessException("Database error") {})
+      .when(jdbcTemplate).queryForList(anyString(), eq("test-collection"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.queryCollectionMetaData(collectionId))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error querying collection");
   }
 }

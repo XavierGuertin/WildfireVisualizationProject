@@ -4,11 +4,12 @@ import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { IoMdClose } from 'react-icons/io'; // Added close icon
 import { useTranslation } from 'react-i18next';
-import { fetchItems, insertDatalayerView } from '../services/api';
-import { changeLayer } from './MapView';
-import { useMapLayerContext } from './MapContext';
+import { fetchItems, fetchTimestamps, resetItems } from '../services/api';
+import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
-import { Map } from 'ol';
+import { toast } from 'react-toastify';
+import withReactContent from 'sweetalert2-react-content';
+import Swal from 'sweetalert2';
 
 interface MapMetaDataProps {
   id?: string;
@@ -29,7 +30,6 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   processes = '',
   datasetSource = '',
   visible,
-  onClose, 
 })  => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -37,26 +37,63 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const { mapRef, setDataItems } = useMapLayerContext();
-
-  // Renamed to handleLoadDataset to avoid confusion with the prop name
-  const handleLoadDataset = async () => {
-    try {
-      setLoading(true);
-      setProgress(0);
-  
-      await insertDatalayerView(id);
-      const map = mapRef.current as Map;
-      changeLayer(map);
-  
-      // Fetch items with progress updates
-      const items = await fetchItems(id, (progress) => {
-        setProgress(progress); // Update progress in real time
+  // Function to show loading bar with progress
+  const showLoadingBar = () => {
+    setProgress(0); // Reset progress
+    const progressInterval = setInterval(() => {
+      setProgress((prevProgress) => {
+        if (prevProgress >= 100) {
+          clearInterval(progressInterval); // Stop auto-progress at 100%
+          return 100;
+        }
+        return prevProgress + 10; // Increment progress
       });
-  
-      setDataItems(items);
-      setProgress(100); // Ensure it hits 100% when complete
-      setTimeout(() => setLoading(false), 1000); // Hide loading after short delay
+    }, 300); // Update every 300ms
+  };
+
+  const MySwal = withReactContent(Swal);
+  const { setTimeStamps } = useMapLayerContext();
+
+  const onLoadDataset = async () => {
+    try {
+      MySwal.fire({
+        title: t('reset'),
+        text: t('confirm_reset_properties'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: t('yes'),
+        customClass: {
+          popup: 'custom-swal-popup'
+        }
+      }).then(async (result: { isConfirmed: any }) => {
+        if (result.isConfirmed) {
+          setLoading(true); // Show loading overlay
+          showLoadingBar(); // Start progress simulation
+
+          await resetItems();
+          localStorage.setItem('sliderValue', '0')
+
+          const response = await fetchItems(id);
+          response == 'Items fetched and saved successfully'
+            ? toast.success(t('timestamps_fetch_success'))
+            : toast.error(t('timestamps_fetch_error'));
+
+          // fetch list of timestamps
+          const timestampsResponse = await fetchTimestamps();
+          if (timestampsResponse) {
+            setTimeStamps(timestampsResponse);
+          }
+          timestampsResponse != null
+            ? toast.success(t('items_fetch_success'))
+            : toast.error(t('items_fetch_error'));
+
+          // Simulate a delay for loading (mocked)
+          await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
+          console.log('Dataset loaded successfully');
+        }
+      });
     } catch (error) {
       console.error("Error loading dataset:", error);
       setLoading(false);
@@ -78,38 +115,28 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const NonCollapsedMetaData = (
     <div className="metadata-container">
-      <div className="header" data-testid="name-div">
-        <div className="header-left" onClick={toggleCollapse}>
-          {name || t('unknown_name')}
-          <RiCollapseDiagonalFill size={20} />
-        </div>
-        <div className="header-right">
-          <IoMdClose 
-            size={20} 
-            onClick={onClose} 
-            data-testid="close-button"
-            className="close-button"
-          />
-        </div>
+      <div className="header" onClick={toggleCollapse} data-testid="name-div">
+        {name || t('unknown_name')}
+        <RiCollapseDiagonalFill size={20} />
       </div>
       <div className="content">
         {[
           {
             label: t('description'),
             value: description,
-            testId: 'dataset-description',
+            testId: 'dataset-description'
           },
           { label: t('format'), value: format, testId: 'dataset-format' },
           {
             label: t('processes'),
             value: processes,
-            testId: 'dataset-processes',
+            testId: 'dataset-processes'
           },
           {
             label: t('dataset_source'),
             value: datasetSource,
-            testId: 'dataset-datasource',
-          },
+            testId: 'dataset-datasource'
+          }
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
@@ -120,7 +147,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         ))}
         <button
           className="load-dataset-button"
-          onClick={handleLoadDataset}
+          onClick={onLoadDataset}
           data-testid="load-dataset-button"
         >
           <LoadingModule
