@@ -391,7 +391,7 @@ public class StacRepository {
       logger.info("Successfully reset the Datalayer view");
     } catch(DataAccessException e) {
       logger.error("Error resetting Datalayer view: {}", e.getMessage(), e);
-      throw new RuntimeException("Error resting Datalayer view: " + e.getMessage(), e);
+      throw new RuntimeException("Error resetting Datalayer view: " + e.getMessage(), e);
     }
   }
 

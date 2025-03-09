@@ -712,4 +712,49 @@ class DataServiceTests {
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Failed to fetch or save items");
   }
+  @Test
+  void resetView_Default_Success() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+    when(stacRepository.checkDatalayerView()).thenReturn(false);
+
+    // Act
+    dataService.resetView();
+
+    // Assert
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void resetView_SleepMillisAdjusted_Failure() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+      when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing failure
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.resetView(0))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("View could not be reset");
+
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void resetView_ShouldHandleInterruptedException() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+    when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing loop
+
+    // Act & Assert
+    assertThatThrownBy(() -> {
+        Thread.currentThread().interrupt(); // Simulate interruption
+        dataService.resetView(0);
+    }).isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("View could not be reset");
+
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
 }
