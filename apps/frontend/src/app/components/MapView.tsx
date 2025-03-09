@@ -19,7 +19,6 @@ import { Style, Stroke, Fill } from 'ol/style';
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
-const DEFAULT_ENDPOINT_URL = 'https://hirondelle.crim.ca/stac/collections';
 const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
 const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
