@@ -184,6 +184,13 @@ const SettingsPanel: React.FC<{
   };
 
   const handleFactoryReset = async () => {
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
+      });
+      return;
+    }
+    
     MySwal.fire({
       title: t('factory_reset'),
       text: t('confirm_factory_reset_data_from_endpoint'),
