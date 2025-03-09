@@ -21,7 +21,7 @@ interface MapLayerContextValue{
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
 
 export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
-    const [layer, setLayer] = useState<string | null>(null);
+    const [layer, setLayer] = useState<string | null>('default');
     const mapRef = useRef<Map | null>(null);
     const [timeStamps, setTimeStamps] = useState<string[]>([]);
     const [sliderValue, setSliderValue] = useState<number>(0);
