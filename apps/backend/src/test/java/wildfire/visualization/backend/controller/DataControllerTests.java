@@ -528,6 +528,24 @@ class DataControllerTests {
   }
 
   @Test
+  void fetchItems_Success() throws InterruptedException {
+    // Arrange
+    String collectionId = "testCollection";
+    doNothing().when(dataService).fetchAndSaveItems(collectionId);
+
+    // Act
+    ResponseEntity<String> response = dataController.fetchItems(collectionId);
+
+    // Delay to let async execution register
+    Thread.sleep(100); // Wait for async task (adjust if needed)
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isEqualTo("Fetching started in the background. Check progress separately.");
+    verify(dataService, times(1)).fetchAndSaveItems(collectionId);
+  }
+
+  @Test
   void resetItems_Success() {
     // Arrange
     doNothing().when(dataService).deleteAllItems();
