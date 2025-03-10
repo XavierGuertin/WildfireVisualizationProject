@@ -58,9 +58,6 @@ public class DataService {
   public String retrieveCollectionMetaData(String collectionId) {
     try {
       return objectMapper.writeValueAsString(stacRepository.queryCollectionMetaData(collectionId));
-    } catch (JsonProcessingException e) {
-      logger.error("Error processing JSON for collection metadata: {}", e.getMessage(), e);
-      throw new DataException("Error processing MetaData: " + e.getMessage(), e);
     } catch (Exception e) {
       logger.error("Error retrieving collection metadata: {}", e.getMessage(), e);
       throw new DataException("Failed to retrieve metadata for collection: " + collectionId, e);

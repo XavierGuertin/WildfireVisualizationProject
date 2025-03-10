@@ -204,7 +204,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @returns The translation key for the toggle status
    */
   const getToggleStatusText = () => {
-    if (!currentBbox || currentBbox.length === 0) {
+    if (!currentBbox) {
       return t('map_required');
     }
     
@@ -240,7 +240,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 aria-label={t('toggle_datasets')}
               >
                 <span className="toggle-status-text" data-testid="toggle-status-text">
-                  {getToggleStatusText()}
+                    {getToggleStatusText()}
                 </span>
                 <input
                   type="checkbox"
