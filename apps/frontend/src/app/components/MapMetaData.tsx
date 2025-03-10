@@ -38,9 +38,16 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [progress, setProgress] = useState(0);
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps } = useMapLayerContext();
+  const { setTimeStamps, isOnline } = useMapLayerContext();
 
   const onLoadDataset = async () => {
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
+      });
+      return;
+    }
+    
     try {
       const result = await MySwal.fire({
         title: t("load_dataset"),

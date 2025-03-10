@@ -10,7 +10,6 @@ import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
 import Footer from './Footer';
-import { verifyInternetConnection } from '../services/api';
 import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
@@ -20,7 +19,6 @@ import { Style, Stroke, Fill } from 'ol/style';
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
-const DEFAULT_ENDPOINT_URL = 'https://hirondelle.crim.ca/stac/collections';
 const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
 const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -33,6 +31,7 @@ const offlineLayer = new TileLayer({
     url: OFFLINE_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 // Default base layers
@@ -41,6 +40,7 @@ const defaultLayer = new TileLayer({
     url: DEFAULT_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 const satelliteLayer = new TileLayer({
@@ -48,6 +48,7 @@ const satelliteLayer = new TileLayer({
     url: SATELLITE_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 const topographicLayer = new TileLayer({
@@ -55,6 +56,7 @@ const topographicLayer = new TileLayer({
     url: TOPOGRAPHIC_LAYER_URL,
     attributions: attributions,
   }),
+  zIndex: -10,
 });
 
 /**
@@ -148,7 +150,7 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, setIsOnline, isOnline } = useMapLayerContext();
+  const { layer, mapRef, isOnline } = useMapLayerContext();
 
   /**
    * Determines which base layer to use based on network connectivity.
@@ -174,23 +176,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
     return selectedLayer;
   };
-
-  /**
-   * Checks internet connectivity by verifying a connection to a remote STAC server.
-   */
-  const setOnlineStatus = async () => {
-    try {
-      const response = await verifyInternetConnection(DEFAULT_ENDPOINT_URL);
-      setIsOnline(response === 'Internet connection established');
-    } catch (error) {
-      setIsOnline(false);
-      console.warn('No internet connection detected.');
-    }
-  };
-
+  
   useEffect(() => {
-    setOnlineStatus();
-
     if (!mapRef.current) {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
@@ -217,7 +204,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       }
       map.addLayer(getLayer());
     }
-  }, [layer]);
+  }, [layer, isOnline]);
 
   useEffect(() => {
     const debouncedBboxChange = debounce((extent: number[]) => {
