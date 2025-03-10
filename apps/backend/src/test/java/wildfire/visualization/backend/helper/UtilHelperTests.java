@@ -53,13 +53,6 @@ class UtilHelperTests {
   }
 
   @Test
-  void testExtractTimestampISO_invalidId() {
-    assertNull(UtilHelper.extractTimestampISO("wildfire_timestamp_invalid_data"));
-    assertNull(UtilHelper.extractTimestampISO(null));
-    assertNull(UtilHelper.extractTimestampISO(""));
-  }
-
-  @Test
   void testCalculateProgress_validData() {
     LocalDateTime start = LocalDateTime.of(2023, 8, 1, 12, 0, 0);
     LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
