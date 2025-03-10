@@ -266,7 +266,8 @@ public class StacRepository {
   }
 
   /**
-   * Method responsible for fetching the metadata from a given collection
+   * Method responsible for fetching the metadata from a given collection,
+   * including item count from `stats:items.count`.
    *
    * @param collectionId Database ID of the given collection
    * @return List object containing the given collection's metadata
@@ -275,19 +276,23 @@ public class StacRepository {
     logger.debug("Querying metadata for: {}", collectionId);
     try {
       String sql = "SELECT (content ->> 'title') AS title," +
-          " (content ->> 'description') AS description," +
-          " datetime AS datetime," +
-          " end_datetime as end_datetime," +
-          " (content -> 'links') as links" +
-          " FROM pgstac.collections WHERE id = ?";
+        " (content ->> 'description') AS description," +
+        " datetime AS datetime," +
+        " end_datetime AS end_datetime," +
+        " (content -> 'links') AS links," +
+        " (content -> 'stats:items' ->> 'count')::int AS item_count " +  // Extract item count
+        " FROM pgstac.collections WHERE id = ?";
+
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
-      logger.debug("Query returned {} results", results.size());
+
+      logger.debug("Query returned {} results with item count", results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
       throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
     }
   }
+
 
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.debug("Fetching items");

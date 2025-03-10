@@ -207,6 +207,29 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
   }
 };
 
+/**
+ * Fetches the progress of item fetching for a given collection.
+ *
+ * @param collectionId The ID of the collection.
+ * @returns A promise resolving to the progress percentage or an error object.
+ */
+export const fetchProgress = async (collectionId: string): Promise<{ collectionId: string; progress: number } | { error: string }> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-progress/${collectionId}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching progress:', error.message);
+    return { error: 'Failed to fetch progress' };
+  }
+};
+
+
 export const fetchTimestamps = async (): Promise<string[]> => {
   try {
     const url = `${BASE_URL}/api/fetch-items-timestamps`;

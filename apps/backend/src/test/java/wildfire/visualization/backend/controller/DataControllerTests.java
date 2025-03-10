@@ -12,6 +12,7 @@ import wildfire.visualization.backend.service.DataService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -343,18 +344,6 @@ class DataControllerTests {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  @Test
-  void fetchItems_Failure() {
-    // Arrange
-    doThrow(new RuntimeException("Error retrieving all items for collection")).when(dataService)
-      .fetchAndSaveItems(anyString());
-
-    // Act
-    ResponseEntity<String> response = dataController.fetchItems("Test");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-  }
 
   @Test
   void getItem_Success() {
@@ -368,6 +357,40 @@ class DataControllerTests {
     // Assert
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(result.getBody()).isEqualTo(mockResult);
+  }
+
+  @Test
+  void getFetchProgress_Success() {
+    // Arrange
+    String collectionId = "testCollection";
+    when(dataService.getProgress(collectionId)).thenReturn(45); // Mock progress
+
+    // Act
+    ResponseEntity<Map<String, Object>> response = dataController.getFetchProgress(collectionId);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).containsEntry("collectionId", collectionId);
+    assertThat(response.getBody()).containsEntry("progress", 45);
+
+    verify(dataService, times(1)).getProgress(collectionId);
+  }
+
+  @Test
+  void getFetchProgress_NoProgress() {
+    // Arrange
+    String collectionId = "testCollection";
+    when(dataService.getProgress(collectionId)).thenReturn(-1); // No progress
+
+    // Act
+    ResponseEntity<Map<String, Object>> response = dataController.getFetchProgress(collectionId);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).containsEntry("collectionId", collectionId);
+    assertThat(response.getBody()).containsEntry("progress", -1);
+
+    verify(dataService, times(1)).getProgress(collectionId);
   }
 
   @Test
@@ -505,17 +528,21 @@ class DataControllerTests {
   }
 
   @Test
-  void fetchItems_Success() {
+  void fetchItems_Success() throws InterruptedException {
     // Arrange
-    doNothing().when(dataService).fetchAndSaveItems("testCollection");
+    String collectionId = "testCollection";
+    doNothing().when(dataService).fetchAndSaveItems(collectionId);
 
     // Act
-    ResponseEntity<String> response = dataController.fetchItems("testCollection");
+    ResponseEntity<String> response = dataController.fetchItems(collectionId);
+
+    // Delay to let async execution register
+    Thread.sleep(100); // Wait for async task (adjust if needed)
 
     // Assert
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Items fetched and saved successfully");
-    verify(dataService).fetchAndSaveItems("testCollection");
+    assertThat(response.getBody()).isEqualTo("Fetching started in the background. Check progress separately.");
+    verify(dataService, times(1)).fetchAndSaveItems(collectionId);
   }
 
   @Test

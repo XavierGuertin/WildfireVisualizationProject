@@ -11,8 +11,10 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Controller class responsible for API Endpoints that interact with fetching, inserting and removing data from pgSTAC database
@@ -137,16 +139,35 @@ public class DataController {
    */
   @GetMapping("/api/fetch-collections-items/{collectionId}")
   public ResponseEntity<String> fetchItems(@PathVariable("collectionId") String collectionId) {
-    logger.info("Received request to fetch items");
+    logger.info("Received request to fetch items asynchronously for collection: {}", collectionId);
     try {
-      dataService.fetchAndSaveItems(collectionId);
-      logger.debug("Successfully fetched items");
-      return ResponseEntity.ok("Items fetched and saved successfully");
+      // Run the fetching task asynchronously
+      CompletableFuture.runAsync(() -> dataService.fetchAndSaveItems(collectionId));
+
+      // Return immediate response to frontend
+      return ResponseEntity.ok("Fetching started in the background. Check progress separately.");
     } catch (Exception e) {
-      logger.error("Error fetching items: {}", e.getMessage(), e);
-      return ResponseEntity.internalServerError().body(null);
+      logger.error("Error starting fetch task: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError().body("Error starting fetch task.");
     }
   }
+
+  /**
+   * Endpoint responsible for fetching items from a given collection
+   *
+   * @param collectionId Database ID for the collection in which to retrieve items from
+   * @return ResponseEntity object containing a list of all the items associated with that collection
+   */
+  @GetMapping("/api/fetch-progress/{collectionId}")
+  public ResponseEntity<Map<String, Object>> getFetchProgress(@PathVariable String collectionId) {
+    int progress = dataService.getProgress(collectionId);
+    Map<String, Object> response = new HashMap<>();
+    response.put("collectionId", collectionId);
+    response.put("progress", progress);
+
+    return ResponseEntity.ok(response);
+  }
+
 
   /**
    * Endpoint responsible for fetching timestamps of items.
