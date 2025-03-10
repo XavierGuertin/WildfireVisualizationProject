@@ -9,7 +9,7 @@ const viewsIcon = '/assets/layers_white.png';
 const satelliteImage = '/assets/Satellite_layer.png';
 const defaultImage = '/assets/Default_layer.png';
 const terrainImage = '/assets/Terrain_layer.png';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Sidebar = () => {
