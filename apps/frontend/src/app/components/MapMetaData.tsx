@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -38,7 +38,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [progress, setProgress] = useState(0);
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps, isOnline } = useMapLayerContext();
+  const { setTimeStamps, isOnline, setSliderValue } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     if(!isOnline){
@@ -64,9 +64,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
       if (result.isConfirmed) {
         setLoading(true); // Show loading overlay
+        localStorage.setItem('sliderValue','0')
+        setSliderValue(0)
         setProgress(0);
         await resetItems();
-        localStorage.setItem("sliderValue", "0");
 
         try {
           // Start fetching items asynchronously

@@ -109,6 +109,7 @@ describe('MapMetaData', () => {
       dataItems: [],
       setTimeStamps: jest.fn(),
       isOnline: true,
+      setSliderValue: jest.fn(),
     });
 
     const { getByTestId } = render(

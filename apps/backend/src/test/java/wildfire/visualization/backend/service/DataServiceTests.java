@@ -781,49 +781,26 @@ class DataServiceTests {
     // Verify that it attempted to fetch config before failing
     verify(configController, times(1)).getConfig();
   }
-  @Test
-  void resetView_Default_Success() {
-    // Arrange
-    doNothing().when(stacRepository).resetDatalayerView();
-    when(stacRepository.checkDatalayerView()).thenReturn(false);
-
-    // Act
-    dataService.resetView();
-
-    // Assert
-    verify(stacRepository, atLeastOnce()).resetDatalayerView();
-    verify(stacRepository, atLeastOnce()).checkDatalayerView();
-  }
 
   @Test
-  void resetView_SleepMillisAdjusted_Failure() {
-    // Arrange
-    doNothing().when(stacRepository).resetDatalayerView();
-      when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing failure
+    void resetView_Success() {
+        // Act
+        dataService.resetView();
 
-    // Act & Assert
-    assertThatThrownBy(() -> dataService.resetView(0))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("View could not be reset");
+        // Assert
+        verify(stacRepository, times(1)).resetDatalayerView();
+    }
 
-    verify(stacRepository, atLeastOnce()).resetDatalayerView();
-    verify(stacRepository, atLeastOnce()).checkDatalayerView();
-  }
+    @Test
+    void resetView_ShouldLogError_WhenExceptionThrown() {
+        // Arrange
+        doThrow(new RuntimeException("Test exception")).when(stacRepository).resetDatalayerView();
 
-  @Test
-  void resetView_ShouldHandleInterruptedException() {
-    // Arrange
-    doNothing().when(stacRepository).resetDatalayerView();
-    when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing loop
+        // Act & Assert
+        assertThatThrownBy(() -> dataService.resetView())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Failed to reset Datalayer view: Test exception");
 
-    // Act & Assert
-    assertThatThrownBy(() -> {
-        Thread.currentThread().interrupt(); // Simulate interruption
-        dataService.resetView(0);
-    }).isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("View could not be reset");
-
-    verify(stacRepository, atLeastOnce()).resetDatalayerView();
-    verify(stacRepository, atLeastOnce()).checkDatalayerView();
-  }
+        verify(stacRepository, times(1)).resetDatalayerView();
+    }
 }
