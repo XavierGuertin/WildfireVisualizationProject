@@ -101,7 +101,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when the refresh key or filter changes.
    */
   useEffect(() => {
-    let selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
     if(selectedDatasetId !== null){
       setSelectedDataset(selectedDatasetId)
     }
@@ -153,8 +153,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleLocalStorageOnDatasetClick = async (id: string) => {
-    let selectedId = localStorage.getItem('selectedDatasetId')
-    if(selectedId === null || selectedId !== id){
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId === null || selectedDatasetId !== id){
       await insertDatalayerView(id);
       localStorage.setItem('selectedDatasetId',id)
       setSelectedDataset(id);
