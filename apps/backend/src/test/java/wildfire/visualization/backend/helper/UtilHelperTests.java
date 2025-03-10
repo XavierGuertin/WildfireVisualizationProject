@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-class UtilHelperTest {
+class UtilHelperTests {
 
   private Map<String, Object> responseWithNextLink;
   private Map<String, Object> responseWithoutNextLink;
@@ -16,17 +17,14 @@ class UtilHelperTest {
 
   @BeforeEach
   void setUp() {
-    // Mock API response with "next" link
     responseWithNextLink = new HashMap<>();
     List<Map<String, Object>> links = new ArrayList<>();
     links.add(Map.of("rel", "next", "href", "https://example.com/next?page=2"));
     responseWithNextLink.put("links", links);
 
-    // Mock API response without "next" link
     responseWithoutNextLink = new HashMap<>();
     responseWithoutNextLink.put("links", Collections.emptyList());
 
-    // Mock DB metadata response
     sampleDbMetadata = new ArrayList<>();
     sampleDbMetadata.add(Map.of(
       "datetime", "2023-08-01T12:00:00Z",
@@ -36,31 +34,29 @@ class UtilHelperTest {
 
   @Test
   void testExtractNextUrl_whenNextExists() {
-    String nextUrl = UtilHelper.extractNextUrl(responseWithNextLink);
-    assertNotNull(nextUrl);
-    assertEquals("https://example.com/next?page=2", nextUrl);
+    assertEquals("https://example.com/next?page=2", UtilHelper.extractNextUrl(responseWithNextLink));
   }
 
   @Test
   void testExtractNextUrl_whenNoNextExists() {
-    String nextUrl = UtilHelper.extractNextUrl(responseWithoutNextLink);
-    assertNull(nextUrl);
+    assertNull(UtilHelper.extractNextUrl(responseWithoutNextLink));
+  }
+
+  @Test
+  void testExtractNextUrl_whenLinksIsNull() {
+    assertNull(UtilHelper.extractNextUrl(Collections.emptyMap()));
   }
 
   @Test
   void testExtractTimestampISO_validId() {
-    String id = "wildfire_timestamp_2023_08_20_12_00_00";
-    String expectedTimestamp = "2023-08-20T12:00:00Z";
-
-    String extractedTimestamp = UtilHelper.extractTimestampISO(id);
-    assertEquals(expectedTimestamp, extractedTimestamp);
+    assertEquals("2023-08-20T12:00:00Z", UtilHelper.extractTimestampISO("wildfire_timestamp_2023_08_20_12_00_00"));
   }
 
   @Test
   void testExtractTimestampISO_invalidId() {
-    String invalidId = "wildfire_timestamp_invalid_data";
-    String extractedTimestamp = UtilHelper.extractTimestampISO(invalidId);
-    assertNull(extractedTimestamp);
+    assertNull(UtilHelper.extractTimestampISO("wildfire_timestamp_invalid_data"));
+    assertNull(UtilHelper.extractTimestampISO(null));
+    assertNull(UtilHelper.extractTimestampISO(""));
   }
 
   @Test
@@ -69,67 +65,85 @@ class UtilHelperTest {
     LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
     LocalDateTime current = LocalDateTime.of(2023, 8, 15, 12, 0, 0);
 
-    double progress = UtilHelper.calculateProgress(current, start, end);
-    // expect a +/- 10% margin of error
-    assertEquals(50.0, progress, 10.0);
+    assertEquals(50.0, UtilHelper.calculateProgress(current, start, end), 10.0);
   }
 
   @Test
   void testCalculateProgress_nullCurrent() {
     LocalDateTime start = LocalDateTime.of(2023, 8, 1, 12, 0, 0);
     LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
+    assertEquals(0.0, UtilHelper.calculateProgress(null, start, end));
+  }
 
-    double progress = UtilHelper.calculateProgress(null, start, end);
-    assertEquals(0.0, progress);
+  @Test
+  void testCalculateProgress_outOfBounds() {
+    LocalDateTime start = LocalDateTime.of(2023, 8, 1, 12, 0, 0);
+    LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
+    LocalDateTime beforeStart = LocalDateTime.of(2023, 7, 31, 12, 0, 0);
+    LocalDateTime afterEnd = LocalDateTime.of(2023, 9, 1, 12, 0, 0);
+
+    assertTrue(UtilHelper.calculateProgress(beforeStart, start, end) < 0);
+    assertTrue(UtilHelper.calculateProgress(afterEnd, start, end) > 100);
   }
 
   @Test
   void testComputeProgressFromItems_validItems() {
-    List<Map<String, Object>> items = new ArrayList<>();
-    items.add(Map.of("id", "wildfire_timestamp_2023_08_15_12_00_00"));
+    List<Map<String, Object>> items = List.of(Map.of("id", "wildfire_timestamp_2023_08_15_12_00_00"));
 
     LocalDateTime start = LocalDateTime.of(2023, 8, 1, 12, 0, 0);
     LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
 
-    double progress = UtilHelper.computeProgressFromItems(items, start, end);
-    assertEquals(50.0, progress, 10);
+    assertEquals(50.0, UtilHelper.computeProgressFromItems(items, start, end), 10);
   }
 
   @Test
   void testComputeProgressFromItems_emptyList() {
-    List<Map<String, Object>> items = new ArrayList<>();
-    LocalDateTime start = LocalDateTime.of(2023, 8, 1, 12, 0, 0);
-    LocalDateTime end = LocalDateTime.of(2023, 8, 31, 12, 0, 0);
-
-    double progress = UtilHelper.computeProgressFromItems(items, start, end);
-    assertEquals(0.0, progress);
+    assertEquals(0.0, UtilHelper.computeProgressFromItems(Collections.emptyList(),
+      LocalDateTime.of(2023, 8, 1, 12, 0, 0),
+      LocalDateTime.of(2023, 8, 31, 12, 0, 0)));
   }
 
   @Test
-  void testExtractTemporalStartFromDB_validData() {
-    LocalDateTime extractedStart = UtilHelper.extractTemporalStartFromDB(sampleDbMetadata);
-    assertNotNull(extractedStart);
-    assertEquals("2023-08-01T12:00:00", extractedStart.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  void testExtractTemporalStartFromDB_validTimestamp() {
+    List<Map<String, Object>> metadata = List.of(Map.of("datetime", Timestamp.valueOf("2023-08-01 12:00:00")));
+    assertEquals("2023-08-01T12:00:00", UtilHelper.extractTemporalStartFromDB(metadata).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  }
+
+  @Test
+  void testExtractTemporalStartFromDB_validString() {
+    assertEquals("2023-08-01T12:00:00", UtilHelper.extractTemporalStartFromDB(sampleDbMetadata).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  }
+
+  @Test
+  void testExtractTemporalStartFromDB_unexpectedType() {
+    List<Map<String, Object>> metadata = List.of(Map.of("datetime", 12345));
+    assertNull(UtilHelper.extractTemporalStartFromDB(metadata));
   }
 
   @Test
   void testExtractTemporalStartFromDB_emptyList() {
-    List<Map<String, Object>> emptyMetadata = new ArrayList<>();
-    LocalDateTime extractedStart = UtilHelper.extractTemporalStartFromDB(emptyMetadata);
-    assertNull(extractedStart);
+    assertNull(UtilHelper.extractTemporalStartFromDB(Collections.emptyList()));
   }
 
   @Test
-  void testExtractTemporalEndFromDB_validData() {
-    LocalDateTime extractedEnd = UtilHelper.extractTemporalEndFromDB(sampleDbMetadata);
-    assertNotNull(extractedEnd);
-    assertEquals("2023-08-31T12:00:00", extractedEnd.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  void testExtractTemporalEndFromDB_validTimestamp() {
+    List<Map<String, Object>> metadata = List.of(Map.of("end_datetime", Timestamp.valueOf("2023-08-31 12:00:00")));
+    assertEquals("2023-08-31T12:00:00", UtilHelper.extractTemporalEndFromDB(metadata).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  }
+
+  @Test
+  void testExtractTemporalEndFromDB_validString() {
+    assertEquals("2023-08-31T12:00:00", UtilHelper.extractTemporalEndFromDB(sampleDbMetadata).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+  }
+
+  @Test
+  void testExtractTemporalEndFromDB_unexpectedType() {
+    List<Map<String, Object>> metadata = List.of(Map.of("end_datetime", 12345));
+    assertNull(UtilHelper.extractTemporalEndFromDB(metadata));
   }
 
   @Test
   void testExtractTemporalEndFromDB_emptyList() {
-    List<Map<String, Object>> emptyMetadata = new ArrayList<>();
-    LocalDateTime extractedEnd = UtilHelper.extractTemporalEndFromDB(emptyMetadata);
-    assertNull(extractedEnd);
+    assertNull(UtilHelper.extractTemporalEndFromDB(Collections.emptyList()));
   }
 }
