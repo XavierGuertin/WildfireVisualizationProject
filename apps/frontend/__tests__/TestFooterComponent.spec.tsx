@@ -167,11 +167,11 @@ describe('Footer component', () => {
 
     render(<MapProvider><Footer /></MapProvider>);
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved', { toastId: 'speed-success' }));
   });
   it('should display toast message when default speed is used (no speed in localStorage)', async () => {
     render(<MapProvider><Footer /></MapProvider>);
 
-    await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved'));
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith('default_speed_retrieved', { toastId: 'speed-default' }));
   });
 });
