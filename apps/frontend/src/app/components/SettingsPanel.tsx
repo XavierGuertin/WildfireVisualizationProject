@@ -11,15 +11,19 @@ import {
 import { PiArrowClockwiseFill, PiGlobeXLight, PiGlobeLight } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
-  resetCollections, resetItems,
+  resetCollections, 
+  resetDatalayerView, 
+  resetItems,
   verifyIfEndpointHasCollections
 } from '../services/api';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
+import { changeLayer } from './MapView';
+import { Map } from 'ol';
 
 const MySwal = withReactContent(Swal);
 
@@ -32,7 +36,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue, mapRef } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -237,12 +241,16 @@ const SettingsPanel: React.FC<{
     try {
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
+      localStorage.setItem('selectedDatasetId','')
       localStorage.setItem('sliderValue', '0');
       setSliderValue(0);
 
       setLayer('default');
       await resetCollections();
       await resetItems();
+      await resetDatalayerView();
+      const map = mapRef.current as Map;
+      changeLayer(map, true)
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
@@ -328,7 +336,6 @@ const SettingsPanel: React.FC<{
 
   return (
     <div className="button-container" ref={dropdownRef}>
-      <ToastContainer />
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}

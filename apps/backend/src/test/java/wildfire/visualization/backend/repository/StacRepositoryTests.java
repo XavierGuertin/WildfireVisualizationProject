@@ -269,7 +269,6 @@ class StacRepositoryTests {
     stacRepository.deleteAllCollections();
 
     // Assert
-    verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.datalayer");
     verify(jdbcTemplate, times(1)).update("DELETE FROM pgstac.collections");
   }
 

@@ -109,6 +109,7 @@ describe('MapMetaData', () => {
       dataItems: [],
       setTimeStamps: jest.fn(),
       isOnline: true,
+      setSliderValue: jest.fn(),
     });
 
     const { getByTestId } = render(
@@ -132,6 +133,6 @@ describe('MapMetaData', () => {
 
     // Ensure progress reached 100%
     expect(fetchProgress).toHaveBeenCalled();
-    expect(toast.success).toHaveBeenCalledWith("items_fetch_success");
+    expect(toast.success).toHaveBeenCalledWith("items_fetch_success", {toastId: 'items-success',});
   });
 });
