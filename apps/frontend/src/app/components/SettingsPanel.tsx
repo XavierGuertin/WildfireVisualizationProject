@@ -225,6 +225,7 @@ const SettingsPanel: React.FC<{
     });
 
     setDropdownState({ activeButton: null, isOpen: false });
+    localStorage.setItem('selectedDatasetId','')
   };
 
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
