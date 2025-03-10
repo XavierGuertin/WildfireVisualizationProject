@@ -328,7 +328,6 @@ const SettingsPanel: React.FC<{
 
   return (
     <div className="button-container" ref={dropdownRef}>
-      <ToastContainer />
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}

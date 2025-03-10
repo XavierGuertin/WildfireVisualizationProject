@@ -37,41 +37,38 @@ const Sidebar = () => {
   }, [isOnline]);
 
   return (
-    <div>
-      <ToastContainer />
-      <div className={`sidebar-component ${isCollapsed ? 'collapsed' : 'expanded'}`}>
-        {isCollapsed ? (
-          <button className='sidebar-toggle' onClick={toggleCollapse}>
-            <img className='icon' src={viewsIcon} alt={t('views')} />
-            <span style={{ marginLeft: '5px', color: 'white' }}>{t('views')}</span>
-          </button>
-        ) : (
-          <>
-            <div className='sidebar-toggle' onClick={toggleCollapse}>
-              <img className='icon' src={viewsIcon} alt={t('collapse')} />
-            </div>
+    <div className={`sidebar-component ${isCollapsed ? 'collapsed' : 'expanded'}`}>
+      {isCollapsed ? (
+        <button className='sidebar-toggle' onClick={toggleCollapse}>
+          <img className='icon' src={viewsIcon} alt={t('views')} />
+          <span style={{ marginLeft: '5px', color: 'white' }}>{t('views')}</span>
+        </button>
+      ) : (
+        <>
+          <div className='sidebar-toggle' onClick={toggleCollapse}>
+            <img className='icon' src={viewsIcon} alt={t('collapse')} />
+          </div>
 
-            <img
-              className='layer-image'
-              src={defaultImage}
-              alt={t('default_layer')}
-              onClick={() => handleLayerChange('default')}
-            />
-            <img
-              className='layer-image'
-              src={terrainImage}
-              alt={t('topographical_layer')}
-              onClick={() => handleLayerChange('topographical')}
-            />
-            <img
-              className='layer-image'
-              src={satelliteImage}
-              alt={t('satellite_layer')}
-              onClick={() => handleLayerChange('satellite')}
-            />
-          </>
-        )}
-      </div>
+          <img
+            className='layer-image'
+            src={defaultImage}
+            alt={t('default_layer')}
+            onClick={() => handleLayerChange('default')}
+          />
+          <img
+            className='layer-image'
+            src={terrainImage}
+            alt={t('topographical_layer')}
+            onClick={() => handleLayerChange('topographical')}
+          />
+          <img
+            className='layer-image'
+            src={satelliteImage}
+            alt={t('satellite_layer')}
+            onClick={() => handleLayerChange('satellite')}
+          />
+        </>
+      )}
     </div>
   );
 };

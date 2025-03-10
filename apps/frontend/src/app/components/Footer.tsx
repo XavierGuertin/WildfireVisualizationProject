@@ -25,9 +25,9 @@ const Footer = () => {
         const savedSpeed = localStorage.getItem('playbackSpeed');
         if (savedSpeed) {
           setSpeed(parseFloat(savedSpeed));
-          toast.success(t('speed_retrieved'));
+          toast.success(t('speed_retrieved'), {toastId: 'speed-success'});
         } else {
-          toast.info(t('default_speed_retrieved'));
+          toast.info(t('default_speed_retrieved'), {toastId: 'speed-default'});
         }
         setSpeedInitialized(true);
         intitializeTimestampIfItemsPresent();
@@ -51,7 +51,7 @@ const Footer = () => {
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
-    toast.success(t('speed_changed') + newSpeed + 'x');
+    toast.success(t('speed_changed') + newSpeed + 'x', {toastId: 'speed-changed'});
   };
 
   useEffect(() => {
