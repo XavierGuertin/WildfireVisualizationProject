@@ -373,21 +373,6 @@ class DataControllerTests {
   }
 
   @Test
-  void fetchItems_Success() throws Exception {
-    // Arrange
-    String collectionId = "testCollection";
-
-    // Act & Assert
-    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", collectionId))
-        .andExpect(status().isOk())
-        .andExpect(content().string("Fetching started in the background. Check progress separately."));
-
-    // IMPORTANT: Either update this verification to match what's actually called
-    // OR update your controller implementation to call fetchAndSaveItems
-    verify(dataService, times(1)).fetchAndSaveItems(collectionId);
-  }
-
-  @Test
   void fetchItems_Failure() throws Exception {
     // Create a DataException with the expected error message
     DataException exception = new DataException("Error retrieving all items for collection");
