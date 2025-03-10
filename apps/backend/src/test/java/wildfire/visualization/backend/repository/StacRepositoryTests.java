@@ -799,4 +799,28 @@ class StacRepositoryTests {
       .isInstanceOf(RuntimeException.class)
       .hasMessageContaining("Error querying collection");
   }
+
+  @Test
+  void resetDatalayerView_Success() {
+    // Arrange
+    doNothing().when(jdbcTemplate).execute(anyString());
+
+    // Act
+    stacRepository.resetDatalayerView();
+
+    // Assert
+    verify(jdbcTemplate, times(1)).execute("DROP VIEW IF EXISTS Datalayer");
+  }
+
+  @Test
+  void resetDatalayerView_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {
+    }).when(jdbcTemplate).execute(anyString());
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.resetDatalayerView())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error resetting Datalayer view");
+  }
 }
