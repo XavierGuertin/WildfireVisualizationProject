@@ -14,7 +14,7 @@ import {
   resetCollections, resetItems,
   verifyIfEndpointHasCollections
 } from '../services/api';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -328,7 +328,6 @@ const SettingsPanel: React.FC<{
 
   return (
     <div className="button-container" ref={dropdownRef}>
-      <ToastContainer />
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
