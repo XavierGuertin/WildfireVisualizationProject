@@ -2,6 +2,7 @@ package wildfire.visualization.backend.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +15,10 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Controller class responsible for API Endpoints that interact with fetching,
@@ -129,10 +132,34 @@ public class DataController {
    */
   @GetMapping("/api/fetch-collections-items/{collectionId}")
   public ResponseEntity<String> fetchItems(@PathVariable("collectionId") String collectionId) {
-    logger.info("Received request to fetch items");
-    dataService.fetchAndSaveItems(collectionId);
-    logger.debug("Successfully fetched items");
-    return ResponseEntity.ok("Items fetched and saved successfully");
+    logger.info("Received request to fetch items asynchronously for collection: {}", collectionId);
+    try {
+      // Run the fetching task asynchronously
+      CompletableFuture.runAsync(() -> dataService.fetchAndSaveItems(collectionId));
+      // Return immediate response to frontend
+      return ResponseEntity.ok("Fetching started in the background. Check progress separately.");
+    } catch (DataException e) {
+      logger.error("Error fetching items for collection: {}", collectionId, e);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+  }
+
+  /**
+   * Endpoint responsible for fetching items from a given collection
+   *
+   * @param collectionId Database ID for the collection in which to retrieve items
+   *                     from
+   * @return ResponseEntity object containing a list of all the items associated
+   *         with that collection
+   */
+  @GetMapping("/api/fetch-progress/{collectionId}")
+  public ResponseEntity<Map<String, Object>> getFetchProgress(@PathVariable String collectionId) {
+    int progress = dataService.getProgress(collectionId);
+    Map<String, Object> response = new HashMap<>();
+    response.put("collectionId", collectionId);
+    response.put("progress", progress);
+
+    return ResponseEntity.ok(response);
   }
 
   /**
@@ -292,7 +319,7 @@ public class DataController {
   }
 
   /**
-   * Endpoint responsible for inserting a view using a given collection
+   * Endpoint responsible for inserting a view using a given collectionId
    *
    * @param collectionId Database ID of given collection
    * @return ResponseEntity containing a String object indicating if the insertion
@@ -304,6 +331,20 @@ public class DataController {
     dataService.insertView(collectionId);
     logger.info("Successfully processed custom collection");
     return ResponseEntity.ok("Successfully inserted view");
+  }
+
+  /**
+   * Endpoint responsible for resetting the Datalayer view
+   *
+   * @return ResponseEntity containing a String object indicating if the reset was
+   *         successful
+   */
+  @GetMapping("/api/reset-view")
+  public ResponseEntity<String> resetView() {
+    logger.info("Received request to /api/reset-view");
+    dataService.resetView();
+    logger.info("Successfully processed resetting view");
+    return ResponseEntity.ok("View reset successfully");
   }
 
   /**

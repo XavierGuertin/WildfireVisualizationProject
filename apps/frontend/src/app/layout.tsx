@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
@@ -11,6 +11,7 @@ import i18n from './resources/i18n';
 import './layout.css';
 import LoadingModule from './components/LoadingModule';
 import { MapProvider } from './context/MapContext';
+import { fetchMetaData } from './services/api';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -36,8 +37,45 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
-    setSelectedDataset(dataset); // Just update the selected dataset
-    setMetadataVisible(true); // Show metadata container
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId !== dataset.id){
+      setSelectedDataset(dataset); // Just update the selected dataset
+      setMetadataVisible(true); // Show metadata container
+    } else {
+      setMetadataVisible(false)
+    }
+  };
+
+  // Handles loading the metadata if dataset is already selected on load
+  useEffect(() => {
+    const onLoadDataset = async () => {
+      const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+      if(selectedDatasetId !== null && selectedDatasetId !== ''){
+        const dataset = await fetchMetaData(selectedDatasetId)
+        setSelectedDataset(dataset)
+        setMetadataVisible(true)
+      }
+    }
+
+    onLoadDataset();
+  }, [])
+
+  // Handle dataset loading from MapMetaData
+  const handleLoadDataset = async () => {
+    if (!selectedDataset) return;
+
+    try {
+      setLoading(true); // Show loading overlay
+      showLoadingBar(); // Start progress simulation
+
+      // Simulate a delay for loading (mocked)
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
+      console.log('Dataset loaded successfully (mock)');
+    } catch (error) {
+      console.error('Error loading dataset:', error);
+    } finally {
+      setLoading(false); // Ensure loading overlay is hidden
+    }
   };
 
   const refreshDatasets = () => {

@@ -8,7 +8,7 @@ import {
   IoSettingsOutline,
   IoTrashOutline,
 } from 'react-icons/io5';
-import { PiArrowClockwiseFill, PiGlobeXLight, PiX } from 'react-icons/pi';
+import { PiArrowClockwiseFill, PiGlobeXLight, PiGlobeLight } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
   resetCollections, resetItems,
@@ -32,7 +32,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline, setSliderValue } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -72,6 +72,10 @@ const SettingsPanel: React.FC<{
         toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
+      
+      if(config.onlineMode != undefined){
+        setIsOnline(config.onlineMode);
+      }
 
       // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
       if (
@@ -180,6 +184,13 @@ const SettingsPanel: React.FC<{
   };
 
   const handleFactoryReset = async () => {
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
+      });
+      return;
+    }
+    
     MySwal.fire({
       title: t('factory_reset'),
       text: t('confirm_factory_reset_data_from_endpoint'),
@@ -211,6 +222,14 @@ const SettingsPanel: React.FC<{
       }
     });
 
+    setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const handleSelectOnlineMode = async (onlineMode: boolean) => {
+    setIsOnline(onlineMode);
+    const config = await getConfig();
+    config.onlineMode = onlineMode;
+    await saveConfig(config);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -373,6 +392,42 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
+            className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('internet')}
+            aria-expanded={dropdownState.activeButton === 'internet'}
+            aria-label="internet"
+            data-testid="internet-dropdown-button"
+          >
+            {isOnline ? (
+              <PiGlobeLight size={32} data-testid="online-icon"/>
+              ) : (
+              <PiGlobeXLight size={32} data-testid="offline-icon"/>
+              )}
+          </button>
+        {dropdownState.activeButton === 'internet' && (
+        <div className="dropdown-content show">
+          <button onClick={() => handleSelectOnlineMode(true)}>
+              {isOnline ? (
+                <IoCheckmark size={24} fill="black" />
+              ) : (
+                <PiArrowClockwiseFill size={24} fill="none" />
+              )}
+              {t('online')}
+            </button>
+            <button onClick={() => handleSelectOnlineMode(false)}>
+              {!isOnline ? (
+                <IoCheckmark size={24} fill="black" />
+              ) : (
+                <PiArrowClockwiseFill size={24} fill="none" />
+              )}
+              {t('offline')}
+            </button>
+        </div>
+        )}
+      </div>
+
+      <div className="dropdown-button">
+        <button
           className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
@@ -398,29 +453,6 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
-
-      {!isOnline &&
-      <div className="dropdown-button">
-        <button
-            className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('internet')}
-            aria-expanded={dropdownState.activeButton === 'internet'}
-            aria-label="internet"
-            data-testid="internet-dropdown-button"
-          >
-            <PiGlobeXLight size={32} />
-          </button>
-        {dropdownState.activeButton === 'internet' && (
-        <div className="dropdown-content show">
-          <div className="settings-information">
-            <label data-testid="internet-button" style={{ color: '#dc143c' }}>
-              <PiX size={24} fill="red" />
-              {t('no_internet_access')}
-            </label>
-            </div>
-        </div>
-        )}
-      </div>}
     </div>
   );
 };

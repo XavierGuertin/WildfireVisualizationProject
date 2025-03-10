@@ -296,7 +296,8 @@ public class StacRepository {
   }
 
   /**
-   * Method responsible for fetching the metadata from a given collection
+   * Method responsible for fetching the metadata from a given collection,
+   * including item count from `stats:items.count`.
    *
    * @param collectionId Database ID of the given collection
    * @return List object containing the given collection's metadata
@@ -308,11 +309,14 @@ public class StacRepository {
       String sql = "SELECT (content ->> 'title') AS title," +
           " (content ->> 'description') AS description," +
           " datetime AS datetime," +
-          " end_datetime as end_datetime," +
-          " (content -> 'links') as links" +
+          " end_datetime AS end_datetime," +
+          " (content -> 'links') AS links," +
+          " (content -> 'stats:items' ->> 'count')::int AS item_count " + // Extract item count
           " FROM pgstac.collections WHERE id = ?";
+
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
-      logger.debug("Query returned {} results", results.size());
+
+      logger.debug("Query returned {} results with item count", results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error querying collection metadata: {}", e.getMessage(), e);
@@ -327,6 +331,7 @@ public class StacRepository {
    * @return List of maps containing item data
    * @throws RepositoryException if a database error occurs
    */
+
   public List<Map<String, Object>> getAllItems(String collectionId) {
     logger.debug("Fetching items for collection: {}", collectionId);
     try {
@@ -418,6 +423,23 @@ public class StacRepository {
     } catch (DataAccessException e) {
       logger.error("Error inserting view: {}", e.getMessage(), e);
       throw new RepositoryException("Error creating datalayer view for collection: " + collectionId, e);
+    }
+  }
+
+  /**
+   * Method responsible for resetting the Datalayer View
+   *
+   * @param collectionId Database ID of the given collection
+   */
+  public void resetDatalayerView() {
+    try {
+      logger.info("Attempting to reset Datalayer view");
+      String sql = "DROP VIEW IF EXISTS Datalayer";
+      jdbcTemplate.execute(sql);
+      logger.info("Successfully reset the Datalayer view");
+    } catch (DataAccessException e) {
+      logger.error("Error resetting Datalayer view: {}", e.getMessage(), e);
+      throw new RepositoryException("Error resetting Datalayer view: " + e.getMessage(), e);
     }
   }
 

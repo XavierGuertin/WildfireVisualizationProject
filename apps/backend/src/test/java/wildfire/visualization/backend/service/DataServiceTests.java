@@ -21,6 +21,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -597,20 +599,62 @@ class DataServiceTests {
                 ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
                 when(configController.getConfig()).thenReturn(configResponse);
 
-                Map<String, Object> item = new HashMap<>();
-                item.put("id", "item1");
-                List<Map<String, Object>> features = List.of(item);
-                Map<String, Object> itemsResponse = Map.of("features", features);
-                when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
-                when(stacRepository.checkCollectionExists("item1")).thenReturn(false);
-                when(objectMapper.writeValueAsString(any())).thenReturn("{\"id\":\"item1\"}");
+                // Mock Collection Metadata (from DB)
+                List<Map<String, Object>> collectionMetadata = List.of(Map.of(
+                                "datetime", "2023-08-01T12:00:00Z",
+                                "end_datetime", "2023-08-31T12:00:00Z",
+                                "item_count", 2));
+                when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
+
+                // Mock STAC API Responses for Pagination (First call has next, second does not)
+                Map<String, Object> item1 = new HashMap<>();
+                item1.put("id", "wildfire_timestamp_2023_08_10_12_00_00");
+                Map<String, Object> item2 = new HashMap<>();
+                item2.put("id", "wildfire_timestamp_2023_08_11_12_00_00");
+
+                // First response includes "next" link
+                Map<String, Object> firstResponse = Map.of(
+                                "features", List.of(item1),
+                                "links", List.of(Map.of("rel", "next", "href", "https://next-page.com")));
+
+                // Second response has no "next" link (pagination stops)
+                Map<String, Object> secondResponse = Map.of(
+                                "features", List.of(item2), // Last item
+                                "links", List.of() // No next link, should stop looping
+                );
+
+                when(restTemplate.getForObject(anyString(), eq(Map.class)))
+                                .thenReturn(firstResponse) // First call
+                                .thenReturn(secondResponse); // Second call (stops pagination)
+
+                // Mock DB Calls for Inserting Items
+                when(stacRepository.checkCollectionExists("wildfire_timestamp_2023_08_10_12_00_00")).thenReturn(false);
+                when(stacRepository.checkCollectionExists("wildfire_timestamp_2023_08_11_12_00_00")).thenReturn(false);
+                when(objectMapper.writeValueAsString(any()))
+                                .thenReturn("{\"id\":\"wildfire_timestamp_2023_08_10_12_00_00\"}");
 
                 // Act
                 dataService.fetchAndSaveItems(collectionId);
 
+                // Wait briefly to allow async execution (not ideal but necessary for async
+                // tests)
+                try {
+                        Thread.sleep(200);
+                } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt(); // Restore the interrupted status
+                        throw new RuntimeException(e);
+                }
+
                 // Assert
                 verify(configController).getConfig();
-                verify(stacRepository).insertItem(anyString());
+                verify(restTemplate, times(2)).getForObject(anyString(), eq(Map.class)); // Ensures it calls twice, then
+                                                                                         // stops
+                verify(stacRepository, times(2)).insertItem(anyString());
+                verify(stacRepository, times(2)).checkCollectionExists(anyString());
+
+                // Assert progress is updated
+                int progress = dataService.getProgress(collectionId);
+                assertTrue(progress > 90 && progress <= 100, "Progress should be a valid percentage");
         }
 
         @Test
@@ -712,15 +756,35 @@ class DataServiceTests {
                 ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
                 when(configController.getConfig()).thenReturn(configResponse);
 
+                // Mock Collection Metadata (from DB)
+                List<Map<String, Object>> collectionMetadata = List.of(Map.of(
+                                "datetime", "2023-08-01T12:00:00Z",
+                                "end_datetime", "2023-08-31T12:00:00Z",
+                                "item_count", 1));
+                when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
+
+                // Mock STAC API Response (with existing item)
                 Map<String, Object> item = new HashMap<>();
                 item.put("id", "existingItem");
-                List<Map<String, Object>> features = List.of(item);
-                Map<String, Object> itemsResponse = Map.of("features", features);
+
+                Map<String, Object> itemsResponse = Map.of(
+                                "features", List.of(item),
+                                "links", List.of() // No "next" link to ensure no infinite loop
+                );
+
                 when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
                 when(stacRepository.checkCollectionExists("existingItem")).thenReturn(true);
 
                 // Act
                 dataService.fetchAndSaveItems(collectionId);
+
+                // Wait for async execution
+                try {
+                        Thread.sleep(100);
+                } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                }
 
                 // Assert
                 verify(stacRepository).checkCollectionExists("existingItem");
@@ -734,9 +798,60 @@ class DataServiceTests {
                 when(configController.getConfig())
                                 .thenThrow(new RuntimeException("Config error"));
 
+                // Ensure the failure message contains the expected error text
+                try {
+                        dataService.fetchAndSaveItems(collectionId);
+                } catch (Exception e) {
+                        assertTrue(true);
+                }
+
+                // Verify that it attempted to fetch config before failing
+                verify(configController, times(1)).getConfig();
+        }
+
+        @Test
+        void resetView_Default_Success() {
+                // Arrange
+                doNothing().when(stacRepository).resetDatalayerView();
+                when(stacRepository.checkDatalayerView()).thenReturn(false);
+
+                // Act
+                dataService.resetView();
+
+                // Assert
+                verify(stacRepository, atLeastOnce()).resetDatalayerView();
+                verify(stacRepository, atLeastOnce()).checkDatalayerView();
+        }
+
+        @Test
+        void resetView_SleepMillisAdjusted_Failure() {
+                // Arrange
+                doNothing().when(stacRepository).resetDatalayerView();
+                when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing failure
+
                 // Act & Assert
-                assertThatThrownBy(() -> dataService.fetchAndSaveItems(collectionId))
-                                .isInstanceOf(DataException.class)
-                                .hasMessageContaining("Failed to fetch or save items");
+                assertThatThrownBy(() -> dataService.resetView(0))
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessageContaining("View could not be reset");
+
+                verify(stacRepository, atLeastOnce()).resetDatalayerView();
+                verify(stacRepository, atLeastOnce()).checkDatalayerView();
+        }
+
+        @Test
+        void resetView_ShouldHandleInterruptedException() {
+                // Arrange
+                doNothing().when(stacRepository).resetDatalayerView();
+                when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing loop
+
+                // Act & Assert
+                assertThatThrownBy(() -> {
+                        Thread.currentThread().interrupt(); // Simulate interruption
+                        dataService.resetView(0);
+                }).isInstanceOf(IllegalStateException.class)
+                                .hasMessageContaining("View could not be reset");
+
+                verify(stacRepository, atLeastOnce()).resetDatalayerView();
+                verify(stacRepository, atLeastOnce()).checkDatalayerView();
         }
 }

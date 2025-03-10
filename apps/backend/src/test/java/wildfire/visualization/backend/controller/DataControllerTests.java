@@ -5,19 +5,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.request.WebRequest;
+
 import wildfire.visualization.backend.exception.DataException;
 import wildfire.visualization.backend.exception.GlobalExceptionHandler;
+import wildfire.visualization.backend.model.ApiError;
 import wildfire.visualization.backend.service.DataService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -366,28 +374,34 @@ class DataControllerTests {
 
   @Test
   void fetchItems_Success() throws Exception {
-    // Act & Assert
-    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", "testCollection"))
-        .andExpect(status().isOk())
-        .andExpect(content().string("Items fetched and saved successfully"));
+    // Arrange
+    String collectionId = "testCollection";
+    doNothing().when(dataService).fetchAndSaveItems(collectionId);
 
-    verify(dataService, times(1)).fetchAndSaveItems("testCollection");
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", collectionId))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Fetching started in the background. Check progress separately."));
+
+    verify(dataService, times(1)).fetchAndSaveItems(collectionId);
   }
 
   @Test
   void fetchItems_Failure() throws Exception {
-    // Arrange
-    doThrow(new DataException("Error retrieving all items for collection"))
-        .when(dataService).fetchAndSaveItems("testCollection");
+    // Create a DataException with the expected error message
+    DataException exception = new DataException("Error retrieving all items for collection");
 
-    // Act & Assert
-    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", "testCollection"))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.error").value("Data Error"))
-        .andExpect(jsonPath("$.message").value("Error retrieving all items for collection"));
+    WebRequest webRequest = mock(WebRequest.class);
+    when(webRequest.getDescription(anyBoolean())).thenReturn("test request");
 
-    verify(dataService, times(1)).fetchAndSaveItems("testCollection");
+    // Create a response entity that your GlobalExceptionHandler would produce
+    ResponseEntity<ApiError> errorResponse = new GlobalExceptionHandler()
+        .handleDataException(exception, webRequest);
+
+    // Assert the response has the expected status code and body
+    assertThat(errorResponse.getStatusCode().value()).isEqualTo(400);
+    assertThat(errorResponse.getBody().getError()).isEqualTo("Data Error");
+    assertThat(errorResponse.getBody().getMessage()).isEqualTo("Error retrieving all items for collection");
   }
 
   @Test
@@ -407,6 +421,36 @@ class DataControllerTests {
         .andExpect(content().json(objectMapper.writeValueAsString(mockResult)));
 
     verify(dataService, times(1)).getItem(itemId, collectionId);
+  }
+
+  @Test
+  void getFetchProgress_Success() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    when(dataService.getProgress(collectionId)).thenReturn(45); // Mock progress
+
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-progress/{collectionId}", collectionId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.collectionId").value(collectionId))
+        .andExpect(jsonPath("$.progress").value(45));
+
+    verify(dataService, times(1)).getProgress(collectionId);
+  }
+
+  @Test
+  void getFetchProgress_NoProgress() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    when(dataService.getProgress(collectionId)).thenReturn(-1); // No progress
+
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-progress/{collectionId}", collectionId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.collectionId").value(collectionId))
+        .andExpect(jsonPath("$.progress").value(-1));
+
+    verify(dataService, times(1)).getProgress(collectionId);
   }
 
   @Test
@@ -617,6 +661,23 @@ class DataControllerTests {
   }
 
   @Test
+  void verifyInternetConnection_Failure() throws Exception {
+    // Arrange
+    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL))
+        .thenThrow(new DataException("Cannot connect to endpoint"));
+
+    // Act & Assert
+    mockMvc.perform(get("/api/verify-internet-connection")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Cannot connect to endpoint"));
+
+    verify(dataService, times(1)).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+  }
+
+  @Test
   void fetchItemsTimestamps_Success() throws Exception {
     // Arrange
     List<String> mockTimestamps = List.of("2023-01-01T12:00:00Z", "2023-02-01T12:00:00Z");
@@ -645,5 +706,31 @@ class DataControllerTests {
         .andExpect(jsonPath("$.message").value("Error retrieving timestamps"));
 
     verify(dataService, times(1)).fetchItemsTimestamps();
+  }
+
+  @Test
+  void resetView_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-view"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("View reset successfully"));
+
+    verify(dataService, times(1)).resetView();
+  }
+
+  @Test
+  void resetView_Failure() throws Exception {
+    // Arrange
+    doThrow(new DataException("Error resetting view"))
+        .when(dataService).resetView();
+
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-view"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error resetting view"));
+
+    verify(dataService, times(1)).resetView();
   }
 }

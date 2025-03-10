@@ -3,7 +3,7 @@ import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
-import { fetchItems, fetchTimestamps, resetItems } from '../services/api';
+import { fetchItems, fetchProgress, fetchTimestamps, resetItems } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
 import { toast } from 'react-toastify';
@@ -36,63 +36,72 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Function to show loading bar with progress
-  const showLoadingBar = () => {
-    setProgress(0); // Reset progress
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval); // Stop auto-progress at 100%
-          return 100;
-        }
-        return prevProgress + 10; // Increment progress
-      });
-    }, 300); // Update every 300ms
-  };
-
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps } = useMapLayerContext();
+  const { setTimeStamps, isOnline } = useMapLayerContext();
 
   const onLoadDataset = async () => {
-    try {
-      MySwal.fire({
-        title: t('reset'),
-        text: t('confirm_reset_properties'),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: t('yes'),
-        customClass: {
-          popup: 'custom-swal-popup'
-        }
-      }).then(async (result: { isConfirmed: any }) => {
-        if (result.isConfirmed) {
-          setLoading(true); // Show loading overlay
-          showLoadingBar(); // Start progress simulation
-
-          await resetItems();
-          localStorage.setItem('sliderValue', '0')
-
-          const response = await fetchItems(id);
-          response == 'Items fetched and saved successfully'
-            ? toast.success(t('timestamps_fetch_success'))
-            : toast.error(t('timestamps_fetch_error'));
-
-          // fetch list of timestamps
-          const timestampsResponse = await fetchTimestamps();
-          if (timestampsResponse) {
-            setTimeStamps(timestampsResponse);
-          }
-          timestampsResponse != null
-            ? toast.success(t('items_fetch_success'))
-            : toast.error(t('items_fetch_error'));
-
-          // Simulate a delay for loading (mocked)
-          await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-          console.log('Dataset loaded successfully');
-        }
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
       });
+      return;
+    }
+    
+    try {
+      const result = await MySwal.fire({
+        title: t("load_dataset"),
+        text: t("confirm_deletion_items_from_previous_collection"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: t("yes"),
+        customClass: {
+          popup: "custom-swal-popup",
+        },
+      });
+
+      if (result.isConfirmed) {
+        setLoading(true); // Show loading overlay
+        setProgress(0);
+        await resetItems();
+        localStorage.setItem("sliderValue", "0");
+
+        try {
+          // Start fetching items asynchronously
+          const response = await fetchItems(id);
+          if (response != "Fetching started in the background. Check progress separately.") {
+            throw new Error(t("timestamps_fetch_error"));
+          }
+          toast.success(t("timestamps_fetch_success"));
+
+          const pollProgress = async () => {
+            while (true) {
+              const progressResponse = await fetchProgress(id);
+
+              if ("progress" in progressResponse) {
+                setProgress(progressResponse.progress);
+                const timestamps = await fetchTimestamps();
+                setTimeStamps(timestamps);
+                // Stop the loop when progress reaches 100%
+                if (progressResponse.progress >= 100) {
+                  setLoading(false);
+                  toast.success(t("items_fetch_success"));
+                  return;
+                }
+              }
+
+              // Increase the polling interval to 1/2 second (500ms)
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+          };
+
+          pollProgress(); // Call the async function for polling
+        } catch (error) {
+          toast.error("Error loading dataset: " + error);
+          setLoading(false);
+        }
+      }
     } catch (error) {
       console.error("Error loading dataset:", error);
       setLoading(false);
