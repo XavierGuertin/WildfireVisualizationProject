@@ -74,7 +74,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           if (response != "Fetching started in the background. Check progress separately.") {
             throw new Error(t("timestamps_fetch_error"));
           }
-          toast.success(t("timestamps_fetch_success"));
+          toast.success(t("timestamps_fetch_success"), {toastId: 'timestamps-success',});
 
           const pollProgress = async () => {
             while (true) {
@@ -87,7 +87,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                 // Stop the loop when progress reaches 100%
                 if (progressResponse.progress >= 100) {
                   setLoading(false);
-                  toast.success(t("items_fetch_success"));
+                  toast.success(t("items_fetch_success"), {toastId: 'items-success',});
                   return;
                 }
               }
@@ -99,7 +99,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           pollProgress(); // Call the async function for polling
         } catch (error) {
-          toast.error("Error loading dataset: " + error);
+          toast.error("Error loading dataset: " + error), {toastId: 'loading-dataset-error',};
           setLoading(false);
         }
       }
