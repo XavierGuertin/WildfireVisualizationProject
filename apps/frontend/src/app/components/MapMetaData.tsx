@@ -38,7 +38,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [progress, setProgress] = useState(0);
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps, isOnline } = useMapLayerContext();
+  const { setTimeStamps, isOnline, setSliderValue } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     if(!isOnline){
@@ -67,6 +67,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         setProgress(0);
         await resetItems();
         localStorage.setItem("sliderValue", "0");
+        setSliderValue(0)
 
         try {
           // Start fetching items asynchronously

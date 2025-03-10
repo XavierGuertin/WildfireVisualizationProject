@@ -22,6 +22,8 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
+import { changeLayer } from './MapView';
+import { Map } from 'ol';
 
 const MySwal = withReactContent(Swal);
 
@@ -34,7 +36,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue, mapRef } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -225,7 +227,6 @@ const SettingsPanel: React.FC<{
     });
 
     setDropdownState({ activeButton: null, isOpen: false });
-    localStorage.setItem('selectedDatasetId','')
   };
 
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
@@ -240,6 +241,7 @@ const SettingsPanel: React.FC<{
     try {
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
+      localStorage.setItem('selectedDatasetId','')
       localStorage.setItem('sliderValue', '0');
       setSliderValue(0);
 
@@ -247,6 +249,8 @@ const SettingsPanel: React.FC<{
       await resetCollections();
       await resetItems();
       await resetDatalayerView();
+      const map = mapRef.current as Map;
+      changeLayer(map, true)
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {

@@ -57,6 +57,20 @@ jest.mock('sweetalert2', () => {
   };
 });
 
+jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('ol/layer/Tile', () => {
+  return jest.fn().mockImplementation(() => {
+    const properties: Record<string, any> = {}; // Store layer properties
+
+    return {
+      set: jest.fn((key: string, value: any) => {
+        properties[key] = value; // Store key-value pairs
+      }),
+    };
+  });
+});
+
 // Ensure the clipboard API exists.
 Object.assign(navigator, {
   clipboard: {
