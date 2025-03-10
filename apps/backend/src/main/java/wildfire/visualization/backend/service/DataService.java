@@ -141,7 +141,7 @@ public class DataService {
       logger.info("View successfully reset in database");
     } catch (Exception e) {
       logger.error("Error resetting Datalayer view: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to reset Datalayer view: " + e.getMessage(), e);
+      throw new IllegalStateException("Failed to reset Datalayer view: " + e.getMessage(), e);
     }
   }
 

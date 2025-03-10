@@ -798,7 +798,7 @@ class DataServiceTests {
 
         // Act & Assert
         assertThatThrownBy(() -> dataService.resetView())
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Failed to reset Datalayer view: Test exception");
 
         verify(stacRepository, times(1)).resetDatalayerView();
