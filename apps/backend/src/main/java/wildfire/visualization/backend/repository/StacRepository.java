@@ -2,11 +2,11 @@ package wildfire.visualization.backend.repository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import wildfire.visualization.backend.exception.RepositoryException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.TimeZone;
 
 /**
- * Repository responsible for directly communicating with the pgSTAC database (items and collections)
+ * Repository responsible for directly communicating with the pgSTAC database
+ * (items and collections)
  */
 @Repository
 public class StacRepository {
@@ -22,14 +23,18 @@ public class StacRepository {
   private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
   private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
 
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
+  private final JdbcTemplate jdbcTemplate;
+
+  public StacRepository(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
 
   /**
    * Method responsible for checking if a collection exists with a given id
    *
    * @param collectionId Database ID of the given collection
    * @return boolean value that clarifies whether the collection exists or not
+   * @throws RepositoryException if a database error occurs
    */
   public boolean checkCollectionExists(String collectionId) {
     logger.debug("Checking if collection exists: {}", collectionId);
@@ -40,7 +45,7 @@ public class StacRepository {
       return count != null && count > 0;
     } catch (DataAccessException e) {
       logger.error("Error checking collection existence: {}", e.getMessage(), e);
-      throw new RuntimeException("Error checking collection existence: " + e.getMessage(), e);
+      throw new RepositoryException("Error checking if collection exists: " + collectionId, e);
     }
   }
 
@@ -49,6 +54,7 @@ public class StacRepository {
    *
    * @param itemId Database ID of the given item
    * @return boolean value that clarifies whether the item exists or not
+   * @throws RepositoryException if a database error occurs
    */
   public boolean checkItemExists(String itemId) {
     try {
@@ -58,7 +64,7 @@ public class StacRepository {
       return count != null && count > 0;
     } catch (DataAccessException e) {
       logger.error("Error checking item existence: {}", e.getMessage(), e);
-      throw new RuntimeException("Error checking item existence: " + e.getMessage(), e);
+      throw new RepositoryException("Error checking if item exists: " + itemId, e);
     }
   }
 
@@ -66,6 +72,7 @@ public class StacRepository {
    * Method responsible for inserting a collection into the database
    *
    * @param collectionJson Stringified JSON object containing the collection data
+   * @throws RepositoryException if a database error occurs
    */
   public void insertCollection(String collectionJson) {
     logger.debug("Attempting to insert collection");
@@ -77,21 +84,27 @@ public class StacRepository {
       logger.info("Successfully inserted collection");
     } catch (DataAccessException e) {
       logger.error("Error inserting collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+      throw new RepositoryException("Error inserting collection", e);
     }
   }
 
+  /**
+   * Method responsible for inserting an item into the database
+   *
+   * @param itemJson Stringified JSON object containing the item data
+   * @throws RepositoryException if a database error occurs
+   */
   public void insertItem(String itemJson) {
     logger.debug("Attempting to insert item");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_item(?::jsonb)",
-        Object.class,
-        itemJson);
+          "SELECT pgstac.create_item(?::jsonb)",
+          Object.class,
+          itemJson);
       logger.info("Successfully inserted item");
     } catch (DataAccessException e) {
-      logger.error("Error inserting collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting collection: " + e.getMessage(), e);
+      logger.error("Error inserting item: {}", e.getMessage(), e);
+      throw new RepositoryException("Error inserting item", e);
     }
   }
 
@@ -100,6 +113,7 @@ public class StacRepository {
    *
    * @param collectionId Database ID of the given collection
    * @return List object containing the data of the given collection
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> queryCollection(String collectionId) {
     logger.debug("Querying collection: {}", collectionId);
@@ -110,7 +124,7 @@ public class StacRepository {
       return results;
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
+      throw new RepositoryException("Error querying collection: " + collectionId, e);
     }
   }
 
@@ -125,14 +139,12 @@ public class StacRepository {
    *                "datetime"). If empty, no ordering is applied.
    * @return A list of collections as key-value maps, containing collection
    *         metadata.
-   * @throws IllegalArgumentException If `bbox` is not null and does not contain
-   *                                  exactly 4 elements.
-   * @throws RuntimeException         If a database error occurs.
+   * @throws RepositoryException If a database error occurs or inputs are invalid
    */
   List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
     // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
     if (bbox != null && bbox.length != 4) {
-      throw new IllegalArgumentException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+      throw new RepositoryException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
     }
 
     // Log query type (bbox filtering or not)
@@ -166,7 +178,7 @@ public class StacRepository {
       // Validate and apply ordering if provided
       if (!orderBy.isEmpty()) {
         if (!Arrays.asList("id", "datetime").contains(orderBy)) {
-          throw new IllegalArgumentException("Invalid orderBy column: " + orderBy);
+          throw new RepositoryException("Invalid orderBy column: " + orderBy);
         }
         sql += " ORDER BY " + orderBy;
       }
@@ -180,7 +192,7 @@ public class StacRepository {
       return results;
     } catch (DataAccessException e) {
       logger.error("Database error while fetching collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching collections: " + e.getMessage(), e);
+      throw new RepositoryException("Error fetching collections", e);
     }
   }
 
@@ -191,11 +203,17 @@ public class StacRepository {
    * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
    *             null, no filter is applied.
    * @return A list of all collections in the database.
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollections(double[] bbox) {
     return fetchCollections(bbox, ""); // No ordering applied
   }
 
+  /**
+   * Deletes all collections from the database
+   * 
+   * @throws RepositoryException if a database error occurs
+   */
   public void deleteAllCollections() {
     try {
       String sql = "DELETE FROM pgstac.datalayer";
@@ -209,10 +227,16 @@ public class StacRepository {
       logger.info("All collections deleted successfully");
     } catch (DataAccessException e) {
       logger.error("Error deleting collections: {}", e.getMessage(), e);
-      throw new RuntimeException("Error deleting collections: " + e.getMessage(), e);
+      throw new RepositoryException("Error deleting all collections", e);
     }
   }
 
+  /**
+   * Retrieves timestamps of all items in the database
+   * 
+   * @return List of timestamps as strings
+   * @throws RepositoryException if a database error occurs
+   */
   public List<String> getItemsTimestamps() {
     String sql = "SELECT to_char(datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as iso FROM pgstac.items ORDER BY datetime ASC";
     try {
@@ -222,10 +246,15 @@ public class StacRepository {
       return timestamps;
     } catch (DataAccessException e) {
       logger.error("Error fetching item timestamps: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching item timestamps: " + e.getMessage(), e);
+      throw new RepositoryException("Error fetching item timestamps", e);
     }
   }
 
+  /**
+   * Deletes all items from the database
+   * 
+   * @throws RepositoryException if a database error occurs
+   */
   public void deleteAllItems() {
     logger.info("Deleting all items from pgstac.items");
     try {
@@ -234,10 +263,9 @@ public class StacRepository {
       logger.info("All items deleted successfully");
     } catch (DataAccessException e) {
       logger.error("Error deleting items: {}", e.getMessage(), e);
-      throw new RuntimeException("Error deleting items: " + e.getMessage(), e);
+      throw new RepositoryException("Error deleting all items", e);
     }
   }
-
 
   /**
    * Retrieves all collections from the database, optionally filtered by a
@@ -247,6 +275,7 @@ public class StacRepository {
    * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
    *             null, no filter is applied.
    * @return A list of collections sorted by name.
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
     return fetchCollections(bbox, "id"); // Order by collection name (ID)
@@ -260,6 +289,7 @@ public class StacRepository {
    * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
    *             null, no filter is applied.
    * @return A list of collections sorted by date.
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
     return fetchCollections(bbox, "datetime"); // Order by date
@@ -270,6 +300,7 @@ public class StacRepository {
    *
    * @param collectionId Database ID of the given collection
    * @return List object containing the given collection's metadata
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> queryCollectionMetaData(String collectionId) {
     logger.debug("Querying metadata for: {}", collectionId);
@@ -284,13 +315,20 @@ public class StacRepository {
       logger.debug("Query returned {} results", results.size());
       return results;
     } catch (DataAccessException e) {
-      logger.error("Error querying collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error querying collection: " + e.getMessage(), e);
+      logger.error("Error querying collection metadata: {}", e.getMessage(), e);
+      throw new RepositoryException("Error querying metadata for collection: " + collectionId, e);
     }
   }
 
+  /**
+   * Retrieves all items from a specific collection
+   * 
+   * @param collectionId ID of the collection to retrieve items from
+   * @return List of maps containing item data
+   * @throws RepositoryException if a database error occurs
+   */
   public List<Map<String, Object>> getAllItems(String collectionId) {
-    logger.debug("Fetching items");
+    logger.debug("Fetching items for collection: {}", collectionId);
     try {
       String sql = "SELECT * FROM pgstac.search(" +
           "    '{" +
@@ -308,7 +346,7 @@ public class StacRepository {
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching items: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching items: " + e.getMessage(), e);
+      throw new RepositoryException("Error fetching items for collection: " + collectionId, e);
     }
   }
 
@@ -317,9 +355,10 @@ public class StacRepository {
    *
    * @param id Database ID of item to be fetched
    * @return List object containing the item with the given id
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getItem(String id) {
-    logger.debug("Fetching item");
+    logger.debug("Fetching item with ID: {}", id);
     try {
       String sql = "SELECT pgstac.get_item('" + id + "');";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
@@ -327,19 +366,22 @@ public class StacRepository {
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+      throw new RepositoryException("Error fetching item with ID: " + id, e);
     }
   }
 
   /**
-   *  Method responsible for retrieving an item from the database from a given collection
+   * Method responsible for retrieving an item from the database from a given
+   * collection
    *
-   * @param id Database ID of item to be retrieved
+   * @param id         Database ID of item to be retrieved
    * @param collection Database ID of collection to retrieve items from
-   * @return List object containing the item with the given id from the given collection
+   * @return List object containing the item with the given id from the given
+   *         collection
+   * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getItem(String id, String collection) {
-    logger.debug("Fetching item");
+    logger.debug("Fetching item with ID: {} from collection: {}", id, collection);
     try {
       String sql = "SELECT pgstac.get_item('" + id + "', '" + collection + "');";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
@@ -347,7 +389,7 @@ public class StacRepository {
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+      throw new RepositoryException("Error fetching item with ID: " + id + " from collection: " + collection, e);
     }
   }
 
@@ -355,6 +397,7 @@ public class StacRepository {
    * Method responsible for setting a DataLayerView in the database
    *
    * @param collectionId Database ID of the given collection
+   * @throws RepositoryException if a database error occurs
    */
   public void setDatalayerView(String collectionId) {
     logger.info("Attempting to create / insert geometry of selected dataset into datalayer view: {}", collectionId);
@@ -374,7 +417,7 @@ public class StacRepository {
       logger.info("Successfully created/replaced view for collectionId: {}", collectionId);
     } catch (DataAccessException e) {
       logger.error("Error inserting view: {}", e.getMessage(), e);
-      throw new RuntimeException("Error inserting view: " + e.getMessage(), e);
+      throw new RepositoryException("Error creating datalayer view for collection: " + collectionId, e);
     }
   }
 
@@ -392,10 +435,10 @@ public class StacRepository {
 
       return result == 1; // If ID exists, return true
     } catch (EmptyResultDataAccessException e) {
-      logger.info("No data found: {}");
+      logger.info("No data found in DataLayer view");
       return false;
     } catch (DataAccessException e) {
-      logger.error("Error querying DataLayer: {}", e.getMessage(), e);
+      logger.error("Error checking DataLayer view: {}", e.getMessage(), e);
       return false;
     }
   }
@@ -404,6 +447,7 @@ public class StacRepository {
    * Method responsible for removing all items from the database
    *
    * @return String object to clarify if removal was successful
+   * @throws RepositoryException if a database error occurs
    */
   public String removeAllItems() {
     logger.debug("Removing all items");
@@ -422,19 +466,21 @@ public class StacRepository {
       jdbcTemplate.execute(sql);
       return "Successfully Removed All Items";
     } catch (DataAccessException e) {
-      logger.error("Error fetching item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error fetching item: " + e.getMessage(), e);
+      logger.error("Error removing all items: {}", e.getMessage(), e);
+      throw new RepositoryException("Error removing all items", e);
     }
   }
 
   /**
-   * Method responsible for removing all items of a given collection from the database
+   * Method responsible for removing all items of a given collection from the
+   * database
    *
    * @param collectionId Database ID of the given collection
    * @return String object to clarify if removal was successful
+   * @throws RepositoryException if a database error occurs
    */
   public String removeItemsFromCollection(String collectionId) {
-    logger.debug("Removing all items from collection");
+    logger.debug("Removing all items from collection: {}", collectionId);
     try {
       String sql = "DO $$ \n" +
           "DECLARE\n" +
@@ -452,18 +498,21 @@ public class StacRepository {
       return "Successfully Removed All Items From Collection";
     } catch (DataAccessException e) {
       logger.error("Error removing items from collection: {}", e.getMessage(), e);
-      throw new RuntimeException("Error removing items from collection: " + e.getMessage(), e);
+      throw new RepositoryException("Error removing items from collection: " + collectionId, e);
     }
   }
 
   /**
-   * Method responsible for removing an item of a given collection from the database
-   * @param itemId Database ID of item to be removed
+   * Method responsible for removing an item of a given collection from the
+   * database
+   * 
+   * @param itemId       Database ID of item to be removed
    * @param collectionId Database ID of collection that the item pertains to
    * @return String object to clarify if removal was successful
+   * @throws RepositoryException if a database error occurs
    */
   public String removeItem(String itemId, String collectionId) {
-    logger.debug("Removing item");
+    logger.debug("Removing item with ID: {} from collection: {}", itemId, collectionId);
     try {
       String sql = "SELECT delete_item('" + itemId + "', '" + collectionId + "');";
 
@@ -471,7 +520,7 @@ public class StacRepository {
       return "Successfully Removed Item";
     } catch (DataAccessException e) {
       logger.error("Error removing item: {}", e.getMessage(), e);
-      throw new RuntimeException("Error removing item: " + e.getMessage(), e);
+      throw new RepositoryException("Error removing item with ID: " + itemId + " from collection: " + collectionId, e);
     }
   }
 }

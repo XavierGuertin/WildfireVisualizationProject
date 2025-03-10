@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
-import { IoMdClose } from 'react-icons/io'; // Added close icon
 import { useTranslation } from 'react-i18next';
 import { fetchItems, fetchTimestamps, resetItems } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';

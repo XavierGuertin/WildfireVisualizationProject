@@ -28,7 +28,8 @@ class ConfigServiceTests {
   @InjectMocks
   private ConfigService configService;
 
-  private static final String CONFIG_FILE_PATH = System.getenv().getOrDefault("CONFIG_FILE_PATH", "config/app-config.json");
+  private static final String CONFIG_FILE_PATH = System.getenv().getOrDefault("CONFIG_FILE_PATH",
+      "config/app-config.json");
   private static final Path CONFIG_DIR_PATH = Path.of("apps/backend/config");
 
   @BeforeEach
@@ -76,7 +77,7 @@ class ConfigServiceTests {
 
     // Act & Assert
     RuntimeException exception = assertThrows(RuntimeException.class, () -> configService.getConfig());
-    assertEquals("Error reading config file", exception.getMessage());
+    assertEquals("Failed to retrieve configuration", exception.getMessage());
   }
 
   @Test
@@ -99,6 +100,6 @@ class ConfigServiceTests {
 
     // Act & Assert
     RuntimeException exception = assertThrows(RuntimeException.class, () -> configService.saveConfig(config));
-    assertEquals("Error writing config file", exception.getMessage());
+    assertEquals("Failed to save configuration", exception.getMessage());
   }
 }

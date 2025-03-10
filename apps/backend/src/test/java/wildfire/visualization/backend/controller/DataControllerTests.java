@@ -1,21 +1,28 @@
 package wildfire.visualization.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import wildfire.visualization.backend.exception.DataException;
+import wildfire.visualization.backend.exception.GlobalExceptionHandler;
 import wildfire.visualization.backend.service.DataService;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataControllerTests {
@@ -26,581 +33,617 @@ class DataControllerTests {
   @InjectMocks
   private DataController dataController;
 
+  private MockMvc mockMvc;
+  private ObjectMapper objectMapper;
+
   private static final String DEFAULT_ENDPOINT_URL = "https://hirondelle.crim.ca/stac/collections";
 
-  @Test
-  void getMetaData_Success() throws JsonProcessingException {
+  @BeforeEach
+  void setUp() {
+    // Initialize MockMvc with the GlobalExceptionHandler
+    mockMvc = MockMvcBuilders
+        .standaloneSetup(dataController)
+        .setControllerAdvice(new GlobalExceptionHandler())
+        .build();
 
-    // Arrange
-    when(dataService.retrieveCollectionMetaData(anyString())).thenReturn("[]");
-
-    // Act
-    ResponseEntity<String> response = dataController.getMetaData("ID");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isNotNull();
+    objectMapper = new ObjectMapper();
   }
 
   @Test
-  void getMetaData_Failure() throws JsonProcessingException {
-
+  void getMetaData_Success() throws Exception {
     // Arrange
-    when(dataService.retrieveCollectionMetaData(anyString())).thenThrow(new RuntimeException("Entry not found"));
+    String collectionId = "ID";
+    String expectedResponse = "[]";
+    when(dataService.retrieveCollectionMetaData(collectionId)).thenReturn(expectedResponse);
 
-    // Act
-    ResponseEntity<String> response = dataController.getMetaData("ID");
+    // Act & Assert
+    mockMvc.perform(get("/api/metadata/{id}", collectionId))
+        .andExpect(status().isOk())
+        .andExpect(content().string(expectedResponse));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isEqualTo("Error processing MetaData: Entry not found");
+    verify(dataService, times(1)).retrieveCollectionMetaData(collectionId);
   }
 
   @Test
-  void fetchCollections_Success() {
-    // Act
-    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
+  void getMetaData_Failure() throws Exception {
+    // Arrange
+    String collectionId = "ID";
+    when(dataService.retrieveCollectionMetaData(collectionId))
+        .thenThrow(new DataException("Failed to retrieve metadata"));
 
-    // Assert
+    // Act & Assert
+    mockMvc.perform(get("/api/metadata/{id}", collectionId))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Failed to retrieve metadata"));
+
+    verify(dataService, times(1)).retrieveCollectionMetaData(collectionId);
+  }
+
+  @Test
+  void fetchCollections_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Collections fetched and saved successfully"));
+
     verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Collections fetched and saved successfully");
   }
 
   @Test
-  void fetchCollections_Failure() {
+  void fetchCollections_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Test error")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
+    doThrow(new DataException("Test error")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
 
-    // Act
-    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
     verify(dataService, times(1)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Error fetching collections: Test error");
   }
 
   @Test
-  void handleIOException() {
-    // Arrange
-    doThrow(new RuntimeException("Test IO error")).when(dataService).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
-
-    // Act
-    ResponseEntity<String> response = dataController.fetchCollections(DEFAULT_ENDPOINT_URL);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Error fetching collections: Test IO error");
-  }
-
-  @Test
-  void getCollections_Success_NoBbox() {
+  void getCollections_Success_NoBbox() throws Exception {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1"),
-      Map.of("key", "value2", "id", "id2"));
+        Map.of("key", "value1", "id", "id1"),
+        Map.of("key", "value2", "id", "id2"));
 
     when(dataService.getCollections(null)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollections(null);
+    verify(dataService, times(1)).getCollections(null);
   }
 
   @Test
-  void getCollections_Success_WithValidBbox() {
+  void getCollections_Success_WithValidBbox() throws Exception {
     // Arrange
     String bboxStr = "10,20,30,40";
-    double[] expectedBbox = new double[]{10.0, 20.0, 30.0, 40.0};
+    double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value3", "id", "id3"),
-      Map.of("key", "value4", "id", "id4"));
+        Map.of("key", "value3", "id", "id3"),
+        Map.of("key", "value4", "id", "id4"));
 
     when(dataService.getCollections(expectedBbox)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(bboxStr);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections")
+        .param("bbox", bboxStr))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollections(expectedBbox);
+    verify(dataService, times(1)).getCollections(expectedBbox);
   }
 
   @Test
-  void getCollections_InvalidBboxFormat_ReturnsBadRequest() {
-    // Arrange
-    String invalidBboxStr = "10,20"; // Only two values instead of four
+  void getCollections_InvalidBboxFormat() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections")
+        .param("bbox", "10,20")) // Only two values instead of four
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Invalid BBOX format: Expected 4 values"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(invalidBboxStr);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).isNull();
     verifyNoInteractions(dataService);
   }
 
   @Test
-  void getCollections_Failure() {
+  void getCollections_Failure() throws Exception {
     // Arrange
-    when(dataService.getCollections(null)).thenThrow(new RuntimeException("Test error"));
+    when(dataService.getCollections(null))
+        .thenThrow(new DataException("Test error"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isNull();
-    verify(dataService).getCollections(null);
+    verify(dataService, times(1)).getCollections(null);
   }
 
   @Test
-  void resetCollections_Success() {
-    // Act
-    ResponseEntity<String> response = dataController.resetCollections();
+  void resetCollections_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-collections"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Collections deleted successfully"));
 
-    // Assert
     verify(dataService, times(1)).deleteAllCollections();
-    verify(dataService, times(0)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Collections deleted successfully");
   }
 
   @Test
-  void resetCollections_Failure() {
+  void resetCollections_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Test error")).when(dataService).deleteAllCollections();
+    doThrow(new DataException("Test error"))
+        .when(dataService).deleteAllCollections();
 
-    // Act
-    ResponseEntity<String> response = dataController.resetCollections();
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-collections"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
     verify(dataService, times(1)).deleteAllCollections();
-    verify(dataService, times(0)).fetchAndSaveCollections(DEFAULT_ENDPOINT_URL);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Error resetting collections: Test error");
   }
 
   @Test
-  void getCollectionsByName_Success_NoBbox() {
+  void getCollectionsByName_Success_NoBbox() throws Exception {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("name", "Collection A", "id", "id1"),
-      Map.of("name", "Collection B", "id", "id2"));
+        Map.of("name", "Collection A", "id", "id1"),
+        Map.of("name", "Collection B", "id", "id2"));
 
     when(dataService.getCollectionsByName(null)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-name"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollectionsByName(null);
+    verify(dataService, times(1)).getCollectionsByName(null);
   }
 
   @Test
-  void getCollectionsByName_Success_WithValidBbox() {
+  void getCollectionsByName_Success_WithValidBbox() throws Exception {
     // Arrange
     String bboxStr = "10,20,30,40";
-    double[] expectedBbox = new double[]{10.0, 20.0, 30.0, 40.0};
+    double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("name", "Collection C", "id", "id3"),
-      Map.of("name", "Collection D", "id", "id4"));
+        Map.of("name", "Collection C", "id", "id3"),
+        Map.of("name", "Collection D", "id", "id4"));
 
     when(dataService.getCollectionsByName(expectedBbox)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName(bboxStr);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-name")
+        .param("bbox", bboxStr))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollectionsByName(expectedBbox);
+    verify(dataService, times(1)).getCollectionsByName(expectedBbox);
   }
 
   @Test
-  void getCollectionsByName_InvalidBboxFormat_ReturnsBadRequest() {
-    // Arrange
-    String invalidBboxStr = "10,20"; // Only two values instead of four
+  void getCollectionsByName_InvalidBboxFormat() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-name")
+        .param("bbox", "10,20")) // Only two values instead of four
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Invalid BBOX format: Expected 4 values"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName(invalidBboxStr);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).isNull();
     verifyNoInteractions(dataService);
   }
 
   @Test
-  void getCollectionsByName_Failure() {
+  void getCollectionsByName_Failure() throws Exception {
     // Arrange
-    when(dataService.getCollectionsByName(null)).thenThrow(new RuntimeException("Test error"));
+    when(dataService.getCollectionsByName(null))
+        .thenThrow(new DataException("Test error"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByName(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-name"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isNull();
-    verify(dataService).getCollectionsByName(null);
+    verify(dataService, times(1)).getCollectionsByName(null);
   }
 
   @Test
-  void getCollectionsByDate_Success_NoBbox() {
+  void getCollectionsByDate_Success_NoBbox() throws Exception {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("date", "2023-01-01", "id", "id1"),
-      Map.of("date", "2023-02-01", "id", "id2"));
+        Map.of("date", "2023-01-01", "id", "id1"),
+        Map.of("date", "2023-02-01", "id", "id2"));
 
     when(dataService.getCollectionsByDate(null)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-date"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollectionsByDate(null);
+    verify(dataService, times(1)).getCollectionsByDate(null);
   }
 
   @Test
-  void getCollectionsByDate_Success_WithValidBbox() {
+  void getCollectionsByDate_Success_WithValidBbox() throws Exception {
     // Arrange
     String bboxStr = "10,20,30,40";
-    double[] expectedBbox = new double[]{10.0, 20.0, 30.0, 40.0};
+    double[] expectedBbox = new double[] { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("date", "2023-03-01", "id", "id3"),
-      Map.of("date", "2023-04-01", "id", "id4"));
+        Map.of("date", "2023-03-01", "id", "id3"),
+        Map.of("date", "2023-04-01", "id", "id4"));
 
     when(dataService.getCollectionsByDate(expectedBbox)).thenReturn(mockCollections);
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate(bboxStr);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-date")
+        .param("bbox", bboxStr))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockCollections);
-    verify(dataService).getCollectionsByDate(expectedBbox);
+    verify(dataService, times(1)).getCollectionsByDate(expectedBbox);
   }
 
   @Test
-  void getCollectionsByDate_InvalidBboxFormat_ReturnsBadRequest() {
-    // Arrange
-    String invalidBboxStr = "10,20"; // Only two values instead of four
+  void getCollectionsByDate_InvalidBboxFormat() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-date")
+        .param("bbox", "10,20")) // Only two values instead of four
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Invalid BBOX format: Expected 4 values"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate(invalidBboxStr);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).isNull();
     verifyNoInteractions(dataService);
   }
 
   @Test
-  void getCollectionsByDate_Failure() {
+  void getCollectionsByDate_Failure() throws Exception {
     // Arrange
-    when(dataService.getCollectionsByDate(null)).thenThrow(new RuntimeException("Test error"));
+    when(dataService.getCollectionsByDate(null))
+        .thenThrow(new DataException("Test error"));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollectionsByDate(null);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections-by-date"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isNull();
-    verify(dataService).getCollectionsByDate(null);
+    verify(dataService, times(1)).getCollectionsByDate(null);
   }
 
   @Test
-  void insertView_Success() {
-    // Arrange
-    doNothing().when(dataService).insertView("ID");
+  void insertView_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/set-datalayer-geometry/{id}", "ID"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Successfully inserted view"));
 
-    // Act
-    ResponseEntity<String> response = dataController.insertView("ID");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(dataService, times(1)).insertView("ID");
   }
 
   @Test
-  void insertView_Failure() {
+  void insertView_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Test error")).when(dataService).insertView("ID");
+    doThrow(new DataException("Test error"))
+        .when(dataService).insertView("ID");
 
-    // Act
-    ResponseEntity<String> response = dataController.insertView("ID");
+    // Act & Assert
+    mockMvc.perform(get("/api/set-datalayer-geometry/{id}", "ID"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    verify(dataService, times(1)).insertView("ID");
   }
 
   @Test
-  void fetchItems_Failure() {
-    // Arrange
-    doThrow(new RuntimeException("Error retrieving all items for collection")).when(dataService)
-      .fetchAndSaveItems(anyString());
+  void fetchItems_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", "testCollection"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Items fetched and saved successfully"));
 
-    // Act
-    ResponseEntity<String> response = dataController.fetchItems("Test");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    verify(dataService, times(1)).fetchAndSaveItems("testCollection");
   }
 
   @Test
-  void getItem_Success() {
+  void fetchItems_Failure() throws Exception {
     // Arrange
+    doThrow(new DataException("Error retrieving all items for collection"))
+        .when(dataService).fetchAndSaveItems("testCollection");
+
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections-items/{collectionId}", "testCollection"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error retrieving all items for collection"));
+
+    verify(dataService, times(1)).fetchAndSaveItems("testCollection");
+  }
+
+  @Test
+  void getItem_Success() throws Exception {
+    // Arrange
+    String itemId = "test";
+    String collectionId = "test";
     List<Map<String, Object>> mockResult = List.of(
-      Map.of("id", "test1"));
+        Map.of("id", "test1"));
 
-    when(dataService.getItem(anyString(), anyString())).thenReturn(mockResult);
-    // Act
-    ResponseEntity<List<Map<String, Object>>> result = dataController.getItem("test", "test");
-    // Assert
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(result.getBody()).isEqualTo(mockResult);
+    when(dataService.getItem(itemId, collectionId)).thenReturn(mockResult);
+
+    // Act & Assert
+    mockMvc.perform(get("/api/get-item/{id}/{collection}", itemId, collectionId))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockResult)));
+
+    verify(dataService, times(1)).getItem(itemId, collectionId);
   }
 
   @Test
-  void getItem_Failure() {
+  void getItem_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Item retrieval error")).when(dataService).getItem(anyString(), anyString());
+    String itemId = "test";
+    String collectionId = "test";
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getItem("Test", "Test");
+    when(dataService.getItem(itemId, collectionId))
+        .thenThrow(new DataException("Item retrieval error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    // Act & Assert
+    mockMvc.perform(get("/api/get-item/{id}/{collection}", itemId, collectionId))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Item retrieval error"));
+
+    verify(dataService, times(1)).getItem(itemId, collectionId);
   }
 
   @Test
-  void removeAllItems_Success() {
+  void removeAllItems_Success() throws Exception {
     // Arrange
-    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
     when(dataService.removeAllItems()).thenReturn("Success!");
-    // Act
-    ResponseEntity<String> result = dataController.removeAllItems();
-    // Assert
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(result).isEqualTo(mockResult);
+
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-all-items"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Success!"));
+
+    verify(dataService, times(1)).removeAllItems();
   }
 
   @Test
-  void removeAllItems_Failure() {
+  void removeAllItems_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Error removing all items")).when(dataService).removeAllItems();
+    when(dataService.removeAllItems())
+        .thenThrow(new DataException("Error removing all items"));
 
-    // Act
-    ResponseEntity<String> response = dataController.removeAllItems();
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-all-items"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error removing all items"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    verify(dataService, times(1)).removeAllItems();
   }
 
   @Test
-  void removeItemsFromCollection_Success() {
+  void removeItemsFromCollection_Success() throws Exception {
     // Arrange
-    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
-    when(dataService.removeItemsFromCollection(anyString())).thenReturn("Success!");
-    // Act
-    ResponseEntity<String> result = dataController.removeItemsFromCollection("test");
-    // Assert
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(result).isEqualTo(mockResult);
+    String collectionId = "test";
+    when(dataService.removeItemsFromCollection(collectionId)).thenReturn("Success!");
+
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-items-from-collection/{collectionId}", collectionId))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Success!"));
+
+    verify(dataService, times(1)).removeItemsFromCollection(collectionId);
   }
 
   @Test
-  void removeItemsFromCollection_Failure() {
+  void removeItemsFromCollection_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Error removing items from collection")).when(dataService)
-      .removeItemsFromCollection(anyString());
+    String collectionId = "Test";
+    doThrow(new DataException("Error removing items from collection"))
+        .when(dataService).removeItemsFromCollection(collectionId);
 
-    // Act
-    ResponseEntity<String> response = dataController.removeItemsFromCollection("Test");
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-items-from-collection/{collectionId}", collectionId))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error removing items from collection"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    verify(dataService, times(1)).removeItemsFromCollection(collectionId);
   }
 
   @Test
-  void removeItem_Success() {
+  void removeItem_Success() throws Exception {
     // Arrange
-    ResponseEntity<String> mockResult = ResponseEntity.ok("Success!");
-    when(dataService.removeItem(anyString(), anyString())).thenReturn("Success!");
-    // Act
-    ResponseEntity<String> result = dataController.removeItem("test", "test");
-    // Assert
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(result).isEqualTo(mockResult);
+    String itemId = "test";
+    String collectionId = "test";
+    when(dataService.removeItem(itemId, collectionId)).thenReturn("Success!");
+
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-item/{id}/{collection}", itemId, collectionId))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Success!"));
+
+    verify(dataService, times(1)).removeItem(itemId, collectionId);
   }
 
   @Test
-  void removeItem_Failure() {
+  void removeItem_Failure() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Error removing item")).when(dataService).removeItem(anyString(), anyString());
+    String itemId = "Test";
+    String collectionId = "Test";
+    doThrow(new DataException("Error removing item"))
+        .when(dataService).removeItem(itemId, collectionId);
 
-    // Act
-    ResponseEntity<String> response = dataController.removeItem("Test", "Test");
+    // Act & Assert
+    mockMvc.perform(delete("/api/remove-item/{id}/{collection}", itemId, collectionId))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error removing item"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    verify(dataService, times(1)).removeItem(itemId, collectionId);
   }
 
   @Test
-  void fetchCollections_ShouldHandleURISyntaxException() {
-    // Act
-    ResponseEntity<String> response = dataController.fetchCollections("invalid-url");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).contains("Invalid URL provided: invalid-url");
+  void fetchCollections_ShouldHandleURISyntaxException() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-collections")
+        .param("endpointUrl", "invalid-url"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Invalid URL provided: invalid-url"));
   }
 
   @Test
-  void verifyIfEndpointHasCollections_ShouldLogInfoAndReturnResult() {
+  void verifyIfEndpointHasCollections_ShouldReturnResult() throws Exception {
     // Arrange
     when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenReturn("Verification result");
 
-    // Act
-    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+    // Act & Assert
+    mockMvc.perform(get("/api/verify-collections")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Verification result"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Verification result");
+    verify(dataService, times(1)).verifyCollections(DEFAULT_ENDPOINT_URL);
   }
 
   @Test
-  void verifyIfEndpointHasCollections_ShouldHandleException() {
+  void verifyIfEndpointHasCollections_ShouldHandleException() throws Exception {
     // Arrange
-    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL)).thenThrow(new RuntimeException("Test error"));
+    when(dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
+        .thenThrow(new DataException("Test error"));
 
-    // Act
-    ResponseEntity<String> response = dataController.verifyIfEndpointHasCollections(DEFAULT_ENDPOINT_URL);
+    // Act & Assert
+    mockMvc.perform(get("/api/verify-collections")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Error checking collections: Test error");
+    verify(dataService, times(1)).verifyCollections(DEFAULT_ENDPOINT_URL);
   }
+
   @Test
-  void getCollections_WithNonNumericBbox_ReturnsBadRequest() {
-    // Arrange - BBOX with non-numeric values
-    String invalidBboxStr = "10,20,abc,40";
+  void getCollections_WithNonNumericBbox() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/get-collections")
+        .param("bbox", "10,20,abc,40"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value(containsString("Error parsing BBOX: Invalid number format")));
 
-    // Act
-    ResponseEntity<List<Map<String, Object>>> response = dataController.getCollections(invalidBboxStr);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).isNull();
     verifyNoInteractions(dataService);
   }
 
   @Test
-  void fetchItems_Success() {
-    // Arrange
-    doNothing().when(dataService).fetchAndSaveItems("testCollection");
+  void resetItems_Success() throws Exception {
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-items"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Items deleted successfully"));
 
-    // Act
-    ResponseEntity<String> response = dataController.fetchItems("testCollection");
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Items fetched and saved successfully");
-    verify(dataService).fetchAndSaveItems("testCollection");
+    verify(dataService, times(1)).deleteAllItems();
   }
 
   @Test
-  void resetItems_Success() {
+  void resetItems_Failure() throws Exception {
     // Arrange
-    doNothing().when(dataService).deleteAllItems();
+    doThrow(new DataException("Test error"))
+        .when(dataService).deleteAllItems();
 
-    // Act
-    ResponseEntity<String> response = dataController.resetItems();
+    // Act & Assert
+    mockMvc.perform(get("/api/reset-items"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Test error"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Items deleted successfully");
-    verify(dataService).deleteAllItems();
+    verify(dataService, times(1)).deleteAllItems();
   }
 
   @Test
-  void resetItems_Failure() {
-    // Arrange
-    doThrow(new RuntimeException("Test error")).when(dataService).deleteAllItems();
-
-    // Act
-    ResponseEntity<String> response = dataController.resetItems();
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isEqualTo("Error resetting items: Test error");
-    verify(dataService).deleteAllItems();
-  }
-
-  @Test
-  void verifyInternetConnection_Success() {
+  void verifyInternetConnection_Success() throws Exception {
     // Arrange
     when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL)).thenReturn("Connected");
 
-    // Act
-    ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+    // Act & Assert
+    mockMvc.perform(get("/api/verify-internet-connection")
+        .param("endpointUrl", DEFAULT_ENDPOINT_URL))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Connected"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("Connected");
-    verify(dataService).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
+    verify(dataService, times(1)).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
   }
 
   @Test
-  void verifyInternetConnection_Failure() {
-    // Arrange
-    when(dataService.verifyInternetConnection(DEFAULT_ENDPOINT_URL))
-      .thenThrow(new RuntimeException("Connection failed"));
-
-    // Act
-    ResponseEntity<String> response = dataController.verifyInternetConnection(DEFAULT_ENDPOINT_URL);
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Error verifying connection: Connection failed");
-    verify(dataService).verifyInternetConnection(DEFAULT_ENDPOINT_URL);
-  }
-
-  @Test
-  void fetchItemsTimestamps_Success() {
+  void fetchItemsTimestamps_Success() throws Exception {
     // Arrange
     List<String> mockTimestamps = List.of("2023-01-01T12:00:00Z", "2023-02-01T12:00:00Z");
     when(dataService.fetchItemsTimestamps()).thenReturn(mockTimestamps);
 
-    // Act
-    ResponseEntity<List<String>> response = dataController.fetchItemsTimestamps();
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-items-timestamps"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockTimestamps)));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockTimestamps);
-    verify(dataService, times(2)).fetchItemsTimestamps(); // Called twice: once for execution and once for return
+    verify(dataService, times(1)).fetchItemsTimestamps();
   }
 
   @Test
-  void fetchItemsTimestamps_Failure() {
+  void fetchItemsTimestamps_Failure() throws Exception {
     // Arrange
-    when(dataService.fetchItemsTimestamps()).thenThrow(new RuntimeException("Error retrieving timestamps"));
+    when(dataService.fetchItemsTimestamps())
+        .thenThrow(new DataException("Error retrieving timestamps"));
 
-    // Act
-    ResponseEntity<List<String>> response = dataController.fetchItemsTimestamps();
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-items-timestamps"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error retrieving timestamps"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).isNull();
-    verify(dataService).fetchItemsTimestamps();
+    verify(dataService, times(1)).fetchItemsTimestamps();
   }
 }

@@ -10,6 +10,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import wildfire.visualization.backend.exception.RepositoryException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,8 +74,8 @@ class StacRepositoryTests {
         });
 
     assertThatThrownBy(() -> stacRepository.checkCollectionExists(testCollectionId))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error checking collection existence");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error checking if collection exists");
   }
 
   @Test
@@ -133,12 +135,13 @@ class StacRepositoryTests {
     // Arrange
     String collectionId = "test-collection";
     when(jdbcTemplate.queryForList(anyString(), eq(collectionId)))
-      .thenThrow(new DataAccessException("Database error") {});
+        .thenThrow(new DataAccessException("Database error") {
+        });
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.queryCollection(collectionId))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error querying collection");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error querying collection");
   }
 
   @Test
@@ -290,8 +293,8 @@ class StacRepositoryTests {
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.deleteAllCollections())
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error deleting collections");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error deleting all collections");
   }
 
   // =========================== FETCH COLLECTIONS BY NAME TESTS
@@ -411,7 +414,7 @@ class StacRepositoryTests {
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.setDatalayerView("ID"))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error inserting view");
+        .hasMessageContaining("Error creating datalayer view for collection: ID");
   }
 
   @Test
@@ -491,8 +494,8 @@ class StacRepositoryTests {
 
     // Assert
     assertThatThrownBy(() -> stacRepository.getAllItems(""))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Error fetching all items");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error fetching items");
   }
 
   @Test
@@ -649,7 +652,7 @@ class StacRepositoryTests {
     // Arrange
     String itemId = "test-item";
     when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
-      .thenReturn(1);
+        .thenReturn(1);
 
     // Act
     boolean result = stacRepository.checkItemExists(itemId);
@@ -657,9 +660,9 @@ class StacRepositoryTests {
     // Assert
     assertThat(result).isTrue();
     verify(jdbcTemplate).queryForObject(
-      eq("SELECT COUNT(*) FROM pgstac.items WHERE id = ?"),
-      eq(Integer.class),
-      eq(itemId));
+        eq("SELECT COUNT(*) FROM pgstac.items WHERE id = ?"),
+        eq(Integer.class),
+        eq(itemId));
   }
 
   @Test
@@ -667,7 +670,7 @@ class StacRepositoryTests {
     // Arrange
     String itemId = "test-item";
     when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
-      .thenReturn(0);
+        .thenReturn(0);
 
     // Act
     boolean result = stacRepository.checkItemExists(itemId);
@@ -681,23 +684,24 @@ class StacRepositoryTests {
     // Arrange
     String itemId = "test-item";
     when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
-      .thenThrow(new DataAccessException("Database error") {});
+        .thenThrow(new DataAccessException("Database error") {
+        });
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.checkItemExists(itemId))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error checking item existence");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error checking if item exists");
   }
 
   @Test
   void getAllCollections_ThrowsException_WithInvalidBboxLength() {
     // Arrange
-    double[] invalidBbox = {10.0, 20.0, 30.0}; // Only 3 elements
+    double[] invalidBbox = { 10.0, 20.0, 30.0 }; // Only 3 elements
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getAllCollections(invalidBbox))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessage("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessage("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
   }
 
   @Test
@@ -712,13 +716,14 @@ class StacRepositoryTests {
   @Test
   void deleteAllItems_ThrowsException_WhenDatabaseError() {
     // Arrange
-    doThrow(new DataAccessException("Database error") {})
-      .when(jdbcTemplate).update("DELETE FROM pgstac.items");
+    doThrow(new DataAccessException("Database error") {
+    })
+        .when(jdbcTemplate).update("DELETE FROM pgstac.items");
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.deleteAllItems())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error deleting items");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error deleting all items");
   }
 
   @Test
@@ -726,7 +731,7 @@ class StacRepositoryTests {
     // Arrange
     String itemId = "test-item";
     when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(itemId)))
-      .thenReturn(null);
+        .thenReturn(null);
 
     // Act
     boolean result = stacRepository.checkItemExists(itemId);
@@ -742,8 +747,8 @@ class StacRepositoryTests {
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.fetchCollections(null, invalidOrderBy))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Invalid orderBy column");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Invalid orderBy column");
   }
 
   @Test
@@ -777,12 +782,13 @@ class StacRepositoryTests {
   void getItemsTimestamps_Failure() {
     // Arrange
     when(jdbcTemplate.queryForList(anyString(), eq(String.class)))
-      .thenThrow(new DataAccessException("Database error") {});
+        .thenThrow(new DataAccessException("Database error") {
+        });
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getItemsTimestamps())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching item timestamps");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Error fetching item timestamps");
   }
 
   @Test
@@ -791,12 +797,13 @@ class StacRepositoryTests {
     String collectionId = "test-collection";
 
     // Use doThrow() syntax which handles overloaded methods better
-    doThrow(new DataAccessException("Database error") {})
-      .when(jdbcTemplate).queryForList(anyString(), eq("test-collection"));
+    doThrow(new DataAccessException("Database error") {
+    })
+        .when(jdbcTemplate).queryForList(anyString(), eq("test-collection"));
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.queryCollectionMetaData(collectionId))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error querying collection");
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error querying metadata for collection: test-collection");
   }
 }
