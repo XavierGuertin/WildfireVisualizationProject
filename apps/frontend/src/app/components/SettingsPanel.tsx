@@ -11,7 +11,9 @@ import {
 import { PiArrowClockwiseFill, PiGlobeXLight, PiGlobeLight } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
-  resetCollections, resetItems,
+  resetCollections, 
+  resetDatalayerView, 
+  resetItems,
   verifyIfEndpointHasCollections
 } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
@@ -243,6 +245,7 @@ const SettingsPanel: React.FC<{
       setLayer('default');
       await resetCollections();
       await resetItems();
+      await resetDatalayerView();
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
