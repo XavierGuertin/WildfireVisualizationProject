@@ -12,6 +12,7 @@ import './layout.css';
 import LoadingModule from './components/LoadingModule';
 import { MapProvider } from './context/MapContext';
 import { fetchMetaData } from './services/api';
+import { ToastContainer } from 'react-toastify';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -87,6 +88,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <MapProvider>
         <html lang="en">
         <body>
+        <ToastContainer/>
         <SettingsPanel refreshDatasets={refreshDatasets} setMetadataVisible={setMetadataVisible} />
         <div className="layout-container relative">
           <LoadingModule
