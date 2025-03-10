@@ -854,4 +854,62 @@ class DataServiceTests {
                 verify(stacRepository, atLeastOnce()).resetDatalayerView();
                 verify(stacRepository, atLeastOnce()).checkDatalayerView();
         }
+
+        @Test
+        void retrieveCollectionMetaData_ThrowsException() {
+                // Arrange
+                String collectionId = "nonexistent-collection";
+
+                // Mock the repository to throw an exception
+                when(stacRepository.queryCollectionMetaData(collectionId))
+                                .thenThrow(new RuntimeException("Database error"));
+
+                // Act & Assert
+                DataException exception = assertThrows(DataException.class, () -> {
+                        dataService.retrieveCollectionMetaData(collectionId);
+                });
+
+                // Verify the exception message and cause
+                assertThat(exception.getMessage())
+                                .isEqualTo("Failed to retrieve metadata for collection: nonexistent-collection");
+                assertThat(exception.getCause())
+                                .isInstanceOf(RuntimeException.class);
+                assertThat(exception.getCause().getMessage())
+                                .isEqualTo("Database error");
+
+                // Verify that the repository method was called
+                verify(stacRepository).queryCollectionMetaData(collectionId);
+        }
+
+        @Test
+        void insertView_CatchesAndWrapsGeneralExceptions() {
+                // Arrange
+                String collectionId = "test-collection";
+
+                // Mock the repository to throw an unexpected exception that isn't a
+                // DataException
+                doThrow(new RuntimeException("Unexpected database error"))
+                                .when(stacRepository).setDatalayerView(collectionId);
+
+                // Act & Assert
+                DataException exception = assertThrows(DataException.class, () -> {
+                        dataService.insertView(collectionId);
+                });
+
+                // Verify the exception was properly wrapped with the correct message
+                assertThat(exception.getMessage())
+                                .isEqualTo("Failed to insert view for collection: test-collection");
+
+                // Verify the original exception is preserved as the cause
+                assertThat(exception.getCause())
+                                .isInstanceOf(RuntimeException.class);
+                assertThat(exception.getCause().getMessage())
+                                .isEqualTo("Unexpected database error");
+
+                // Verify the repository method was called
+                verify(stacRepository).setDatalayerView(collectionId);
+
+                // Verify checkDatalayerView was never called (exception happens before that)
+                verify(stacRepository, never()).checkDatalayerView();
+        }
 }
