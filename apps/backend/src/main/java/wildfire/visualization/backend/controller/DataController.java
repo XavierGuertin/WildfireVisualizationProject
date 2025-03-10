@@ -374,7 +374,7 @@ public class DataController {
   }
 
   /**
-   * Endpoint responsible for inserting a view using a given collection
+   * Endpoint responsible for inserting a view using a given collectionId
    *
    * @param collectionId Database ID of given collection
    * @return ResponseEntity containing a String object indicating if the insertion was successful
@@ -390,6 +390,25 @@ public class DataController {
       logger.error("Error inserting View: {}", e.getMessage(), e);
       return ResponseEntity.internalServerError()
         .body("Error inserting view: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Endpoint responsible for resetting the Datalayer view
+   *
+   * @return ResponseEntity containing a String object indicating if the reset was successful
+   */
+  @GetMapping("/api/reset-datalayer-view")
+  public ResponseEntity<String> resetView() {
+    try {
+      logger.info("Received request to /api/reset-datalayer-view");
+      dataService.resetView();
+      logger.info("Successfully processed resetting Datalayer View");
+      return ResponseEntity.ok("Successfully reset Datalayer view");
+    } catch(Exception e) {
+      logger.error("Error resetting Datalayer View: {}", e.getMessage(), e);
+      return ResponseEntity.internalServerError()
+        .body("Error resetting Datalayer View: " + e.getMessage());
     }
   }
 

@@ -630,4 +630,28 @@ class DataControllerTests {
     assertThat(response.getBody()).isNull();
     verify(dataService).fetchItemsTimestamps();
   }
+
+  @Test
+  void resetView_Success() {
+    // Arrange
+    doNothing().when(dataService).resetView();
+
+    // Act
+    ResponseEntity<String> response = dataController.resetView();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  void resetView_Failure() {
+    // Arrange
+    doThrow(new RuntimeException("Test error")).when(dataService).resetView();
+
+    // Act
+    ResponseEntity<String> response = dataController.resetView();
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
 }

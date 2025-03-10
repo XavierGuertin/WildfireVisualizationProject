@@ -132,6 +132,43 @@ public class DataService {
   }
 
   /**
+   * Overloaded method responsible for resetting datalayer view
+   */
+  public void resetView() {
+    resetView(50);
+  }
+
+  /**
+  * Method responsible for resetting the Datalayer view. The thread sleep time can be set using sleepMillis.
+  *
+  * @param sleepMillis The thread sleep amount in milliseconds
+  */
+  public void resetView(int sleepMillis) {
+    stacRepository.resetDatalayerView();
+    boolean check = true;
+    int count = 0;
+
+    while (check && count < 50) {
+        check = stacRepository.checkDatalayerView();
+        count++;
+        try {
+            Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Thread interrupted while waiting for the view to be reset", e);
+            break;
+        }
+    }
+
+    if (!check) {
+        logger.info("View successfully reset in database");
+    } else {
+        logger.warn("View was still in database after 50 attempts");
+        throw new IllegalStateException("View could not be reset");
+    }
+  }
+
+  /**
    * Method responsible for retrieving and saving of collections into our database from a given endpoint
    *
    * @param endpointUrl Endpoint that we will be retrieving collections from

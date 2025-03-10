@@ -570,8 +570,6 @@ class DataServiceTests {
   void fetchAndSaveItems_Success() throws JsonProcessingException {
     // Arrange
     String collectionId = "testCollection";
-
-    // Mock Configuration Response
     Map<String, Object> configMap = Map.of("endpoint", "https://test-endpoint.com");
     ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
     when(configController.getConfig()).thenReturn(configResponse);
@@ -632,8 +630,6 @@ class DataServiceTests {
     int progress = dataService.getProgress(collectionId);
     assertTrue(progress > 90 && progress <= 100, "Progress should be a valid percentage");
   }
-
-
 
   @Test
   void removeAllItems_Success() {
@@ -729,8 +725,6 @@ class DataServiceTests {
   void fetchAndSaveItems_SkipsExistingItems() throws JsonProcessingException {
     // Arrange
     String collectionId = "testCollection";
-
-    // Mock Configuration Response
     Map<String, Object> configMap = Map.of("endpoint", "https://test-endpoint.com");
     ResponseEntity<Map<String, Object>> configResponse = ResponseEntity.ok(configMap);
     when(configController.getConfig()).thenReturn(configResponse);
@@ -753,8 +747,6 @@ class DataServiceTests {
     );
 
     when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
-
-    // Mock DB Call - Simulate that the item already exists
     when(stacRepository.checkCollectionExists("existingItem")).thenReturn(true);
 
     // Act
@@ -770,16 +762,13 @@ class DataServiceTests {
 
     // Assert
     verify(stacRepository).checkCollectionExists("existingItem");
-    verify(stacRepository, never()).insertItem(anyString()); // Ensure no insert happened
+    verify(stacRepository, never()).insertItem(anyString());
   }
-
 
   @Test
   void fetchAndSaveItems_HandlesException() {
     // Arrange
     String collectionId = "testCollection";
-
-    // Mock ConfigController to Throw Exception
     when(configController.getConfig()).thenThrow(new RuntimeException("Config error"));
 
     // Ensure the failure message contains the expected error text
@@ -792,5 +781,49 @@ class DataServiceTests {
     // Verify that it attempted to fetch config before failing
     verify(configController, times(1)).getConfig();
   }
+  @Test
+  void resetView_Default_Success() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+    when(stacRepository.checkDatalayerView()).thenReturn(false);
 
+    // Act
+    dataService.resetView();
+
+    // Assert
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void resetView_SleepMillisAdjusted_Failure() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+      when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing failure
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.resetView(0))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("View could not be reset");
+
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
+
+  @Test
+  void resetView_ShouldHandleInterruptedException() {
+    // Arrange
+    doNothing().when(stacRepository).resetDatalayerView();
+    when(stacRepository.checkDatalayerView()).thenReturn(true); // View remains, causing loop
+
+    // Act & Assert
+    assertThatThrownBy(() -> {
+        Thread.currentThread().interrupt(); // Simulate interruption
+        dataService.resetView(0);
+    }).isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("View could not be reset");
+
+    verify(stacRepository, atLeastOnce()).resetDatalayerView();
+    verify(stacRepository, atLeastOnce()).checkDatalayerView();
+  }
 }
