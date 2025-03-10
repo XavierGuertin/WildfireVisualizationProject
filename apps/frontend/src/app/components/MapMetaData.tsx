@@ -44,6 +44,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       setProgress((prevProgress) => {
         if (prevProgress >= 100) {
           clearInterval(progressInterval); // Stop auto-progress at 100%
+          setLoading(false);
           return 100;
         }
         return prevProgress + 10; // Increment progress
