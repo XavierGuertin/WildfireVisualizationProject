@@ -45,7 +45,7 @@ const resources = {
       no_datasets_available: 'No datasets available.',
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
-      filtering_by_map_view: 'Filtering datasets by region',
+      filtering_by_map_view: 'Only Show Datasets in View',
       showing_all_datasets: 'Showing all datasets',
       only_visible_datasets_shown: 'Only datasets in current map view',
       including_outside_map_view: 'Including datasets outside visible area',

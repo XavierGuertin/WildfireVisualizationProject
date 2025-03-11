@@ -176,7 +176,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         </p>
       );
     }
-    
+
     if (datasets.length > 0) {
       return datasets.map((dataset) => (
         <button
@@ -189,7 +189,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         </button>
       ));
     }
-    
+
     return (
       <div className="no-datasets-container" data-testid="no-datasets-container">
         <p className="no-datasets-message" data-testid="no-datasets-message">
@@ -207,8 +207,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     if (!currentBbox) {
       return t('map_required');
     }
-    
-    return isToggled ? t('filtering_by_map_view') : t('showing_all_datasets');
+
+    return t('filtering_by_map_view');
   };
 
   return (
