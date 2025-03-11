@@ -167,15 +167,35 @@ const Footer = () => {
       </div>
       {/* Playback controls */}
       <div className="sliderContainer">
-        <input
-          className="simulationSlider"
-          type="range"
-          min="0"
-          max={timeStamps.length-1}
-          value={sliderValue}
-          onChange={handleSliderChange}
-          data-testid="slider"
-        />
+        <div
+          className="customSliderContainer"
+          ref={sliderRef}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="sliderTrack">
+            {timeStamps.length > 0 && (
+              <div
+                className="timeMarkerThumb"
+                style={{
+                  left: `${timeStamps.length > 1 ? (sliderValue / (timeStamps.length - 1)) * 100 : 0}%`,
+                }}
+              >
+                <span className="timeMarkerText">
+                  {timeStamps[sliderValue]
+                    ? formatTimestamp(timeStamps[sliderValue])
+                    : ''}
+                </span>
+              </div>
+            )}
+          </div>
+          <div
+            className="sliderThumb"
+            style={{
+              left: `${timeStamps.length > 1 ? (sliderValue / (timeStamps.length - 1)) * 100 : 0}%`,
+            }}
+          ></div>
+        </div>
+
         <button
           className="iconButton"
           onClick={handlePlayPause}
