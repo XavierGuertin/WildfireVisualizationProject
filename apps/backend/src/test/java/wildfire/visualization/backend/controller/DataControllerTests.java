@@ -217,7 +217,7 @@ class DataControllerTests {
         Map.of("name", "Collection A", "id", "id1"),
         Map.of("name", "Collection B", "id", "id2"));
 
-    when(dataService.getCollectionsByName(null)).thenReturn(mockCollections);
+    when(dataService.getCollectionsByName(null, "asc")).thenReturn(mockCollections);
 
     // Act & Assert
     mockMvc.perform(get("/api/get-collections-by-name"))
@@ -225,7 +225,7 @@ class DataControllerTests {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    verify(dataService, times(1)).getCollectionsByName(null);
+    verify(dataService, times(1)).getCollectionsByName(null, "asc");
   }
 
   @Test
@@ -237,7 +237,7 @@ class DataControllerTests {
         Map.of("name", "Collection C", "id", "id3"),
         Map.of("name", "Collection D", "id", "id4"));
 
-    when(dataService.getCollectionsByName(expectedBbox)).thenReturn(mockCollections);
+    when(dataService.getCollectionsByName(expectedBbox, "asc")).thenReturn(mockCollections);
 
     // Act & Assert
     mockMvc.perform(get("/api/get-collections-by-name")
@@ -246,7 +246,7 @@ class DataControllerTests {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    verify(dataService, times(1)).getCollectionsByName(expectedBbox);
+    verify(dataService, times(1)).getCollectionsByName(expectedBbox, "asc");
   }
 
   @Test
@@ -265,7 +265,7 @@ class DataControllerTests {
   @Test
   void getCollectionsByName_Failure() throws Exception {
     // Arrange
-    when(dataService.getCollectionsByName(null))
+    when(dataService.getCollectionsByName(null, "asc"))
         .thenThrow(new DataException("Test error"));
 
     // Act & Assert
@@ -275,7 +275,7 @@ class DataControllerTests {
         .andExpect(jsonPath("$.error").value("Data Error"))
         .andExpect(jsonPath("$.message").value("Test error"));
 
-    verify(dataService, times(1)).getCollectionsByName(null);
+    verify(dataService, times(1)).getCollectionsByName(null, "asc");
   }
 
   @Test
@@ -285,7 +285,7 @@ class DataControllerTests {
         Map.of("date", "2023-01-01", "id", "id1"),
         Map.of("date", "2023-02-01", "id", "id2"));
 
-    when(dataService.getCollectionsByDate(null)).thenReturn(mockCollections);
+    when(dataService.getCollectionsByDate(null, "asc")).thenReturn(mockCollections);
 
     // Act & Assert
     mockMvc.perform(get("/api/get-collections-by-date"))
@@ -293,7 +293,7 @@ class DataControllerTests {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    verify(dataService, times(1)).getCollectionsByDate(null);
+    verify(dataService, times(1)).getCollectionsByDate(null, "asc");
   }
 
   @Test
@@ -305,7 +305,7 @@ class DataControllerTests {
         Map.of("date", "2023-03-01", "id", "id3"),
         Map.of("date", "2023-04-01", "id", "id4"));
 
-    when(dataService.getCollectionsByDate(expectedBbox)).thenReturn(mockCollections);
+    when(dataService.getCollectionsByDate(expectedBbox, "asc")).thenReturn(mockCollections);
 
     // Act & Assert
     mockMvc.perform(get("/api/get-collections-by-date")
@@ -314,7 +314,7 @@ class DataControllerTests {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(objectMapper.writeValueAsString(mockCollections)));
 
-    verify(dataService, times(1)).getCollectionsByDate(expectedBbox);
+    verify(dataService, times(1)).getCollectionsByDate(expectedBbox, "asc");
   }
 
   @Test
@@ -333,7 +333,7 @@ class DataControllerTests {
   @Test
   void getCollectionsByDate_Failure() throws Exception {
     // Arrange
-    when(dataService.getCollectionsByDate(null))
+    when(dataService.getCollectionsByDate(null, "asc"))
         .thenThrow(new DataException("Test error"));
 
     // Act & Assert
@@ -343,7 +343,7 @@ class DataControllerTests {
         .andExpect(jsonPath("$.error").value("Data Error"))
         .andExpect(jsonPath("$.message").value("Test error"));
 
-    verify(dataService, times(1)).getCollectionsByDate(null);
+    verify(dataService, times(1)).getCollectionsByDate(null, "asc");
   }
 
   @Test
@@ -697,7 +697,7 @@ class DataControllerTests {
   @Test
   void resetView_Success() throws Exception {
     // Act & Assert
-    mockMvc.perform(get("/api/reset-view"))
+    mockMvc.perform(get("/api/reset-datalayer-view"))
         .andExpect(status().isOk())
         .andExpect(content().string("View reset successfully"));
 
@@ -711,7 +711,7 @@ class DataControllerTests {
         .when(dataService).resetView();
 
     // Act & Assert
-    mockMvc.perform(get("/api/reset-view"))
+    mockMvc.perform(get("/api/reset-datalayer-view"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.error").value("Data Error"))

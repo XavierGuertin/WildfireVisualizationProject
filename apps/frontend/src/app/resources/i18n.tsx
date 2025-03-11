@@ -45,7 +45,7 @@ const resources = {
       no_datasets_available: 'No datasets available.',
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
-      filtering_by_map_view: 'Filtering datasets by region',
+      filtering_by_map_view: 'Only Show Datasets in View',
       showing_all_datasets: 'Showing all datasets',
       map_required: 'Load map first',
       // Filters
@@ -80,6 +80,8 @@ const resources = {
       error_fetching_data: 'Failed to fetch data',
       error_fetching_data_by_name: 'Failed to fetch data by name',
       error_fetching_data_by_date: 'Failed to fetch data by date',
+      error_fetching_config_file:
+        'Failed to fetch config file. Please validate app-config.json.',
     },
   },
   fr: {
@@ -124,12 +126,11 @@ const resources = {
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Datasets
       available_datasets: 'Collections disponibles',
-      no_datasets_available: 'Aucune collection disponible.',
+      no_datasets_available: 'Aucune collections disponible.',
       //Datasets - Toggle
-      toggle_datasets: "Basculer les jeux de données",
-      filtering_by_map_view: "Filtrer les données par région",
-      showing_all_datasets: "Affichage de toutes les données",
-      map_required: "Charger la carte d'abord",
+      toggle_datasets: 'Afficher les collections de données',
+      showing_all_datasets: 'Afficher toutes les collections',
+      filtering_by_map_view: 'Filtrer les collections par région',
       // Filters
       name: 'Nom',
       date: 'Date',
@@ -162,6 +163,8 @@ const resources = {
       error_fetching_data: 'Échec de la récupération des données',
       error_fetching_data_by_name: 'Échec de la récupération des données par nom',
       error_fetching_data_by_date: 'Échec de la récupération des données par date',
+      error_fetching_config_file:
+        "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
     },
   },
 };
