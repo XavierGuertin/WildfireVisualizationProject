@@ -62,6 +62,11 @@
 .content {
   padding: 12px;
 }
+.scrollable-description {
+  max-height: 57px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
 
 .data-row {
   display: grid;

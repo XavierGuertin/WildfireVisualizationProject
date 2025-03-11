@@ -150,7 +150,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
-            <div className="value" data-testid={testId}>
+            <div
+            className={`value ${testId === 'dataset-description' ? 'scrollable-description' : ''}`}
+            data-testid={testId}
+            >
               {value || t('n_a')}
             </div>
           </div>
