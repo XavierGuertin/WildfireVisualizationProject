@@ -80,7 +80,7 @@ public class UtilHelper {
     if (current == null || start == null || end == null) return 0.0;
     long totalDuration = ChronoUnit.SECONDS.between(start, end);
     long elapsedDuration = ChronoUnit.SECONDS.between(start, current);
-    return totalDuration > 0 ? (elapsedDuration * 100.0) / totalDuration : 0.0;
+    return (elapsedDuration * 100.0) / totalDuration;
   }
 
   /**
