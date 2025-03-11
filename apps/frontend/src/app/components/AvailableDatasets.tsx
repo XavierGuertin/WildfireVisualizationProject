@@ -24,6 +24,7 @@ import debounce from 'lodash/debounce';
 import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
+import { getConfig } from '../services/configApi';
 
 export interface DatasetEntry {
   key: number;
@@ -47,14 +48,12 @@ interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
   currentBbox?: [number, number, number, number]; // [west, south, east, north]
-  loadedDatasetName?: string | null;
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
   refreshKey,
   currentBbox = [],
-  loadedDatasetName
 }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -65,6 +64,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const {mapRef} = useMapLayerContext();
+  const [loadedDataset, setLoadedDataset] = useState<string | null>(null);
 
   /**
    * Fetches dataset collections based on the selected filter and bounding box.
@@ -107,8 +107,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   }, 300);
 
   useEffect(() => {
-    console.log("[DEBUG] AvailableDatasets received loadedDatasetName:", loadedDatasetName);
-  }, [loadedDatasetName]);
+    const fetchLoadedDataset = async () => {
+      const config = await getConfig();
+      setLoadedDataset(config.loadedDataset || null);
+    };
+    fetchLoadedDataset();
+  }, [refreshKey]);
 
   /**
    * Fetches datasets when the refresh key or filter changes.
@@ -176,10 +180,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleDatasetClick = async (id: string) => {
-    console.log(`[DEBUG] Dataset clicked:`, id)
-    setSelectedDataset(id);
     const dataset = await fetchMetaData(id);
-    console.log(`[DEBUG] Fetched metadata for dataset:`, dataset);
     onDatasetClick(dataset);
     handleLocalStorageOnDatasetClick(id)
     const map = mapRef.current as Map;
@@ -216,19 +217,19 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
 
     if (datasets.length > 0) {
-      return datasets.map((dataset) => (
-        <button
-          key={dataset.id}
-          className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
-          onClick={() => handleDatasetClick(dataset.id)}
-          data-testid={`dataset-button-${dataset.id}`}
-        >
-          {dataset.id}
-          {dataset.id === loadedDatasetName && (
-                    <span className="loaded-tag" data-testid="loaded-indicator">{t('dataset_loaded')}</span>
-                  )}
-        </button>
-      ));
+      return datasets.map((dataset) => {
+        const isLoaded = dataset.id === loadedDataset;
+        return (
+          <button
+            key={dataset.id}
+            className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+            onClick={() => handleDatasetClick(dataset.id)}
+            data-testid={`dataset-button-${dataset.id}`}
+          >
+            {dataset.id} {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
+          </button>
+        );
+      });
     }
 
     return (
