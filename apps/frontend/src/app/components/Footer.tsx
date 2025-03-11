@@ -205,13 +205,13 @@ const Footer = () => {
           {!isPlaying ? (
             <FaPlayCircle
               className="controlIcon"
-              size={25}
+              size={30}
               data-testid="play-icon"
             />
           ) : (
             <FaPauseCircle
               className="controlIcon"
-              size={25}
+              size={30}
               data-testid="pause-icon"
             />
           )}
@@ -223,7 +223,7 @@ const Footer = () => {
         >
           <FaStopCircle
             className="controlIcon"
-            size={25}
+            size={30}
             data-testid="stop-icon"
           />
         </button>
