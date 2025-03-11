@@ -25,6 +25,7 @@ body {
   transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
 
 .datasets-container.collapsed {
@@ -302,4 +303,20 @@ body {
   right: calc(100% + 8px);
   color: #f44336;
   font-size: 0.8rem;
+}
+
+/* Optimizations for smaller screens*/
+@media (max-height: 700px) {
+  .datasets-container {
+    height: auto;
+    max-height: 85vh;
+  }
+}
+
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .datasets-container {
+    height: auto;
+    max-height: 85vh;
+    width: 450px;
+  }
 }

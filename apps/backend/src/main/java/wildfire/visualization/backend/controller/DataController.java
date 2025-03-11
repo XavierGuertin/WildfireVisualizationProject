@@ -283,38 +283,41 @@ public class DataController {
   }
 
   /**
-   * Fetches collections sorted by name, optionally filtering by a bounding box
-   * (BBOX).
+   * Fetches collections sorted by name, optionally filtering by a bounding box (BBOX)
+   * with specified sort direction.
    *
-   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
-   *                (optional).
+   * @param bboxStr       The bounding box string in "minX,minY,maxX,maxY" format (optional).
+   * @param sortDirection The direction to sort collections ("asc" or "desc"). Default is "asc".
    * @return A ResponseEntity containing a list of collections sorted by name.
    */
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName(
-      @RequestParam(value = "bbox", required = false) String bboxStr) {
-    logger.info("Processing request to fetch collections sorted by name.");
+    @RequestParam(value = "bbox", required = false) String bboxStr,
+    @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+    logger.info("Processing request to fetch collections sorted by name with direction: {}", sortDirection);
 
     double[] bbox = parseBbox(bboxStr);
-    List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox);
+    List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox, sortDirection);
     return ResponseEntity.ok(collections);
   }
 
   /**
    * Fetches collections sorted by date, optionally filtering by a bounding box
-   * (BBOX).
+   * (BBOX) with specified sort direction.
    *
    * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
    *                (optional).
+   * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A ResponseEntity containing a list of collections sorted by date.
    */
   @GetMapping("/api/get-collections-by-date")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate(
-      @RequestParam(value = "bbox", required = false) String bboxStr) {
-    logger.info("Processing request to fetch collections sorted by date.");
+    @RequestParam(value = "bbox", required = false) String bboxStr,
+    @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+    logger.info("Processing request to fetch collections sorted by date with direction: {}", sortDirection);
 
     double[] bbox = parseBbox(bboxStr);
-    List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox);
+    List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox, sortDirection);
     return ResponseEntity.ok(collections);
   }
 
@@ -339,9 +342,9 @@ public class DataController {
    * @return ResponseEntity containing a String object indicating if the reset was
    *         successful
    */
-  @GetMapping("/api/reset-view")
+  @GetMapping("/api/reset-datalayer-view")
   public ResponseEntity<String> resetView() {
-    logger.info("Received request to /api/reset-view");
+    logger.info("Received request to /api/reset-datalayer-view");
     dataService.resetView();
     logger.info("Successfully processed resetting view");
     return ResponseEntity.ok("View reset successfully");
