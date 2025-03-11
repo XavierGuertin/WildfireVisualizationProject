@@ -109,7 +109,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         response = await returnListOfCollectionsFromEndpoint(params.bbox);
       }
 
-      // Rest of the function remains the same
       if (!Array.isArray(response)) {
         console.error("Invalid response:", response.error || response);
         setFetchError(getTranslatedErrorMessageKey(response.error || ''));
@@ -196,7 +195,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const handleDatasetClick = async (id: string) => {
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);
-    handleLocalStorageOnDatasetClick(id)
+    await handleLocalStorageOnDatasetClick(id)
     const map = mapRef.current as Map;
     changeLayer(map, true);
   };
