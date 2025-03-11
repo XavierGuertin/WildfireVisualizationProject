@@ -115,3 +115,12 @@
 .load-dataset-button:active {
   transform: scale(0.98);
 }
+
+/* Optimizations for smaller screens */
+@media (max-height: 700px) {
+  .metadata-container {
+    top: 15%;
+  }
+}
+
+
