@@ -43,7 +43,7 @@ const resources = {
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
-      dataset_loaded: 'Loaded', 
+      loaded: 'Loaded', 
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
       filtering_by_map_view: 'Only Show Datasets in View',
@@ -125,6 +125,7 @@ const resources = {
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
+      loaded: 'Chargé',
       toggle_datasets: 'Afficher les collections de données',
       showing_all_datasets: 'Afficher toutes les collections',
       filtering_by_map_view: 'Filtrer les collections par région',
