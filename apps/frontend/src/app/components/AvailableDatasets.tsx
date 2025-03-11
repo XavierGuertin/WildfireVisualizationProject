@@ -128,6 +128,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    */
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  useEffect(() => {
+    fetchDatasets();
+  }, [activeFilter, sortDirection]);
+
   /**
    * Handles changes to the dataset sorting filter.
    * @param filter - The selected sorting filter.
