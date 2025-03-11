@@ -46,7 +46,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       });
       return;
     }
-    
+
     try {
       const result = await MySwal.fire({
         title: t("load_dataset"),
@@ -86,14 +86,16 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                 setTimeStamps(timestamps);
                 // Stop the loop when progress reaches 100%
                 if (progressResponse.progress >= 100) {
+                  // sleep for 1 second to allow the items to be loaded
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
                   setLoading(false);
                   toast.success(t("items_fetch_success"), {toastId: 'items-success',});
                   return;
                 }
               }
 
-              // Increase the polling interval to 1/2 second (500ms)
-              await new Promise((resolve) => setTimeout(resolve, 500));
+              // Increase the polling interval to 1 second (1000ms)
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           };
 
