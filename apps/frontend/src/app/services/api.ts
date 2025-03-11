@@ -336,7 +336,7 @@ export const insertDatalayerView = async (
  */
 export const resetDatalayerView = async (): Promise<any> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/reset-view`);
+    const response = await fetch(`${BASE_URL}/api/reset-datalayer-view`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }

@@ -697,7 +697,7 @@ class DataControllerTests {
   @Test
   void resetView_Success() throws Exception {
     // Act & Assert
-    mockMvc.perform(get("/api/reset-view"))
+    mockMvc.perform(get("/api/reset-datalayer-view"))
         .andExpect(status().isOk())
         .andExpect(content().string("View reset successfully"));
 
@@ -711,7 +711,7 @@ class DataControllerTests {
         .when(dataService).resetView();
 
     // Act & Assert
-    mockMvc.perform(get("/api/reset-view"))
+    mockMvc.perform(get("/api/reset-datalayer-view"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.error").value("Data Error"))

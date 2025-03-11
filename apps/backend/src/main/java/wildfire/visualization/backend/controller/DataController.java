@@ -342,9 +342,9 @@ public class DataController {
    * @return ResponseEntity containing a String object indicating if the reset was
    *         successful
    */
-  @GetMapping("/api/reset-view")
+  @GetMapping("/api/reset-datalayer-view")
   public ResponseEntity<String> resetView() {
-    logger.info("Received request to /api/reset-view");
+    logger.info("Received request to /api/reset-datalayer-view");
     dataService.resetView();
     logger.info("Successfully processed resetting view");
     return ResponseEntity.ok("View reset successfully");
