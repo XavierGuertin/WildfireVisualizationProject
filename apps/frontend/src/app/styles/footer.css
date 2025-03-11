@@ -68,3 +68,89 @@
   margin-left: 10px;
   text-align: center;
 }
+
+.customSliderContainer {
+  margin-left: 65px;
+  margin-bottom: 20px;
+  position: relative;
+  width: calc(90% - 50px);
+  height: 30px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sliderTrack {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  background-color: #ccc;
+  border-radius: 20px;
+  border-color: #a3a3a3;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.sliderThumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: #00467E;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 3;
+}
+
+.timeMarker {
+  display: none;
+}
+
+.timeMarker.active {
+  width: 40px;
+  height: 40px;
+  top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  z-index: 2;
+}
+
+.timeMarker.active .timeMarkerText {
+  display: block;
+}
+
+.timeMarkerThumb {
+  position: absolute;
+  width: 85px;
+  height: 50px;
+  border-radius: 12px;
+  background-color: #00467E;
+  transform: translateX(-50%);
+  top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  z-index: 4;
+}
+
+.timeMarkerText {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.3;
+  font-family: 'Arial', sans-serif;
+}
+
+.timeMarkerText span {
+  font-size: 12px;
+}
+
+.timeMarkerThumb.active .timeMarkerText {
+  display: block;
+}
