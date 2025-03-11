@@ -27,6 +27,13 @@ body {
   flex-direction: column;
 }
 
+@media (max-height: 700px) {
+  .datasets-container {
+    height: auto;
+    max-height: 85vh;
+  }
+}
+
 .datasets-container.collapsed {
   width: 75px;
   height: 75px;
