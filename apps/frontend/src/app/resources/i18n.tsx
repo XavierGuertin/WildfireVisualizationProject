@@ -124,7 +124,9 @@ const resources = {
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
       toggle_datasets: 'Afficher les collections de données',
-      // TODO: Translate the datasets strings
+      showing_all_datasets: 'Afficher toutes les collections',
+      filtering_by_map_view: 'Filtrer les collections par région',
+      name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',
       latest_updated: 'Dernière Mise à Jour',
