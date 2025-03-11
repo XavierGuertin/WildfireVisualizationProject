@@ -85,8 +85,28 @@ const Footer = () => {
     const map = mapRef.current as Map;
     setIsPlaying(false);
     setSliderValue(0);
-    localStorage.setItem("timestamp", "0")
-    changeLayer(map, false, timeStamps[0])
+    localStorage.setItem('sliderValue', '0');
+    changeLayer(map, false, timeStamps[0]);
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+
+    // Format the date (YYYY-MM-DD)
+    const dateStr = date.toISOString().split('T')[0];
+
+    // Format the time (HH:MM:SS)
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:${seconds}`;
+
+    return (
+      <>
+        <span>{dateStr}</span>
+        <span>{timeStr}</span>
+      </>
+    );
   };
 
   useEffect(() => {
