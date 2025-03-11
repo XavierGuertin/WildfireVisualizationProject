@@ -233,10 +233,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @returns The translation key for the toggle status
    */
   const getToggleStatusText = () => {
-    if (!currentBbox) {
+    if (!currentBbox || currentBbox.length === 0) {
       return t('map_required');
     }
-
     return t('filtering_by_map_view');
   };
 
