@@ -9,6 +9,7 @@ import LoadingModule from './LoadingModule';
 import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
+import { getConfig, saveConfig } from '../services/configApi';
 
 interface MapMetaDataProps {
   id?: string;
@@ -17,9 +18,9 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
-  onDatasetLoaded: (datasetId: string) => void;
   onClose: () => void;
   visible: boolean;
+  refreshDatasets: () => void;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
@@ -30,8 +31,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   processes = '',
   datasetSource = '',
   visible,
-  onDatasetLoaded,
-}) => {
+  refreshDatasets,
+})  => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
@@ -88,8 +89,18 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                 setTimeStamps(timestamps);
                 // Stop the loop when progress reaches 100%
                 if (progressResponse.progress >= 100) {
+                  console.log("MapMetaData: Dataset loaded successfully");
                   setLoading(false);
                   toast.success(t("items_fetch_success"), {toastId: 'items-success',});
+
+                  try {
+                    const config = await getConfig();
+                    config.loadedDataset = id;
+                    await saveConfig(config);
+                    refreshDatasets?.();
+                  } catch (err) {
+                    console.error("Error updating loadedDataset in config:", err);
+                  }
                   return;
                 }
               }
@@ -167,7 +178,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           <LoadingModule
             progress={progress}
             isVisible={loading}
-            datasetBeingLoaded={id}
+            datasetBeingLoaded={name}
             data-testid="loading-module"
           />
           {t('load_dataset')}

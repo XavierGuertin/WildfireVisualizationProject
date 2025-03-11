@@ -21,7 +21,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0); // Add state for refresh key
   const [isMetadataVisible, setMetadataVisible] = useState(false); // Add state for metadata visibility
   const [currentBbox, setCurrentBbox] = useState<[number, number, number, number] | undefined>(undefined);
-  const [loadedDatasetName, setLoadedDatasetName] = useState<string | null>(null);
 
   // Function to show loading bar with progress
   const showLoadingBar = () => {
@@ -68,13 +67,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     try {
       setLoading(true); // Show loading overlay
-      setLoadedDatasetName(null); // Reset loaded dataset name
       showLoadingBar(); // Start progress simulation
 
       // Simulate a delay for loading (mocked)
       await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-
-      setLoadedDatasetName(selectedDataset.id); // set the successfully loaded dataset name
+      console.log('Dataset loaded successfully (mock)');
     } catch (error) {
       console.error('Error loading dataset:', error);
     } finally {
@@ -97,14 +94,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <LoadingModule
             progress={progress}
             isVisible={loading}
-            datasetBeingLoaded={selectedDataset?.id}
+            datasetBeingLoaded={selectedDataset?.name}
           />
           <main className="app-main">{children}</main>
           <AvailableDatasets 
               onDatasetClick={handleDatasetClick}
               refreshKey={refreshKey} 
-              currentBbox={currentBbox ?? undefined}
-              loadedDatasetName={loadedDatasetName} />
+              currentBbox={currentBbox ?? undefined} />
           <MapView onBboxChange={(bbox) => {
               if (bbox && bbox.length === 4) {
                 setCurrentBbox(bbox as [number, number, number, number]);
@@ -119,9 +115,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               format={selectedDataset.format}
               processes={selectedDataset.processes}
               datasetSource={selectedDataset.datasetSource}
-              onDatasetLoaded={handleLoadDataset}
               onClose={() => setMetadataVisible(false)}
               visible={isMetadataVisible} // Pass visibility state
+              refreshDatasets={refreshDatasets}
             />
           )}
           
