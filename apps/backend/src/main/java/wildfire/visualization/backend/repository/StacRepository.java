@@ -130,49 +130,53 @@ public class StacRepository {
 
   /**
    * Fetches a list of collections from the database, optionally filtered by a
-   * bounding box (BBOX)
-   * and sorted by a specified column.
+   * bounding box (BBOX) and sorted with specified column and direction.
    *
-   * @param bbox    An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                null, no filter is applied.
-   * @param orderBy The column by which to order results (e.g., "id" or
-   *                "datetime"). If empty, no ordering is applied.
-   * @return A list of collections as key-value maps, containing collection
-   *         metadata.
+   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                     null, no filter is applied.
+   * @param orderBy      The column by which to order results (e.g., "id" or "datetime").
+   *                     If empty, no ordering is applied.
+   * @param sortDirection The direction to sort ("asc" or "desc"). Defaults to "asc" if invalid.
+   * @return A list of collections as key-value maps, containing collection metadata.
    * @throws RepositoryException If a database error occurs or inputs are invalid
    */
-  List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy) {
+  List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy, String sortDirection) {
     // Ensure bounding box contains exactly 4 elements (minX, minY, maxX, maxY)
     if (bbox != null && bbox.length != 4) {
       throw new RepositoryException("Bounding box must have exactly 4 elements (minX, minY, maxX, maxY)");
     }
 
+    // Validate sort direction
+    String direction = "asc".equalsIgnoreCase(sortDirection) || "desc".equalsIgnoreCase(sortDirection)
+      ? sortDirection.toLowerCase()
+      : "asc";
+
     // Log query type (bbox filtering or not)
     if (bbox == null) {
-      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy));
+      logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy + " " + direction));
     } else {
-      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox) + (orderBy.isEmpty() ? "" : " sorted by " + orderBy + " " + direction));
     }
 
     try {
       // Base SQL query for fetching collections
       String sql = "WITH bbox_data AS ( " +
-          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
-          "  FROM pgstac.collections " +
-          ") " +
-          "SELECT key, id, bbox_array AS bbox " +
-          "FROM bbox_data ";
+        "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
+        "  FROM pgstac.collections " +
+        ") " +
+        "SELECT key, id, bbox_array AS bbox " +
+        "FROM bbox_data ";
 
       // Apply bounding box filtering if provided
       if (bbox != null) {
         sql += "WHERE ST_Intersects( " +
-            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
-            "  ST_SetSRID(ST_MakeEnvelope( " +
-            "    (bbox_array->0->>0)::double precision, " +
-            "    (bbox_array->0->>1)::double precision, " +
-            "    (bbox_array->0->>2)::double precision, " +
-            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
-            ") ";
+          "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+          "  ST_SetSRID(ST_MakeEnvelope( " +
+          "    (bbox_array->0->>0)::double precision, " +
+          "    (bbox_array->0->>1)::double precision, " +
+          "    (bbox_array->0->>2)::double precision, " +
+          "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+          ") ";
       }
 
       // Validate and apply ordering if provided
@@ -180,13 +184,13 @@ public class StacRepository {
         if (!Arrays.asList("id", "datetime").contains(orderBy)) {
           throw new RepositoryException("Invalid orderBy column: " + orderBy);
         }
-        sql += " ORDER BY " + orderBy;
+        sql += " ORDER BY " + orderBy + " " + direction;
       }
 
       // Execute query and fetch results
       List<Map<String, Object>> results = (bbox != null)
-          ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
-          : jdbcTemplate.queryForList(sql);
+        ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
+        : jdbcTemplate.queryForList(sql);
 
       logger.info("Successfully fetched {} collections.", results.size());
       return results;
@@ -206,12 +210,12 @@ public class StacRepository {
    * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollections(double[] bbox) {
-    return fetchCollections(bbox, ""); // No ordering applied
+    return fetchCollections(bbox, "", "asc"); // No ordering applied, default ascending
   }
 
   /**
    * Deletes all collections from the database
-   * 
+   *
    * @throws RepositoryException if a database error occurs
    */
   public void deleteAllCollections() {
@@ -228,7 +232,7 @@ public class StacRepository {
 
   /**
    * Retrieves timestamps of all items in the database
-   * 
+   *
    * @return List of timestamps as strings
    * @throws RepositoryException if a database error occurs
    */
@@ -247,7 +251,7 @@ public class StacRepository {
 
   /**
    * Deletes all items from the database
-   * 
+   *
    * @throws RepositoryException if a database error occurs
    */
   public void deleteAllItems() {
@@ -264,30 +268,31 @@ public class StacRepository {
 
   /**
    * Retrieves all collections from the database, optionally filtered by a
-   * bounding box (BBOX),
-   * and sorted by collection name (ID).
+   * bounding box (BBOX), and sorted by collection name (ID) with specified direction.
    *
-   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
-   *             null, no filter is applied.
+   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                     null, no filter is applied.
+   * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections sorted by name.
    * @throws RepositoryException if a database error occurs
    */
-  public List<Map<String, Object>> getAllCollectionsByName(double[] bbox) {
-    return fetchCollections(bbox, "id"); // Order by collection name (ID)
+  public List<Map<String, Object>> getAllCollectionsByName(double[] bbox, String sortDirection) {
+    return fetchCollections(bbox, "id", sortDirection);
   }
 
   /**
    * Retrieves all collections from the database, optionally filtered by a
    * bounding box (BBOX),
-   * and sorted by date.
+   * and sorted by date with specified direction.
    *
    * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
    *             null, no filter is applied.
+   * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections sorted by date.
    * @throws RepositoryException if a database error occurs
    */
-  public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox) {
-    return fetchCollections(bbox, "datetime"); // Order by date
+  public List<Map<String, Object>> getAllCollectionsByDate(double[] bbox, String sortDirection) {
+    return fetchCollections(bbox, "datetime", sortDirection);
   }
 
   /**
@@ -321,7 +326,7 @@ public class StacRepository {
 
   /**
    * Retrieves all items from a specific collection
-   * 
+   *
    * @param collectionId ID of the collection to retrieve items from
    * @return List of maps containing item data
    * @throws RepositoryException if a database error occurs
@@ -524,7 +529,7 @@ public class StacRepository {
   /**
    * Method responsible for removing an item of a given collection from the
    * database
-   * 
+   *
    * @param itemId       Database ID of item to be removed
    * @param collectionId Database ID of collection that the item pertains to
    * @return String object to clarify if removal was successful

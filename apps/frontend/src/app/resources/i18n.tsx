@@ -46,7 +46,7 @@ const resources = {
       dataset_loaded: 'Loaded', 
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
-      filtering_by_map_view: 'Filtering datasets by region',
+      filtering_by_map_view: 'Only Show Datasets in View',
       showing_all_datasets: 'Showing all datasets',
       map_required: 'Load map first',
       // Filters
@@ -78,6 +78,8 @@ const resources = {
       //Errors
       error_fetching_collections:
         'Failed to fetch collections. Please try again with a valid endpoint url.',
+      error_fetching_config_file:
+        'Failed to fetch config file. Please validate app-config.json.',
     },
   },
   fr: {
@@ -123,13 +125,9 @@ const resources = {
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
-      dataset_loaded: 'Chargé',
-      //Datasets - Toggle
-      toggle_datasets: "Basculer les jeux de données",
-      filtering_by_map_view: "Filtrer les données par région",
-      showing_all_datasets: "Affichage de toutes les données",
-      map_required: "Charger la carte d'abord",
-      // Filters
+      toggle_datasets: 'Afficher les collections de données',
+      showing_all_datasets: 'Afficher toutes les collections',
+      filtering_by_map_view: 'Filtrer les collections par région',
       name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',
@@ -158,6 +156,8 @@ const resources = {
       //Errors
       error_fetching_collections:
         "Impossible de récupérer les collections. Veuillez réessayer avec un URL d'endpoint valide.",
+      error_fetching_config_file:
+        "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
     },
   },
 };
