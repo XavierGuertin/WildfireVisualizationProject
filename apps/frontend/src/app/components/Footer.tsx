@@ -15,8 +15,11 @@ const Footer = () => {
   const { speed, setSpeed } = useMapLayerContext();
   const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
 
-  const { mapRef, timeStamps, sliderValue, setSliderValue, setTimeStamps } = useMapLayerContext();
+  const { mapRef, timeStamps, sliderValue, setSliderValue, setTimeStamps } =
+    useMapLayerContext();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -25,9 +28,11 @@ const Footer = () => {
         const savedSpeed = localStorage.getItem('playbackSpeed');
         if (savedSpeed) {
           setSpeed(parseFloat(savedSpeed));
-          toast.success(t('speed_retrieved'), {toastId: 'speed-success'});
+          toast.success(t('speed_retrieved'), { toastId: 'speed-success' });
         } else {
-          toast.info(t('default_speed_retrieved'), {toastId: 'speed-default'});
+          toast.info(t('default_speed_retrieved'), {
+            toastId: 'speed-default',
+          });
         }
         setSpeedInitialized(true);
         intitializeTimestampIfItemsPresent();
@@ -49,9 +54,31 @@ const Footer = () => {
   }, [speed, speedInitialized]);
 
   const handlePlayPause = () => setIsPlaying((prev) => !prev);
+
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
-    toast.success(t('speed_changed') + newSpeed + 'x', {toastId: 'speed-changed'});
+    toast.success(t('speed_changed') + newSpeed + 'x', {
+      toastId: 'speed-changed',
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    handleSliderMove(e);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDraggingRef.current) {
+      handleSliderMove(e);
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
   useEffect(() => {
@@ -62,7 +89,7 @@ const Footer = () => {
         setSliderValue((prev) => {
           const newValue = prev < timeStamps.length - 1 ? prev + 1 : 0;
           changeLayer(map, false, timeStamps[newValue]);
-          localStorage.setItem("sliderValue", newValue.toString())
+          localStorage.setItem('sliderValue', newValue.toString());
           return newValue;
         });
       }, 1000 / speed);
@@ -73,13 +100,24 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
 
+  const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
+    if (sliderRef.current && timeStamps.length > 0) {
+      const rect = sliderRef.current.getBoundingClientRect();
+      const position = (e.clientX - rect.left) / rect.width;
+      const newValue = Math.max(
+        0,
+        Math.min(
+          Math.floor(position * timeStamps.length),
+          timeStamps.length - 1,
+        ),
+      );
 
-  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const map = mapRef.current as Map;
-    setSliderValue(Number(event.target.value));
-    changeLayer(map, false, timeStamps[Number(event.target.value)])
-    localStorage.setItem("sliderValue", event.target.value)
-  }
+      setSliderValue(newValue);
+      const map = mapRef.current as Map;
+      changeLayer(map, false, timeStamps[newValue]);
+      localStorage.setItem('sliderValue', newValue.toString());
+    }
+  };
 
   const handleStopPress = () => {
     const map = mapRef.current as Map;
@@ -123,24 +161,26 @@ const Footer = () => {
   }, []);
 
   /**
- * This fetches and loads the stac items if they exist in the items table
- */
+   * This fetches and loads the stac items if they exist in the items table
+   */
   const intitializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
     if (timestampsResponse) {
       setTimeStamps(timestampsResponse);
-      const stringCurrentSliderValue = localStorage.getItem("sliderValue");
+      const stringCurrentSliderValue = localStorage.getItem('sliderValue');
 
       // Check if there's a saved slider value in localStorage, otherwise default to 0
-      const currentSliderValue = stringCurrentSliderValue ? parseInt(stringCurrentSliderValue) : 0;
+      const currentSliderValue = stringCurrentSliderValue
+        ? parseInt(stringCurrentSliderValue)
+        : 0;
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
     }
   };
 
   /**
- * Add layer if the timeStamps list is populated
- */
+   * Add layer if the timeStamps list is populated
+   */
   useEffect(() => {
     if (timeStamps.length > 0) {
       const map = mapRef.current as Map;
@@ -148,14 +188,13 @@ const Footer = () => {
     }
   }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
 
-
   return (
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}
       <div className="speedContainer">
         {[0.5, 1, 1.5, 2, 4].map((s) => (
           <button
-            className={`speedButton {speed === s ? 'border-[#00467E]' : 'border-white'}`}
+            className={`speedButton ${speed === s ? 'border-[#00467E]' : 'border-white'}`}
             key={s}
             onClick={() => handleSpeedChange(s)}
             data-testid={`speed-button-${s}`}
