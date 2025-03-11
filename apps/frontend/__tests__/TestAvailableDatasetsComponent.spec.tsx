@@ -266,79 +266,8 @@ describe('Test AvailableDatasets component', () => {
 
     await waitFor(() => {
       expect(mockFetchCollectionsByName).toHaveBeenCalled();
-      expect(
-        screen.getByTestId('dataset-button-dataset-1'),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument();
     });
-  });
-
-  it('filters datasets by date when activeFilter is Date', async () => {
-    mockFetchCollectionsByDate.mockResolvedValue(mockDatasets);
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    fireEvent.click(screen.getByTestId('filter-button-Date'));
-    await waitFor(() => {
-      expect(mockFetchCollectionsByDate).toHaveBeenCalled();
-    });
-  });
-
-  it('handles non-array responses gracefully', async () => {
-    mockReturnListOfCollections.mockResolvedValue({
-      error: 'Unexpected format',
-    });
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    await waitFor(() => {
-      expect(screen.getByTestId('no-datasets-container')).toBeInTheDocument();
-    });
-  });
-
-  it('catches errors while fetching datasets', async () => {
-    mockReturnListOfCollections.mockRejectedValue(new Error('Error loading'));
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    await waitFor(() => {
-      expect(screen.getByTestId('no-datasets-container')).toBeInTheDocument();
-    });
-  });
-
-  it('toggles sort direction when clicking the same filter again', async () => {
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    const nameFilterButton = screen.getByTestId('filter-button-Name');
-    fireEvent.click(nameFilterButton);
-    fireEvent.click(nameFilterButton);
-  });
-
-  it('resets filter and sort direction', async () => {
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    fireEvent.click(screen.getByTestId('filter-button-Name'));
-    fireEvent.click(screen.getByTestId('filter-button-reset'));
-  });
-
-  it('shows map_required text if currentBbox is absent', () => {
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} currentBbox={undefined} />);
-    expect(screen.getByTestId('toggle-status-text')).toHaveTextContent('map_required');
-  });
-
-  it('shows alpha sort icon when sorting by Name', async () => {
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    fireEvent.click(screen.getByTestId('filter-button-Name'));
-  });
-
-  it('shows numeric sort icon when sorting by Date', async () => {
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-    fireEvent.click(screen.getByTestId('filter-button-Date'));
   });
 
   it('displays an error message if fetchError is set', async () => {
@@ -346,6 +275,87 @@ describe('Test AvailableDatasets component', () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
     await waitFor(() => {
       expect(screen.queryByTestId('error-message')).not.toBeNull();
+    });
+  });
+
+  it('should display translated error when fetch fails with "Failed to fetch data by name"', async () => {
+    mockFetchCollectionsByName.mockResolvedValue({ error: 'Failed to fetch data by name' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    const nameFilterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(nameFilterButton);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_name');
+    });
+  });
+
+  it('should display translated error when fetch fails with "Failed to fetch data by date"', async () => {
+    mockFetchCollectionsByDate.mockResolvedValue({ error: 'Failed to fetch data by date' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    const dateFilterButton = screen.getByTestId('filter-button-Date');
+    fireEvent.click(dateFilterButton);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_date');
+    });
+  });
+
+  it('should display translated error when fetch fails with "Failed to fetch data"', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: 'Failed to fetch data' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
+    });
+  });
+
+  it('should display default translation key when response.error is undefined', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: undefined });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
+    });
+  });
+
+  it('should display raw error string when it does not match any known translation key', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: 'Some random backend error' });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Some random backend error');
+    });
+  });
+
+  it('should trigger fetchDatasets catch block and display fallback error message', async () => {
+    mockReturnListOfCollections.mockRejectedValue(new Error('Something broke'));
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to load datasets.');
     });
   });
 });

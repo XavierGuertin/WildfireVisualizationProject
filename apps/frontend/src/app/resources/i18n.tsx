@@ -78,6 +78,9 @@ const resources = {
       //Errors
       error_fetching_collections:
         'Failed to fetch collections. Please try again with a valid endpoint url.',
+      error_fetching_data: 'Failed to fetch data',
+      error_fetching_data_by_name: 'Failed to fetch data by name',
+      error_fetching_data_by_date: 'Failed to fetch data by date',
       error_fetching_config_file:
         'Failed to fetch config file. Please validate app-config.json.',
     },
@@ -126,9 +129,11 @@ const resources = {
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
       loaded: 'Chargé',
+      //Datasets - Toggle
       toggle_datasets: 'Afficher les collections de données',
       showing_all_datasets: 'Afficher toutes les collections',
       filtering_by_map_view: 'Filtrer les collections par région',
+      // Filters
       name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',
@@ -157,6 +162,9 @@ const resources = {
       //Errors
       error_fetching_collections:
         "Impossible de récupérer les collections. Veuillez réessayer avec un URL d'endpoint valide.",
+      error_fetching_data: 'Échec de la récupération des données',
+      error_fetching_data_by_name: 'Échec de la récupération des données par nom',
+      error_fetching_data_by_date: 'Échec de la récupération des données par date',
       error_fetching_config_file:
         "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
     },

@@ -67,6 +67,30 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [loadedDataset, setLoadedDataset] = useState<string | null>(null);
 
   /**
+ * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
+ * This ensures that user-facing error messages are displayed in the selected language
+ * while allowing the service layer (api.ts) to remain free of localization logic.
+ *
+ * @param rawError - The raw error string returned from the API service
+ * @returns A translated error message string based on the active language
+ */
+  const getTranslatedErrorMessageKey = (rawError: string): string => {
+    switch (rawError) {
+      case 'Failed to fetch data by name':
+        return 'error_fetching_data_by_name';
+      case 'Failed to fetch data by date':
+        return 'error_fetching_data_by_date';
+      case 'Failed to fetch data':
+        return 'error_fetching_data';
+      case '':
+      case undefined:
+        return 'error_fetching_data';
+      default:
+        return rawError;// fallback if no match
+    }
+  };
+  
+  /**
    * Fetches dataset collections based on the selected filter and bounding box.
    * Uses debounce to limit frequent API calls.
    */
@@ -87,10 +111,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         response = await returnListOfCollectionsFromEndpoint(params.bbox);
       }
 
-      // Rest of the function remains the same
       if (!Array.isArray(response)) {
-        console.error("Invalid response format:", response);
-        setFetchError(response.error || "Failed to load datasets.");
+        console.error("Invalid response:", response.error || response);
+        setFetchError(getTranslatedErrorMessageKey(response.error || ''));
         setDatasets([]);
         return;
       }
@@ -182,7 +205,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const handleDatasetClick = async (id: string) => {
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);
-    handleLocalStorageOnDatasetClick(id)
+    await handleLocalStorageOnDatasetClick(id)
     const map = mapRef.current as Map;
     changeLayer(map, true);
   };
@@ -338,7 +361,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
           {fetchError && (
             <div className="error-message" data-testid="error-message">
-              {fetchError}
+              {t(fetchError)}
             </div>
           )}
 
