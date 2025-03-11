@@ -78,6 +78,8 @@ const resources = {
       //Errors
       error_fetching_collections:
         'Failed to fetch collections. Please try again with a valid endpoint url.',
+      error_fetching_config_file:
+        'Failed to fetch config file. Please validate app-config.json.',
     },
   },
   fr: {
@@ -154,6 +156,8 @@ const resources = {
       //Errors
       error_fetching_collections:
         "Impossible de récupérer les collections. Veuillez réessayer avec un URL d'endpoint valide.",
+      error_fetching_config_file:
+        "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
     },
   },
 };

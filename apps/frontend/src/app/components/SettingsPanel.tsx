@@ -11,8 +11,8 @@ import {
 import { PiArrowClockwiseFill, PiGlobeXLight, PiGlobeLight } from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
-  resetCollections, 
-  resetDatalayerView, 
+  resetCollections,
+  resetDatalayerView,
   resetItems,
   verifyIfEndpointHasCollections
 } from '../services/api';
@@ -76,7 +76,7 @@ const SettingsPanel: React.FC<{
         toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
-      
+
       if(config.onlineMode != undefined){
         setIsOnline(config.onlineMode);
       }
@@ -135,6 +135,12 @@ const SettingsPanel: React.FC<{
 
         // Save the new endpoint to config file
         const config = await getConfig();
+        // If an error occurred during fetching config, show error and do not save changes
+        if (config.error) {
+          toast.error(t('error_fetching_config_file'));
+          return false;
+        }
+
         config.endpoint = endpointUrl;
         await saveConfig(config);
 
@@ -194,7 +200,7 @@ const SettingsPanel: React.FC<{
       });
       return;
     }
-    
+
     MySwal.fire({
       title: t('factory_reset'),
       text: t('confirm_factory_reset_data_from_endpoint'),
@@ -231,7 +237,13 @@ const SettingsPanel: React.FC<{
 
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
     setIsOnline(onlineMode);
+
     const config = await getConfig();
+    // If an error occurred during fetching config, show error and do not save changes
+    if (config.error) {
+      toast.error(t('error_fetching_config_file'));
+      return false;
+    }
     config.onlineMode = onlineMode;
     await saveConfig(config);
     setDropdownState({ activeButton: null, isOpen: false });
@@ -283,6 +295,12 @@ const SettingsPanel: React.FC<{
         success = await handleSaveAndFetchEndpoint(inputResult.value);
       } else {
         const config = await getConfig();
+        // If an error occurred during fetching config, show error and do not save changes
+        if (config.error) {
+          toast.error(t('error_fetching_config_file'));
+          break;
+        }
+
         config.endpoint = 'No endpoint saved';
         await saveConfig(config);
 
