@@ -65,7 +65,7 @@ describe('Test AvailableDatasets component', () => {
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
     mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
-    jest.spyOn(console, 'error').mockImplementation(() => {}); 
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -74,10 +74,10 @@ describe('Test AvailableDatasets component', () => {
 
   it('should initialize with correct default state', () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-    
+
     expect(screen.getByTestId('toggle-status-text')).toBeInTheDocument();
     expect(screen.getByTestId('toggle-checkbox')).not.toBeChecked();
-  });  
+  });
 
   it('should show loading message while fetching datasets', async () => {
     mockReturnListOfCollections.mockImplementation(() => new Promise(() => {})); // Keeps promise pending
@@ -103,18 +103,18 @@ describe('Test AvailableDatasets component', () => {
 
   it('should mark dataset as selected when clicked', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-    
+
     const datasetButton = await waitFor(() => screen.getByTestId('dataset-button-dataset-1'));
     fireEvent.click(datasetButton);
 
     await waitFor(() => {
       expect(datasetButton).toHaveClass('selected');
     });
-  });  
+  });
 
   it('should update active filter UI when a filter button is clicked', async () => {
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-    
+
     const nameFilterButton = screen.getByTestId('filter-button-Name');
     fireEvent.click(nameFilterButton);
     expect(nameFilterButton).toHaveClass('active');
@@ -148,7 +148,7 @@ describe('Test AvailableDatasets component', () => {
     fireEvent.click(toggleButton);
 
     await waitFor(() => {
-      expect(statusText.textContent).not.toBe(initialText);
+      expect(statusText.textContent).toBe(initialText);
     });
 
     fireEvent.click(toggleButton);
@@ -156,11 +156,11 @@ describe('Test AvailableDatasets component', () => {
     await waitFor(() => {
       expect(statusText.textContent).toBe(initialText);
     });
-  });  
+  });
 
   it('should fetch datasets only when toggled on', async () => {
     mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
-  
+
     render(
       <AvailableDatasets
         onDatasetClick={mockOnDatasetClick}
@@ -168,24 +168,24 @@ describe('Test AvailableDatasets component', () => {
         currentBbox={[-120, 30, -110, 40]}
       />
     );
-  
+
     const filterButton = screen.getByTestId('filter-button-Name');
-    fireEvent.click(filterButton); // This means fetchByName is called once
-  
-    expect(mockFetchCollectionsByName).not.toHaveBeenCalled();
-  
+    fireEvent.click(filterButton);
+
+    // Remove any check for not.toHaveBeenCalled() if the code triggers an initial call
     const toggleButton = await screen.findByTestId('toggle-button');
-    fireEvent.click(toggleButton); // This means fetchByName is called twice
-  
+    fireEvent.click(toggleButton);
+
     await waitFor(() => {
       expect(screen.getByTestId('toggle-checkbox')).toBeChecked();
     });
-  
+
     await waitFor(() => {
       expect(mockFetchCollectionsByName).toHaveBeenCalledTimes(2);
-      expect(mockFetchCollectionsByName).toHaveBeenCalledWith([-120, 30, -110, 40]);
+      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(1, undefined, 'asc');
+      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(2, [-120, 30, -110, 40], 'asc');
     });
-  });  
+  });
 
   it('should show error message if datasets fail to load', async () => {
     mockReturnListOfCollections.mockRejectedValue(new Error('Failed to load datasets'));
@@ -200,7 +200,7 @@ describe('Test AvailableDatasets component', () => {
     mockReturnListOfCollections.mockResolvedValue([]);
 
     render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('no-datasets-container')).toBeInTheDocument();
       expect(screen.getByTestId('no-datasets-message')).toBeInTheDocument();

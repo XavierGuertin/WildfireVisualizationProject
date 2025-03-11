@@ -121,7 +121,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    */
   useEffect(() => {
     fetchDatasets();
-  }, [isToggled, currentBbox.join(',')]);
+  }, [isToggled, currentBbox?.join(',')]);
 
   /**
    * Add state to track sort direction
