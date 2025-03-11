@@ -47,9 +47,8 @@ const resources = {
       toggle_datasets: 'Toggle Datasets',
       filtering_by_map_view: 'Filtering datasets by region',
       showing_all_datasets: 'Showing all datasets',
-      only_visible_datasets_shown: 'Only datasets in current map view',
-      including_outside_map_view: 'Including datasets outside visible area',
       map_required: 'Load map first',
+      // Filters
       name: 'Name',
       date: 'Date',
       latest_added: 'Latest Added',
@@ -78,6 +77,9 @@ const resources = {
       //Errors
       error_fetching_collections:
         'Failed to fetch collections. Please try again with a valid endpoint url.',
+      error_fetching_data: 'Failed to fetch data',
+      error_fetching_data_by_name: 'Failed to fetch data by name',
+      error_fetching_data_by_date: 'Failed to fetch data by date',
     },
   },
   fr: {
@@ -122,9 +124,14 @@ const resources = {
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Datasets
       available_datasets: 'Collections disponibles',
-      no_datasets_available: 'Aucune collections disponible.',
-      toggle_datasets: 'Afficher les collections de données',
-      // TODO: Translate the datasets strings
+      no_datasets_available: 'Aucune collection disponible.',
+      //Datasets - Toggle
+      toggle_datasets: "Basculer les jeux de données",
+      filtering_by_map_view: "Filtrer les données par région",
+      showing_all_datasets: "Affichage de toutes les données",
+      map_required: "Charger la carte d'abord",
+      // Filters
+      name: 'Nom',
       date: 'Date',
       latest_added: 'Dernier Ajouté',
       latest_updated: 'Dernière Mise à Jour',
@@ -152,6 +159,9 @@ const resources = {
       //Errors
       error_fetching_collections:
         "Impossible de récupérer les collections. Veuillez réessayer avec un URL d'endpoint valide.",
+      error_fetching_data: 'Échec de la récupération des données',
+      error_fetching_data_by_name: 'Échec de la récupération des données par nom',
+      error_fetching_data_by_date: 'Échec de la récupération des données par date',
     },
   },
 };

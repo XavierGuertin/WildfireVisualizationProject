@@ -59,6 +59,19 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const {mapRef} = useMapLayerContext();
 
+  const getTranslatedErrorMessage = (rawError: string): string => {
+    switch (rawError) {
+      case 'Failed to fetch data by name':
+        return t('error_fetching_data_by_name');
+      case 'Failed to fetch data by date':
+        return t('error_fetching_data_by_date');
+      case 'Failed to fetch data':
+        return t('error_fetching_data');
+      default:
+        return rawError; // fallback if no match
+    }
+  };
+  
   /**
    * Fetches dataset collections based on the selected filter and bounding box.
    * Uses debounce to limit frequent API calls.
@@ -81,7 +94,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
       if (!Array.isArray(response)) {
         console.error("Invalid response format:", response);
-        setFetchError(response.error || "Failed to load datasets.");
+        setFetchError(getTranslatedErrorMessage(response.error || ''));
         setDatasets([]);
         return;
       }
