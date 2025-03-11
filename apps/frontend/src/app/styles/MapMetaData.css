@@ -11,6 +11,7 @@
   left: 20px;
   top: 20%;
   z-index: 1000;
+  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
 }
 
 .metadata-container-collapsed {
@@ -32,6 +33,7 @@
   left: 20px;
   top: 20%;
   z-index: 1000;
+  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
 }
 
 
@@ -61,6 +63,12 @@
 
 .content {
   padding: 12px;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.scrollable-description {
+  max-height: 57px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 .data-row {
