@@ -878,4 +878,26 @@ class DataServiceTests {
                 // Verify checkDatalayerView was never called (exception happens before that)
                 verify(stacRepository, never()).checkDatalayerView();
         }
+
+        @Test
+        void resetView_Success() {
+                // Act
+                dataService.resetView();
+
+                // Assert
+                verify(stacRepository, times(1)).resetDatalayerView();
+        }
+
+        @Test
+        void resetView_ShouldLogError_WhenExceptionThrown() {
+                // Arrange
+                doThrow(new RuntimeException("Test exception")).when(stacRepository).resetDatalayerView();
+
+                // Act & Assert
+                assertThatThrownBy(() -> dataService.resetView())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessageContaining("Failed to reset Datalayer view: Test exception");
+
+                verify(stacRepository, times(1)).resetDatalayerView();
+        }
 }
