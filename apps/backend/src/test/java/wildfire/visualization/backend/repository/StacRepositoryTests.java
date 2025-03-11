@@ -307,7 +307,7 @@ class StacRepositoryTests {
 
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
-    List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null);
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null, "asc");
 
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("id", "collection1");
@@ -324,7 +324,7 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
 
-    List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox);
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox, "asc");
 
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("id", "collection1");
@@ -336,7 +336,7 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
     });
 
-    assertThatThrownBy(() -> stacRepository.getAllCollectionsByName(null))
+    assertThatThrownBy(() -> stacRepository.getAllCollectionsByName(null, "asc"))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Error fetching collections");
 
@@ -354,7 +354,7 @@ class StacRepositoryTests {
 
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
-    List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(null);
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(null, "asc");
 
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("datetime", "2024-02-01T12:00:00Z");
@@ -371,7 +371,7 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
 
-    List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(bbox);
+    List<Map<String, Object>> results = stacRepository.getAllCollectionsByDate(bbox, "asc");
 
     assertThat(results).hasSize(2);
     assertThat(results.get(0)).containsEntry("datetime", "2024-02-01T12:00:00Z");
@@ -383,7 +383,7 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString())).thenThrow(new DataAccessException("Database error") {
     });
 
-    assertThatThrownBy(() -> stacRepository.getAllCollectionsByDate(null))
+    assertThatThrownBy(() -> stacRepository.getAllCollectionsByDate(null, "asc"))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Error fetching collections");
 
@@ -745,7 +745,7 @@ class StacRepositoryTests {
     String invalidOrderBy = "invalid_column";
 
     // Act & Assert
-    assertThatThrownBy(() -> stacRepository.fetchCollections(null, invalidOrderBy))
+    assertThatThrownBy(() -> stacRepository.fetchCollections(null, invalidOrderBy, "asc"))
         .isInstanceOf(RepositoryException.class)
         .hasMessageContaining("Invalid orderBy column");
   }
@@ -757,8 +757,8 @@ class StacRepositoryTests {
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
     // Act - Should not throw exception
-    List<Map<String, Object>> result1 = stacRepository.fetchCollections(null, "id");
-    List<Map<String, Object>> result2 = stacRepository.fetchCollections(null, "datetime");
+    stacRepository.fetchCollections(null, "id", "asc");
+    stacRepository.fetchCollections(null, "datetime", "asc");
 
     // Assert
     verify(jdbcTemplate, times(2)).queryForList(anyString());

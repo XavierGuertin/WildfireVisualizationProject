@@ -6,6 +6,11 @@ import {
   FaChevronCircleRight,
   FaDatabase,
   FaFilter,
+  FaSortAlphaDown,
+  FaSortAlphaUp,
+  FaSortNumericDown,
+  FaSortNumericUp,
+  FaTimes
 } from 'react-icons/fa';
 import {
   fetchCollectionsFromEndpointByName,
@@ -68,17 +73,19 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     try {
       let response;
       const params = {
-        bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined
+        bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined,
+        sortDirection
       };
 
       if (activeFilter === 'Name') {
-        response = await fetchCollectionsFromEndpointByName(params.bbox);
+        response = await fetchCollectionsFromEndpointByName(params.bbox, params.sortDirection);
       } else if (activeFilter === 'Date') {
-        response = await fetchCollectionsFromEndpointByDate(params.bbox);
+        response = await fetchCollectionsFromEndpointByDate(params.bbox, params.sortDirection);
       } else {
-        response = await returnListOfCollectionsFromEndpoint(params.bbox); // Fetch all datasets if bbox is undefined
+        response = await returnListOfCollectionsFromEndpoint(params.bbox);
       }
 
+      // Rest of the function remains the same
       if (!Array.isArray(response)) {
         console.error("Invalid response format:", response);
         setFetchError(response.error || "Failed to load datasets.");
@@ -113,17 +120,39 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when toggling filtering by map view.
    */
   useEffect(() => {
-    if (isToggled) {
-      fetchDatasets();
-    }
-  }, [isToggled, currentBbox.join(',')]);
+    fetchDatasets();
+  }, [isToggled, currentBbox?.join(',')]);
+
+  /**
+   * Add state to track sort direction
+   */
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  useEffect(() => {
+    fetchDatasets();
+  }, [activeFilter, sortDirection]);
 
   /**
    * Handles changes to the dataset sorting filter.
    * @param filter - The selected sorting filter.
    */
   const handleFilterChange = (filter: string) => {
-    setActiveFilter(filter);
+    if (activeFilter === filter) {
+      // Toggle direction if same filter is clicked
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Reset to ascending when changing filters
+      setActiveFilter(filter);
+      setSortDirection('asc');
+    }
+  };
+
+  /**
+   * Resets the dataset filters.
+   */
+  const resetFilters = () => {
+    setActiveFilter('');
+    setSortDirection('asc');
   };
 
   /**
@@ -176,7 +205,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         </p>
       );
     }
-    
+
     if (datasets.length > 0) {
       return datasets.map((dataset) => (
         <button
@@ -189,7 +218,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         </button>
       ));
     }
-    
+
     return (
       <div className="no-datasets-container" data-testid="no-datasets-container">
         <p className="no-datasets-message" data-testid="no-datasets-message">
@@ -204,11 +233,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @returns The translation key for the toggle status
    */
   const getToggleStatusText = () => {
-    if (!currentBbox) {
+    if (!currentBbox || currentBbox.length === 0) {
       return t('map_required');
     }
-    
-    return isToggled ? t('filtering_by_map_view') : t('showing_all_datasets');
+    return t('filtering_by_map_view');
   };
 
   return (
@@ -266,20 +294,33 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           </div>
           <div className="filter-container" data-testid="filter-container">
             <div className="filter-icon" data-testid="filter-icon">
-            <FaFilter size={24} />
+              <FaFilter size={24} />
             </div>
-            {['Name', 'Date'].map(
-              (filter) => (
-                <button
-                  key={filter}
-                  className={`filter-button ${activeFilter === filter ? 'active' : ''}`}
-                  onClick={() => handleFilterChange(filter)}
-                  data-testid={`filter-button-${filter}`}
-                >
-                {t(filter.toLowerCase().replace(/ /g, '_'))}
-              </button>
-              ),
+            <button
+              className={`filter-button ${activeFilter === 'Name' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('Name')}
+              data-testid="filter-button-Name"
+            >
+              {t('name')} {activeFilter === 'Name' && (
+              sortDirection === 'asc' ? <FaSortAlphaDown /> : <FaSortAlphaUp />
             )}
+            </button>
+            <button
+              className={`filter-button ${activeFilter === 'Date' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('Date')}
+              data-testid="filter-button-Date"
+            >
+              {t('date')} {activeFilter === 'Date' && (
+              sortDirection === 'asc' ? <FaSortNumericDown /> : <FaSortNumericUp />
+            )}
+            </button>
+            <button
+              className="filter-button reset-button"
+              onClick={resetFilters}
+              data-testid="filter-button-reset"
+            >
+              <FaTimes /> {t('reset')}
+            </button>
           </div>
 
           {fetchError && (

@@ -204,10 +204,10 @@ class DataServiceTests {
                 List<Map<String, Object>> mockCollections = List.of(
                                 Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
                                 Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
-                when(stacRepository.getAllCollectionsByName(null)).thenReturn(mockCollections);
+                when(stacRepository.getAllCollectionsByName(null, "asc")).thenReturn(mockCollections);
 
                 // Act
-                List<Map<String, Object>> collections = dataService.getCollectionsByName(null);
+                List<Map<String, Object>> collections = dataService.getCollectionsByName(null, "asc");
 
                 // Assert
                 assertThat(collections).isNotNull().hasSize(2);
@@ -218,7 +218,7 @@ class DataServiceTests {
                                 "bbox",
                                 "[50,60,70,80]");
 
-                verify(stacRepository, times(1)).getAllCollectionsByName(null);
+                verify(stacRepository, times(1)).getAllCollectionsByName(null, "asc");
         }
 
         @Test
@@ -228,10 +228,10 @@ class DataServiceTests {
                 List<Map<String, Object>> mockCollections = List.of(
                                 Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
                                 Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
-                when(stacRepository.getAllCollectionsByName(eq(bbox))).thenReturn(mockCollections);
+                when(stacRepository.getAllCollectionsByName(eq(bbox), eq("asc"))).thenReturn(mockCollections);
 
                 // Act
-                List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox);
+                List<Map<String, Object>> collections = dataService.getCollectionsByName(bbox, "asc");
 
                 // Assert
                 assertThat(collections).isNotNull().hasSize(2);
@@ -242,21 +242,21 @@ class DataServiceTests {
                                 "bbox",
                                 "[50,60,70,80]");
 
-                verify(stacRepository, times(1)).getAllCollectionsByName(eq(bbox));
+                verify(stacRepository, times(1)).getAllCollectionsByName(eq(bbox), eq("asc"));
         }
 
         @Test
         void getCollectionsByName_Failure() {
                 // Arrange
-                when(stacRepository.getAllCollectionsByName(any()))
+                when(stacRepository.getAllCollectionsByName(any(), eq("asc")))
                                 .thenThrow(new RepositoryException("Test error"));
 
                 // Act & Assert
-                assertThatThrownBy(() -> dataService.getCollectionsByName(null))
+                assertThatThrownBy(() -> dataService.getCollectionsByName(null, "asc"))
                                 .isInstanceOf(DataException.class)
                                 .hasMessageContaining("Failed to fetch collections by name");
 
-                verify(stacRepository, times(1)).getAllCollectionsByName(null);
+                verify(stacRepository, times(1)).getAllCollectionsByName(null, "asc");
         }
 
         @Test
@@ -265,10 +265,10 @@ class DataServiceTests {
                 List<Map<String, Object>> mockCollections = List.of(
                                 Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
                                 Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
-                when(stacRepository.getAllCollectionsByDate(null)).thenReturn(mockCollections);
+                when(stacRepository.getAllCollectionsByDate(null, "asc")).thenReturn(mockCollections);
 
                 // Act
-                List<Map<String, Object>> collections = dataService.getCollectionsByDate(null);
+                List<Map<String, Object>> collections = dataService.getCollectionsByDate(null, "asc");
 
                 // Assert
                 assertThat(collections).isNotNull().hasSize(2);
@@ -279,7 +279,7 @@ class DataServiceTests {
                                 "bbox",
                                 "[50,60,70,80]");
 
-                verify(stacRepository, times(1)).getAllCollectionsByDate(null);
+                verify(stacRepository, times(1)).getAllCollectionsByDate(null, "asc");
         }
 
         @Test
@@ -289,10 +289,10 @@ class DataServiceTests {
                 List<Map<String, Object>> mockCollections = List.of(
                                 Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
                                 Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
-                when(stacRepository.getAllCollectionsByDate(eq(bbox))).thenReturn(mockCollections);
+                when(stacRepository.getAllCollectionsByDate(eq(bbox), eq("asc"))).thenReturn(mockCollections);
 
                 // Act
-                List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox);
+                List<Map<String, Object>> collections = dataService.getCollectionsByDate(bbox, "asc");
 
                 // Assert
                 assertThat(collections).isNotNull().hasSize(2);
@@ -303,21 +303,21 @@ class DataServiceTests {
                                 "bbox",
                                 "[50,60,70,80]");
 
-                verify(stacRepository, times(1)).getAllCollectionsByDate(eq(bbox));
+                verify(stacRepository, times(1)).getAllCollectionsByDate(eq(bbox), eq("asc"));
         }
 
         @Test
         void getCollectionsByDate_Failure() {
                 // Arrange
-                when(stacRepository.getAllCollectionsByDate(any()))
+                when(stacRepository.getAllCollectionsByDate(any(), eq("asc")))
                                 .thenThrow(new RepositoryException("Test error"));
 
                 // Act & Assert
-                assertThatThrownBy(() -> dataService.getCollectionsByDate(null))
+                assertThatThrownBy(() -> dataService.getCollectionsByDate(null, "asc"))
                                 .isInstanceOf(DataException.class)
                                 .hasMessageContaining("Failed to fetch collections by date");
 
-                verify(stacRepository, times(1)).getAllCollectionsByDate(null);
+                verify(stacRepository, times(1)).getAllCollectionsByDate(null, "asc");
         }
 
         @Test
