@@ -3,6 +3,7 @@ package wildfire.visualization.backend.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import wildfire.visualization.backend.exception.ConfigException;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -36,23 +37,22 @@ public class ConfigService {
       } else {
         return Map.of();
       }
-    } catch (IOException e) {
-      logger.error("Error reading config file: {}", e.getMessage(), e);
-      throw new RuntimeException("Error reading config file", e);
+    } catch (Exception e) {
+      throw new ConfigException("Failed to retrieve configuration", e);
     }
   }
 
   /**
    * Method responsible for saving user configuration
    *
-   * @param config Map object containing the key value pairs of the user configuration
+   * @param config Map object containing the key value pairs of the user
+   *               configuration
    */
   public void saveConfig(Map<String, Object> config) {
     try {
       objectMapper.writeValue(new File(CONFIG_FILE_PATH), config);
-    } catch (IOException e) {
-      logger.error("Error writing config file: {}", e.getMessage(), e);
-      throw new RuntimeException("Error writing config file", e);
+    } catch (Exception e) {
+      throw new ConfigException("Failed to save configuration", e);
     }
   }
 }

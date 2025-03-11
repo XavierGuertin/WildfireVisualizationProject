@@ -115,11 +115,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               format={selectedDataset.format}
               processes={selectedDataset.processes}
               datasetSource={selectedDataset.datasetSource}
-              onLoadDataset={handleLoadDataset}
               onClose={() => setMetadataVisible(false)}
               visible={isMetadataVisible} // Pass visibility state
             />
           )}
+          
           <footer className="app-footer"></footer>
         </div>
         </body>

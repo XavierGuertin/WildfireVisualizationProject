@@ -1,18 +1,23 @@
 package wildfire.visualization.backend.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import wildfire.visualization.backend.exception.GlobalExceptionHandler;
+import wildfire.visualization.backend.exception.TestException;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class TestControllerTests {
@@ -23,32 +28,42 @@ class TestControllerTests {
   @InjectMocks
   private TestController testController;
 
-  @Test
-  void testDbConnection_Success() {
-    // Arrange
-    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class)))
-      .thenReturn(1);
+  private MockMvc mockMvc;
 
-    // Act
-    ResponseEntity<String> response = testController.testDbConnection();
-
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).contains("Database connected");
-    assertThat(response.getBody()).contains("1");
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(testController)
+        .setControllerAdvice(new GlobalExceptionHandler())
+        .build();
   }
 
   @Test
-  void testDbConnection_Failure() {
+  void testDbConnection_Success() throws Exception {
     // Arrange
     when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class)))
-      .thenThrow(new RuntimeException("Connection failed"));
+        .thenReturn(1);
 
-    // Act
-    ResponseEntity<String> response = testController.testDbConnection();
+    // Act & Assert
+    mockMvc.perform(get("/api/test/db"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Database connected! Test query result: 1"));
 
-    // Assert
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).contains("Database connection failed");
+    verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Integer.class));
+  }
+
+  @Test
+  void testDbConnection_Failure() throws Exception {
+    // Arrange
+    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class)))
+        .thenThrow(new TestException("Database connection failed"));
+
+    // Act & Assert
+    mockMvc.perform(get("/api/test/db"))
+        .andExpect(status().isServiceUnavailable())
+        .andExpect(jsonPath("$.status").value(503))
+        .andExpect(jsonPath("$.error").value("Test Error"))
+        .andExpect(jsonPath("$.message").value("Database connection failed"));
+
+    verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Integer.class));
   }
 }
