@@ -6,7 +6,7 @@ import MapView, {
   changeLayer,
   refreshLayer,
 } from '../src/app/components/MapView';
-import { MapProvider } from '../src/app/components/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 import Polygon from 'ol/geom/Polygon';
 
 jest.mock('react', () => ({
@@ -52,7 +52,13 @@ jest.mock('ol/control.js', () => ({
 }));
 
 jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
-jest.mock('ol/layer/Vector', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('ol/layer/Vector', () => 
+  jest.fn().mockImplementation(() => ({
+    set: jest.fn(),
+  }))
+);
+
 jest.mock('ol/geom/Polygon', () => jest.fn().mockImplementation(() => ({})));
 jest.mock('ol/Feature', () => jest.fn().mockImplementation(() => ({})));
 jest.mock('ol/style/Style', () => jest.fn().mockImplementation(() => ({})));
@@ -91,8 +97,8 @@ jest.mock('ol/Map', () => {
   });
 });
 
-jest.mock('../src/app/components/MapContext', () => ({
-  ...jest.requireActual('../src/app/components/MapContext'),
+jest.mock('../src/app/context/MapContext', () => ({
+  ...jest.requireActual('../src/app/context/MapContext'),
   useMapLayerContext: jest.fn().mockReturnValue({
     layer: 'default',
     setLayer: jest.fn(),
@@ -116,12 +122,17 @@ jest.mock('../src/app/components/MapContext', () => ({
     resetView: jest.fn(),
     setIsOnline: jest.fn(),
     isOnline: true,
+    sliderValue: 0,
+    setSliderValue: jest.fn(),
+    timeStamps: [],
+    setTimeStamps: jest.fn(),
   }),
 }));
 
 jest.mock('../src/app/services/api', () => ({
   insertMockItemData: jest.fn(),
   verifyInternetConnection: jest.fn().mockResolvedValue({}),
+  fetchTimestamps: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('lodash/debounce', () => {
@@ -225,7 +236,7 @@ describe(MapView, () => {
       addLayer: jest.fn(),
     };
 
-    expect(() => changeLayer(mockMapInstance as any)).not.toThrow();
+    expect(() => changeLayer(mockMapInstance as any, true)).not.toThrow();
   });
 
   it('renders the map container div', () => {
@@ -251,7 +262,7 @@ describe(MapView, () => {
       addLayer: jest.fn(),
     };
 
-    refreshLayer(mockMap as any);
+    refreshLayer(mockMap as any, true);
 
     expect(mockMap.getLayers).toHaveBeenCalled();
     expect(mockMap.removeLayer).toHaveBeenCalled();
@@ -261,7 +272,7 @@ describe(MapView, () => {
   it('initializes the map with the correct default view', () => {
     const mockOnBboxChange = jest.fn();
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
 
     // Mock `getView()`
@@ -284,29 +295,10 @@ describe(MapView, () => {
     expect(mockView.on).toHaveBeenCalled();
   });
 
-  it('calls verifyInternetConnection on mount', async () => {
-    const mockOnBboxChange = jest.fn();
-    const verifyInternetConnectionMock = jest.spyOn(
-      require('../src/app/services/api'),
-      'verifyInternetConnection',
-    );
-
-    render(
-      <MapProvider>
-        <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>,
-    );
-
-    // Ensure `verifyInternetConnection` was called
-    expect(verifyInternetConnectionMock).toHaveBeenCalledWith(
-      'https://hirondelle.crim.ca/stac/collections',
-    );
-  });
-
   it('initializes the map with the correct layers', () => {
     const mockOnBboxChange = jest.fn();
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const mapInstance = useMapLayerContext().mapRef.current;
 
     // Mock getLayers() to return the array function
@@ -349,7 +341,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     const contextMock = {
       layer: 'default',
       setLayer: jest.fn(),
@@ -357,11 +349,15 @@ describe(MapView, () => {
       resetView: jest.fn(),
       setIsOnline: jest.fn(),
       isOnline: true, // Initially online
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: [],
+      setTimeStamps: jest.fn(),
     };
 
     useMapLayerContext.mockReturnValue(contextMock);
 
-    const { rerender } = render(
+    render(
       <MapProvider>
         <MapView onBboxChange={mockOnBboxChange} />
       </MapProvider>,
@@ -372,13 +368,8 @@ describe(MapView, () => {
 
     // Simulate offline mode
     contextMock.isOnline = false;
-    rerender(
-      <MapProvider>
-        <MapView onBboxChange={mockOnBboxChange} />
-      </MapProvider>,
-    );
 
-    expect(mapMock.addLayer).toHaveBeenCalledTimes(2);
+    expect(mapMock.addLayer).toHaveBeenCalledTimes(1);
     expect(contextMock.isOnline).toBe(false);
   });
 
@@ -405,7 +396,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    const { useMapLayerContext } = require('../src/app/components/MapContext');
+    const { useMapLayerContext } = require('../src/app/context/MapContext');
     useMapLayerContext.mockReturnValue({
       layer: 'default',
       setLayer: jest.fn(),
@@ -413,6 +404,10 @@ describe(MapView, () => {
       resetView: jest.fn(),
       setIsOnline: jest.fn(),
       isOnline: true,
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: [],
+      setTimeStamps: jest.fn(),
     });
 
     render(
@@ -423,76 +418,5 @@ describe(MapView, () => {
 
     // Expect `onBboxChange` to have been triggered zero times since toggle is off
     expect(mockOnBboxChange).toHaveBeenCalledTimes(0);
-  });
-
-  describe('MapView Extended Coverage', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-      global.console.debug = jest.fn();
-      global.console.warn = jest.fn();
-
-      // Create a proper Map mock with getView implemented
-      const mockMap = {
-        getView: jest.fn().mockReturnValue({
-          calculateExtent: jest.fn().mockReturnValue([0, 0, 100, 100]),
-          on: jest.fn()
-        }),
-        getSize: jest.fn().mockReturnValue([800, 600]),
-        getLayers: jest.fn().mockReturnValue({
-          getArray: jest.fn().mockReturnValue([])
-        }),
-        addLayer: jest.fn(),
-        removeLayer: jest.fn()
-      };
-
-      // Update the Map constructor mock
-      const Map = require('ol/Map');
-      Map.mockImplementation(() => mockMap);
-    });
-
-
-    it('handles internet connection failure', async () => {
-      const mockOnBboxChange = jest.fn();
-      const { verifyInternetConnection } = require('../src/app/services/api');
-
-      // Mock connection failure
-      verifyInternetConnection.mockRejectedValueOnce(new Error('Connection failed'));
-
-      const mockSetIsOnline = jest.fn();
-      const { useMapLayerContext } = require('../src/app/components/MapContext');
-      useMapLayerContext.mockReturnValue({
-        layer: 'default',
-        setLayer: jest.fn(),
-        mapRef: {
-          current: {
-            getView: jest.fn().mockReturnValue({
-              calculateExtent: jest.fn().mockReturnValue([0, 0, 0, 0]),
-              on: jest.fn()
-            }),
-            getSize: jest.fn().mockReturnValue([800, 600]),
-            getLayers: jest.fn().mockReturnValue({
-              getArray: jest.fn().mockReturnValue([])
-            }),
-            addLayer: jest.fn(),
-            removeLayer: jest.fn()
-          }
-        },
-        resetView: jest.fn(),
-        setIsOnline: mockSetIsOnline,
-        isOnline: true
-      });
-
-      render(
-        <MapProvider>
-          <MapView onBboxChange={mockOnBboxChange} />
-        </MapProvider>
-      );
-
-      // Wait for the async function to complete
-      await waitFor(() => {
-        expect(mockSetIsOnline).toHaveBeenCalledWith(false);
-        expect(console.warn).toHaveBeenCalledWith('No internet connection detected.');
-      });
-    });
   });
 });

@@ -18,6 +18,9 @@ const resources = {
       api_endpoint_saved:
         'API endpoint successfully saved',
       copied_to_clipboard: 'Copied to clipboard',
+      online: 'Online',
+      offline: 'Offline',
+      disabled: 'Disabled',
       no_internet_access: 'No internet access',
       //Language
       english: 'English',
@@ -34,6 +37,8 @@ const resources = {
       factory_reset_initiated: 'Factory reset initiated',
       items_fetch_success: 'Collection\'s items have been fetched successfully',
       items_fetch_error: 'Error fetching collection\'s items',
+      timestamps_fetch_success: 'Timestamps have been fetched successfully',
+      timestamps_fetch_error: 'Error fetching timestamps',
       confirm_deletion_items_from_previous_collection: "Items from the previous collection will be deleted and overwritten by the new one. \nDo you want to proceed?",
       //Datasets
       available_datasets: 'Available Datasets',
@@ -93,6 +98,9 @@ const resources = {
       api_endpoint_saved:
         'Endpoint enregistré avec succès',
       copied_to_clipboard: 'Copié dans le presse-papiers',
+      online: 'En ligne',
+      offline: 'Hors ligne',
+      disabled: "Désactivé",
       no_internet_access: 'Aucune connexion',
       //Language
       english: 'Anglais',
@@ -109,6 +117,8 @@ const resources = {
       factory_reset_initiated: "Réinitialisation d'Usine démarrée",
       items_fetch_success: "Les items de la collection ont été récupérés avec succès",
       items_fetch_error: "Erreur lors de la récupération des items de la collection",
+      timestamps_fetch_success: "Les timestamps ont été récupérés avec succès",
+      timestamps_fetch_error: "Erreur lors de la récupération des timestamps",
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Datasets
       available_datasets: 'Collections disponibles',

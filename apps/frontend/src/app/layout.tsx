@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
 import SettingsPanel from './components/SettingsPanel';
@@ -10,7 +11,9 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './resources/i18n';
 import './layout.css';
 import LoadingModule from './components/LoadingModule';
-import { MapProvider } from './components/MapContext';
+import { MapProvider } from './context/MapContext';
+import { fetchMetaData } from './services/api';
+import { ToastContainer } from 'react-toastify';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -37,9 +40,28 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
-    setSelectedDataset(dataset); // Just update the selected dataset
-    setMetadataVisible(true); // Show metadata container
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId !== dataset.id){
+      setSelectedDataset(dataset); // Just update the selected dataset
+      setMetadataVisible(true); // Show metadata container
+    } else {
+      setMetadataVisible(false)
+    }
   };
+
+  // Handles loading the metadata if dataset is already selected on load
+  useEffect(() => {
+    const onLoadDataset = async () => {
+      const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+      if(selectedDatasetId !== null && selectedDatasetId !== ''){
+        const dataset = await fetchMetaData(selectedDatasetId)
+        setSelectedDataset(dataset)
+        setMetadataVisible(true)
+      }
+    }
+
+    onLoadDataset();
+  }, [])
 
   // Handle dataset loading from MapMetaData
   const handleLoadDataset = async () => {
@@ -70,6 +92,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <MapProvider>
         <html lang="en">
         <body>
+        <ToastContainer/>
         <SettingsPanel refreshDatasets={refreshDatasets} setMetadataVisible={setMetadataVisible} />
         <div className="layout-container relative">
           <LoadingModule
@@ -102,6 +125,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               visible={isMetadataVisible} // Pass visibility state
             />
           )}
+          
           <footer className="app-footer"></footer>
         </div>
         </body>

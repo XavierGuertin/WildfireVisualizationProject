@@ -3,7 +3,7 @@ import React from 'react';
 import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
 
 // --- Mocks ---
 
@@ -57,6 +57,20 @@ jest.mock('sweetalert2', () => {
   };
 });
 
+jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
+
+jest.mock('ol/layer/Tile', () => {
+  return jest.fn().mockImplementation(() => {
+    const properties: Record<string, any> = {}; // Store layer properties
+
+    return {
+      set: jest.fn((key: string, value: any) => {
+        properties[key] = value; // Store key-value pairs
+      }),
+    };
+  });
+});
+
 // Ensure the clipboard API exists.
 Object.assign(navigator, {
   clipboard: {
@@ -87,10 +101,11 @@ describe('SettingsPanel Component', () => {
     localStorage.clear();
   });
 
-  it('renders the three dropdown buttons (settings, language, reset)', async () => {
+  it('renders the four dropdown buttons (settings, language, internet reset)', async () => {
     await renderSettingsPanel();
     expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /language/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /internet/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
   });
 
@@ -294,43 +309,38 @@ describe('SettingsPanel Component', () => {
     });
   });
 
-  describe('Offline Behavior', () => {
-    it('Internet button is not visible when online', () => {
-      const OnlineComponent = () => {
-        const { setIsOnline } = useMapLayerContext();
-        setIsOnline(true);
-        return <></>;
-      };
+  describe('Offline Mode Dropdown', () => {
+    it('opens the offline mode dropdown and allows the user to select a mode', async () => {      
+      await renderSettingsPanel();
 
-      const TestComponent = () => (
-        <MapProvider>
-          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn} />
-          <OnlineComponent />
-        </MapProvider>
-      );
+      const internetButton = screen.getByRole('button', { name: /internet/i });
+      await act(async () => {
+        fireEvent.click(internetButton);
+      });
+      expect(internetButton).toHaveClass('active');
 
-      render(<TestComponent />);
-      expect(screen.queryByRole('button', { name: /internet/i })).not.toBeInTheDocument();
+      // Verify modes
+      const onlineOption = screen.getByText('online');
+      const offlineOption = screen.getByText('offline');
+      expect(onlineOption).toBeInTheDocument();
+      expect(offlineOption).toBeInTheDocument();
+
+      // Select offline
+      await act(async () => {
+        fireEvent.click(offlineOption);
+      });
+      expect(screen.getByTestId('offline-icon')).toBeInTheDocument();
+
+      // Re-open dropdown and select online.
+      await act(async () => {
+        fireEvent.click(internetButton);
+      });
+      const newOnlineOption = screen.getByText('online');
+      await act(async () => {
+        fireEvent.click(newOnlineOption);
+      });
+      expect(screen.getByTestId('online-icon')).toBeInTheDocument();
     });
-
-    it('Internet button is visible when offline', () => {
-      const OnlineComponent = () => {
-        const { setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
-        return <></>;
-      };
-
-      const TestComponent = () => (
-        <MapProvider>
-          <SettingsPanel refreshDatasets={jest.fn} setMetadataVisible={jest.fn} />
-          <OnlineComponent />
-        </MapProvider>
-      );
-
-      render(<TestComponent />);
-      expect(screen.queryByRole('button', { name: /internet/i })).toBeInTheDocument();
-    });
-
   });
 
   describe('Language Configuration', () => {
@@ -443,7 +453,6 @@ describe('SettingsPanel Component', () => {
 
   it('calls resetItems when factory reset is triggered', async () => {
     const { resetItems, resetCollections } = require('../src/app/services/api');
-    const { setLayer, setSpeed } = require('../src/app/components/MapContext');
     const Swal = require('sweetalert2');
     Swal.fire.mockResolvedValueOnce({ isConfirmed: true });
 
@@ -465,32 +474,6 @@ describe('SettingsPanel Component', () => {
       expect(resetItems).toHaveBeenCalled();
     });
   });
-
-  describe('Internet Connection Display', () => {
-    it('shows internet status when internet dropdown is clicked', async () => {
-      const OfflineComponent = () => {
-        const { setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
-        return <></>;
-      };
-
-      render(
-        <MapProvider>
-          <SettingsPanel refreshDatasets={jest.fn()} setMetadataVisible={jest.fn()} />
-          <OfflineComponent />
-        </MapProvider>
-      );
-
-      const internetButton = await screen.findByTestId('internet-dropdown-button');
-      await act(async () => {
-        fireEvent.click(internetButton);
-      });
-
-      const noInternetMessage = await screen.findByTestId('internet-button');
-      expect(noInternetMessage).toHaveTextContent('no_internet_access');
-    });
-  });
-
 
   describe('Endpoint Prompt Flow', () => {
     it('handles confirmed input in promptForEndpoint', async () => {

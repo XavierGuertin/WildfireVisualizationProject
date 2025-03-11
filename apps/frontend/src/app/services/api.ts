@@ -104,7 +104,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
 
     const sourceLink = parent.href;
     let truncatedSource = '';
-    if (sourceLink.charAt(sourceLink.length - 1) === '/')
+    if (sourceLink.endsWith('/'))
       truncatedSource = sourceLink.substring(0, sourceLink.length - 1);
 
     const source = truncatedSource.split('/').pop()?.toUpperCase();
@@ -202,8 +202,45 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
     }
     return await response.text();
   } catch (error: any) {
-    console.error('Error fetching MetaData:', error);
-    return { error: 'Failed to fetch MetaData' };
+    console.error('Error fetching Items:', error);
+    return { error: 'Failed to fetch Items' };
+  }
+};
+
+/**
+ * Fetches the progress of item fetching for a given collection.
+ *
+ * @param collectionId The ID of the collection.
+ * @returns A promise resolving to the progress percentage or an error object.
+ */
+export const fetchProgress = async (collectionId: string): Promise<{ collectionId: string; progress: number } | { error: string }> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-progress/${collectionId}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching progress:', error.message);
+    return { error: 'Failed to fetch progress' };
+  }
+};
+
+
+export const fetchTimestamps = async (): Promise<string[]> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-items-timestamps`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching timestamps:', error.message);
+    throw new Error(`Failed to fetch timestamps: ${error.message}`);
   }
 };
 
@@ -232,6 +269,21 @@ export const insertDatalayerView = async (collectionId: string): Promise<any> =>
   } catch (error: any) {
     console.error("Error inserting View:", error);
     return { error: "Failed to insert View" };
+  }
+}
+
+/**
+ * Resets datalayer view
+ */
+export const resetDatalayerView = async (): Promise<any> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-datalayer-view`);
+    if(!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+  } catch (error: any) {
+    console.error("Error resetting Datalayer View:", error);
+    return { error: "Failed to reset Datalayer View" };
   }
 }
 

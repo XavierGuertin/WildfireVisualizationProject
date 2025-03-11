@@ -1,8 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import React, { useEffect } from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Sidebar from '../src/app/components/Sidebar';
-import { MapProvider, useMapLayerContext } from '../src/app/components/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
 
 // Mock react-toastify.
 jest.mock('react-toastify', () => ({
@@ -76,9 +76,11 @@ describe('Test Sidebar component', () => {
   });
 
   it('should not switch layers when offline', () => {
-      const LayerChecker: React.FC = () => {
+    const LayerChecker: React.FC = () => {
         const { layer, setIsOnline } = useMapLayerContext();
-        setIsOnline(false);
+        useEffect(() => {
+          setIsOnline(false);
+        }, [setIsOnline])
         return <span data-testid="current-layer">{layer}</span>;
       };
 
@@ -88,11 +90,10 @@ describe('Test Sidebar component', () => {
           <LayerChecker />
         </MapProvider>
       );
-
-      const { toast } = require('react-toastify');
-
+      
       render(<TestComponent />);
 
+      const { toast } = require('react-toastify');
       fireEvent.click(screen.getByAltText('views')); // Expand the sidebar
 
       // Check each layer click updates the layer value correctly
@@ -101,10 +102,10 @@ describe('Test Sidebar component', () => {
 
       fireEvent.click(screen.getByAltText('topographical_layer'));
       expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
-      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
+      expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {"toastId": "online-disabled"});
 
       fireEvent.click(screen.getByAltText('satellite_layer'));
       expect(screen.getByTestId('current-layer')).toHaveTextContent('default');
-      expect(toast.error).toHaveBeenCalledWith('view_disabled - no_internet_access', {"toastId": "view-disabled"});
+      expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {"toastId": "online-disabled"});
   });
 });

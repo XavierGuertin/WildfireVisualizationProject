@@ -12,8 +12,13 @@ import {
   fetchCollectionsFromEndpointByDate,
   fetchMetaData,
   returnListOfCollectionsFromEndpoint,
+  insertDatalayerView,
+  resetDatalayerView
 } from '../services/api';
 import debounce from 'lodash/debounce';
+import { useMapLayerContext } from '../context/MapContext';
+import { changeLayer } from './MapView';
+import { Map } from 'ol';
 
 export interface DatasetEntry {
   key: number;
@@ -54,6 +59,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {mapRef} = useMapLayerContext();
 
   /**
    * Fetches dataset collections based on the selected filter and bounding box.
@@ -101,6 +107,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when the refresh key or filter changes.
    */
   useEffect(() => {
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId !== null){
+      setSelectedDataset(selectedDatasetId)
+    }
     fetchDatasets();
     return () => fetchDatasets.cancel();
   }, [refreshKey, activeFilter]);
@@ -142,6 +152,75 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     const dataset = await fetchMetaData(id);
     console.log(`[DEBUG] Fetched metadata for dataset:`, dataset);
     onDatasetClick(dataset);
+    handleLocalStorageOnDatasetClick(id)
+    const map = mapRef.current as Map;
+    changeLayer(map, true);
+  };
+
+  /**
+   * Handles local storage when user selects a dataset
+   * @param id - The dataset ID.
+   */
+  const handleLocalStorageOnDatasetClick = async (id: string) => {
+    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    if(selectedDatasetId === null || selectedDatasetId !== id){
+      await insertDatalayerView(id);
+      localStorage.setItem('selectedDatasetId',id)
+      setSelectedDataset(id);
+    } else {
+      await resetDatalayerView()
+      localStorage.setItem('selectedDatasetId', '')
+      setSelectedDataset(null)
+    }
+  }
+
+  /**
+   * Renders dataset content based on loading state and available datasets
+   */
+  const renderDatasetContent = () => {
+    if (isLoading) {
+      return (
+        <p className="loading-message" data-testid="loading-message">
+          {t('loading_datasets')}
+        </p>
+      );
+    }
+    
+    if (datasets.length > 0) {
+      return datasets.map((dataset) => (
+        <button
+          key={dataset.id}
+          className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+          onClick={() => handleDatasetClick(dataset.id)}
+          data-testid={`dataset-button-${dataset.id}`}
+        >
+          {dataset.id}
+          {dataset.id === loadedDatasetName && (
+                    <span className="loaded-tag" data-testid="loaded-indicator">{t('dataset_loaded')}</span>
+                  )}
+        </button>
+      ));
+    }
+    
+    return (
+      <div className="no-datasets-container" data-testid="no-datasets-container">
+        <p className="no-datasets-message" data-testid="no-datasets-message">
+          {t('no_datasets_available')}
+        </p>
+      </div>
+    );
+  };
+
+  /**
+   * Gets the appropriate toggle status text based on current state
+   * @returns The translation key for the toggle status
+   */
+  const getToggleStatusText = () => {
+    if (!currentBbox) {
+      return t('map_required');
+    }
+    
+    return isToggled ? t('filtering_by_map_view') : t('showing_all_datasets');
   };
 
   return (
@@ -173,10 +252,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 aria-label={t('toggle_datasets')}
               >
                 <span className="toggle-status-text" data-testid="toggle-status-text">
-                  {currentBbox 
-                    ? t(isToggled ? 'filtering_by_map_view' : 'showing_all_datasets')
-                    : t('map_required')
-                  }
+                    {getToggleStatusText()}
                 </span>
                 <input
                   type="checkbox"
@@ -225,31 +301,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
           )}
 
           <div className="buttons-container" data-testid="buttons-container">
-            {isLoading ? (
-              <p className="loading-message" data-testid="loading-message">
-                {t('loading_datasets')}
-              </p>
-            ) : datasets.length > 0 ? (
-              datasets.map((dataset) => (
-                <button
-                  key={dataset.id}
-                  className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
-                  onClick={() => handleDatasetClick(dataset.id)}
-                  data-testid={`dataset-button-${dataset.id}`}
-                >
-                  {dataset.id}
-                  {dataset.id === loadedDatasetName && (
-                    <span className="loaded-tag" data-testid="loaded-indicator">{t('dataset_loaded')}</span>
-                  )}
-                </button>
-              ))
-            ) : (
-              <div className="no-datasets-container" data-testid="no-datasets-container">
-                <p className="no-datasets-message" data-testid="no-datasets-message">
-                  {t('no_datasets_available')}
-                </p>
-              </div>
-            )}
+            {renderDatasetContent()}
           </div>
         </>
       )}

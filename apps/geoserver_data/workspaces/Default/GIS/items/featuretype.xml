@@ -1,14 +1,14 @@
 <featureType>
-  <id>FeatureTypeInfoImpl-72972593:1948a67d39b:-7fe7</id>
-  <name>datalayer</name>
-  <nativeName>datalayer</nativeName>
+  <id>FeatureTypeInfoImpl--75a9e4a8:1956719363f:-7ff3</id>
+  <name>items</name>
+  <nativeName>items</nativeName>
   <namespace>
     <id>NamespaceInfoImpl-635ac42e:1935f6a3bc7:-7ff5</id>
   </namespace>
-  <title>datalayer</title>
+  <title>items</title>
   <keywords>
     <string>features</string>
-    <string>datalayer</string>
+    <string>items</string>
   </keywords>
   <nativeCRS>GEOGCS[&quot;WGS 84&quot;, 
   DATUM[&quot;World Geodetic System 1984&quot;, 

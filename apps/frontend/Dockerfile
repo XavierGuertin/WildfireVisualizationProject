@@ -23,11 +23,15 @@ RUN npm install -g nx
 # Debug: Verify Node.js and Nx installation
 RUN node -v && npm -v && nx --version
 
-# Accept REACT_APP_BACKEND_URL as a build argument
+# Accept build arguments
 ARG NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_GEOSERVER_URL
+ARG NEXT_PUBLIC_TILESERVER_URL
 
-# Set the environment variable to make it available during build
+# Set environment variables
 ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+ENV NEXT_PUBLIC_GEOSERVER_URL=${NEXT_PUBLIC_GEOSERVER_URL}
+ENV NEXT_PUBLIC_TILESERVER_URL=${NEXT_PUBLIC_TILESERVER_URL}
 
 # Build the frontend app using the nx target, which now has access to REACT_APP_BACKEND_URL
 RUN npx nx run frontend:build

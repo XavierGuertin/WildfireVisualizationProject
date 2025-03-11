@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
-import { fetchItems, insertDatalayerView, resetItems } from '../services/api';
-import { changeLayer } from './MapView';
-import { useMapLayerContext } from './MapContext';
+import { fetchItems, fetchProgress, fetchTimestamps, resetItems } from '../services/api';
+import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
-import { Map } from 'ol';
 import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
@@ -40,56 +38,73 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Function to show loading bar with progress
-  const showLoadingBar = () => {
-    setProgress(0); // Reset progress
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval); // Stop auto-progress at 100%
-          return 100;
-        }
-        return prevProgress + 10; // Increment progress
-      });
-    }, 300); // Update every 300ms
-  };
-
-  const { mapRef } = useMapLayerContext();
   const MySwal = withReactContent(Swal);
+  const { setTimeStamps, isOnline, setSliderValue } = useMapLayerContext();
 
-  const handleInternalLoadDataset = async () => {
-    try {
-      MySwal.fire({
-        title: t('reset'),
-        text: t('confirm_reset_properties'),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: t('yes'),
-        customClass: {
-          popup: 'custom-swal-popup',
-        },
-      }).then(async (result: { isConfirmed: any }) => {
-        if (result.isConfirmed) {
-          setLoading(true); // Show loading overlay
-          showLoadingBar(); // Start progress simulation
-          await insertDatalayerView(id);
-          const map = mapRef.current as Map;
-          changeLayer(map);
-
-          await resetItems();
-
-          const response = await fetchItems(id);
-          response == 'Items fetched and saved successfully'
-            ? toast.success(t('items_fetch_success'))
-            : toast.error(t('items_fetch_error'));
-
-          // Simulate a delay for loading (mocked)
-          await new Promise((resolve) => setTimeout(resolve, 4000)); // Simulate a 4-second loading delay
-          console.log('Dataset loaded successfully');
-        }
+  const onLoadDataset = async () => {
+    if(!isOnline){
+      toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
+        toastId: 'online-disabled',
       });
+      return;
+    }
+    
+    try {
+      const result = await MySwal.fire({
+        title: t("load_dataset"),
+        text: t("confirm_deletion_items_from_previous_collection"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: t("yes"),
+        customClass: {
+          popup: "custom-swal-popup",
+        },
+      });
+
+      if (result.isConfirmed) {
+        setLoading(true); // Show loading overlay
+        localStorage.setItem('sliderValue','0')
+        setSliderValue(0)
+        setProgress(0);
+        await resetItems();
+
+        try {
+          // Start fetching items asynchronously
+          const response = await fetchItems(id);
+          if (response != "Fetching started in the background. Check progress separately.") {
+            throw new Error(t("timestamps_fetch_error"));
+          }
+          toast.success(t("timestamps_fetch_success"), {toastId: 'timestamps-success',});
+
+          const pollProgress = async () => {
+            while (true) {
+              const progressResponse = await fetchProgress(id);
+
+              if ("progress" in progressResponse) {
+                setProgress(progressResponse.progress);
+                const timestamps = await fetchTimestamps();
+                setTimeStamps(timestamps);
+                // Stop the loop when progress reaches 100%
+                if (progressResponse.progress >= 100) {
+                  setLoading(false);
+                  toast.success(t("items_fetch_success"), {toastId: 'items-success',});
+                  return;
+                }
+              }
+
+              // Increase the polling interval to 1/2 second (500ms)
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+          };
+
+          pollProgress(); // Call the async function for polling
+        } catch (error) {
+          toast.error("Error loading dataset: " + error), {toastId: 'loading-dataset-error',};
+          setLoading(false);
+        }
+      }
     } catch (error) {
       console.error("Error loading dataset:", error);
       setLoading(false);
@@ -120,30 +135,33 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           {
             label: t('description'),
             value: description,
-            testId: 'dataset-description',
+            testId: 'dataset-description'
           },
           { label: t('format'), value: format, testId: 'dataset-format' },
           {
             label: t('processes'),
             value: processes,
-            testId: 'dataset-processes',
+            testId: 'dataset-processes'
           },
           {
             label: t('dataset_source'),
             value: datasetSource,
-            testId: 'dataset-datasource',
-          },
+            testId: 'dataset-datasource'
+          }
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
-            <div className="value" data-testid={testId}>
+            <div
+            className={`value ${testId === 'dataset-description' ? 'scrollable-description' : ''}`}
+            data-testid={testId}
+            >
               {value || t('n_a')}
             </div>
           </div>
         ))}
         <button
           className="load-dataset-button"
-          onClick={handleInternalLoadDataset}
+          onClick={onLoadDataset}
           data-testid="load-dataset-button"
         >
           <LoadingModule
