@@ -6,7 +6,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
  * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
  * @returns A promise resolving to an array of collections or an error object.
  */
-export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
+export const returnListOfCollectionsFromEndpoint = async (
+  bbox?: number[],
+): Promise<
+  | {
+      id: string;
+      key: number;
+      bbox: number[][];
+    }[]
+  | { error: string }
+> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections`);
     if (bbox) {
@@ -25,9 +34,13 @@ export const returnListOfCollectionsFromEndpoint = async (bbox?: number[]): Prom
   }
 };
 
-export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promise<string> => {
+export const fetchCollectionsFromEndpoint = async (
+  endpoint_url: string,
+): Promise<string> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`);
+    const response = await fetch(
+      `${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`,
+    );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -39,9 +52,13 @@ export const fetchCollectionsFromEndpoint = async (endpoint_url: string): Promis
   }
 };
 
-export const verifyIfEndpointHasCollections = async (endpoint_url: string): Promise<string> => {
+export const verifyIfEndpointHasCollections = async (
+  endpoint_url: string,
+): Promise<string> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`);
+    const response = await fetch(
+      `${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`,
+    );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -128,8 +145,13 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
   }
 };
 
-export const returnCollectionsFromEndpoint = async (): Promise<{
-  id: string; key: number}[] | { error: string }> => {
+export const returnCollectionsFromEndpoint = async (): Promise<
+  | {
+      id: string;
+      key: number;
+    }[]
+  | { error: string }
+> => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
     console.log('Fetching from: ', `${BASE_URL}/api/get-collections`);
@@ -141,20 +163,32 @@ export const returnCollectionsFromEndpoint = async (): Promise<{
     console.error('Error fetching collections:', error);
     return { error: 'Failed to fetch data' };
   }
-}
+};
 
 /**
  * Fetches collections from the backend, optionally filtered by bounding box (BBOX), and sorted by name.
  *
  * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
+ * @param sortDirection Optional sort direction ('asc' or 'desc'), defaults to 'asc'.
  * @returns A promise resolving to an array of collections or an error object.
  */
-export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
+export const fetchCollectionsFromEndpointByName = async (
+  bbox?: number[],
+  sortDirection: 'asc' | 'desc' = 'asc',
+): Promise<
+  | {
+      id: string;
+      key: number;
+      bbox: number[][];
+    }[]
+  | { error: string }
+> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections-by-name`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
     }
+    url.searchParams.set('sortDirection', sortDirection);
 
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -172,14 +206,26 @@ export const fetchCollectionsFromEndpointByName = async (bbox?: number[]): Promi
  * Fetches collections from the backend, optionally filtered by bounding box (BBOX), and sorted by date.
  *
  * @param bbox Optional bounding box filter [minX, minY, maxX, maxY].
+ * @param sortDirection Optional sort direction ('asc' or 'desc'), defaults to 'asc'.
  * @returns A promise resolving to an array of collections or an error object.
  */
-export const fetchCollectionsFromEndpointByDate = async (bbox?: number[]): Promise<{ id: string; key: number; bbox: number[][] }[] | { error: string }> => {
+export const fetchCollectionsFromEndpointByDate = async (
+  bbox?: number[],
+  sortDirection: 'asc' | 'desc' = 'asc',
+): Promise<
+  | {
+      id: string;
+      key: number;
+      bbox: number[][];
+    }[]
+  | { error: string }
+> => {
   try {
     const url = new URL(`${BASE_URL}/api/get-collections-by-date`);
     if (bbox) {
       url.searchParams.set('bbox', bbox.join(','));
     }
+    url.searchParams.set('sortDirection', sortDirection);
 
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -213,7 +259,14 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
  * @param collectionId The ID of the collection.
  * @returns A promise resolving to the progress percentage or an error object.
  */
-export const fetchProgress = async (collectionId: string): Promise<{ collectionId: string; progress: number } | { error: string }> => {
+export const fetchProgress = async (
+  collectionId: string,
+): Promise<
+  | { collectionId: string; progress: number }
+  | {
+      error: string;
+    }
+> => {
   try {
     const url = `${BASE_URL}/api/fetch-progress/${collectionId}`;
     const response = await fetch(url);
@@ -229,7 +282,6 @@ export const fetchProgress = async (collectionId: string): Promise<{ collectionI
   }
 };
 
-
 export const fetchTimestamps = async (): Promise<string[]> => {
   try {
     const url = `${BASE_URL}/api/fetch-items-timestamps`;
@@ -244,9 +296,12 @@ export const fetchTimestamps = async (): Promise<string[]> => {
   }
 };
 
-export const fetchItem = async (itemId: string, collectionId?: string): Promise<any> => {
+export const fetchItem = async (
+  itemId: string,
+  collectionId?: string,
+): Promise<any> => {
   try {
-    const url = `${BASE_URL}/api/get-item/${itemId}${collectionId !== null ? '/' + collectionId : '' }`;
+    const url = `${BASE_URL}/api/get-item/${itemId}${collectionId !== null ? '/' + collectionId : ''}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -255,22 +310,26 @@ export const fetchItem = async (itemId: string, collectionId?: string): Promise<
 
     return data;
   } catch (error: any) {
-    console.error("Error fetching MetaData:", error);
-    return { error: "Failed to fetch MetaData" };
+    console.error('Error fetching MetaData:', error);
+    return { error: 'Failed to fetch MetaData' };
   }
 };
 
-export const insertDatalayerView = async (collectionId: string): Promise<any> => {
+export const insertDatalayerView = async (
+  collectionId: string,
+): Promise<any> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/set-datalayer-geometry/${collectionId}`);
-    if(!response.ok) {
+    const response = await fetch(
+      `${BASE_URL}/api/set-datalayer-geometry/${collectionId}`,
+    );
+    if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
   } catch (error: any) {
-    console.error("Error inserting View:", error);
-    return { error: "Failed to insert View" };
+    console.error('Error inserting View:', error);
+    return { error: 'Failed to insert View' };
   }
-}
+};
 
 /**
  * Resets datalayer view
@@ -278,18 +337,22 @@ export const insertDatalayerView = async (collectionId: string): Promise<any> =>
 export const resetDatalayerView = async (): Promise<any> => {
   try {
     const response = await fetch(`${BASE_URL}/api/reset-datalayer-view`);
-    if(!response.ok) {
+    if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
   } catch (error: any) {
-    console.error("Error resetting Datalayer View:", error);
-    return { error: "Failed to reset Datalayer View" };
+    console.error('Error resetting Datalayer View:', error);
+    return { error: 'Failed to reset Datalayer View' };
   }
-}
+};
 
-export const verifyInternetConnection = async (endpoint_url: string): Promise<string> => {
+export const verifyInternetConnection = async (
+  endpoint_url: string,
+): Promise<string> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`);
+    const response = await fetch(
+      `${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`,
+    );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
