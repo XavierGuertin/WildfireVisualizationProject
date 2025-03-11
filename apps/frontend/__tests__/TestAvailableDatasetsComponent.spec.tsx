@@ -270,4 +270,34 @@ describe('Test AvailableDatasets component', () => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
     });
   });
+
+  it('should display default translation key when response.error is undefined', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: undefined });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
+    });
+  });
+
+  it('should display raw error string when it does not match any known translation key', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: 'Some random backend error' });
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Some random backend error');
+    });
+  });
+
+  it('should trigger fetchDatasets catch block and display fallback error message', async () => {
+    mockReturnListOfCollections.mockRejectedValue(new Error('Something broke'));
+  
+    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to load datasets.');
+    });
+  });
 });
