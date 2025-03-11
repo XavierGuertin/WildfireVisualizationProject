@@ -17,20 +17,19 @@ interface MapMetaDataProps {
   format?: string;
   processes?: string;
   datasetSource?: string;
-  onLoadDataset: () => Promise<void>;
   onClose: () => void;
   visible: boolean;
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-                                                   id = '',
-                                                   name = '',
-                                                   description = '',
-                                                   format = '',
-                                                   processes = '',
-                                                   datasetSource = '',
-                                                   visible
-                                                 }) => {
+  id = '',
+  name = '',
+  description = '',
+  format = '',
+  processes = '',
+  datasetSource = '',
+  visible,
+})  => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);

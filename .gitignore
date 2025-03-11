@@ -110,6 +110,7 @@ apps/db/data/
 apps/frontend/.env.development
 apps/frontend/.env.production
 .env.development
+.env.production
 .env.*.local
 .env
 
