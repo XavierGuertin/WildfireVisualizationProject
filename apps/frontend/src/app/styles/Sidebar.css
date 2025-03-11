@@ -54,3 +54,26 @@
     opacity: 0.8;
   }
 }
+
+/* Optimizations for smaller screens */
+@media (max-height: 800px) {
+  .sidebar-component.expanded {
+    max-height: 30vh;
+    width:80px;
+    padding: 5px 15px 10px 15px;
+    bottom: 10vh;
+  }
+
+  .sidebar-component.collapsed {
+    width:80px;
+    padding: 5px 15px 10px 15px;
+    bottom: 10vh;
+  }
+
+  .icon {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+

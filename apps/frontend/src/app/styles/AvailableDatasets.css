@@ -304,3 +304,19 @@ body {
   color: #f44336;
   font-size: 0.8rem;
 }
+
+/* Optimizations for smaller screens*/
+@media (max-height: 700px) {
+  .datasets-container {
+    height: auto;
+    max-height: 85vh;
+  }
+}
+
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .datasets-container {
+    height: auto;
+    max-height: 85vh;
+    width: 450px;
+  }
+}
