@@ -189,12 +189,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
           zoom: 1,
         }),
       });
-
-      // Calculate and update the initial bounding box
-      const initialExtent = mapRef.current
-        .getView()
-        .calculateExtent(mapRef.current.getSize());
-      console.debug(`Initial Map Extent: ${initialExtent}`);
     } else {
       const map = mapRef.current;
       const layers = map.getLayers().getArray();
@@ -219,14 +213,12 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       view.on('change:resolution', () => {
         const mapExtent = view.calculateExtent(map.getSize());
         debouncedBboxChange(mapExtent);
-        console.debug('Map extent updated due to zoom change.');
       });
 
       // Listen for pan events and update bounding box
       view.on('change:center', () => {
         const mapExtent = view.calculateExtent(map.getSize());
         debouncedBboxChange(mapExtent);
-        console.debug('Map extent updated due to pan movement.');
       });
     }
 
