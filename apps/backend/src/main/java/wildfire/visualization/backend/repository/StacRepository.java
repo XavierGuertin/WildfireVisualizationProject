@@ -216,12 +216,7 @@ public class StacRepository {
    */
   public void deleteAllCollections() {
     try {
-      String sql = "DELETE FROM pgstac.datalayer";
-      logger.info("Deleting Datalayer view from pgstac.collections");
-      jdbcTemplate.update(sql);
-      logger.info("Datalayer view deleted successfully");
-
-      sql = "DELETE FROM pgstac.collections";
+      String sql = "DELETE FROM pgstac.collections";
       logger.info("Deleting all collections from pgstac.collections");
       jdbcTemplate.update(sql);
       logger.info("All collections deleted successfully");
