@@ -249,35 +249,35 @@ public class DataService {
 
   /**
    * Retrieves all collections from the database, sorted by name, optionally
-   * filtered by a bounding box (BBOX).
+   * filtered by a bounding box (BBOX) with specified sort direction.
    * <p>
    * This method queries collections ordered by their name (`id` field) and
-   * restructures
-   * the response for client consumption.
+   * restructures the response for client consumption.
    *
-   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
-   *             null, no filter is applied.
+   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                     null, no filter is applied.
+   * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
-  public List<Map<String, Object>> getCollectionsByName(double[] bbox) {
-    logger.debug("Fetching collections from database sorted by name with bbox: {}",
-        bbox != null ? Arrays.toString(bbox) : "No bbox");
+  public List<Map<String, Object>> getCollectionsByName(double[] bbox, String sortDirection) {
+    logger.debug("Fetching collections from database sorted by name ({}) with bbox: {}",
+      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
 
     try {
       // Fetch collections sorted by name (id) from repository
-      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName(bbox);
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByName(bbox, sortDirection);
 
       logger.info("Successfully fetched {} collections sorted by name.", collections.size());
 
       // Transform collections into a structured format
       return collections.stream()
-          .map(collection -> Map.of(
-              "key", collection.get("key"),
-              "id", collection.get("id"),
-              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-          ))
-          .collect(Collectors.toList());
+        .map(collection -> Map.of(
+          "key", collection.get("key"),
+          "id", collection.get("id"),
+          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+        ))
+        .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by name", e);
@@ -286,7 +286,7 @@ public class DataService {
 
   /**
    * Retrieves all collections from the database, sorted by date, optionally
-   * filtered by a bounding box (BBOX).
+   * filtered by a bounding box (BBOX) with specified sort direction.
    * <p>
    * This method queries collections ordered by their creation or modification
    * date and
@@ -294,27 +294,28 @@ public class DataService {
    *
    * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
    *             null, no filter is applied.
+   * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
-  public List<Map<String, Object>> getCollectionsByDate(double[] bbox) {
-    logger.debug("Fetching collections from database sorted by date with bbox: {}",
-        bbox != null ? Arrays.toString(bbox) : "No bbox");
+  public List<Map<String, Object>> getCollectionsByDate(double[] bbox, String sortDirection) {
+    logger.debug("Fetching collections from database sorted by date ({}) with bbox: {}",
+      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
 
     try {
       // Fetch collections sorted by date from repository
-      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate(bbox);
+      List<Map<String, Object>> collections = stacRepository.getAllCollectionsByDate(bbox, sortDirection);
 
       logger.info("Successfully fetched {} collections sorted by date.", collections.size());
 
       // Transform collections into a structured format
       return collections.stream()
-          .map(collection -> Map.of(
-              "key", collection.get("key"),
-              "id", collection.get("id"),
-              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-          ))
-          .collect(Collectors.toList());
+        .map(collection -> Map.of(
+          "key", collection.get("key"),
+          "id", collection.get("id"),
+          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+        ))
+        .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by date", e);
