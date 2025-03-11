@@ -113,9 +113,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when toggling filtering by map view.
    */
   useEffect(() => {
-    if (isToggled) {
-      fetchDatasets();
-    }
+    fetchDatasets();
   }, [isToggled, currentBbox.join(',')]);
 
   /**
