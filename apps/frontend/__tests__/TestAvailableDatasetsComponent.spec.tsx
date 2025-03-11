@@ -219,4 +219,55 @@ describe('Test AvailableDatasets component', () => {
       expect(screen.getByTestId('dataset-button-dataset-1')).toBeInTheDocument();
     });
   });
+
+  it('should display translated error when fetch fails with "Failed to fetch data by name"', async () => {
+    mockFetchCollectionsByName.mockResolvedValue({ error: 'Failed to fetch data by name' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    const nameFilterButton = screen.getByTestId('filter-button-Name');
+    fireEvent.click(nameFilterButton);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_name');
+    });
+  });
+
+  it('should display translated error when fetch fails with "Failed to fetch data by date"', async () => {
+    mockFetchCollectionsByDate.mockResolvedValue({ error: 'Failed to fetch data by date' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    const dateFilterButton = screen.getByTestId('filter-button-Date');
+    fireEvent.click(dateFilterButton);
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_date');
+    });
+  });
+
+  it('should display translated error when fetch fails with "Failed to fetch data"', async () => {
+    mockReturnListOfCollections.mockResolvedValue({ error: 'Failed to fetch data' });
+  
+    render(
+      <AvailableDatasets
+        onDatasetClick={mockOnDatasetClick}
+        refreshKey={0}
+      />
+    );
+  
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
+    });
+  });
 });
