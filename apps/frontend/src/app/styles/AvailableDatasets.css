@@ -28,10 +28,6 @@ body {
   user-select: none;
 }
 
-.datasets-container:hover:not(.collapsed) {
-  transform: translateY(-50%) scale(1.02);
-}
-
 .datasets-container.collapsed:hover {
   transform: translateY(-50%) scale(1.05);
 }
