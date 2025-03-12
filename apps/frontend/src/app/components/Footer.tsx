@@ -140,10 +140,10 @@ const Footer = () => {
     const timeStr = `${hours}:${minutes}:${seconds}`;
 
     return (
-      <>
-        <span>{dateStr}</span>
-        <span>{timeStr}</span>
-      </>
+      <span className="timeMarkerText">
+      <span>{dateStr}</span>
+      <span>{timeStr}</span>
+    </span>
     );
   };
 
