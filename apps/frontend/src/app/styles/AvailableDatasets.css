@@ -22,10 +22,18 @@ body {
   border-radius: 8px;
   z-index: 999;
   overflow: visible;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease;
   display: flex;
   flex-direction: column;
   user-select: none;
+}
+
+.datasets-container:hover:not(.collapsed) {
+  transform: translateY(-50%) scale(1.02);
+}
+
+.datasets-container.collapsed:hover {
+  transform: translateY(-50%) scale(1.05);
 }
 
 .datasets-container.collapsed {
@@ -109,6 +117,11 @@ body {
   height: 26px;
   z-index: 1100;
   box-shadow: none;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.collapse-button:hover {
+  transform: translateY(-50%) scale(1.15);
 }
 
 .collapse-button.collapsed {
