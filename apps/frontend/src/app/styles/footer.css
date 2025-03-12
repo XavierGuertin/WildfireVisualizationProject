@@ -154,3 +154,15 @@
 .timeMarkerThumb.active .timeMarkerText {
   display: block;
 }
+
+.iconButton .controlIcon {
+  transition: transform 0.3s ease;
+}
+
+.iconButton:hover .controlIcon {
+  transform: scale(1.2);
+}
+
+.timeMarkerThumb:hover {
+  transform: translateX(-50%) scale(1.05);
+}
