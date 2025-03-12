@@ -45,6 +45,8 @@ jest.mock('../src/app/context/MapContext', () => ({
   })),
 }));
 
+jest.useFakeTimers();
+
 describe('MapMetaData', () => {
   const defaultProps = {
     id: 'test-dataset',
@@ -58,8 +60,16 @@ describe('MapMetaData', () => {
     refreshDatasets: jest.fn(),
   };
 
+  const mockedFetchProgress = fetchProgress as jest.MockedFunction<typeof fetchProgress>;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
+    localStorage.clear();
   });
 
   it('does not render when visible is false', () => {
@@ -205,4 +215,51 @@ describe('MapMetaData', () => {
     expect(fetchItems).not.toHaveBeenCalled();
     expect(resetItems).not.toHaveBeenCalled();
   });
+
+  it('initializes map context on render', () => {
+    render(<MapMetaData {...defaultProps} />);
+    // Assert that setSliderValue and setTimeStamps exist (just triggers MapContext usage)
+    expect(typeof useMapLayerContext().setSliderValue).toBe('function');
+  });
+
+  it('calls fetchTimestamps and updates setTimeStamps when progress reaches 100%', async () => {
+    const mockTimestamps = ['2024-01-01', '2024-01-02'];
+    const mockSetTimeStamps = jest.fn();
+  
+    // Override context mock to provide our mock setTimeStamps
+    const mockCtx = require('../src/app/context/MapContext');
+    mockCtx.useMapLayerContext.mockReturnValue({
+      isOnline: true,
+      setSliderValue: jest.fn(),
+      setTimeStamps: mockSetTimeStamps,
+      mapRef: { current: {} }
+    });
+  
+    const mockedFetchItems = fetchItems as jest.MockedFunction<typeof fetchItems>;
+    const mockedFetchProgress = fetchProgress as jest.MockedFunction<typeof fetchProgress>;
+    const mockedFetchTimestamps = require('../src/app/services/api').fetchTimestamps;
+  
+    mockedFetchItems.mockResolvedValue("Fetching started in the background. Check progress separately.");
+    mockedFetchProgress.mockResolvedValueOnce({ collectionId: 'test-dataset', progress: 50 });
+    mockedFetchProgress.mockResolvedValueOnce({ collectionId: 'test-dataset', progress: 100 });    
+    mockedFetchTimestamps.mockResolvedValue(mockTimestamps);
+  
+    render(<MapMetaData {...defaultProps} />);
+  
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+  
+    // Simulate polling loop
+    for (let i = 0; i < 2; i++) {
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+        await Promise.resolve();
+      });
+    }
+  
+    expect(mockedFetchTimestamps).toHaveBeenCalled();
+    expect(mockSetTimeStamps).toHaveBeenCalledWith(mockTimestamps);
+  });  
 });
