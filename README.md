@@ -57,67 +57,80 @@ The Wildfire Visualization Platform is an innovative tool designed to provide hi
 | Oliel, Eden         | 40211989   | [eo2000](https://github.com/eo2000)        | olieleden0@gmail.com        |
 ---
 
-## Developer Getting Started Guide
+## Running the Application
 
-To get started as a developer on this project:
+To run the application, follow these steps:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-repo/wildfire-visualization-platform.git
+   git clone https://github.com/XavierGuertin/WildfireVisualizationProject.git
    ```
-2. **Open the project with an IDE**<br>
-   ex. Visual Studio Code<br><br>
-3.  **Install Dependencies In the root directory, install the necessary npm packages:**
-    ```bash
-    cd wildfire-visualization-platform
-    npm install
-    ```
-4. **Incorporate secrets for keys in .env file:**
-    Put .env in the root folder.
-5. **Build the Backend Before launching the backend, ensure it is built:**
-    ```bash
-    nx build backend
-    ```
-6. **Launch the Backend Once built, you can serve the backend:**
-    ```bash
-    nx dev backend
-    ```
-7. **Launch the Frontend After the backend is running, you can start the frontend:**
-    ```bash
-    nx dev frontend
-    ```
 
-## Running Production
+2. **Navigate to the Project Root**
+   ```bash
+   cd WildfireVisualizationProject
+   ```
 
-To run the application in a production environment, follow these steps:
+3. **Run the Application using Docker Compose**
+   ```bash
+   docker-compose up --pull always
+   ```
 
-### Step 1: Clone the Repository
-Start by cloning the repository to your local machine.
+4. **Access the Application**
+   Once the project is running, open your browser and navigate to:
+   ```
+   http://localhost:3000
+   ```
 
-```bash
-git clone https://github.com/your-repo/wildfire-visualization-platform.git
-cd wildfire-visualization-platform
-```
-### Step 2: Navigate to the Project Root
-Ensure you're in the root directory of the project. All commands should be run from here.
-```bash
-cd wildfire-visualization-platform
-```
+---
 
-### Step 3: Pull Docker Images
-Use Docker Compose to pull any pre-built images specified in the docker-compose.yml file. This step ensures all required images are downloaded, including backend, frontend, database, and any other necessary services.
-```bash
-docker-compose pull
-```
+## Developer Guide
 
-### Step 4: Start the Application in Detached Mode
-Run the application in detached mode (-d flag) to keep the containers running in the background. This starts all services as specified in the docker-compose.yml, including the frontend, backend, database, and any other supporting services.
-```bash
-docker-compose up -d
-```
+For setting up the development environment, follow these additional steps:
 
-### Step 5: Access the Application
-Once the containers are up and running, you can access the application through the frontend URL in your browser (e.g., http://localhost:3000 if using the default port).
+1. **Pull Required Services**
+   ```bash
+   docker compose pull geoserver db tileserver tileserver-init
+   ```
+
+2. **Start Services**
+   ```bash
+   docker compose up geoserver db tileserver tileserver-init
+   ```
+
+3. **Add Environment Variables**
+   ```
+   # Navigate to the frontend directory
+   cd frontend
+
+   # Create environment files if they don't exist
+   touch .env.production .env.development
+   ```
+
+   Add the following variables to both .env.production and .env.development
+   ```ini
+   NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+   NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
+   NEXT_PUBLIC_TILESERVER_URL=http://localhost:8081/data/OAM-World-1-8-min-J80
+   ```
+
+4. **Run the Backend**
+   ```bash
+   nx dev backend
+   ```
+
+5. **Install Dependencies**
+   ```bash
+   cd wildfire-visualization-platform
+   npm i
+   ```
+
+6. **Run the Frontend**
+   ```bash
+   nx dev frontend
+   ```
+
+---
 
    
 ## Running Tests
