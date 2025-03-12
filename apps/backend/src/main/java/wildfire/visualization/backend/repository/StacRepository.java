@@ -383,8 +383,6 @@ public class StacRepository {
    * @param collection Database ID of collection to retrieve items from
    * @return List object containing the item with the given id from the given
    *         collection
-   * @return List object containing the item with the given id from the given
-   *         collection
    * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getItem(String id, String collection) {
