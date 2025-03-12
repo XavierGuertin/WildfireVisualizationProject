@@ -21,6 +21,8 @@ const Footer = () => {
   const { mapRef, timeStamps, sliderValue, setSliderValue, setTimeStamps } =
     useMapLayerContext();
 
+  const speedValues = [0.5, 1, 1.5, 2, 4];
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -192,17 +194,36 @@ const Footer = () => {
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}
       <div className="speedContainer">
-        {[0.5, 1, 1.5, 2, 4].map((s) => (
-          <button
-            className={`speedButton ${speed === s ? 'border-[#00467E]' : 'border-white'}`}
-            key={s}
-            onClick={() => handleSpeedChange(s)}
-            data-testid={`speed-button-${s}`}
-            aria-label={`Set speed to ${s}x`}
-          >
-            {s}x
-          </button>
-        ))}
+        <div className="speedSlider">
+          <div
+            className="speedTrack"
+            style={{
+              width: `${(speedValues.indexOf(speed) / (speedValues.length - 1)) * 100}%`
+            }}
+          ></div>
+          {speedValues.map((s, index) => (
+            <React.Fragment key={s}>
+              <div
+                className={`speedPoint ${
+                  s <= speed ? 'active-or-left' : 'right'
+                } ${s === speed ? 'active' : ''}`}
+                style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
+                onClick={() => handleSpeedChange(s)}
+                data-testid={`speed-point-${s}`}
+                aria-label={`Set speed to ${s}x`}
+              ></div>
+              <span
+                className={`speedLabel ${
+                  s <= speed ? 'active-or-left' : 'right'
+                } ${s === speed ? 'active' : ''}`}
+                style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
+                onClick={() => handleSpeedChange(s)}
+              >
+          {s}x
+        </span>
+            </React.Fragment>
+          ))}
+        </div>
       </div>
       {/* Playback controls */}
       <div className="sliderContainer">
