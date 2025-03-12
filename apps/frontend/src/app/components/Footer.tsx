@@ -201,28 +201,39 @@ const Footer = () => {
               width: `${(speedValues.indexOf(speed) / (speedValues.length - 1)) * 100}%`
             }}
           ></div>
-          {speedValues.map((s, index) => (
-            <React.Fragment key={s}>
-              <div
-                className={`speedPoint ${
-                  s <= speed ? 'active-or-left' : 'right'
-                } ${s === speed ? 'active' : ''}`}
-                style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
-                onClick={() => handleSpeedChange(s)}
-                data-testid={`speed-point-${s}`}
-                aria-label={`Set speed to ${s}x`}
-              ></div>
-              <span
-                className={`speedLabel ${
-                  s <= speed ? 'active-or-left' : 'right'
-                } ${s === speed ? 'active' : ''}`}
-                style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
-                onClick={() => handleSpeedChange(s)}
-              >
-          {s}x
-        </span>
-            </React.Fragment>
-          ))}
+          {speedValues.map((s, index) => {
+            // Calculate progressively larger sizes
+            const baseSize = 12;
+            const sizeIncrement = 2.5; // How much each point grows
+            const pointSize = baseSize + (index * sizeIncrement);
+
+            return (
+              <React.Fragment key={s}>
+                <div
+                  className={`speedPoint ${
+                    s <= speed ? 'active-or-left' : 'right'
+                  } ${s === speed ? 'active' : ''}`}
+                  style={{
+                    left: `${(index / (speedValues.length - 1)) * 100}%`,
+                    width: `${pointSize}px`,
+                    height: `${pointSize}px`
+                  }}
+                  onClick={() => handleSpeedChange(s)}
+                  data-testid={`speed-point-${s}`}
+                  aria-label={`Set speed to ${s}x`}
+                ></div>
+                <span
+                  className={`speedLabel ${
+                    s <= speed ? 'active-or-left' : 'right'
+                  } ${s === speed ? 'active' : ''}`}
+                  style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
+                  onClick={() => handleSpeedChange(s)}
+                >
+            {s}x
+          </span>
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
       {/* Playback controls */}
