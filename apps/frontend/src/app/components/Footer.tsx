@@ -216,7 +216,8 @@ const Footer = () => {
               <div
                 className="timeMarkerThumb"
                 style={{
-                  left: `${timeStamps.length > 1 ? (sliderValue / (timeStamps.length - 1)) * 100 : 0}%`,
+                  left: `${timeStamps.length > 1 ?
+                    (sliderValue / (timeStamps.length - 1)) * 94 + 3 : 5}%`,
                 }}
               >
                 <span className="timeMarkerText">
