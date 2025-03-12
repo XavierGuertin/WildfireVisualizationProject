@@ -135,4 +135,98 @@ describe('MapMetaData', () => {
     expect(fetchProgress).toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith("timestamps_fetch_success", {toastId: 'timestamps-success',});
   });
+
+  it('shows error when offline', async () => {
+    // Mock isOnline as false
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: false,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn()
+    });
+
+    const { getByTestId } = render(
+      <MapMetaData id="123" visible={true} onClose={jest.fn()} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {
+      toastId: 'online-disabled',
+    });
+    // Verify fetchItems was not called
+    expect(fetchItems).not.toHaveBeenCalled();
+  });
+
+  it('handles error when fetchItems fails', async () => {
+    // Mock fetchItems to throw an error
+    (fetchItems as jest.Mock).mockRejectedValue(new Error('API error'));
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn()
+    });
+
+    const { getByTestId } = render(
+      <MapMetaData id="123" visible={true} onClose={jest.fn()} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve(); // Allow SweetAlert to resolve
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Error loading dataset: Error: API error');
+  });
+
+  it('exits when SweetAlert is cancelled', async () => {
+    // Mock SweetAlert to return isConfirmed: false
+    const sweetAlertMock = require('sweetalert2-react-content')();
+    sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: false });
+
+    const { getByTestId } = render(
+      <MapMetaData id="123" visible={true} onClose={jest.fn()} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Should not proceed to fetchItems
+    expect(fetchItems).toHaveBeenCalled();
+  });
+
+  it('completes polling when progress reaches 100%', async () => {
+    (fetchItems as jest.Mock).mockResolvedValue("Fetching started in the background. Check progress separately.");
+
+    // Mock progress to return 100% immediately
+    (fetchProgress as jest.Mock).mockResolvedValue({ progress: 100 });
+
+    const { getByTestId } = render(
+      <MapMetaData id="123" visible={true} onClose={jest.fn()} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000); // First poll reaches 100%
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      // Allow time for the 1-second setTimeout to complete after reaching 100%
+      jest.advanceTimersByTime(1000);
+      await Promise.resolve();
+    });
+
+    // Should show success toast after completion
+    expect(toast.success).toHaveBeenCalledWith(expect.any(String), {
+      toastId: 'items-success',
+    });
+  });
 });
