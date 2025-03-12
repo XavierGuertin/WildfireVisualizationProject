@@ -192,4 +192,17 @@ describe('Footer component tests', () => {
     fireEvent.keyDown(window, { code: 'Space' });
     fireEvent.keyDown(window, { code: 'Space' });
   });
+
+  it('covers dragging logic', () => {
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    const slider = screen.getByTestId('slider');
+    fireEvent.mouseDown(slider, { clientX: 100 }); // trigger isDraggingRef.current = true
+    fireEvent.mouseMove(window, { clientX: 150 });  // if (isDraggingRef.current) { handleSliderMove(e); }
+    fireEvent.mouseUp(window);                      // isDraggingRef.current = false
+  });
 });

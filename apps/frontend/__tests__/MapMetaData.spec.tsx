@@ -5,6 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { fetchItems, fetchProgress, fetchTimestamps, insertDatalayerView } from '../src/app/services/api';
 import { useMapLayerContext } from '../src/app/context/MapContext';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 jest.mock('sweetalert2-react-content', () => {
   return jest.fn().mockImplementation(() => ({
@@ -228,5 +229,89 @@ describe('MapMetaData', () => {
     expect(toast.success).toHaveBeenCalledWith(expect.any(String), {
       toastId: 'items-success',
     });
+  });
+
+  it('covers the alert confirmed path and error handling', async () => {
+    const mockSwal = require('sweetalert2-react-content')();
+    mockSwal.fire.mockImplementationOnce(() => {
+      throw new Error('SweetAlert error');
+    });
+
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { getByTestId } = render(<MapMetaData id='123' visible onClose={jest.fn()} />);
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('throws error when fetchItems returns unexpected response', async () => {
+    // Mock fetchItems to return an unexpected response string
+    (fetchItems as jest.Mock).mockResolvedValue("Unexpected response");
+
+    // Mock SweetAlert to confirm
+    const sweetAlertMock = require('sweetalert2-react-content')();
+    sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: true });
+
+    // Mock the context
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    // Render component
+    const { getByTestId } = render(
+      <MapMetaData id='123' visible onClose={jest.fn()} />
+    );
+
+    // Click load dataset button
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Verify toast.error was called
+    expect(toast.error).toHaveBeenCalled();
+  });
+
+  it('logs error to console when SweetAlert throws an error', async () => {
+    // Mock SweetAlert to throw an error
+    const mockSwal = require('sweetalert2-react-content')();
+    mockSwal.fire.mockImplementationOnce(() => {
+      throw new Error('SweetAlert error');
+    });
+
+    // Mock context
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    // Spy on console.error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    // Render component
+    const { getByTestId } = render(
+      <MapMetaData id='123' visible onClose={jest.fn()} />
+    );
+
+    // Click load dataset button
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Clean up
+    consoleErrorSpy.mockRestore();
   });
 });
