@@ -24,6 +24,7 @@ import debounce from 'lodash/debounce';
 import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
+import { getConfig } from '../services/configApi';
 
 export interface DatasetEntry {
   key: number;
@@ -65,6 +66,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const {mapRef} = useMapLayerContext();
+  const [loadedDataset, setLoadedDataset] = useState<string | null>(null);
 
   /**
  * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
@@ -118,6 +120,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         return;
       }
 
+      const config = await getConfig();
+      setLoadedDataset(config.loadedDataset || null);
+
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
@@ -130,8 +135,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   }, 300);
 
   /**
-   * Fetches datasets when the refresh key or filter changes.
-   */
+ * Fetches datasets when the refresh key or filter changes.
+ */
   useEffect(() => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId')
     if(selectedDatasetId !== null){
@@ -244,16 +249,19 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
 
     if (datasets.length > 0) {
-      return datasets.map((dataset) => (
-        <button
-          key={dataset.id}
-          className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
-          onClick={() => handleDatasetClick(dataset.id)}
-          data-testid={`dataset-button-${dataset.id}`}
-        >
-          {dataset.id}
-        </button>
-      ));
+      return datasets.map((dataset) => {
+        const isLoaded = dataset.id === loadedDataset;
+        return (
+          <button
+            key={dataset.id}
+            className={`dataset-button ${selectedDataset === dataset.id ? 'selected' : ''}`}
+            onClick={() => handleDatasetClick(dataset.id)}
+            data-testid={`dataset-button-${dataset.id}`}
+          >
+            {dataset.id} {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
+          </button>
+        );
+      });
     }
 
     return (

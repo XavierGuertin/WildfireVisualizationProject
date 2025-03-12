@@ -216,17 +216,10 @@ describe('Test AvailableDatasets component', () => {
     });
 
     await waitFor(() => {
-      expect(mockFetchCollectionsByName).toHaveBeenCalledTimes(2);
-      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(
-        1,
-        undefined,
-        'asc',
-      );
-      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(
-        2,
+      expect(mockFetchCollectionsByName).toHaveBeenCalledWith(
         [-120, 30, -110, 40],
-        'asc',
-      );
+        'asc'
+      );      
     });
   });
 

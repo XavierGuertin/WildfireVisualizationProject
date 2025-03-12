@@ -80,6 +80,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               datasetSource={selectedDataset.datasetSource}
               onClose={() => setMetadataVisible(false)}
               visible={isMetadataVisible} // Pass visibility state
+              refreshDatasets={refreshDatasets}
             />
           )}
 
