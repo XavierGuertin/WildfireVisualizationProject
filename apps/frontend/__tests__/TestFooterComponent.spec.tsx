@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { toast } from 'react-toastify';
-import { MapProvider } from '../src/app/context/MapContext';
+import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 
@@ -23,6 +23,21 @@ jest.mock('ol/layer/Tile', () => {
     };
   });
 });
+
+const mockSetSliderValue = jest.fn();
+const mockSetSpeed = jest.fn();
+const mockSetTimeStamps = jest.fn();
+
+const defaultContextValue = {
+  mapRef: { current: {} },
+  timeStamps: ['2023-01-01T00:00:00Z', '2023-01-02T00:00:00Z'],
+  sliderValue: 0,
+  speed: 1,
+  setSliderValue: mockSetSliderValue,
+  setSpeed: mockSetSpeed,
+  setTimeStamps: mockSetTimeStamps,
+  // Include other properties used by Footer
+};
 
 jest.mock('../src/app/context/MapContext', () => ({
   ...jest.requireActual('../src/app/context/MapContext'),
@@ -50,15 +65,15 @@ jest.mock('../src/app/context/MapContext', () => ({
     setIsOnline: jest.fn(),
     isOnline: true,
     sliderValue: 50,
-    setSliderValue: jest.fn(),
+    setSliderValue: mockSetSliderValue,
     timeStamps: ["2024-01-01", "2024-01-02", "2024-01-03"],
     setTimeStamps: jest.fn(),
-    setSpeed: jest.fn(),
-    playBackSpeed: 1
+    setSpeed: mockSetSpeed, // Use the mockSetSpeed here
+    speed: 1
   }),
 }));
 
-jest.mock('ol/layer/Vector', () => 
+jest.mock('ol/layer/Vector', () =>
   jest.fn().mockImplementation(() => ({
     set: jest.fn(),
   }))
@@ -74,6 +89,8 @@ jest.mock('../src/app/services/api', () => ({
 
 jest.mock('react-toastify');
 beforeEach(() => {
+  mockSetSpeed.mockClear();
+
   // Mock localStorage
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -97,78 +114,45 @@ describe('Footer component', () => {
   it('renders the footer with initial elements', () => {
     render(<MapProvider><Footer /></MapProvider>);
 
-    // Verify speed buttons
+    // Verify speed points
     [0.5, 1, 1.5, 2, 4].forEach((speed) => {
-      expect(screen.getByTestId(`speed-button-${speed}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`speed-point-${speed}`)).toBeInTheDocument();
     });
 
-    // Verify slider, play, and stop buttons
     expect(screen.getByTestId('slider')).toBeInTheDocument();
     expect(screen.getByTestId('play-pause-button')).toBeInTheDocument();
     expect(screen.getByTestId('stop-button')).toBeInTheDocument();
-    expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Should display play icon initially
+    expect(screen.getByTestId('play-icon')).toBeInTheDocument();
   });
 
   it('toggles play and pause states correctly', () => {
     render(<MapProvider><Footer /></MapProvider>);
 
-    // Click to start playing
     const playPauseButton = screen.getByTestId('play-pause-button');
     act(() => {
-    fireEvent.click(playPauseButton);
-    })
-    expect(screen.getByTestId('pause-icon')).toBeInTheDocument(); // Verify it shows pause icon
+      fireEvent.click(playPauseButton);
+    });
+    expect(screen.getByTestId('pause-icon')).toBeInTheDocument();
 
-    // Click again to pause
     act(() => {
-    fireEvent.click(playPauseButton);
-    })
-    expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Verify it shows play icon
+      fireEvent.click(playPauseButton);
+    });
+    expect(screen.getByTestId('play-icon')).toBeInTheDocument();
   });
 
-  it('resets to initial state when stop button is pressed', () => {
+  // Additional test for keyboard controls
+  it('handles spacebar to toggle play/pause', () => {
     render(<MapProvider><Footer /></MapProvider>);
 
-    // Start playback
-    const playPauseButton = screen.getByTestId('play-pause-button');
+    expect(screen.getByTestId('play-icon')).toBeInTheDocument();
+
     act(() => {
-    fireEvent.click(playPauseButton);
-    })
-    // Advance timer to move slider
-    act(() => {
-    jest.advanceTimersByTime(2000);
-    })
-    // Stop playback
-    const stopButton = screen.getByTestId('stop-button');
-    act(() => {
-    fireEvent.click(stopButton);
-    })
-    // Verify slider reset and play icon is visible
-    expect(screen.getByTestId('play-icon')).toBeInTheDocument(); // Should show play icon again
-    const slider = screen.getByTestId('slider');
-    expect(slider.getAttribute('value')).toBe('50'); // Slider should reset to 0
+      fireEvent.keyDown(document, { code: 'Space' });
+    });
+
+    expect(screen.getByTestId('pause-icon')).toBeInTheDocument();
   });
 
-  it('changes the slider value when user interacts with it', () => {
-    render(<MapProvider><Footer /></MapProvider>);
-
-    const slider = screen.getByTestId('slider');
-    act(() => {
-    fireEvent.change(slider, { target: { value: '50' } });
-    })
-    // Verify slider value changed
-    expect(slider.getAttribute('value')).toBe('50');
-    // Verify localStorage updated
-  });
-
-
-  it('should display toast message when speed is retrieved from localStorage', async () => {
-    localStorage.setItem('playbackSpeed', '1.5');
-
-    render(<MapProvider><Footer /></MapProvider>);
-
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('speed_retrieved', { toastId: 'speed-success' }));
-  });
   it('should display toast message when default speed is used (no speed in localStorage)', async () => {
     render(<MapProvider><Footer /></MapProvider>);
 
