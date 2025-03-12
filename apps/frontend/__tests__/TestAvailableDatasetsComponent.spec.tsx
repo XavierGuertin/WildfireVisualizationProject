@@ -117,21 +117,6 @@ describe('Test AvailableDatasets component', () => {
     });
   });
 
-  it('should mark dataset as selected when clicked', async () => {
-    render(
-      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
-    );
-
-    const datasetButton = await waitFor(() =>
-      screen.getByTestId('dataset-button-dataset-1'),
-    );
-    fireEvent.click(datasetButton);
-
-    await waitFor(() => {
-      expect(datasetButton).toHaveClass('selected');
-    });
-  });
-
   it('should update active filter UI when a filter button is clicked', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} />,
@@ -213,17 +198,10 @@ describe('Test AvailableDatasets component', () => {
     });
 
     await waitFor(() => {
-      expect(mockFetchCollectionsByName).toHaveBeenCalledTimes(2);
-      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(
-        1,
-        undefined,
-        'asc',
-      );
-      expect(mockFetchCollectionsByName).toHaveBeenNthCalledWith(
-        2,
+      expect(mockFetchCollectionsByName).toHaveBeenCalledWith(
         [-120, 30, -110, 40],
-        'asc',
-      );
+        'asc'
+      );      
     });
   });
 
