@@ -35,7 +35,6 @@
 }
 
 .controlIcon {
-  padding-left: 30px;
   vertical-align: middle;
 }
 
@@ -72,6 +71,7 @@
 }
 
 .customSliderContainer {
+  padding-right: 25px;
   margin-left: 35px;
   margin-bottom: 15px;
   position: relative;

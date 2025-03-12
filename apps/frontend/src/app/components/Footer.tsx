@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
-import { FaPauseCircle, FaPlayCircle, FaStopCircle } from 'react-icons/fa';
+import { FaBackward, FaPause, FaPlay } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -141,9 +141,9 @@ const Footer = () => {
 
     return (
       <span className="timeMarkerText">
-      <span>{dateStr}</span>
-      <span>{timeStr}</span>
-    </span>
+        <span>{dateStr}</span>
+        <span>{timeStr}</span>
+      </span>
     );
   };
 
@@ -216,8 +216,11 @@ const Footer = () => {
               <div
                 className="timeMarkerThumb"
                 style={{
-                  left: `${timeStamps.length > 1 ?
-                    (sliderValue / (timeStamps.length - 1)) * 94 + 3 : 5}%`,
+                  left: `${
+                    timeStamps.length > 1
+                      ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
+                      : 5
+                  }%`,
                 }}
               >
                 <span className="timeMarkerText">
@@ -243,13 +246,9 @@ const Footer = () => {
           aria-label={isPlaying ? 'Pause simulation' : 'Play simulation'}
         >
           {!isPlaying ? (
-            <FaPlayCircle
-              className="controlIcon"
-              size={30}
-              data-testid="play-icon"
-            />
+            <FaPlay className="controlIcon" size={30} data-testid="play-icon" />
           ) : (
-            <FaPauseCircle
+            <FaPause
               className="controlIcon"
               size={30}
               data-testid="pause-icon"
@@ -261,9 +260,9 @@ const Footer = () => {
           onClick={handleStopPress}
           data-testid="stop-button"
         >
-          <FaStopCircle
+          <FaBackward
             className="controlIcon"
-            size={30}
+            size={35}
             data-testid="stop-icon"
           />
         </button>
