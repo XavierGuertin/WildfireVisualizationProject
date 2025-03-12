@@ -237,6 +237,7 @@ const Footer = () => {
       <div className="sliderContainer">
         <div
           className="customSliderContainer"
+          data-testid="slider"
           ref={sliderRef}
           onMouseDown={handleMouseDown}
         >
