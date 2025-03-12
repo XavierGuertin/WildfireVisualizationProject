@@ -118,6 +118,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         return;
       }
 
+      const config = await getConfig();
+      setLoadedDataset(config.loadedDataset || null);
+
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
@@ -129,17 +132,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, 300);
 
-  useEffect(() => {
-    const fetchLoadedDataset = async () => {
-      const config = await getConfig();
-      setLoadedDataset(config.loadedDataset || null);
-    };
-    fetchLoadedDataset();
-  }, [refreshKey]);
-
   /**
-   * Fetches datasets when the refresh key or filter changes.
-   */
+ * Fetches datasets when the refresh key or filter changes.
+ */
   useEffect(() => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId')
     if(selectedDatasetId !== null){
@@ -153,7 +148,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when toggling filtering by map view.
    */
   useEffect(() => {
-    fetchDatasets();
+    if (isToggled) {
+      fetchDatasets();
+    }
   }, [isToggled, currentBbox?.join(',')]);
 
   /**
