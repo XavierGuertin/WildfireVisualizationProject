@@ -46,6 +46,9 @@
   width: 100%;
   text-align: center;
   vertical-align: middle;
+  margin-bottom: 20px;
+  justify-content: flex-end;
+  padding-right: 50px;
 }
 
 .speedButton {
