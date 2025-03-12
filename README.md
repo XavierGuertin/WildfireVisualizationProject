@@ -98,12 +98,34 @@ For setting up the development environment, follow these additional steps:
    docker compose up geoserver db tileserver tileserver-init
    ```
 
-3. **Run the Backend**
+3. **Add Environment Variables**
+   ```
+   # Navigate to the frontend directory
+   cd frontend
+
+   # Create environment files if they don't exist
+   touch .env.production .env.development
+   ```
+
+   Add the following variables to both .env.production and .env.development
+   ```ini
+   NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+   NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
+   NEXT_PUBLIC_TILESERVER_URL=http://localhost:8081/data/OAM-World-1-8-min-J80
+   ```
+
+4. **Run the Backend**
    ```bash
    nx dev backend
    ```
 
-4. **Run the Frontend**
+5. **Install Dependencies**
+   ```bash
+   cd wildfire-visualization-platform
+   npm i
+   ```
+
+6. **Run the Frontend**
    ```bash
    nx dev frontend
    ```
