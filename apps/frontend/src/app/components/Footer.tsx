@@ -59,9 +59,6 @@ const Footer = () => {
 
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
-    toast.success(t('speed_changed') + newSpeed + 'x', {
-      toastId: 'speed-changed',
-    });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
