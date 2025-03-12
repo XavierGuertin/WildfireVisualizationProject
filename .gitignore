@@ -151,16 +151,9 @@ storybook-static/
 yarn.lock
 .pnpm-debug.log
 
-# GeoServer
-apps/geoserver_data/logs
-apps/geoserver_data/security
-apps/geoserver_data/temp
-apps/geoserver_data/tmp
-apps/geoserver_data/gwc-layers
-apps/geoserver_data/monitoring
-
-# TileServer
-*.mbtiles
+# Geoserver artifacts (if applicable)
+geoserver-data/
+geoserver-cache/
 
 # Custom - Ignore generated files (starts with "generated")
 generated*
