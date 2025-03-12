@@ -11,6 +11,7 @@
   overflow-y: hidden;
   z-index: 1000;
   margin-bottom: 5px;
+  padding-top: 25px;
 }
 
 .sliderContainer {
@@ -28,24 +29,95 @@
 
 .iconButton {
   border: none;
-  padding: none;
-  margin: none;
+  margin-bottom: 15px;
   cursor: pointer;
   color: #00467E;
   background: none;
 }
 
 .controlIcon {
-  padding-left: 10px;
   vertical-align: middle;
 }
 
 .speedContainer {
   display: flex;
-  flex-direction: row;
   width: 100%;
-  text-align: center;
-  vertical-align: middle;
+  justify-content: flex-end;
+  padding-right: 50px;
+  margin-bottom: 30px;
+  position: relative;
+  user-select: none;
+}
+
+.speedSlider {
+  width: 250px;
+  height: 8px;
+  position: relative;
+  background: #dfdfdf;
+  border-radius: 4px;
+}
+
+.speedTrack {
+  position: absolute;
+  height: 100%;
+  left: 0;
+  border-radius: 4px;
+  background: linear-gradient(to right, #69c0ff, #0050b3);
+  transition: width 0.3s ease;
+}
+
+.speedPoint {
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Selected point - white fill with blue border */
+.speedPoint.active {
+  background-color: white;
+  border: 2px solid #0050b3;
+}
+
+/* Points to the left - solid blue with no white outline */
+.speedPoint.active-or-left:not(.active) {
+  background-color: #0050b3;
+  border: none;
+}
+
+/* Right points styling remains gray */
+.speedPoint.right {
+  background-color: #e0e0e0;
+  border: 2px solid #cccccc;
+}
+
+.speedPoint:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.speedLabel {
+  font-size: 12px;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  transform: translateX(-50%);
+  transition: color 0.2s ease;
+}
+
+.speedLabel.active {
+  font-weight: bold;
+  color: #0050b3;
+}
+
+.speedLabel.active-or-left {
+  color: #0468bc;
+}
+
+.speedLabel.right {
+  color: #6c6c6c;
 }
 
 .speedButton {
@@ -55,7 +127,6 @@
   font-size: 12px;
   color: #00467E;
   background-color: white;
-  box-shadow: white;
   margin-left: 10px;
   cursor: pointer;
   border-style: solid;
@@ -67,4 +138,111 @@
   margin-bottom: 0;
   margin-left: 10px;
   text-align: center;
+}
+
+.customSliderContainer {
+  padding-right: 25px;
+  margin-left: 35px;
+  margin-bottom: 15px;
+  position: relative;
+  width: calc(92% - 50px);
+  height: 30px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sliderTrack {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  background-color: #dfdfdf;
+  border-radius: 8px;
+  border-color: #a3a3a3;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.sliderThumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.timeMarker {
+  display: none;
+}
+
+.timeMarker.active {
+  width: 40px;
+  height: 40px;
+  top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  z-index: 2;
+}
+
+.timeMarker.active .timeMarkerText {
+  display: block;
+}
+
+.timeMarkerThumb {
+  position: absolute;
+  width: 140px;
+  height: 32px;
+  border-radius: 12px;
+  background-color: #00467E;
+  transform: translateX(-50%);
+  top: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  z-index: 4;
+  transition: left 0.2s ease-out;
+}
+
+.timeMarkerText {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: center;
+  white-space: nowrap;
+  font-family: 'Calibri', sans-serif;
+}
+
+.timeMarkerText span:first-child {
+  margin-right: 5px;
+}
+
+.timeMarkerText span {
+  font-size: 13.5px;
+}
+
+.timeMarkerThumb.active .timeMarkerText {
+  display: block;
+}
+
+.iconButton .controlIcon {
+  transition: transform 0.3s ease;
+}
+
+.iconButton:hover .controlIcon {
+  transform: scale(1.2);
+}
+
+.timeMarkerThumb:hover {
+  transform: translateX(-50%) scale(1.05);
 }

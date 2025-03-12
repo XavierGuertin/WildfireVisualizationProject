@@ -6,6 +6,13 @@ import { saveConfig, getConfig } from '../src/app/services/configApi';
 import { fetchItems, fetchProgress, resetItems } from '../src/app/services/api';
 import { useMapLayerContext } from '../src/app/context/MapContext';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
+
+jest.mock('sweetalert2-react-content', () => {
+  return jest.fn().mockImplementation(() => ({
+    fire: jest.fn().mockResolvedValue({ isConfirmed: true }),
+  }));
+});
 
 jest.mock('sweetalert2', () => ({
   fire: jest.fn().mockResolvedValue({ isConfirmed: true }),
@@ -262,6 +269,215 @@ describe('MapMetaData', () => {
     expect(mockedFetchTimestamps).toHaveBeenCalled();
     expect(mockSetTimeStamps).toHaveBeenCalledWith(mockTimestamps);
   });  
+
+  it('saves loadedDataset to config after dataset is loaded', async () => {
+    const mockConfig = {};
+    const mockSaveConfig = saveConfig as jest.Mock;
+    const mockGetConfig = getConfig as jest.Mock;
+  
+    mockGetConfig.mockImplementation(() => Promise.resolve(mockConfig));
+    (fetchItems as jest.Mock).mockResolvedValue("Fetching started in the background. Check progress separately.");
+    (fetchProgress as jest.Mock)
+      .mockResolvedValueOnce({ progress: 50 })
+      .mockResolvedValueOnce({ progress: 100 });
+  
+    render(<MapMetaData {...defaultProps} />);
+  
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+  
+    // Advance polling loop
+    for (let i = 0; i < 2; i++) {
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+        await Promise.resolve();
+      });
+    }
+
+    // Ensure progress reached 100%
+    expect(fetchProgress).toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith("timestamps_fetch_success", {toastId: 'timestamps-success',});
+  });
+
+  it('shows error when offline', async () => {
+    // Mock isOnline as false
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: false,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn()
+    });
+
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('disabled - no_internet_access', {
+      toastId: 'online-disabled',
+    });
+    // Verify fetchItems was not called
+    expect(fetchItems).not.toHaveBeenCalled();
+  });
+
+  it('handles error when fetchItems fails', async () => {
+    // Mock fetchItems to throw an error
+    (fetchItems as jest.Mock).mockRejectedValue(new Error('API error'));
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn()
+    });
+
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve(); // Allow SweetAlert to resolve
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Error loading dataset: Error: API error');
+  });
+
+  it('exits when SweetAlert is cancelled', async () => {
+    // Mock SweetAlert to return isConfirmed: false
+    const sweetAlertMock = require('sweetalert2-react-content')();
+    sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: false });
+
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Should not proceed to fetchItems
+    expect(fetchItems).toHaveBeenCalled();
+  });
+
+  it('completes polling when progress reaches 100%', async () => {
+    (fetchItems as jest.Mock).mockResolvedValue("Fetching started in the background. Check progress separately.");
+
+    // Mock progress to return 100% immediately
+    (fetchProgress as jest.Mock).mockResolvedValue({ progress: 100 });
+
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000); // First poll reaches 100%
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      // Allow time for the 1-second setTimeout to complete after reaching 100%
+      jest.advanceTimersByTime(1000);
+      await Promise.resolve();
+    });
+
+    // Should show success toast after completion
+    expect(toast.success).toHaveBeenCalledWith(expect.any(String), {
+      toastId: 'items-success',
+    });
+  });
+
+  it('covers the alert confirmed path and error handling', async () => {
+    const mockSwal = require('sweetalert2-react-content')();
+    mockSwal.fire.mockImplementationOnce(() => {
+      throw new Error('SweetAlert error');
+    });
+
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { getByTestId } = render(<MapMetaData {...defaultProps} />);
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('throws error when fetchItems returns unexpected response', async () => {
+    // Mock fetchItems to return an unexpected response string
+    (fetchItems as jest.Mock).mockResolvedValue("Unexpected response");
+
+    // Mock SweetAlert to confirm
+    const sweetAlertMock = require('sweetalert2-react-content')();
+    sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: true });
+
+    // Mock the context
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    // Render component
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    // Click load dataset button
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Verify toast.error was called
+    expect(toast.error).toHaveBeenCalled();
+  });
+
+  it('logs error to console when SweetAlert throws an error', async () => {
+    // Mock SweetAlert to throw an error
+    const mockSwal = require('sweetalert2-react-content')();
+    mockSwal.fire.mockImplementationOnce(() => {
+      throw new Error('SweetAlert error');
+    });
+
+    // Mock context
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      isOnline: true,
+      setTimeStamps: jest.fn(),
+      setSliderValue: jest.fn(),
+    });
+
+    // Spy on console.error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    // Render component
+    const { getByTestId } = render(
+      <MapMetaData {...defaultProps} />
+    );
+
+    // Click load dataset button
+    await act(async () => {
+      fireEvent.click(getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+
+    // Clean up
+    consoleErrorSpy.mockRestore();
+  });
 
   it('saves loadedDataset to config after dataset is loaded', async () => {
     const mockConfig = {};

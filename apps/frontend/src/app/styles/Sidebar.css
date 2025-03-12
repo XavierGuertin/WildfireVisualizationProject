@@ -4,17 +4,18 @@
   background: #00447E;
   color: white;
   position: fixed;
-  bottom: 10vh;
+  bottom: 9vh;
   left: 25px;
   padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   z-index: 1000;
   border-radius: 8px;
-  transition: width 0.3s ease, height 0.3s ease, padding 0.3s ease;
+  transition: width 0.3s ease, height 0.3s ease, padding 0.3s ease, transform 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
+  user-select: none;
 
   &.collapsed {
     width: 100px;
@@ -24,6 +25,10 @@
   &.expanded {
     width: 100px;
     padding: 5px 20px 10px 20px;
+  }
+
+  &:hover {
+    transform: scale(1.05);
   }
 }
 
@@ -39,6 +44,11 @@
 .icon {
   width: 30px;
   height: 30px;
+  transition: transform 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.05);
 }
 
 .layer-image {
