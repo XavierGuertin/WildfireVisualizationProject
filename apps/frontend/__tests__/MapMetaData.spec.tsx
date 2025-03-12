@@ -262,4 +262,49 @@ describe('MapMetaData', () => {
     expect(mockedFetchTimestamps).toHaveBeenCalled();
     expect(mockSetTimeStamps).toHaveBeenCalledWith(mockTimestamps);
   });  
+
+  it('saves loadedDataset to config after dataset is loaded', async () => {
+    const mockConfig = {};
+    const mockSaveConfig = saveConfig as jest.Mock;
+    const mockGetConfig = getConfig as jest.Mock;
+  
+    mockGetConfig.mockImplementation(() => Promise.resolve(mockConfig));
+    (fetchItems as jest.Mock).mockResolvedValue("Fetching started in the background. Check progress separately.");
+    (fetchProgress as jest.Mock)
+      .mockResolvedValueOnce({ progress: 50 })
+      .mockResolvedValueOnce({ progress: 100 });
+  
+    render(<MapMetaData {...defaultProps} />);
+  
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('load-dataset-button'));
+      await Promise.resolve();
+    });
+  
+    // Advance polling loop
+    for (let i = 0; i < 2; i++) {
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+        await Promise.resolve();
+      });
+    }
+  
+    // Force resolution before assertions
+    await waitFor(() => {
+  expect(mockGetConfig).toHaveBeenCalled();
+  expect(mockSaveConfig).toHaveBeenCalled();
+  const savedConfig = mockSaveConfig.mock.calls[0][0];
+  expect(savedConfig.loadedDataset).toBe('test-dataset');
+  expect(defaultProps.refreshDatasets).toHaveBeenCalled();
+    });
+  
+    // 🔥 Key part: check value assignment
+    const savedConfig = mockSaveConfig.mock.calls[0][0];
+    expect(savedConfig.loadedDataset).toBe('test-dataset');
+  });  
+
+  it('renders non-collapsed content when not collapsed initially', () => {
+    render(<MapMetaData {...defaultProps} />);
+    expect(screen.getByTestId('dataset-description')).toBeInTheDocument();
+  });  
 });
