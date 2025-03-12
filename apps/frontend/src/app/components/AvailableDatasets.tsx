@@ -143,8 +143,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when toggling filtering by map view.
    */
   useEffect(() => {
-    fetchDatasets();
-  }, [isToggled, currentBbox?.join(',')]);
+    if(isToggled){
+      fetchDatasets();
+    }
+  }, [isToggled, currentBbox.join(',')]);
 
   /**
    * Add state to track sort direction
