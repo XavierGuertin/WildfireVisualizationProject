@@ -205,4 +205,91 @@ describe('Footer component tests', () => {
     fireEvent.mouseMove(window, { clientX: 150 });  // if (isDraggingRef.current) { handleSliderMove(e); }
     fireEvent.mouseUp(window);                      // isDraggingRef.current = false
   });
+
+  it('formats timestamps properly and displays them in the UI', async () => {
+    // Mock a specific timestamp to ensure predictable formatting
+    const timestamp = '2023-05-15T14:30:45Z';
+
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: {
+        current: {
+          getView: jest.fn(() => ({
+            setCenter: jest.fn(),
+            setZoom: jest.fn(),
+          })),
+        },
+      },
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: [timestamp],
+      setTimeStamps: jest.fn(),
+    });
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>,
+    );
+
+    // Use a more specific query that targets only the innermost spans
+    const dateElement = await screen.findByText('2023-05-15', { exact: true });
+
+    // Use getByText with a predicate function that checks for exact match
+    const timePattern = /^\d{2}:\d{2}:\d{2}$/;
+    const timeElements = screen.getAllByText(timePattern);
+
+    // There should be at least one element matching our time pattern
+    expect(timeElements.length).toBeGreaterThan(0);
+    expect(dateElement).toBeInTheDocument();
+  });
+
+  it('properly handles slider dragging states and event listeners', () => {
+    // Spy on document event listeners
+    const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+    const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener');
+
+    // Clear previous calls to changeLayer
+    (changeLayer as jest.Mock).mockClear();
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    const slider = screen.getByTestId('slider');
+
+    // Start dragging
+    fireEvent.mouseDown(slider, { clientX: 100 });
+
+    // Verify event listeners were added for mousemove and mouseup
+    expect(addEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+    expect(addEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+
+    // Simulate mouse movement during drag
+    fireEvent.mouseMove(document, { clientX: 150 });
+
+    // Verify slider movement triggered changeLayer
+    expect(changeLayer).toHaveBeenCalled();
+
+    // Reset mock to check future calls
+    (changeLayer as jest.Mock).mockClear();
+
+    // End dragging
+    fireEvent.mouseUp(document);
+
+    // Verify event listeners were removed
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+
+    // Verify dragging has ended by confirming movement no longer triggers changeLayer
+    fireEvent.mouseMove(document, { clientX: 200 });
+    expect(changeLayer).not.toHaveBeenCalled();
+
+    // Clean up spies
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
+  });
 });
