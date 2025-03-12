@@ -18,6 +18,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0); // Add state for refresh key
   const [isMetadataVisible, setMetadataVisible] = useState(false); // Add state for metadata visibility
   const [currentBbox, setCurrentBbox] = useState<[number, number, number, number] | undefined>(undefined);
+  const WORLD_BBOX: [number, number, number, number] = [-180, -90, 180, 90];
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
@@ -60,7 +61,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <AvailableDatasets
               onDatasetClick={handleDatasetClick}
               refreshKey={refreshKey}
-              currentBbox={currentBbox ?? undefined} />
+              currentBbox={currentBbox ?? undefined}
+              onResetBbox={() => setCurrentBbox(WORLD_BBOX)}
+              />
           <MapView onBboxChange={(bbox) => {
               if (bbox && bbox.length === 4) {
                 setCurrentBbox(bbox as [number, number, number, number]);

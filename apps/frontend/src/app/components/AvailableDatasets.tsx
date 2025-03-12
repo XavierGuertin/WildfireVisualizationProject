@@ -47,12 +47,14 @@ interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
   currentBbox?: [number, number, number, number]; // [west, south, east, north]
+  onResetBbox: () => void;
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   onDatasetClick,
   refreshKey,
   currentBbox = [],
+  onResetBbox
 }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -147,6 +149,16 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       fetchDatasets();
     }
   }, [isToggled, currentBbox.join(',')]);
+
+  /**
+   * Fetches datasets when toggling filtering by map view.
+   */
+  useEffect(() => {
+    if(!isToggled){
+      onResetBbox();
+      fetchDatasets();
+    }
+  }, [isToggled]);
 
   /**
    * Add state to track sort direction
