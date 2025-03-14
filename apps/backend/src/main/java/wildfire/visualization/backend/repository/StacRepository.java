@@ -580,4 +580,13 @@ public class StacRepository {
     jdbcTemplate.update("DELETE FROM ItemAssets");
   }
 
+  /**
+   * Method responsible for deleting a layer from the database
+   *
+   * @param layerName Name of the layer to be deleted
+   */
+  public void deleteItemAssetLayer(String layerName) {
+    jdbcTemplate.update("DELETE FROM ItemAssets WHERE asset_name = ?", layerName);
+  }
+
 }

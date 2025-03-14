@@ -630,14 +630,7 @@ public class DataService {
 
       if (assets == null || assets.isEmpty()) return;
 
-      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
-      for (Map<String, Object> layer : existingLayers) {
-        String layerName = (String) layer.get("asset_name");
-        geoServerService.unregisterLayer(layerName);
-      }
-
-      // Clear previously registered layers
-      stacRepository.clearLayers();
+      itemAssetsReset(); // Reset previously registered layers
 
       // Get total number of assets
       int totalAssets = assets.size();
@@ -657,6 +650,32 @@ public class DataService {
     } catch (Exception e) {
       logger.error("Error processing item assets: {}", e.getMessage(), e);
       fetchProgress.put(itemId, new AtomicInteger(-1)); // Set error state
+    }
+  }
+
+  public boolean itemAssetsReset() {
+    try {
+      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
+
+      for (Map<String, Object> layer : existingLayers) {
+        String layerName = (String) layer.get("asset_name");
+
+        try {
+          geoServerService.unregisterLayer(layerName);
+        } catch (Exception e) {
+          logger.error("Layer not found in GeoServer (likely already deleted): {}", layerName);
+        }
+
+        // Always delete the database trace of the asset, whether unregister succeeds or fails
+        stacRepository.deleteItemAssetLayer(layerName);
+      }
+
+      // Finally, clear all registered layers from the database
+      stacRepository.clearLayers();
+      return true;
+    } catch (Exception e) {
+      logger.error("Error resetting item assets: {}", e.getMessage(), e);
+      return false;
     }
   }
 
