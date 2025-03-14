@@ -142,6 +142,7 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = endpointUrl;
+        config.loadedDataset = "";
         await saveConfig(config);
 
         toast.success(t('api_endpoint_saved'));
@@ -302,6 +303,7 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = 'No endpoint saved';
+        config.loadedDataset = "";
         await saveConfig(config);
 
         refreshDatasets(); // Trigger the refresh
