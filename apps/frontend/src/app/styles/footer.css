@@ -11,7 +11,7 @@
   overflow-y: hidden;
   z-index: 1000;
   margin-bottom: 5px;
-  padding-top: 25px;
+  padding-top: 75px;
 }
 
 .sliderContainer {
@@ -199,7 +199,7 @@
 
 .timeMarkerThumb {
   position: absolute;
-  width: 150px;
+  width: 175px;
   height: 40px;
   border-radius: 12px;
   background-color: #00467E;
@@ -228,7 +228,7 @@
 }
 
 .timeMarkerText span {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .timeMarkerThumb.active .timeMarkerText {
@@ -246,7 +246,7 @@
 .timeMarkerHoverBox {
   position: absolute;
   bottom: 25px;
-  width: 145px;
+  width: 170px;
   background-color: white;
   border: 2px solid #00467E;
   border-radius: 8px 8px 0 0;
@@ -284,7 +284,7 @@
 .hoverBoxText {
   color: #00467E;
   font-weight: bold;
-  font-size: 15px;
+  font-size: 16px;
   margin-top: -6px;
   padding-bottom: 12px;
 }
@@ -308,5 +308,54 @@
   to {
     transform: translate(-50%, 20px);
     opacity: 0;
+  }
+}
+
+.timeMarkerHoverBox[data-locked="true"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translate(-50%, 0) !important;
+  animation: none !important;
+  pointer-events: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: auto;
+}
+
+.timeMarkerHoverBox[data-locked="true"] .hoverBoxIcon {
+  cursor: pointer;
+  margin-bottom: 5px;
+  transition: transform 0.2s ease;
+}
+
+.timeMarkerHoverBox[data-locked="true"] .hoverBoxIcon:hover {
+  transform: scale(1.2);
+}
+
+.loadAssetsButton {
+  background-color: #00467E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  opacity: 0;
+  animation: fadeIn 0.3s ease 0.2s forwards;
+}
+
+.loadAssetsButton:hover {
+  background-color: #003057;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
