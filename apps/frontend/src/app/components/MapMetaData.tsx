@@ -45,7 +45,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [progress, setProgress] = useState(0);
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps, isOnline, setSliderValue } = useMapLayerContext();
+  const { setTimeStamps, isOnline, setSliderValue, setCollectionId } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     if (!isOnline) {
@@ -97,6 +97,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                 setProgress(progressResponse.progress);
                 const timestamps = await fetchTimestamps();
                 setTimeStamps(timestamps);
+                setCollectionId(id);
                 // Stop the loop when progress reaches 100%
                 if (progressResponse.progress >= 100) {
                   // sleep for 1 second to allow the items to be loaded
