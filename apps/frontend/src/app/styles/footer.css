@@ -199,8 +199,8 @@
 
 .timeMarkerThumb {
   position: absolute;
-  width: 140px;
-  height: 32px;
+  width: 150px;
+  height: 40px;
   border-radius: 12px;
   background-color: #00467E;
   transform: translateX(-50%);
@@ -210,7 +210,7 @@
   justify-content: center;
   font-weight: bold;
   color: white;
-  z-index: 4;
+  z-index: 5;
   transition: left 0.2s ease-out;
 }
 
@@ -228,7 +228,7 @@
 }
 
 .timeMarkerText span {
-  font-size: 13.5px;
+  font-size: 15px;
 }
 
 .timeMarkerThumb.active .timeMarkerText {
@@ -243,6 +243,35 @@
   transform: scale(1.2);
 }
 
-.timeMarkerThumb:hover {
-  transform: translateX(-50%) scale(1.05);
+.timeMarkerHoverBox {
+  position: absolute;
+  bottom: 25px; /* Adjust as needed */
+  transform: translateX(-50%);
+  width: 145px;
+  background-color: white;
+  border: 2px solid #00467E;
+  border-radius: 8px 8px 0 0;
+  padding: 5px 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: -15px;
+  z-index: 4;
+}
+
+.timeMarkerThumb:hover .timeMarkerHoverBox {
+  display: flex;
+}
+
+.hoverBoxIcon {
+  color: #00467E;
+  margin-top: -5px;
+}
+
+.hoverBoxText {
+  color: #00467E;
+  font-weight: bold;
+  font-size: 15px;
+  margin-top: -6px;
+  padding-bottom: 12px;
 }

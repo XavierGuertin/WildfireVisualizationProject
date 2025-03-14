@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
-import { FaBackward, FaPause, FaPlay } from 'react-icons/fa';
+import { FaAngleUp, FaBackward, FaPause, FaPlay } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -177,6 +177,8 @@ const Footer = () => {
     }
   };
 
+  const [hoveredThumb, setHoveredThumb] = useState(false);
+
   /**
    * Add layer if the timeStamps list is populated
    */
@@ -195,14 +197,14 @@ const Footer = () => {
           <div
             className="speedTrack"
             style={{
-              width: `${(speedValues.indexOf(speed) / (speedValues.length - 1)) * 100}%`
+              width: `${(speedValues.indexOf(speed) / (speedValues.length - 1)) * 100}%`,
             }}
           ></div>
           {speedValues.map((s, index) => {
             // Calculate progressively larger sizes
             const baseSize = 12;
             const sizeIncrement = 2.5; // How much each point grows
-            const pointSize = baseSize + (index * sizeIncrement);
+            const pointSize = baseSize + index * sizeIncrement;
 
             return (
               <React.Fragment key={s}>
@@ -213,7 +215,7 @@ const Footer = () => {
                   style={{
                     left: `${(index / (speedValues.length - 1)) * 100}%`,
                     width: `${pointSize}px`,
-                    height: `${pointSize}px`
+                    height: `${pointSize}px`,
                   }}
                   onClick={() => handleSpeedChange(s)}
                   data-testid={`speed-point-${s}`}
@@ -223,11 +225,13 @@ const Footer = () => {
                   className={`speedLabel ${
                     s <= speed ? 'active-or-left' : 'right'
                   } ${s === speed ? 'active' : ''}`}
-                  style={{ left: `${(index / (speedValues.length - 1)) * 100}%` }}
+                  style={{
+                    left: `${(index / (speedValues.length - 1)) * 100}%`,
+                  }}
                   onClick={() => handleSpeedChange(s)}
                 >
-            {s}x
-          </span>
+                  {s}x
+                </span>
               </React.Fragment>
             );
           })}
@@ -243,22 +247,40 @@ const Footer = () => {
         >
           <div className="sliderTrack">
             {timeStamps.length > 0 && (
-              <div
-                className="timeMarkerThumb"
-                style={{
-                  left: `${
-                    timeStamps.length > 1
-                      ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
-                      : 5
-                  }%`,
-                }}
-              >
-                <span className="timeMarkerText">
-                  {timeStamps[sliderValue]
-                    ? formatTimestamp(timeStamps[sliderValue])
-                    : ''}
-                </span>
-              </div>
+              <>
+                <div
+                  className="timeMarkerHoverBox"
+                  style={{
+                    left: `${
+                      timeStamps.length > 1
+                        ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
+                        : 5
+                    }%`,
+                    display: hoveredThumb ? 'flex' : 'none',
+                  }}
+                >
+                  <FaAngleUp className="hoverBoxIcon" size={20} />
+                  <span className="hoverBoxText">Weather Assets</span>
+                </div>
+                <div
+                  className="timeMarkerThumb"
+                  style={{
+                    left: `${
+                      timeStamps.length > 1
+                        ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
+                        : 5
+                    }%`,
+                  }}
+                  onMouseEnter={() => setHoveredThumb(true)}
+                  onMouseLeave={() => setHoveredThumb(false)}
+                >
+                  <span className="timeMarkerText">
+                    {timeStamps[sliderValue]
+                      ? formatTimestamp(timeStamps[sliderValue])
+                      : ''}
+                  </span>
+                </div>
+              </>
             )}
           </div>
           <div
