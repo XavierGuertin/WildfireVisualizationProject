@@ -245,22 +245,35 @@
 
 .timeMarkerHoverBox {
   position: absolute;
-  bottom: 25px; /* Adjust as needed */
-  transform: translateX(-50%);
+  bottom: 25px;
   width: 145px;
   background-color: white;
   border: 2px solid #00467E;
   border-radius: 8px 8px 0 0;
   padding: 5px 0;
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: -15px;
   z-index: 4;
+  transform: translate(-50%, 20px);
+  pointer-events: none;
 }
 
-.timeMarkerThumb:hover .timeMarkerHoverBox {
-  display: flex;
+.timeMarkerHoverBox[data-hovered="true"] {
+  animation: slideUp 0.3s ease forwards;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.timeMarkerHoverBox[data-hovered="false"] {
+  animation: slideDown 0.3s ease forwards;
+  visibility: visible;
+}
+
+.timeMarkerHoverBox[data-hovered="false"] {
+  visibility: hidden;
+  transition: visibility 0s 0.3s;
 }
 
 .hoverBoxIcon {
@@ -274,4 +287,26 @@
   font-size: 15px;
   margin-top: -6px;
   padding-bottom: 12px;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
 }

@@ -256,14 +256,14 @@ const Footer = () => {
                         ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
                         : 5
                     }%`,
-                    display: hoveredThumb ? 'flex' : 'none',
                   }}
+                  data-hovered={hoveredThumb ? 'true' : 'false'}
                 >
                   <FaAngleUp className="hoverBoxIcon" size={20} />
                   <span className="hoverBoxText">Weather Assets</span>
                 </div>
                 <div
-                  className="timeMarkerThumb"
+                  className="timeMarkerHoverBox"
                   style={{
                     left: `${
                       timeStamps.length > 1
@@ -271,24 +271,19 @@ const Footer = () => {
                         : 5
                     }%`,
                   }}
-                  onMouseEnter={() => setHoveredThumb(true)}
-                  onMouseLeave={() => setHoveredThumb(false)}
+                  data-hovered={hoveredThumb || hoverBoxLocked ? 'true' : 'false'}
+                  data-locked={hoverBoxLocked ? 'true' : 'false'}
+                  onClick={() => setHoverBoxLocked(true)}
                 >
-                  <span className="timeMarkerText">
-                    {timeStamps[sliderValue]
-                      ? formatTimestamp(timeStamps[sliderValue])
-                      : ''}
-                  </span>
+                  <FaAngleUp className="hoverBoxIcon" size={20} />
+                  <span className="hoverBoxText">Weather Assets</span>
+                  {hoverBoxLocked && (
+                    <button className="loadAssetsButton">Load Assets</button>
+                  )}
                 </div>
               </>
             )}
           </div>
-          <div
-            className="sliderThumb"
-            style={{
-              left: `${timeStamps.length > 1 ? (sliderValue / (timeStamps.length - 1)) * 100 : 0}%`,
-            }}
-          ></div>
         </div>
 
         <button
