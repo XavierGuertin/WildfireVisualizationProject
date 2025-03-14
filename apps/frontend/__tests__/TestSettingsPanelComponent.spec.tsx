@@ -513,6 +513,7 @@ describe('SettingsPanel Component', () => {
         } else {
           const config = await getConfig();
           config.endpoint = 'No endpoint saved';
+          config.loadedDataset = '';
           await saveConfig(config);
           refreshDatasets();
         }
@@ -578,6 +579,7 @@ describe('SettingsPanel Component', () => {
 
             const config = await getConfig();
             config.endpoint = endpointUrl;
+            config.loadedDataset = "";
             await saveConfig(config);
 
             toast.success(mockT('api_endpoint_saved'));
@@ -599,6 +601,12 @@ describe('SettingsPanel Component', () => {
       // Verify all expected behaviors
       expect(result).toBe(true);
       // Rest of expectations unchanged
+      expect(saveConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          endpoint: 'https://valid-endpoint.com',
+          loadedDataset: ''
+        })
+      );
     });
     // Test with valid URL but no collections found
     it('returns false for valid URL with no collections', async () => {
