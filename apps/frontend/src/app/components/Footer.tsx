@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
-import { fetchTimestamps } from '../services/api';
+import { fetchTimestamps, loadAssets } from '../services/api';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -328,7 +328,9 @@ const Footer = () => {
                   )}
                   <span className="hoverBoxText">Weather Assets</span>
                   {hoverBoxLocked && (
-                    <button className="loadAssetsButton">Load Assets</button>
+                    <button className="loadAssetsButton" onClick={onloadAssetsClick}>
+                      Load Assets
+                    </button>
                   )}
                 </div>
                 <div
@@ -342,6 +344,11 @@ const Footer = () => {
                   }}
                   onMouseEnter={() => setHoveredThumb(true)}
                   onMouseLeave={() => setHoveredThumb(false)}
+                  onClick={() => {
+                    if (hoveredBox || hoveredThumb) {
+                      setHoverBoxLocked(!hoverBoxLocked);
+                    }
+                  }}
                 >
                   <span className="timeMarkerText">
                     {timeStamps[sliderValue]

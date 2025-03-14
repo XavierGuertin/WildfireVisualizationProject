@@ -7,13 +7,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
  * @returns A promise resolving to an array of collections or an error object.
  */
 export const returnListOfCollectionsFromEndpoint = async (
-  bbox?: number[],
+  bbox?: number[]
 ): Promise<
   | {
-      id: string;
-      key: number;
-      bbox: number[][];
-    }[]
+  id: string;
+  key: number;
+  bbox: number[][];
+}[]
   | { error: string }
 > => {
   try {
@@ -35,11 +35,11 @@ export const returnListOfCollectionsFromEndpoint = async (
 };
 
 export const fetchCollectionsFromEndpoint = async (
-  endpoint_url: string,
+  endpoint_url: string
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`,
+      `${BASE_URL}/api/fetch-collections?endpointUrl=${endpoint_url}`
     );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -53,11 +53,11 @@ export const fetchCollectionsFromEndpoint = async (
 };
 
 export const verifyIfEndpointHasCollections = async (
-  endpoint_url: string,
+  endpoint_url: string
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`,
+      `${BASE_URL}/api/verify-collections?endpointUrl=${encodeURIComponent(endpoint_url)}`
     );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -136,7 +136,7 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
       latestAdded: '',
       latestUpdated: '',
       name: data[0].title,
-      processes: '',
+      processes: ''
     };
     return metadata;
   } catch (error: any) {
@@ -147,9 +147,9 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
 
 export const returnCollectionsFromEndpoint = async (): Promise<
   | {
-      id: string;
-      key: number;
-    }[]
+  id: string;
+  key: number;
+}[]
   | { error: string }
 > => {
   try {
@@ -174,13 +174,13 @@ export const returnCollectionsFromEndpoint = async (): Promise<
  */
 export const fetchCollectionsFromEndpointByName = async (
   bbox?: number[],
-  sortDirection: 'asc' | 'desc' = 'asc',
+  sortDirection: 'asc' | 'desc' = 'asc'
 ): Promise<
   | {
-      id: string;
-      key: number;
-      bbox: number[][];
-    }[]
+  id: string;
+  key: number;
+  bbox: number[][];
+}[]
   | { error: string }
 > => {
   try {
@@ -211,13 +211,13 @@ export const fetchCollectionsFromEndpointByName = async (
  */
 export const fetchCollectionsFromEndpointByDate = async (
   bbox?: number[],
-  sortDirection: 'asc' | 'desc' = 'asc',
+  sortDirection: 'asc' | 'desc' = 'asc'
 ): Promise<
   | {
-      id: string;
-      key: number;
-      bbox: number[][];
-    }[]
+  id: string;
+  key: number;
+  bbox: number[][];
+}[]
   | { error: string }
 > => {
   try {
@@ -260,12 +260,12 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
  * @returns A promise resolving to the progress percentage or an error object.
  */
 export const fetchProgress = async (
-  collectionId: string,
+  collectionId: string
 ): Promise<
   | { collectionId: string; progress: number }
   | {
-      error: string;
-    }
+  error: string;
+}
 > => {
   try {
     const url = `${BASE_URL}/api/fetch-progress/${collectionId}`;
@@ -298,7 +298,7 @@ export const fetchTimestamps = async (): Promise<string[]> => {
 
 export const fetchItem = async (
   itemId: string,
-  collectionId?: string,
+  collectionId?: string
 ): Promise<any> => {
   try {
     const url = `${BASE_URL}/api/get-item/${itemId}${collectionId !== null ? '/' + collectionId : ''}`;
@@ -316,11 +316,11 @@ export const fetchItem = async (
 };
 
 export const insertDatalayerView = async (
-  collectionId: string,
+  collectionId: string
 ): Promise<any> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/set-datalayer-geometry/${collectionId}`,
+      `${BASE_URL}/api/set-datalayer-geometry/${collectionId}`
     );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -347,11 +347,11 @@ export const resetDatalayerView = async (): Promise<any> => {
 };
 
 export const verifyInternetConnection = async (
-  endpoint_url: string,
+  endpoint_url: string
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`,
+      `${BASE_URL}/api/verify-internet-connection?endpointUrl=${encodeURIComponent(endpoint_url)}`
     );
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -361,5 +361,19 @@ export const verifyInternetConnection = async (
   } catch (error: any) {
     console.error('Failed to verify connection: ', error);
     throw new Error(`Failed to verify connection: ${error.message}`);
+  }
+};
+
+export const loadAssets = async (collectionId: string, itemId: string) : Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/load-assets/${collectionId}/${itemId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.text();
+  } catch (error: any) {
+    console.error('Error fetching assets:', error);
+    return { error: 'Failed to fetch assets' };
   }
 };
