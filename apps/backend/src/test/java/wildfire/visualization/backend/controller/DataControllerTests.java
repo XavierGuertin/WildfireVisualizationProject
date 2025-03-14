@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -757,6 +758,24 @@ class DataControllerTests {
     Thread.sleep(100);
 
     verify(dataService, times(1)).processItemAssets(collectionId, itemId);
+  }
+
+  @Test
+  void loadAssets_Failure_CatchException() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    String itemId = "testItem";
+
+    // Mock CompletableFuture to simulate an exception in async execution
+    try (MockedStatic<CompletableFuture> mockedCompletableFuture = mockStatic(CompletableFuture.class)) {
+      mockedCompletableFuture.when(() -> CompletableFuture.runAsync(any(Runnable.class)))
+        .thenThrow(new RuntimeException("Async processing error"));
+
+      // Act & Assert
+      mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("Failed to start processing."));
+    }
   }
 
 

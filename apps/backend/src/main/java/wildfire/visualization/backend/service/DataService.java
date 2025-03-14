@@ -634,7 +634,6 @@ public class DataService {
       for (Map<String, Object> layer : existingLayers) {
         String layerName = (String) layer.get("asset_name");
         geoServerService.unregisterLayer(layerName);
-        geoServerService.deleteCoverageStore(layerName);
       }
 
       // Clear previously registered layers

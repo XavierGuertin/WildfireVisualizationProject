@@ -113,10 +113,10 @@ class GeoServerServiceTests {
 
   @Test
   void testUnregisterLayer_Success() {
-    String expectedUrl = geoserverUrl + "/rest/layers/" + workspace + ":" + layerName;
+    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
 
     // Mock response
-    ResponseEntity<String> successResponse = new ResponseEntity<>("Deleted", HttpStatus.OK);
+    ResponseEntity<String> successResponse = new ResponseEntity<>(HttpStatus.NO_CONTENT);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
       .thenReturn(successResponse);
 
@@ -130,10 +130,10 @@ class GeoServerServiceTests {
 
   @Test
   void testUnregisterLayer_Failure() {
-    String expectedUrl = geoserverUrl + "/rest/layers/" + workspace + ":" + layerName;
+    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
 
     // Mock response
-    ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
+    ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.INTERNAL_SERVER_ERROR);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
       .thenReturn(failureResponse);
 
@@ -145,39 +145,6 @@ class GeoServerServiceTests {
     assertThat(result).isFalse();
   }
 
-  @Test
-  void testDeleteCoverageStore_Success() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
-
-    // Mock response
-    ResponseEntity<String> successResponse = new ResponseEntity<>("Deleted", HttpStatus.OK);
-    when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(successResponse);
-
-    // Execute
-    boolean result = geoServerService.deleteCoverageStore(layerName);
-
-    // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
-    assertThat(result).isTrue();
-  }
-
-  @Test
-  void testDeleteCoverageStore_Failure() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
-
-    // Mock response
-    ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
-    when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(failureResponse);
-
-    // Execute
-    boolean result = geoServerService.deleteCoverageStore(layerName);
-
-    // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
-    assertThat(result).isFalse();
-  }
 
   // ✅ Utility method to set private fields via reflection
   private void setField(Object target, String fieldName, Object value) {

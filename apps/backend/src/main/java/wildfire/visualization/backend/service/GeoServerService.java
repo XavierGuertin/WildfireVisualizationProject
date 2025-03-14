@@ -5,8 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.Map;
 
 @Service
 public class GeoServerService {
@@ -26,8 +29,10 @@ public class GeoServerService {
   @Value("${geoserver.dataDir}")
   private String geoserverDataDir;
 
-  private final RestTemplate restTemplate = new RestTemplate();
+  @Value("${geoserver.downloadDir}")
+  private String geoserverDownloadDir;
 
+  private final RestTemplate restTemplate = new RestTemplate();
 
   /**
    * Creates and returns HTTP headers with basic authentication for GeoServer interaction.
@@ -37,8 +42,7 @@ public class GeoServerService {
   private HttpHeaders createHeaders() {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
-    String auth = geoserverUsername + ":" + geoserverPassword;
-    headers.setBasicAuth(Base64.getEncoder().encodeToString(auth.getBytes()));
+    headers.setBasicAuth(geoserverUsername, geoserverPassword);
     return headers;
   }
 
@@ -69,7 +73,6 @@ public class GeoServerService {
     return response.getStatusCode().is2xxSuccessful();
   }
 
-
   /**
    * Registers a new coverage layer in the GeoServer under the specified workspace and coverage store.
    *
@@ -96,27 +99,21 @@ public class GeoServerService {
     return response.getStatusCode().is2xxSuccessful();
   }
 
-
   /**
    * Removes a registered layer from the GeoServer within the specified workspace.
+   * Also deletes the corresponding .tif file from local storage.
    *
    * @param layerName the name of the layer to be unregistered
    * @return true if the layer was successfully unregistered, false otherwise
    */
   public boolean unregisterLayer(String layerName) {
-    String url = geoserverUrl + "/rest/layers/" + workspace + ":" + layerName;
-    return sendDeleteRequest(url);
-  }
+    String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
 
-  /**
-   * Deletes a coverage store from the GeoServer within the specified workspace.
-   *
-   * @param storeName the name of the coverage store to be deleted
-   * @return true if the coverage store was successfully deleted, false otherwise
-   */
-  public boolean deleteCoverageStore(String storeName) {
-    String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + storeName + "?purge=all&recurse=true";
-    return sendDeleteRequest(url);
+    boolean apiSuccess = sendDeleteRequest(url);
+    if (apiSuccess) {
+      deleteTifFile(layerName);
+    }
+    return apiSuccess;
   }
 
   /**
@@ -126,11 +123,29 @@ public class GeoServerService {
    * @return true if the request was successful, false otherwise
    */
   private boolean sendDeleteRequest(String url) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBasicAuth(geoserverUsername, geoserverPassword);
+    HttpHeaders headers = createHeaders();
     HttpEntity<String> entity = new HttpEntity<>(headers);
 
     ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
     return response.getStatusCode().is2xxSuccessful();
+  }
+
+  /**
+   * Deletes the .tif file corresponding to a given layer or store from the local storage.
+   *
+   * @param layerName the name of the file to be deleted (without extension)
+   */
+  private void deleteTifFile(String layerName) {
+    try {
+      Path filePath = Paths.get(geoserverDownloadDir, layerName + ".tif");
+      if (Files.exists(filePath)) {
+        Files.delete(filePath);
+        System.out.println("Deleted: " + filePath.toAbsolutePath());
+      } else {
+        System.out.println("File not found: " + filePath.toAbsolutePath());
+      }
+    } catch (Exception e) {
+      System.err.println("Error deleting file: " + layerName + ".tif. " + e.getMessage());
+    }
   }
 }
