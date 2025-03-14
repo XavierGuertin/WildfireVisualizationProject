@@ -843,10 +843,14 @@ class StacRepositoryTests {
 
     // Assert
     verify(jdbcTemplate, times(1)).update(
-      eq("INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url) VALUES (?, ?, ?, ?) ON CONFLICT (item_id, collection_id, asset_name) DO NOTHING;"),
+      argThat(query -> query.replaceAll("\\s+", " ").trim().equals(
+        "INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url) VALUES (?, ?, ?, ?) ON CONFLICT (item_id, collection_id, asset_name) DO NOTHING;"
+      )),
       eq(itemId), eq(collectionId), eq(assetName), eq(layerUrl)
     );
   }
+
+
 
   @Test
   void getLoadedLayers_Success() {
@@ -887,8 +891,8 @@ class StacRepositoryTests {
 
     // Act & Assert
     assertThatThrownBy(() -> stacRepository.getLoadedLayers())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessageContaining("Error fetching loaded layers");
+      .isInstanceOf(DataAccessException.class)
+      .hasMessageContaining("Database error");
 
     verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
   }
