@@ -607,6 +607,8 @@ public class DataService {
     List<Map<String, Object>> queryResults = stacRepository.getItem(itemId);
     if (queryResults.isEmpty()) return;
 
+    fetchProgress.put(itemId, new AtomicInteger(0)); // Initialize progress
+
     // Extract JSON from `pgstac.get_item()`
     Object jsonObject = queryResults.get(0).get("get_item");
     String itemJson;
@@ -632,14 +634,21 @@ public class DataService {
       // Clear previously registered layers
       stacRepository.clearLayers();
 
+      // Get total number of assets
+      int totalAssets = assets.size();
+      int counter = 0;
+
       for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
         String assetKey = it.next();
         JsonNode asset = assets.get(assetKey);
         String tiffUrl = asset.get("href").asText();
 
         boolean success = geoTIFFService.processGeoTIFF(itemId, collectionId, assetKey, tiffUrl);
+        counter++;
+        fetchProgress.put(itemId, new AtomicInteger((int) Math.floor(((double) counter / totalAssets) * 100)));
         if (!success) return;
       }
+      fetchProgress.put(itemId, new AtomicInteger(100));
     } catch (Exception e) {
       e.printStackTrace();
     }
