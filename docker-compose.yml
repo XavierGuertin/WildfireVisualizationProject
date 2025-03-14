@@ -13,10 +13,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
       - CONFIG_FILE_PATH=/var/config/app-config.json
+      - GEOSERVER_DATA_DIR=/var/geoserver/data_dir/tiffs
     networks:
       - app-network
     volumes:
       - ./config:/var/config/
+      - ./apps/geoserver_data/tiffs:/var/geoserver/data_dir/tiffs
     depends_on:
       db:
         condition: service_healthy

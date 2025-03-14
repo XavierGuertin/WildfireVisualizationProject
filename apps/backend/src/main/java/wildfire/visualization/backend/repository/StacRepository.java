@@ -545,4 +545,39 @@ public class StacRepository {
       throw new RepositoryException("Error removing item with ID: " + itemId + " from collection: " + collectionId, e);
     }
   }
+
+  /**
+   * Method responsible for saving a layer URL to the database
+   *
+   * @param itemId       Database ID of the item
+   * @param collectionId Database ID of the collection
+   * @param assetName    Name of the asset
+   * @param layerUrl     URL of the layer
+   */
+  public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl) {
+    String sql = """
+            INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (item_id, collection_id, asset_name) DO NOTHING;
+        """;
+    jdbcTemplate.update(sql, itemId, collectionId, assetName, layerUrl);
+  }
+
+  /**
+   * Method responsible for fetching all loaded layers from the database
+   *
+   * @return List object containing all loaded layers
+   */
+  public List<Map<String, Object>> getLoadedLayers() {
+    String sql = "SELECT * FROM ItemAssets";
+    return jdbcTemplate.queryForList(sql);
+  }
+
+  /**
+   * Method responsible for clearing all layers from the database
+   */
+  public void clearLayers() {
+    jdbcTemplate.update("DELETE FROM ItemAssets");
+  }
+
 }

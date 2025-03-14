@@ -2,6 +2,7 @@ package wildfire.visualization.backend.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import wildfire.visualization.backend.service.DataService;
 import wildfire.visualization.backend.exception.DataException;
+import wildfire.visualization.backend.service.GeoTIFFService;
 
 import java.net.URI;
 import java.net.URLDecoder;
@@ -26,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 public class DataController {
+
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
   private final DataService dataService;
@@ -33,6 +36,29 @@ public class DataController {
   public DataController(DataService dataService) {
     this.dataService = dataService;
   }
+
+  @GetMapping("/load-assets/{collectionId}/{itemId}")
+  public ResponseEntity<String> loadAssets(
+    @PathVariable String collectionId,
+    @PathVariable String itemId
+  ) {
+    logger.info("Received request to load assets asynchronously for collection: {}, item: {}", collectionId, itemId);
+    try {
+      // Run the processing task asynchronously
+      CompletableFuture.runAsync(() -> dataService.processItemAssets(collectionId, itemId));
+      // Return immediate response to frontend
+      return ResponseEntity.ok("Processing started in the background. Check logs for completion.");
+    } catch (Exception e) {
+      logger.error("Error processing assets for item: {} in collection: {}", itemId, collectionId, e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start processing.");
+    }
+  }
+
+  @GetMapping("/get-loaded-layers")
+  public ResponseEntity<List<Map<String, Object>>> getLoadedLayers() {
+    return ResponseEntity.ok(dataService.getLoadedLayers());
+  }
+
 
   /**
    * Parses a bounding box (BBOX) string from a request parameter.

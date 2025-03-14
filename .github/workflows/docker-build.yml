@@ -46,6 +46,7 @@ jobs:
           NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           CONFIG_FILE_PATH: /var/config/app-config.json
+          GEOSERVER_DATA_DIR: /var/geoserver/data_dir/tiffs
 
       # Push Docker images to Docker Hub
       - name: Push Docker Images

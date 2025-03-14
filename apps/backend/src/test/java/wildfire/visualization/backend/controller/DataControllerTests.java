@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -719,4 +720,98 @@ class DataControllerTests {
 
     verify(dataService, times(1)).resetView();
   }
+
+  @Test
+  void loadAssets_Success() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    String itemId = "testItem";
+
+    // We can't verify execution due to async, but ensure the method is called
+    doNothing().when(dataService).processItemAssets(anyString(), anyString());
+
+    // Act & Assert
+    mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+      .andExpect(status().isOk())
+      .andExpect(content().string("Processing started in the background. Check logs for completion."));
+
+    // Give async execution a brief moment (useful for debugging)
+    Thread.sleep(100);
+
+    verify(dataService, times(1)).processItemAssets(collectionId, itemId);
+  }
+
+  @Test
+  void loadAssets_Failure_ShouldStillReturnSuccess() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    String itemId = "testItem";
+
+    doThrow(new RuntimeException("Processing error")).when(dataService).processItemAssets(anyString(), anyString());
+
+    // Since the exception is caught in `CompletableFuture.runAsync()`, the API should still return success.
+    mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+      .andExpect(status().isOk()) // Still returns success because the exception is async
+      .andExpect(content().string("Processing started in the background. Check logs for completion."));
+
+    // Give async execution a brief moment
+    Thread.sleep(100);
+
+    verify(dataService, times(1)).processItemAssets(collectionId, itemId);
+  }
+
+  @Test
+  void loadAssets_Failure_CatchException() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    String itemId = "testItem";
+
+    // Mock CompletableFuture to simulate an exception in async execution
+    try (MockedStatic<CompletableFuture> mockedCompletableFuture = mockStatic(CompletableFuture.class)) {
+      mockedCompletableFuture.when(() -> CompletableFuture.runAsync(any(Runnable.class)))
+        .thenThrow(new RuntimeException("Async processing error"));
+
+      // Act & Assert
+      mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("Failed to start processing."));
+    }
+  }
+
+
+  @Test
+  void getLoadedLayers_Success() throws Exception {
+    // Arrange
+    List<Map<String, Object>> mockLayers = List.of(
+      Map.of("layer", "layer1"),
+      Map.of("layer", "layer2")
+    );
+
+    when(dataService.getLoadedLayers()).thenReturn(mockLayers);
+
+    // Act & Assert
+    mockMvc.perform(get("/get-loaded-layers"))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(content().json(objectMapper.writeValueAsString(mockLayers)));
+
+    verify(dataService, times(1)).getLoadedLayers();
+  }
+
+  @Test
+  void getLoadedLayers_Failure() throws Exception {
+    // Arrange
+    doThrow(new DataException("Failed to fetch loaded layers")).when(dataService).getLoadedLayers();
+
+    // Act & Assert
+    mockMvc.perform(get("/get-loaded-layers"))
+      .andExpect(status().isBadRequest())
+      .andExpect(jsonPath("$.status").value(400))
+      .andExpect(jsonPath("$.error").value("Data Error"))
+      .andExpect(jsonPath("$.message").value("Failed to fetch loaded layers"));
+
+    verify(dataService, times(1)).getLoadedLayers();
+  }
+
 }
+

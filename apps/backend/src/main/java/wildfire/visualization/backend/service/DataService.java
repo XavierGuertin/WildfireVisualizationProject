@@ -1,6 +1,7 @@
 package wildfire.visualization.backend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.postgresql.util.PGobject;
 
 import wildfire.visualization.backend.controller.ConfigController;
 import wildfire.visualization.backend.exception.DataException;
@@ -43,6 +45,12 @@ public class DataService {
 
   @Autowired
   private ConfigController configController;
+
+  @Autowired
+  private GeoTIFFService geoTIFFService;
+
+  @Autowired
+  private GeoServerService geoServerService;
 
   private final Map<String, AtomicInteger> fetchProgress = new ConcurrentHashMap<>();
 
@@ -591,5 +599,73 @@ public class DataService {
       logger.info("No internet connection could be established");
       return "No internet connection could be established";
     }
+  }
+
+
+  /**
+   * Method responsible for processing all assets of a given item
+   *
+   * @param collectionId String object representing the id of the collection
+   * @param itemId       String object representing the id of the item
+   */
+  @Async
+  public void processItemAssets(String collectionId, String itemId) {
+    List<Map<String, Object>> queryResults = stacRepository.getItem(itemId);
+    if (queryResults.isEmpty()) return;
+
+    fetchProgress.put(itemId, new AtomicInteger(0)); // Initialize progress
+
+    // Extract JSON from `pgstac.get_item()`
+    Object jsonObject = queryResults.get(0).get("get_item");
+    String itemJson;
+    if (jsonObject instanceof PGobject) {
+      itemJson = ((PGobject) jsonObject).getValue();
+    } else {
+      throw new RuntimeException("Unexpected data type from database");
+    }
+
+    try {
+      JsonNode jsonNode = objectMapper.readTree(itemJson);
+      JsonNode assets = jsonNode.get("assets");
+
+      if (assets == null || assets.isEmpty()) return;
+
+      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
+      for (Map<String, Object> layer : existingLayers) {
+        String layerName = (String) layer.get("asset_name");
+        geoServerService.unregisterLayer(layerName);
+      }
+
+      // Clear previously registered layers
+      stacRepository.clearLayers();
+
+      // Get total number of assets
+      int totalAssets = assets.size();
+      int counter = 0;
+
+      for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
+        String assetKey = it.next();
+        JsonNode asset = assets.get(assetKey);
+        String tiffUrl = asset.get("href").asText();
+
+        boolean success = geoTIFFService.processGeoTIFF(itemId, collectionId, assetKey, tiffUrl);
+        counter++;
+        fetchProgress.put(itemId, new AtomicInteger((int) Math.floor(((double) counter / totalAssets) * 100)));
+        if (!success) return;
+      }
+      fetchProgress.put(itemId, new AtomicInteger(100));
+    } catch (Exception e) {
+      logger.error("Error processing item assets: {}", e.getMessage(), e);
+      fetchProgress.put(itemId, new AtomicInteger(-1)); // Set error state
+    }
+  }
+
+  /**
+   * Method responsible for retrieving all loaded layers
+   *
+   * @return List object containing all loaded layers
+   */
+  public List<Map<String, Object>> getLoadedLayers() {
+    return stacRepository.getLoadedLayers();
   }
 }
