@@ -546,6 +546,14 @@ public class StacRepository {
     }
   }
 
+  /**
+   * Method responsible for saving a layer URL to the database
+   *
+   * @param itemId       Database ID of the item
+   * @param collectionId Database ID of the collection
+   * @param assetName    Name of the asset
+   * @param layerUrl     URL of the layer
+   */
   public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl) {
     String sql = """
             INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url)
@@ -555,13 +563,30 @@ public class StacRepository {
     jdbcTemplate.update(sql, itemId, collectionId, assetName, layerUrl);
   }
 
+  /**
+   * Method responsible for fetching all loaded layers from the database
+   *
+   * @return List object containing all loaded layers
+   */
   public List<Map<String, Object>> getLoadedLayers() {
     String sql = "SELECT * FROM ItemAssets";
     return jdbcTemplate.queryForList(sql);
   }
 
+  /**
+   * Method responsible for clearing all layers from the database
+   */
   public void clearLayers() {
     jdbcTemplate.update("DELETE FROM ItemAssets");
+  }
+
+  /**
+   * Method responsible for deleting a layer from the database
+   *
+   * @param layerName Name of the layer to be deleted
+   */
+  public void deleteItemAssetLayer(String layerName) {
+    jdbcTemplate.update("DELETE FROM ItemAssets WHERE asset_name = ?", layerName);
   }
 
 }

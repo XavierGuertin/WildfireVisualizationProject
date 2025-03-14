@@ -602,6 +602,12 @@ public class DataService {
   }
 
 
+  /**
+   * Method responsible for processing all assets of a given item
+   *
+   * @param collectionId String object representing the id of the collection
+   * @param itemId       String object representing the id of the item
+   */
   @Async
   public void processItemAssets(String collectionId, String itemId) {
     List<Map<String, Object>> queryResults = stacRepository.getItem(itemId);
@@ -624,15 +630,7 @@ public class DataService {
 
       if (assets == null || assets.isEmpty()) return;
 
-      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
-      for (Map<String, Object> layer : existingLayers) {
-        String layerName = (String) layer.get("asset_name");
-        geoServerService.unregisterLayer(layerName);
-        geoServerService.deleteCoverageStore(layerName);
-      }
-
-      // Clear previously registered layers
-      stacRepository.clearLayers();
+      itemAssetsReset(); // Reset previously registered layers
 
       // Get total number of assets
       int totalAssets = assets.size();
@@ -650,10 +648,42 @@ public class DataService {
       }
       fetchProgress.put(itemId, new AtomicInteger(100));
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Error processing item assets: {}", e.getMessage(), e);
+      fetchProgress.put(itemId, new AtomicInteger(-1)); // Set error state
     }
   }
 
+  public boolean itemAssetsReset() {
+    try {
+      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
+
+      for (Map<String, Object> layer : existingLayers) {
+        String layerName = (String) layer.get("asset_name");
+
+        try {
+          geoServerService.unregisterLayer(layerName);
+        } catch (Exception e) {
+          logger.error("Layer not found in GeoServer (likely already deleted): {}", layerName);
+        }
+
+        // Always delete the database trace of the asset, whether unregister succeeds or fails
+        stacRepository.deleteItemAssetLayer(layerName);
+      }
+
+      // Finally, clear all registered layers from the database
+      stacRepository.clearLayers();
+      return true;
+    } catch (Exception e) {
+      logger.error("Error resetting item assets: {}", e.getMessage(), e);
+      return false;
+    }
+  }
+
+  /**
+   * Method responsible for retrieving all loaded layers
+   *
+   * @return List object containing all loaded layers
+   */
   public List<Map<String, Object>> getLoadedLayers() {
     return stacRepository.getLoadedLayers();
   }
