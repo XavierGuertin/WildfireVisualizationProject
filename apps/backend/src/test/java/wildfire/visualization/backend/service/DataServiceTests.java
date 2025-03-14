@@ -923,4 +923,54 @@ class DataServiceTests {
     assertThat(result).isNotNull().hasSize(1);
     assertThat(result.get(0)).containsEntry("layer", "testLayer");
   }
+
+  @Test
+  void testProcessItemAssets_Success() throws Exception {
+    // Arrange
+    String collectionId = "testCollection";
+    String itemId = "testItem";
+
+    // Mock database query result
+    PGobject pgObject = new PGobject();
+    pgObject.setType("jsonb");
+    pgObject.setValue("""
+        {
+            "assets": {
+                "asset1": {"href": "http://example.com/test1.tif"},
+                "asset2": {"href": "http://example.com/test2.tif"}
+            }
+        }
+    """);
+    List<Map<String, Object>> queryResults = List.of(Map.of("get_item", pgObject));
+    when(stacRepository.getItem(itemId)).thenReturn(queryResults);
+
+    // Mock parsing JSON
+    JsonNode mockJsonNode = new ObjectMapper().readTree(pgObject.getValue());
+    when(objectMapper.readTree(anyString())).thenReturn(mockJsonNode);
+
+    // Mock layers
+    List<Map<String, Object>> existingLayers = List.of(Map.of("asset_name", "oldLayer"));
+    when(stacRepository.getLoadedLayers()).thenReturn(existingLayers);
+
+    // Mock services
+    when(geoServerService.unregisterLayer(anyString())).thenReturn(true);
+    doNothing().when(stacRepository).clearLayers();
+    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString())).thenReturn(true);
+
+    // Act
+    dataService.processItemAssets(collectionId, itemId);
+
+    // Allow some time for async execution (optional)
+    Thread.sleep(200);
+
+    // Assert
+    verify(stacRepository, times(1)).getItem(itemId);
+    verify(objectMapper, times(1)).readTree(anyString());
+    verify(stacRepository, times(1)).getLoadedLayers();
+    verify(geoServerService, times(1)).unregisterLayer("oldLayer");
+    verify(stacRepository, times(1)).clearLayers();
+    verify(geoTIFFService, times(2)).processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString());
+  }
+
+
 }
