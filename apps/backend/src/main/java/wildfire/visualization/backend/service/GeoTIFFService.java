@@ -55,7 +55,6 @@ public class GeoTIFFService {
       stacRepository.saveLayer(itemId, collectionId, assetName, layerUrl);
       return true;
     } catch (Exception e) {
-      e.printStackTrace();
       return false;
     }
   }
