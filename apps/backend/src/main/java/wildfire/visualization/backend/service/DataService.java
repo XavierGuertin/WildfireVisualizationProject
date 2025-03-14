@@ -655,7 +655,8 @@ public class DataService {
       }
       fetchProgress.put(itemId, new AtomicInteger(100));
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Error processing item assets: {}", e.getMessage(), e);
+      fetchProgress.put(itemId, new AtomicInteger(-1)); // Set error state
     }
   }
 
