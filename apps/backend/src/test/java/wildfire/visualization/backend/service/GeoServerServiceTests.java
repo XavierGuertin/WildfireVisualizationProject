@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class GeoServerServiceTest {
+class GeoServerServiceTests {
 
   @Mock
   private RestTemplate restTemplate;
