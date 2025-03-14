@@ -731,7 +731,7 @@ class DataControllerTests {
     doNothing().when(dataService).processItemAssets(anyString(), anyString());
 
     // Act & Assert
-    mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+    mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
       .andExpect(status().isOk())
       .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
@@ -750,7 +750,7 @@ class DataControllerTests {
     doThrow(new RuntimeException("Processing error")).when(dataService).processItemAssets(anyString(), anyString());
 
     // Since the exception is caught in `CompletableFuture.runAsync()`, the API should still return success.
-    mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+    mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
       .andExpect(status().isOk()) // Still returns success because the exception is async
       .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
@@ -772,7 +772,7 @@ class DataControllerTests {
         .thenThrow(new RuntimeException("Async processing error"));
 
       // Act & Assert
-      mockMvc.perform(get("/load-assets/{collectionId}/{itemId}", collectionId, itemId))
+      mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
         .andExpect(status().isInternalServerError())
         .andExpect(content().string("Failed to start processing."));
     }
@@ -790,7 +790,7 @@ class DataControllerTests {
     when(dataService.getLoadedLayers()).thenReturn(mockLayers);
 
     // Act & Assert
-    mockMvc.perform(get("/get-loaded-layers"))
+    mockMvc.perform(get("/api/get-loaded-layers"))
       .andExpect(status().isOk())
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(content().json(objectMapper.writeValueAsString(mockLayers)));
@@ -804,7 +804,7 @@ class DataControllerTests {
     doThrow(new DataException("Failed to fetch loaded layers")).when(dataService).getLoadedLayers();
 
     // Act & Assert
-    mockMvc.perform(get("/get-loaded-layers"))
+    mockMvc.perform(get("/api/get-loaded-layers"))
       .andExpect(status().isBadRequest())
       .andExpect(jsonPath("$.status").value(400))
       .andExpect(jsonPath("$.error").value("Data Error"))
