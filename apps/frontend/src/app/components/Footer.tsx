@@ -24,8 +24,14 @@ const Footer = () => {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
 
-  const { mapRef, timeStamps, sliderValue, setSliderValue, setTimeStamps } =
-    useMapLayerContext();
+  const {
+    mapRef,
+    timeStamps,
+    sliderValue,
+    setSliderValue,
+    setTimeStamps,
+    collectionId,
+  } = useMapLayerContext();
 
   const speedValues = [0.5, 1, 1.5, 2, 4];
 
@@ -135,20 +141,23 @@ const Footer = () => {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
 
-    // Format the date (YYYY-MM-DD)
-    const dateStr = date.toISOString().split('T')[0];
+    // Format the date (YYYY-MM-DD) using UTC methods
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
-    // Format the time (HH:MM:SS)
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
+    // Format the time (HH:MM:SS) using UTC methods
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    const seconds = date.getUTCSeconds().toString().padStart(2, '0');
     const timeStr = `${hours}:${minutes}:${seconds}`;
 
     return (
       <span className="timeMarkerText">
-        <span>{dateStr}</span>
-        <span>{timeStr}</span>
-      </span>
+      <span>{dateStr}</span>
+      <span>{timeStr}</span>
+    </span>
     );
   };
 
@@ -186,6 +195,35 @@ const Footer = () => {
   const [hoveredThumb, setHoveredThumb] = useState(false);
   const [hoverBoxLocked, setHoverBoxLocked] = useState(false);
   const [hoveredBox, setHoveredBox] = useState(false);
+
+  const formatTimestampForItemId = (timestamp: string): string => {
+    const date = new Date(timestamp);
+
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+
+    return `wildfire_timestamp_${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
+  };
+
+  const onloadAssetsClick = async () => {
+    try {
+      const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
+      const response = await loadAssets(collectionId, itemId);
+
+      if (typeof response === 'object' && response.error) {
+        toast.error(`Failed to load assets: ${response.error}`);
+      } else {
+        toast.success("Assets loaded successfully");
+      }
+    } catch (error) {
+      console.error("Error loading assets:", error);
+      toast.error("Failed to load assets");
+    }
+  };
 
   /**
    * Add layer if the timeStamps list is populated
