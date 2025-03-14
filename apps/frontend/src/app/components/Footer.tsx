@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
-import { FaAngleUp, FaBackward, FaPause, FaPlay } from 'react-icons/fa';
+import {
+  FaAngleDown,
+  FaAngleUp,
+  FaBackward,
+  FaPause,
+  FaPlay,
+} from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -178,6 +184,8 @@ const Footer = () => {
   };
 
   const [hoveredThumb, setHoveredThumb] = useState(false);
+  const [hoverBoxLocked, setHoverBoxLocked] = useState(false);
+  const [hoveredBox, setHoveredBox] = useState(false);
 
   /**
    * Add layer if the timeStamps list is populated
@@ -257,13 +265,36 @@ const Footer = () => {
                         : 5
                     }%`,
                   }}
-                  data-hovered={hoveredThumb ? 'true' : 'false'}
+                  data-hovered={
+                    hoveredThumb || hoveredBox || hoverBoxLocked
+                      ? 'true'
+                      : 'false'
+                  }
+                  data-locked={hoverBoxLocked ? 'true' : 'false'}
+                  onClick={() => setHoverBoxLocked(true)}
+                  onMouseEnter={() => setHoveredBox(true)}
+                  onMouseLeave={() => setHoveredBox(false)}
                 >
-                  <FaAngleUp className="hoverBoxIcon" size={20} />
+                  {hoverBoxLocked ? (
+                    <FaAngleDown
+                      className="hoverBoxIcon"
+                      size={20}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHoverBoxLocked(false);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  ) : (
+                    <FaAngleUp className="hoverBoxIcon" size={20} />
+                  )}
                   <span className="hoverBoxText">Weather Assets</span>
+                  {hoverBoxLocked && (
+                    <button className="loadAssetsButton">Load Assets</button>
+                  )}
                 </div>
                 <div
-                  className="timeMarkerHoverBox"
+                  className="timeMarkerThumb"
                   style={{
                     left: `${
                       timeStamps.length > 1
@@ -271,15 +302,14 @@ const Footer = () => {
                         : 5
                     }%`,
                   }}
-                  data-hovered={hoveredThumb || hoverBoxLocked ? 'true' : 'false'}
-                  data-locked={hoverBoxLocked ? 'true' : 'false'}
-                  onClick={() => setHoverBoxLocked(true)}
+                  onMouseEnter={() => setHoveredThumb(true)}
+                  onMouseLeave={() => setHoveredThumb(false)}
                 >
-                  <FaAngleUp className="hoverBoxIcon" size={20} />
-                  <span className="hoverBoxText">Weather Assets</span>
-                  {hoverBoxLocked && (
-                    <button className="loadAssetsButton">Load Assets</button>
-                  )}
+                  <span className="timeMarkerText">
+                    {timeStamps[sliderValue]
+                      ? formatTimestamp(timeStamps[sliderValue])
+                      : ''}
+                  </span>
                 </div>
               </>
             )}
