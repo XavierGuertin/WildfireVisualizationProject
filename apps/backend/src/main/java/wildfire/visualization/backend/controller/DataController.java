@@ -37,7 +37,7 @@ public class DataController {
     this.dataService = dataService;
   }
 
-  @GetMapping("/load-assets/{collectionId}/{itemId}")
+  @GetMapping("/api/load-assets/{collectionId}/{itemId}")
   public ResponseEntity<String> loadAssets(
     @PathVariable String collectionId,
     @PathVariable String itemId
@@ -54,7 +54,7 @@ public class DataController {
     }
   }
 
-  @GetMapping("/get-loaded-layers")
+  @GetMapping("/api/get-loaded-layers")
   public ResponseEntity<List<Map<String, Object>>> getLoadedLayers() {
     return ResponseEntity.ok(dataService.getLoadedLayers());
   }
@@ -389,5 +389,23 @@ public class DataController {
     logger.info("Checking if there is an internet connection: {}", endpointUrl);
     String result = dataService.verifyInternetConnection(endpointUrl);
     return ResponseEntity.ok(result);
+  }
+
+  /**
+   * Endpoint responsible for fetching the GeoTIFF data from a given URL
+   *
+   * @param url String object representing the URL to fetch the GeoTIFF data from
+   * @return ResponseEntity object containing a String object indicating if the
+   *         GeoTIFF data was fetched successfully
+   */
+  @PostMapping("/api/reset-item-assets")
+  public ResponseEntity<String> resetItemAssets() {
+    boolean success = dataService.itemAssetsReset();
+    if (success) {
+      return ResponseEntity.ok("Item asset layers reset successfully.");
+    } else {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body("Failed to reset item asset layers.");
+    }
   }
 }

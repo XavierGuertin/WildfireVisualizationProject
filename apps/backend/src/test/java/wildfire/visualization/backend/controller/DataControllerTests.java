@@ -813,5 +813,33 @@ class DataControllerTests {
     verify(dataService, times(1)).getLoadedLayers();
   }
 
+  @Test
+  void resetItemAssets_Success() throws Exception {
+    // Arrange
+    when(dataService.itemAssetsReset()).thenReturn(true);
+
+    // Act & Assert
+    mockMvc.perform(post("/api/reset-item-assets"))
+      .andExpect(status().isOk())
+      .andExpect(content().string("Item asset layers reset successfully."));
+
+    // Verify interaction
+    verify(dataService, times(1)).itemAssetsReset();
+  }
+
+  @Test
+  void resetItemAssets_Failure() throws Exception {
+    // Arrange
+    when(dataService.itemAssetsReset()).thenReturn(false);
+
+    // Act & Assert
+    mockMvc.perform(post("/api/reset-item-assets"))
+      .andExpect(status().isInternalServerError())
+      .andExpect(content().string("Failed to reset item asset layers."));
+
+    // Verify interaction
+    verify(dataService, times(1)).itemAssetsReset();
+  }
+
 }
 

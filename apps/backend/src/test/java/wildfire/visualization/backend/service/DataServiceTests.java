@@ -972,5 +972,44 @@ class DataServiceTests {
     verify(geoTIFFService, times(2)).processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString());
   }
 
+  @Test
+  void itemAssetsReset_Success() {
+    // Arrange: Mock database layers
+    List<Map<String, Object>> mockLayers = List.of(
+      Map.of("asset_name", "layer1"),
+      Map.of("asset_name", "layer2")
+    );
+    when(stacRepository.getLoadedLayers()).thenReturn(mockLayers);
+
+    // Act
+    boolean result = dataService.itemAssetsReset();
+
+    // Assert
+    verify(stacRepository, times(1)).getLoadedLayers();
+    verify(geoServerService, times(1)).unregisterLayer("layer1");
+    verify(geoServerService, times(1)).unregisterLayer("layer2");
+    verify(stacRepository, times(1)).deleteItemAssetLayer("layer1");
+    verify(stacRepository, times(1)).deleteItemAssetLayer("layer2");
+    verify(stacRepository, times(1)).clearLayers();
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void itemAssetsReset_TotalFailure_ReturnsFalse() {
+    // Arrange: Simulate an exception when getting loaded layers
+    when(stacRepository.getLoadedLayers()).thenThrow(new RuntimeException("Database error"));
+
+    // Act
+    boolean result = dataService.itemAssetsReset();
+
+    // Assert
+    verify(stacRepository, times(1)).getLoadedLayers();
+    verify(geoServerService, never()).unregisterLayer(anyString());
+    verify(stacRepository, never()).deleteItemAssetLayer(anyString());
+    verify(stacRepository, never()).clearLayers();
+
+    assertThat(result).isFalse();
+  }
 
 }

@@ -919,4 +919,15 @@ class StacRepositoryTests {
     verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets");
   }
 
+  @Test
+  void deleteItemAssetLayer_Success() {
+    String layerName = "test-layer";
+
+    // Act
+    stacRepository.deleteItemAssetLayer(layerName);
+
+    // Assert
+    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets WHERE asset_name = ?", layerName);
+  }
+
 }
