@@ -829,4 +829,90 @@ class StacRepositoryTests {
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Error resetting Datalayer view");
   }
+
+  @Test
+  void saveLayer_Success() {
+    // Arrange
+    String itemId = "test-item";
+    String collectionId = "test-collection";
+    String assetName = "test-asset";
+    String layerUrl = "http://test-layer.com";
+
+    // Act
+    stacRepository.saveLayer(itemId, collectionId, assetName, layerUrl);
+
+    // Assert
+    verify(jdbcTemplate, times(1)).update(
+      eq("INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url) VALUES (?, ?, ?, ?) ON CONFLICT (item_id, collection_id, asset_name) DO NOTHING;"),
+      eq(itemId), eq(collectionId), eq(assetName), eq(layerUrl)
+    );
+  }
+
+  @Test
+  void getLoadedLayers_Success() {
+    // Arrange
+    List<Map<String, Object>> expectedLayers = List.of(
+      Map.of("item_id", "item1", "collection_id", "collection1", "asset_name", "asset1", "layer_url", "http://layer1.com"),
+      Map.of("item_id", "item2", "collection_id", "collection2", "asset_name", "asset2", "layer_url", "http://layer2.com")
+    );
+
+    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets")).thenReturn(expectedLayers);
+
+    // Act
+    List<Map<String, Object>> actualLayers = stacRepository.getLoadedLayers();
+
+    // Assert
+    assertThat(actualLayers).isEqualTo(expectedLayers);
+    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
+  }
+
+  @Test
+  void getLoadedLayers_EmptyResult() {
+    // Arrange
+    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets")).thenReturn(List.of());
+
+    // Act
+    List<Map<String, Object>> actualLayers = stacRepository.getLoadedLayers();
+
+    // Assert
+    assertThat(actualLayers).isEmpty();
+    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
+  }
+
+  @Test
+  void getLoadedLayers_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets"))
+      .thenThrow(new DataAccessException("Database error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getLoadedLayers())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessageContaining("Error fetching loaded layers");
+
+    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
+  }
+
+  @Test
+  void clearLayers_Success() {
+    // Act
+    stacRepository.clearLayers();
+
+    // Assert
+    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets");
+  }
+
+  @Test
+  void clearLayers_ThrowsException_WhenDatabaseError() {
+    // Arrange
+    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).update("DELETE FROM ItemAssets");
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.clearLayers())
+      .isInstanceOf(DataAccessException.class)
+      .hasMessageContaining("Database error");
+
+    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets");
+  }
+
 }

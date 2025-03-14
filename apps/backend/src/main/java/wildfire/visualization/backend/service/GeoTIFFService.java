@@ -27,6 +27,15 @@ public class GeoTIFFService {
   @Autowired
   private StacRepository stacRepository;
 
+  /**
+   * Processes a GeoTIFF asset by downloading it, storing it in GeoServer, and saving its layer URL in the database.
+   *
+   * @param itemId The ID of the STAC item containing the asset.
+   * @param collectionId The ID of the STAC collection containing the item.
+   * @param assetName The name of the asset to process.
+   * @param tiffUrl The URL of the GeoTIFF asset.
+   * @return true if the asset was successfully processed, false otherwise.
+   */
   public boolean processGeoTIFF(String itemId, String collectionId, String assetName, String tiffUrl) {
     try {
       String localFilePath = tiffStoragePath + "/" + assetName + ".tif";
@@ -51,10 +60,16 @@ public class GeoTIFFService {
     }
   }
 
-  private void downloadFile(String sourceUrl, String destinationPath) throws IOException {
+  /**
+   * Downloads a file from the specified source URL and saves it to the destination path.
+   *
+   * @param sourceUrl The URL of the file to download.
+   * @param destinationPath The local file system path where the file should be saved.
+   * @throws IOException If an I/O error occurs during file download or saving.
+   */
+  void downloadFile(String sourceUrl, String destinationPath) throws IOException {
     Path filePath = Paths.get(destinationPath);
 
-    // ✅ Ensure the parent directory exists
     Files.createDirectories(filePath.getParent());
 
     try (InputStream in = new URL(sourceUrl).openStream()) {

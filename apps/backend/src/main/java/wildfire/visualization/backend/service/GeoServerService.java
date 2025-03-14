@@ -28,6 +28,12 @@ public class GeoServerService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
+
+  /**
+   * Creates and returns HTTP headers with basic authentication for GeoServer interaction.
+   *
+   * @return HttpHeaders object with content type set to JSON and basic authentication included.
+   */
   private HttpHeaders createHeaders() {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
@@ -36,6 +42,12 @@ public class GeoServerService {
     return headers;
   }
 
+  /**
+   * Registers a new coverage store in the GeoServer under the specified workspace.
+   *
+   * @param layerName the name of the coverage store to be registered
+   * @return true if the registration was successful, false otherwise
+   */
   public boolean registerCoverageStore(String layerName) {
     String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores";
 
@@ -57,6 +69,13 @@ public class GeoServerService {
     return response.getStatusCode().is2xxSuccessful();
   }
 
+
+  /**
+   * Registers a new coverage layer in the GeoServer under the specified workspace and coverage store.
+   *
+   * @param layerName the name of the layer to be registered
+   * @return true if the registration was successful, false otherwise
+   */
   public boolean registerCoverageLayer(String layerName) {
     String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "/coverages";
 
@@ -77,16 +96,35 @@ public class GeoServerService {
     return response.getStatusCode().is2xxSuccessful();
   }
 
+
+  /**
+   * Removes a registered layer from the GeoServer within the specified workspace.
+   *
+   * @param layerName the name of the layer to be unregistered
+   * @return true if the layer was successfully unregistered, false otherwise
+   */
   public boolean unregisterLayer(String layerName) {
     String url = geoserverUrl + "/rest/layers/" + workspace + ":" + layerName;
     return sendDeleteRequest(url);
   }
 
+  /**
+   * Deletes a coverage store from the GeoServer within the specified workspace.
+   *
+   * @param storeName the name of the coverage store to be deleted
+   * @return true if the coverage store was successfully deleted, false otherwise
+   */
   public boolean deleteCoverageStore(String storeName) {
     String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + storeName + "?purge=all&recurse=true";
     return sendDeleteRequest(url);
   }
 
+  /**
+   * Sends a DELETE request to the specified URL with basic authentication.
+   *
+   * @param url the URL to send the DELETE request to
+   * @return true if the request was successful, false otherwise
+   */
   private boolean sendDeleteRequest(String url) {
     HttpHeaders headers = new HttpHeaders();
     headers.setBasicAuth(geoserverUsername, geoserverPassword);

@@ -602,6 +602,12 @@ public class DataService {
   }
 
 
+  /**
+   * Method responsible for processing all assets of a given item
+   *
+   * @param collectionId String object representing the id of the collection
+   * @param itemId       String object representing the id of the item
+   */
   @Async
   public void processItemAssets(String collectionId, String itemId) {
     List<Map<String, Object>> queryResults = stacRepository.getItem(itemId);
@@ -654,6 +660,11 @@ public class DataService {
     }
   }
 
+  /**
+   * Method responsible for retrieving all loaded layers
+   *
+   * @return List object containing all loaded layers
+   */
   public List<Map<String, Object>> getLoadedLayers() {
     return stacRepository.getLoadedLayers();
   }
