@@ -227,7 +227,16 @@ const Footer = () => {
     return `wildfire_timestamp_${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
   };
 
-  // Add this effect to reset assets when sliderValue changes
+  useEffect(() => {
+    // Reset loadedTimestamp when timestamps array changes (new dataset loaded)
+    setLoadedTimestamp(null);
+    setHoverBoxLocked(false);
+
+    // Also reset any selected layer
+    setSelectedLayer(null);
+  }, [timeStamps]);
+
+  // Resets assets when sliderValue changes
   useEffect(() => {
     // Reset assets when timestamp changes
     setLoadedLayers([]);
