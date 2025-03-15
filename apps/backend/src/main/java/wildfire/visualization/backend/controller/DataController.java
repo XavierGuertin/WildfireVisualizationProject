@@ -390,7 +390,6 @@ public class DataController {
   /**
    * Endpoint responsible for fetching the GeoTIFF data from a given URL
    *
-   * @param url String object representing the URL to fetch the GeoTIFF data from
    * @return ResponseEntity object containing a String object indicating if the
    *         GeoTIFF data was fetched successfully
    */

@@ -6,7 +6,11 @@ import {
   FaBackward,
   FaPause,
   FaPlay,
+  FaWind,
+  FaRegCompass
 } from 'react-icons/fa';
+import { IoIosSettings } from 'react-icons/io';
+import { BsDropletFill } from 'react-icons/bs';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -273,6 +277,51 @@ const Footer = () => {
   const handleLayerClick = (layerName: string) => {
     // Implement layer display logic here
     toast.info(`Showing ${layerName} layer`);
+    setSelectedLayer(layerName === selectedLayer ? null : layerName);
+  };
+
+  const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
+
+  // Function to format layer name
+  const formatLayerName = (name: string): string => {
+    return name
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Function to get the appropriate icon for a layer
+  const getLayerIcon = (layerName: string) => {
+    switch (layerName) {
+      case 'humidity':
+        return (
+          <BsDropletFill
+            className="layerButtonIcon"
+            color={selectedLayer === layerName ? 'white' : '#00447E'}
+          />
+        );
+      case 'wind_force':
+        return (
+          <FaWind
+            className="layerButtonIcon"
+            color={selectedLayer === layerName ? 'white' : '#00447E'}
+          />
+        );
+      case 'wind_direction':
+        return (
+          <FaRegCompass
+            className="layerButtonIcon"
+            color={selectedLayer === layerName ? 'white' : '#00447E'}
+          />
+        );
+      default:
+        return (
+          <IoIosSettings
+            className="layerButtonIcon"
+            color={selectedLayer === layerName ? 'white' : '#00447E'}
+          />
+        );
+    }
   };
 
   return (
@@ -379,15 +428,19 @@ const Footer = () => {
                           {loadedLayers.map((layer, index) => (
                             <button
                               key={index}
-                              className="layerButton"
+                              className={`layerButton ${selectedLayer === layer.asset_name ? 'active' : ''}`}
                               onClick={() => handleLayerClick(layer.asset_name)}
                             >
-                              {layer.asset_name}
+                              {getLayerIcon(layer.asset_name)}
+                              {formatLayerName(layer.asset_name)}
                             </button>
                           ))}
                         </div>
                       ) : (
-                        <button className="loadAssetsButton" onClick={onloadAssetsClick}>
+                        <button
+                          className="loadAssetsButton"
+                          onClick={onloadAssetsClick}
+                        >
                           Load Assets
                         </button>
                       )}
