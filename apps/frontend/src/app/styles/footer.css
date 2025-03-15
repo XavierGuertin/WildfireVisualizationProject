@@ -1,7 +1,7 @@
 .footerContainer {
   width: 100%;
   background: transparent;
-  color: #00467E;
+  color: #00447E;
   position: fixed;
   bottom: 0;
   display: flex;
@@ -11,7 +11,7 @@
   overflow-y: hidden;
   z-index: 1000;
   margin-bottom: 5px;
-  padding-top: 75px;
+  padding-top: 150px;
 }
 
 .sliderContainer {
@@ -23,7 +23,7 @@
 
 .simulationSlider {
   width: 90%;
-  accent-color: #00467E;
+  accent-color: #00447E;
   vertical-align: middle;
 }
 
@@ -31,7 +31,7 @@
   border: none;
   margin-bottom: 15px;
   cursor: pointer;
-  color: #00467E;
+  color: #00447E;
   background: none;
 }
 
@@ -125,7 +125,7 @@
   width: 37px;
   height: 37px;
   font-size: 12px;
-  color: #00467E;
+  color: #00447E;
   background-color: white;
   margin-left: 10px;
   cursor: pointer;
@@ -202,7 +202,7 @@
   width: 175px;
   height: 40px;
   border-radius: 12px;
-  background-color: #00467E;
+  background-color: #00447E;
   transform: translateX(-50%);
   top: -10px;
   display: flex;
@@ -248,7 +248,7 @@
   bottom: 25px;
   width: 170px;
   background-color: white;
-  border: 2px solid #00467E;
+  border: 2px solid #00447E;
   border-radius: 8px 8px 0 0;
   padding: 5px 0;
   display: flex;
@@ -277,12 +277,12 @@
 }
 
 .hoverBoxIcon {
-  color: #00467E;
+  color: #00447E;
   margin-top: -5px;
 }
 
 .hoverBoxText {
-  color: #00467E;
+  color: #00447E;
   font-weight: bold;
   font-size: 16px;
   margin-top: -6px;
@@ -333,7 +333,7 @@
 }
 
 .loadAssetsButton {
-  background-color: #00467E;
+  background-color: #00447E;
   color: white;
   border: none;
   border-radius: 4px;
@@ -358,4 +358,48 @@
   to {
     opacity: 1;
   }
+}
+
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #00447E;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.layerButtonsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.layerButton {
+  background-color: white;
+  color: #00447E;
+  border: 2px solid #00447E;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.layerButton:hover {
+  background-color: #003057;
 }

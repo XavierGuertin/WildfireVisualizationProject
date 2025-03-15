@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
-import { fetchTimestamps, loadAssets } from '../services/api';
+import { fetchTimestamps, getLoadedLayers, loadAssets } from '../services/api';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -23,6 +23,11 @@ const Footer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
 
   const {
     mapRef,
@@ -155,9 +160,9 @@ const Footer = () => {
 
     return (
       <span className="timeMarkerText">
-      <span>{dateStr}</span>
-      <span>{timeStr}</span>
-    </span>
+        <span>{dateStr}</span>
+        <span>{timeStr}</span>
+      </span>
     );
   };
 
@@ -212,18 +217,48 @@ const Footer = () => {
   const onloadAssetsClick = async () => {
     try {
       const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
+      setIsLoadingAssets(true);
       const response = await loadAssets(collectionId, itemId);
 
       if (typeof response === 'object' && response.error) {
         toast.error(`Failed to load assets: ${response.error}`);
+        setIsLoadingAssets(false);
       } else {
-        toast.success("Assets loaded successfully");
+        toast.success('Asset loading initiated');
+        // Start polling for loaded assets
+        const interval = setInterval(pollLoadedLayers, 2000);
+        setPollingInterval(interval);
       }
     } catch (error) {
-      console.error("Error loading assets:", error);
-      toast.error("Failed to load assets");
+      console.error('Error loading assets:', error);
+      toast.error('Failed to load assets');
+      setIsLoadingAssets(false);
     }
   };
+
+  const pollLoadedLayers = async () => {
+    try {
+      const layers = await getLoadedLayers();
+      if (Array.isArray(layers) && layers.length > 0) {
+        setLoadedLayers(layers);
+        setIsLoadingAssets(false);
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error polling loaded layers:', error);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   /**
    * Add layer if the timeStamps list is populated
@@ -234,6 +269,11 @@ const Footer = () => {
       changeLayer(map, false, timeStamps[sliderValue]);
     }
   }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
+
+  const handleLayerClick = (layerName: string) => {
+    // Implement layer display logic here
+    toast.info(`Showing ${layerName} layer`);
+  };
 
   return (
     <div className="footerContainer" data-testid="footer-container">
@@ -328,9 +368,30 @@ const Footer = () => {
                   )}
                   <span className="hoverBoxText">Weather Assets</span>
                   {hoverBoxLocked && (
-                    <button className="loadAssetsButton" onClick={onloadAssetsClick}>
-                      Load Assets
-                    </button>
+                    <>
+                      {isLoadingAssets ? (
+                        <div className="loadingSpinner">
+                          <div className="spinner"></div>
+                          <span>Loading assets...</span>
+                        </div>
+                      ) : loadedLayers.length > 0 ? (
+                        <div className="layerButtonsContainer">
+                          {loadedLayers.map((layer, index) => (
+                            <button
+                              key={index}
+                              className="layerButton"
+                              onClick={() => handleLayerClick(layer.asset_name)}
+                            >
+                              {layer.asset_name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <button className="loadAssetsButton" onClick={onloadAssetsClick}>
+                          Load Assets
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
                 <div
