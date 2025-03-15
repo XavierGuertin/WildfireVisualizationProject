@@ -9,6 +9,7 @@ import {
   FaRegCompass,
   FaWind,
 } from 'react-icons/fa';
+import { FiDownload } from 'react-icons/fi';
 import { IoIosSettings } from 'react-icons/io';
 import { BsDropletFill } from 'react-icons/bs';
 import { useTranslation } from 'react-i18next';
@@ -233,9 +234,6 @@ const Footer = () => {
     // Reset loadedTimestamp when timestamps array changes (new dataset loaded)
     setLoadedTimestamp(null);
     setHoverBoxLocked(false);
-
-    // Also reset any selected layer
-    setSelectedLayer(null);
   }, [timeStamps]);
 
   // Resets assets when sliderValue changes
@@ -258,15 +256,15 @@ const Footer = () => {
     try {
       const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
       setIsLoadingAssets(true);
+      setLoadedLayers([]);
       await resetItemAssets();
       const response = await loadAssets(collectionId, itemId);
 
       if (typeof response === 'object' && response.error) {
-        toast.error(`Failed to load assets: ${response.error}`);
+        toast.error(`Failed to load assets`);
         setIsLoadingAssets(false);
       } else {
-        toast.success('Asset loading initiated');
-        setLoadedTimestamp(timeStamps[sliderValue]); // <- Set the loaded timestamp here
+        setLoadedTimestamp(timeStamps[sliderValue]);
         const interval = setInterval(pollLoadedLayers, 1000);
         setPollingInterval(interval);
       }
@@ -319,33 +317,31 @@ const Footer = () => {
     }
 
     // Find the layer data
-    const layerData = loadedLayers.find(layer => layer.asset_name === layerName);
+    const layerData = loadedLayers.find(
+      (layer) => layer.asset_name === layerName,
+    );
     if (!layerData || !layerData.layer_url) {
       toast.error(`Layer URL not found for ${layerName}`);
       return;
     }
-
-    console.log(`Layer data for ${layerName}:`, layerData);
 
     // Check if this layer is already selected
     const isSelected = selectedAssetLayers.includes(layerName);
 
     if (isSelected) {
       // Remove from selected layers
-      setSelectedAssetLayers(prev => prev.filter(name => name !== layerName));
+      setSelectedAssetLayers((prev) =>
+        prev.filter((name) => name !== layerName),
+      );
       // Remove from map
       toggleAssetLayer(map, layerName, layerData.layer_url, false);
     } else {
       // Add to selected layers
-      setSelectedAssetLayers(prev => [...prev, layerName]);
+      setSelectedAssetLayers((prev) => [...prev, layerName]);
       // Add to map
       toggleAssetLayer(map, layerName, layerData.layer_url, true);
     }
-
-    toast.info(`${isSelected ? 'Removed' : 'Added'} ${formatLayerName(layerName)} layer`);
   };
-
-  const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
 
   // Function to format layer name
   const formatLayerName = (name: string): string => {
@@ -356,34 +352,43 @@ const Footer = () => {
   };
 
   // Function to get the appropriate icon for a layer
+  // Function to get the appropriate icon for a layer
   const getLayerIcon = (layerName: string) => {
     switch (layerName) {
       case 'humidity':
         return (
           <BsDropletFill
             className="layerButtonIcon"
-            color={selectedLayer === layerName ? 'white' : '#00447E'}
+            color={
+              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
+            }
           />
         );
       case 'wind_force':
         return (
           <FaWind
             className="layerButtonIcon"
-            color={selectedLayer === layerName ? 'white' : '#00447E'}
+            color={
+              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
+            }
           />
         );
       case 'wind_direction':
         return (
           <FaRegCompass
             className="layerButtonIcon"
-            color={selectedLayer === layerName ? 'white' : '#00447E'}
+            color={
+              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
+            }
           />
         );
       default:
         return (
           <IoIosSettings
             className="layerButtonIcon"
-            color={selectedLayer === layerName ? 'white' : '#00447E'}
+            color={
+              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
+            }
           />
         );
     }
@@ -455,9 +460,9 @@ const Footer = () => {
                       left: `${
                         timeStamps.indexOf(loadedTimestamp) >= 0
                           ? (timeStamps.indexOf(loadedTimestamp) /
-                            (timeStamps.length - 1)) *
-                          94 +
-                          3
+                              (timeStamps.length - 1)) *
+                              94 +
+                            3
                           : 0
                       }%`,
                       display:
@@ -486,9 +491,19 @@ const Footer = () => {
                       : 'false'
                   }
                   data-locked={hoverBoxLocked ? 'true' : 'false'}
-                  onClick={() => setHoverBoxLocked(true)}
-                  onMouseEnter={() => setHoveredBox(true)}
-                  onMouseLeave={() => setHoveredBox(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHoverBoxLocked(true);
+                  }}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    setHoveredBox(true);
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    setHoveredBox(false);
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
                   {hoverBoxLocked ? (
                     <FaAngleDown
@@ -503,13 +518,15 @@ const Footer = () => {
                   ) : (
                     <FaAngleUp className="hoverBoxIcon" size={20} />
                   )}
-                  <span className="hoverBoxText">Weather Assets</span>
+                  <span className="hoverBoxText">
+                    {t('weather_assets_label')}
+                  </span>
                   {hoverBoxLocked && (
                     <>
                       {isLoadingAssets ? (
                         <div className="loadingSpinner">
                           <div className="spinner"></div>
-                          <span>Loading assets...</span>
+                          <span>{t('loading_label')}</span>
                         </div>
                       ) : loadedLayers.length > 0 &&
                         loadedTimestamp === timeStamps[sliderValue] ? (
@@ -528,9 +545,18 @@ const Footer = () => {
                       ) : (
                         <button
                           className="loadAssetsButton"
-                          onClick={onloadAssetsClick}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onloadAssetsClick();
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
                         >
-                          Load Assets
+                          <FiDownload
+                            color="white"
+                            size={20}
+                            style={{ marginRight: '4px' }}
+                          />
+                          {t('load_assets_button')}
                         </button>
                       )}
                     </>

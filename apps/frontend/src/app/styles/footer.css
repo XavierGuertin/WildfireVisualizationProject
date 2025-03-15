@@ -342,14 +342,16 @@
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 6px 12px;
-  margin-top: 5px;
-  margin-bottom: 20px;
+  padding: 8px 12px;
   font-weight: bold;
+  font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  opacity: 0;
-  animation: fadeIn 0.3s ease 0.2s forwards;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  width: 75%;
+  text-align: left;
+  margin: 5px auto 10px;
 }
 
 .loadAssetsButton:hover {

@@ -278,7 +278,7 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
       opacity: 1.0,
       visible: true,
     });
-    newLayer.set('style',)
+
     // Set a name to identify this asset layer later
     newLayer.set('name', layerName);
     newLayer.set('type', 'asset');
@@ -289,10 +289,8 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
     map.renderSync();
 
     // Log successful addition
-    console.log(`Layer ${layerName} added to map`);
   } else if (!add && existingLayer) {
     // Remove the layer
-    console.log(`Removing layer: ${layerName}`);
     map.removeLayer(existingLayer);
     map.renderSync();
   }
