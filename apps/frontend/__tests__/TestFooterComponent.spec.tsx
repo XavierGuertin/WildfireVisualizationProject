@@ -468,20 +468,15 @@ describe('Footer component interactions', () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
 
-    const localStorageMock = {
-      store: {},
-      getItem: jest.fn((key) => {
-        if (key === 'playbackSpeed') throw new Error('Test localStorage read error');
-        return '1';
-      }),
-      setItem: jest.fn(() => {
-        throw new Error('Test localStorage write error');
-      })
-    };
-
     Object.defineProperty(window, 'localStorage', {
-      value: localStorageMock,
-      writable: true
+      value: {
+        getItem: jest.fn((key) => {
+          return '1';
+        }),
+        setItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
     });
 
     // Mock API functions
