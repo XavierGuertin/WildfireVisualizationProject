@@ -14,7 +14,6 @@ import { BsDropletFill } from 'react-icons/bs';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
-import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -23,6 +22,7 @@ import {
   loadAssets,
   resetItemAssets,
 } from '../services/api';
+import { changeLayer, removeAllAssetLayers, toggleAssetLayer } from './MapView';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -40,6 +40,8 @@ const Footer = () => {
     setLoadedLayers,
     isLoadingAssets,
     setIsLoadingAssets,
+    selectedAssetLayers,
+    setSelectedAssetLayers,
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
@@ -240,6 +242,11 @@ const Footer = () => {
   useEffect(() => {
     // Reset assets when timestamp changes
     setLoadedLayers([]);
+    setSelectedAssetLayers([]);
+
+    if (mapRef.current) {
+      removeAllAssetLayers(mapRef.current);
+    }
 
     if (timeStamps.length > 0) {
       const map = mapRef.current as Map;
@@ -305,9 +312,37 @@ const Footer = () => {
   }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
 
   const handleLayerClick = (layerName: string) => {
-    // Implement layer display logic here
-    toast.info(`Showing ${layerName} layer`);
-    setSelectedLayer(layerName === selectedLayer ? null : layerName);
+    const map = mapRef.current as Map;
+    if (!map) {
+      toast.error('Map not initialized');
+      return;
+    }
+
+    // Find the layer data
+    const layerData = loadedLayers.find(layer => layer.asset_name === layerName);
+    if (!layerData || !layerData.layer_url) {
+      toast.error(`Layer URL not found for ${layerName}`);
+      return;
+    }
+
+    console.log(`Layer data for ${layerName}:`, layerData);
+
+    // Check if this layer is already selected
+    const isSelected = selectedAssetLayers.includes(layerName);
+
+    if (isSelected) {
+      // Remove from selected layers
+      setSelectedAssetLayers(prev => prev.filter(name => name !== layerName));
+      // Remove from map
+      toggleAssetLayer(map, layerName, layerData.layer_url, false);
+    } else {
+      // Add to selected layers
+      setSelectedAssetLayers(prev => [...prev, layerName]);
+      // Add to map
+      toggleAssetLayer(map, layerName, layerData.layer_url, true);
+    }
+
+    toast.info(`${isSelected ? 'Removed' : 'Added'} ${formatLayerName(layerName)} layer`);
   };
 
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
@@ -482,7 +517,7 @@ const Footer = () => {
                           {loadedLayers.map((layer, index) => (
                             <button
                               key={index}
-                              className={`layerButton ${selectedLayer === layer.asset_name ? 'active' : ''}`}
+                              className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
                               onClick={() => handleLayerClick(layer.asset_name)}
                             >
                               {getLayerIcon(layer.asset_name)}
