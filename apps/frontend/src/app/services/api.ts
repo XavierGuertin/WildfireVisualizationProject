@@ -391,3 +391,21 @@ export const getLoadedLayers = async (): Promise<any> => {
     return { error: 'Failed to fetch loaded layers' };
   }
 };
+
+export const resetItemAssets = async (): Promise<string | { error: string }> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/reset-item-assets`, {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const message = await response.text();
+    return message;
+  } catch (error: any) {
+    console.error('Error resetting item assets:', error);
+    return { error: `Error resetting item assets: ${error.message}` };
+  }
+};

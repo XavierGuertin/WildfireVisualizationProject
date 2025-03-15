@@ -17,30 +17,32 @@ import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
-import { fetchTimestamps, getLoadedLayers, loadAssets } from '../services/api';
+import { fetchTimestamps, getLoadedLayers, loadAssets, resetItemAssets } from '../services/api';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
-  const { speed, setSpeed } = useMapLayerContext();
-  const [speedInitialized, setSpeedInitialized] = useState(false); // Flag to track if speed has been initialized
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
-  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    null,
-  );
-
   const {
+    speed,
+    setSpeed,
     mapRef,
     timeStamps,
     sliderValue,
     setSliderValue,
     setTimeStamps,
     collectionId,
+    loadedLayers,
+    setLoadedLayers,
+    isLoadingAssets,
+    setIsLoadingAssets
   } = useMapLayerContext();
+
+  const [speedInitialized, setSpeedInitialized] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
 
   const speedValues = [0.5, 1, 1.5, 2, 4];
 
@@ -58,7 +60,7 @@ const Footer = () => {
           });
         }
         setSpeedInitialized(true);
-        intitializeTimestampIfItemsPresent();
+        initializeTimestampIfItemsPresent();
       } catch (error) {
         console.error('Error reading playback speed from localStorage:', error);
       }
@@ -186,7 +188,7 @@ const Footer = () => {
   /**
    * This fetches and loads the stac items if they exist in the items table
    */
-  const intitializeTimestampIfItemsPresent = async () => {
+  const initializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
     if (timestampsResponse) {
       setTimeStamps(timestampsResponse);
@@ -218,10 +220,26 @@ const Footer = () => {
     return `wildfire_timestamp_${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
   };
 
+  // Add this effect to reset assets when sliderValue changes
+  useEffect(() => {
+    // Reset assets when timestamp changes
+    setLoadedLayers([]);
+
+    if (timeStamps.length > 0) {
+      const map = mapRef.current as Map;
+      changeLayer(map, false, timeStamps[sliderValue]);
+    }
+  }, [sliderValue]);
+
+
   const onloadAssetsClick = async () => {
     try {
       const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
       setIsLoadingAssets(true);
+
+      // First reset item assets
+      await resetItemAssets();
+
       const response = await loadAssets(collectionId, itemId);
 
       if (typeof response === 'object' && response.error) {
@@ -230,7 +248,7 @@ const Footer = () => {
       } else {
         toast.success('Asset loading initiated');
         // Start polling for loaded assets
-        const interval = setInterval(pollLoadedLayers, 2000);
+        const interval = setInterval(pollLoadedLayers, 1000);
         setPollingInterval(interval);
       }
     } catch (error) {
@@ -239,6 +257,7 @@ const Footer = () => {
       setIsLoadingAssets(false);
     }
   };
+
 
   const pollLoadedLayers = async () => {
     try {

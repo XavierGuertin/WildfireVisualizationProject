@@ -258,6 +258,7 @@
   z-index: 4;
   transform: translate(-50%, 20px);
   pointer-events: none;
+  transition: left 0.2s ease-out;
 }
 
 .timeMarkerHoverBox[data-hovered="true"] {

@@ -25,6 +25,10 @@ interface MapLayerContextValue {
   setCollectionId: React.Dispatch<React.SetStateAction<string>>;
   sliderValue: number;
   setSliderValue: React.Dispatch<React.SetStateAction<number>>;
+  loadedLayers: any[];
+  setLoadedLayers: React.Dispatch<React.SetStateAction<any[]>>;
+  isLoadingAssets: boolean;
+  setIsLoadingAssets: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(
@@ -37,6 +41,8 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [timeStamps, setTimeStamps] = useState<string[]>([]);
   const [collectionId, setCollectionId] = useState<string>(''); // Change to string
   const [sliderValue, setSliderValue] = useState<number>(0);
+  const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
 
   // Timeline playback speed
   const [speed, setSpeed] = useState<number>(1);
@@ -72,8 +78,12 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setCollectionId,
       sliderValue,
       setSliderValue,
+      loadedLayers,
+      setLoadedLayers,
+      isLoadingAssets,
+      setIsLoadingAssets,
     }),
-    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue],
+    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets]
   );
 
   return (
