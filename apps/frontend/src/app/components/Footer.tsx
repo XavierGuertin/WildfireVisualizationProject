@@ -624,6 +624,7 @@ const Footer = () => {
                       ) : (
                         <button
                           className="loadAssetsButton"
+                          data-testid="loadAssetsButton"
                           onClick={(e) => {
                             e.stopPropagation();
                             onloadAssetsClick();

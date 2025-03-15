@@ -91,7 +91,7 @@ const createCollectionDataLayer = (): VectorLayer => {
  *
  * @returns {VectorLayer} The generated item data layer for the map.
  */
-const createItemDataLayer = (timestamp: string): VectorLayer => {
+export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
 
   const vectorSource = new VectorSource({

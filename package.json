@@ -7,7 +7,8 @@
     "start:frontend": "nx dev frontend",
     "start:backend": "nx dev backend",
     "build:backend": "nx build backend",
-    "lint": "next lint apps/frontend"
+    "lint": "next lint apps/frontend",
+    "coverage:frontend": "nx run frontend:test --coverage"
   },
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
