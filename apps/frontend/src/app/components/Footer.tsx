@@ -6,8 +6,8 @@ import {
   FaBackward,
   FaPause,
   FaPlay,
+  FaRegCompass,
   FaWind,
-  FaRegCompass
 } from 'react-icons/fa';
 import { IoIosSettings } from 'react-icons/io';
 import { BsDropletFill } from 'react-icons/bs';
@@ -17,7 +17,12 @@ import { toast } from 'react-toastify';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import 'react-toastify/dist/ReactToastify.css';
-import { fetchTimestamps, getLoadedLayers, loadAssets, resetItemAssets } from '../services/api';
+import {
+  fetchTimestamps,
+  getLoadedLayers,
+  loadAssets,
+  resetItemAssets,
+} from '../services/api';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -34,15 +39,17 @@ const Footer = () => {
     loadedLayers,
     setLoadedLayers,
     isLoadingAssets,
-    setIsLoadingAssets
+    setIsLoadingAssets,
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
-
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
+  const [loadedTimestamp, setLoadedTimestamp] = useState<string | null>(null);
 
   const speedValues = [0.5, 1, 1.5, 2, 4];
 
@@ -231,15 +238,11 @@ const Footer = () => {
     }
   }, [sliderValue]);
 
-
   const onloadAssetsClick = async () => {
     try {
       const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
       setIsLoadingAssets(true);
-
-      // First reset item assets
       await resetItemAssets();
-
       const response = await loadAssets(collectionId, itemId);
 
       if (typeof response === 'object' && response.error) {
@@ -247,7 +250,7 @@ const Footer = () => {
         setIsLoadingAssets(false);
       } else {
         toast.success('Asset loading initiated');
-        // Start polling for loaded assets
+        setLoadedTimestamp(timeStamps[sliderValue]); // <- Set the loaded timestamp here
         const interval = setInterval(pollLoadedLayers, 1000);
         setPollingInterval(interval);
       }
@@ -257,7 +260,6 @@ const Footer = () => {
       setIsLoadingAssets(false);
     }
   };
-
 
   const pollLoadedLayers = async () => {
     try {
@@ -402,6 +404,29 @@ const Footer = () => {
           <div className="sliderTrack">
             {timeStamps.length > 0 && (
               <>
+                {loadedTimestamp && (
+                  <div
+                    className="slider-loaded-tag"
+                    style={{
+                      left: `${
+                        timeStamps.indexOf(loadedTimestamp) >= 0
+                          ? (timeStamps.indexOf(loadedTimestamp) /
+                            (timeStamps.length - 1)) *
+                          94 +
+                          3
+                          : 0
+                      }%`,
+                      display:
+                        timeStamps.indexOf(loadedTimestamp) >= 0
+                          ? 'block'
+                          : 'none',
+                    }}
+                    title="Assets loaded for this timestamp"
+                  >
+                    {t('loaded')}
+                  </div>
+                )}
+
                 <div
                   className="timeMarkerHoverBox"
                   style={{
@@ -442,7 +467,8 @@ const Footer = () => {
                           <div className="spinner"></div>
                           <span>Loading assets...</span>
                         </div>
-                      ) : loadedLayers.length > 0 ? (
+                      ) : loadedLayers.length > 0 &&
+                        loadedTimestamp === timeStamps[sliderValue] ? (
                         <div className="layerButtonsContainer">
                           {loadedLayers.map((layer, index) => (
                             <button
