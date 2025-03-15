@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
 import MapView, {
   changeLayer,
@@ -40,6 +40,15 @@ jest.mock('ol/layer/Tile', () => {
   });
 });
 
+jest.mock('ol/layer/Image', () => {
+  return jest.fn().mockImplementation(() => ({
+    setSource: jest.fn(),
+    set: jest.fn(),
+    setZIndex: jest.fn(),
+    getSource: jest.fn(),
+  }));
+});
+
 jest.mock('ol/View', () => {
   return jest.fn().mockImplementation(() => {
     return {};
@@ -53,10 +62,10 @@ jest.mock('ol/control.js', () => ({
 
 jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
 
-jest.mock('ol/layer/Vector', () => 
+jest.mock('ol/layer/Vector', () =>
   jest.fn().mockImplementation(() => ({
     set: jest.fn(),
-  }))
+  })),
 );
 
 jest.mock('ol/geom/Polygon', () => jest.fn().mockImplementation(() => ({})));
@@ -126,6 +135,13 @@ jest.mock('../src/app/context/MapContext', () => ({
     setSliderValue: jest.fn(),
     timeStamps: [],
     setTimeStamps: jest.fn(),
+    loadedLayers: [],
+    setLoadedLayers: jest.fn(),
+    isLoadingAssets: false,
+    setIsLoadingAssets: jest.fn(),
+    selectedAssetLayers: [],
+    setSelectedAssetLayers: jest.fn(),
+    collectionId: 'test-collection',
   }),
 }));
 
@@ -353,6 +369,8 @@ describe(MapView, () => {
       setSliderValue: jest.fn(),
       timeStamps: [],
       setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      setSelectedAssetLayers: jest.fn(),
     };
 
     useMapLayerContext.mockReturnValue(contextMock);
@@ -408,6 +426,8 @@ describe(MapView, () => {
       setSliderValue: jest.fn(),
       timeStamps: [],
       setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      setSelectedAssetLayers: jest.fn(),
     });
 
     render(

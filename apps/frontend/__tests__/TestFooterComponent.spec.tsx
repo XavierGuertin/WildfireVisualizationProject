@@ -25,8 +25,21 @@ jest.mock('ol/layer/Tile', () => {
   });
 });
 
+jest.mock('ol/layer/Image', () => {
+  return jest.fn().mockImplementation(() => ({
+    setSource: jest.fn(),
+    set: jest.fn(),
+    setZIndex: jest.fn(),
+    getSource: jest.fn(),
+  }));
+});
+
 jest.mock('../src/app/components/MapView', () => ({
+  ...jest.requireActual('../src/app/components/MapView'),
   changeLayer: jest.fn(),
+  refreshLayer: jest.fn(),
+  removeAllAssetLayers: jest.fn(),
+  toggleAssetLayer: jest.fn(),
 }));
 
 jest.mock('../src/app/context/MapContext', () => ({
@@ -56,10 +69,18 @@ jest.mock('../src/app/context/MapContext', () => ({
     resetView: jest.fn(),
     setIsOnline: jest.fn(),
     isOnline: true,
-    sliderValue: 50,
+    sliderValue: 0,
     setSliderValue: jest.fn(),
     timeStamps: ['2024-01-01', '2024-01-02', '2024-01-03'],
     setTimeStamps: jest.fn(),
+    loadedLayers: [],
+    setLoadedLayers: jest.fn(),
+    isLoadingAssets: false,
+    setIsLoadingAssets: jest.fn(),
+    selectedAssetLayers: [],
+    setSelectedAssetLayers: jest.fn(),
+    loadedTimestamp: null,
+    setLoadedTimestamp: jest.fn(),
   }),
 }));
 
@@ -72,9 +93,10 @@ jest.mock('ol/layer/Vector', () =>
 jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('../src/app/services/api', () => ({
-  fetchTimestamps: jest.fn(() =>
-    Promise.resolve(['2024-01-01', '2024-01-02', '2024-01-03']),
-  ),
+  fetchTimestamps: jest.fn(() => Promise.resolve(['2023-01-01T00:00:00Z'])),
+  loadAssets: jest.fn(() => Promise.resolve({})),
+  resetItemAssets: jest.fn(() => Promise.resolve()),
+  getLoadedLayers: jest.fn(),
 }));
 
 jest.mock('react-toastify');
@@ -197,13 +219,13 @@ describe('Footer component tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     const slider = screen.getByTestId('slider');
     fireEvent.mouseDown(slider, { clientX: 100 }); // trigger isDraggingRef.current = true
-    fireEvent.mouseMove(window, { clientX: 150 });  // if (isDraggingRef.current) { handleSliderMove(e); }
-    fireEvent.mouseUp(window);                      // isDraggingRef.current = false
+    fireEvent.mouseMove(window, { clientX: 150 }); // if (isDraggingRef.current) { handleSliderMove(e); }
+    fireEvent.mouseUp(window); // isDraggingRef.current = false
   });
 
   it('formats timestamps properly and displays them in the UI', async () => {
@@ -223,6 +245,8 @@ describe('Footer component tests', () => {
       },
       sliderValue: 0,
       setSliderValue: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      setSelectedAssetLayers: jest.fn(),
       timeStamps: [timestamp],
       setTimeStamps: jest.fn(),
     });
@@ -256,7 +280,7 @@ describe('Footer component tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     const slider = screen.getByTestId('slider');
@@ -265,8 +289,14 @@ describe('Footer component tests', () => {
     fireEvent.mouseDown(slider, { clientX: 100 });
 
     // Verify event listeners were added for mousemove and mouseup
-    expect(addEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
-    expect(addEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'mousemove',
+      expect.any(Function),
+    );
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'mouseup',
+      expect.any(Function),
+    );
 
     // Simulate mouse movement during drag
     fireEvent.mouseMove(document, { clientX: 150 });
@@ -281,8 +311,14 @@ describe('Footer component tests', () => {
     fireEvent.mouseUp(document);
 
     // Verify event listeners were removed
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'mousemove',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'mouseup',
+      expect.any(Function),
+    );
 
     // Verify dragging has ended by confirming movement no longer triggers changeLayer
     fireEvent.mouseMove(document, { clientX: 200 });

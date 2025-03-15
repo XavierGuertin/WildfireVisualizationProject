@@ -1,9 +1,15 @@
 // SettingsPanel.test.tsx
 import React from 'react';
-import { render, fireEvent, screen, waitFor, act } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
-import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 
 // --- Mocks ---
 
@@ -69,6 +75,15 @@ jest.mock('ol/layer/Tile', () => {
       }),
     };
   });
+});
+
+jest.mock('ol/layer/Image', () => {
+  return jest.fn().mockImplementation(() => ({
+    setSource: jest.fn(),
+    set: jest.fn(),
+    setZIndex: jest.fn(),
+    getSource: jest.fn(),
+  }));
 });
 
 // Ensure the clipboard API exists.
