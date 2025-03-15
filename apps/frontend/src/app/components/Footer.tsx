@@ -624,12 +624,12 @@ const Footer = () => {
                       ) : (
                         <button
                           className="loadAssetsButton"
-                          data-testid="loadAssetsButton"
                           onClick={(e) => {
                             e.stopPropagation();
                             onloadAssetsClick();
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
+                          data-testid="loadAssetsButton"
                         >
                           <FiDownload
                             color="white"

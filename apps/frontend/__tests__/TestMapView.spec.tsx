@@ -7,11 +7,13 @@ import MapView, {
   refreshLayer,
   toggleAssetLayer,
 } from '../src/app/components/MapView';
-import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
+import { MapProvider } from '../src/app/context/MapContext';
 import Polygon from 'ol/geom/Polygon';
 
 jest.mock('../src/app/components/Footer', () => {
-  return () => <div data-testid="footer-container">Mock Footer</div>;
+  const MockFooter = () => <div data-testid="footer-container">Mock Footer</div>;
+  MockFooter.displayName = 'MockFooter';
+  return MockFooter;
 });
 
 jest.mock('react', () => ({
@@ -584,6 +586,8 @@ describe(MapView, () => {
     // Fix debounce mock to actually invoke the callback
     const debounceMock = require('lodash/debounce');
     debounceMock.mockImplementation((fn: (arg0: any) => any) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       const mockFn = (...args: any[]) => fn(...args);
       mockFn.cancel = jest.fn();
       return mockFn;
