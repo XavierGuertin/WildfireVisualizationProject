@@ -15,6 +15,8 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 import { Style, Stroke, Fill } from 'ol/style';
+import ImageLayer from 'ol/layer/Image';
+import { ImageWMS } from 'ol/source';
 
 const attributions =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -91,7 +93,7 @@ const createCollectionDataLayer = (): VectorLayer => {
  */
 const createItemDataLayer = (timestamp: string): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
-  
+
   const vectorSource = new VectorSource({
     format: new GeoJSON(),
     url: `${geoserverUrl}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Default:items&cql_filter=datetime='${timestamp}'&outputFormat=application/json`,
@@ -176,7 +178,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
 
     return selectedLayer;
   };
-  
+
   useEffect(() => {
     if (!mapRef.current) {
       // Initialize the map if it hasn't been created yet
@@ -268,6 +270,7 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
+        params: { STYLES: layerName},
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
@@ -275,7 +278,7 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
       opacity: 1.0,
       visible: true,
     });
-
+    newLayer.set('style',)
     // Set a name to identify this asset layer later
     newLayer.set('name', layerName);
     newLayer.set('type', 'asset');
