@@ -210,7 +210,7 @@
   justify-content: center;
   font-weight: bold;
   color: white;
-  z-index: 5;
+  z-index: 1001;
   transition: left 0.2s ease-out;
 }
 
@@ -255,7 +255,7 @@
   flex-direction: column;
   align-items: center;
   margin-bottom: -15px;
-  z-index: 4;
+  z-index: 100;
   transform: translate(-50%, 20px);
   pointer-events: none;
   transition: left 0.2s ease-out;

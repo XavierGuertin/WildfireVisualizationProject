@@ -236,21 +236,34 @@ const Footer = () => {
     setHoverBoxLocked(false);
   }, [timeStamps]);
 
-  // Resets assets when sliderValue changes
+  // Handle slider value changes
   useEffect(() => {
-    // Reset assets when timestamp changes
-    setLoadedLayers([]);
-    setSelectedAssetLayers([]);
+    const currentTimestamp = timeStamps[sliderValue];
 
-    if (mapRef.current) {
-      removeAllAssetLayers(mapRef.current);
+    // Only reset assets if we're not returning to the previously loaded timestamp
+    if (currentTimestamp !== loadedTimestamp) {
+      setLoadedLayers([]);
+      setSelectedAssetLayers([]);
+
+      if (mapRef.current) {
+        removeAllAssetLayers(mapRef.current);
+      }
+    }
+    // If we are returning to the loaded timestamp, refresh the layers data
+    else if (currentTimestamp === loadedTimestamp) {
+      getLoadedLayers().then(layers => {
+        if (Array.isArray(layers) && layers.length > 0) {
+          setLoadedLayers(layers);
+        }
+      });
     }
 
+    // Always update the base map layer
     if (timeStamps.length > 0) {
       const map = mapRef.current as Map;
-      changeLayer(map, false, timeStamps[sliderValue]);
+      changeLayer(map, false, currentTimestamp);
     }
-  }, [sliderValue]);
+  }, [sliderValue, timeStamps, loadedTimestamp]);
 
   const onloadAssetsClick = async () => {
     try {
@@ -514,8 +527,8 @@ const Footer = () => {
                   style={{
                     left: `${
                       timeStamps.length > 1
-                        ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
-                        : 5
+                        ? Math.min(96, Math.max(4, (sliderValue / (timeStamps.length - 1)) * 92 + 4))
+                        : 4
                     }%`,
                   }}
                   data-hovered={
@@ -633,8 +646,8 @@ const Footer = () => {
                   style={{
                     left: `${
                       timeStamps.length > 1
-                        ? (sliderValue / (timeStamps.length - 1)) * 94 + 3
-                        : 5
+                        ? Math.min(96, Math.max(4, (sliderValue / (timeStamps.length - 1)) * 92 + 4))
+                        : 4
                     }%`,
                   }}
                   onMouseEnter={() => setHoveredThumb(true)}
