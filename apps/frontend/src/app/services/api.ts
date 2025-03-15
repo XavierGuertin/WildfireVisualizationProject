@@ -377,3 +377,17 @@ export const loadAssets = async (collectionId: string, itemId: string) : Promise
     return { error: 'Failed to fetch assets' };
   }
 };
+
+export const getLoadedLayers = async (): Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/get-loaded-layers`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching loaded layers:', error);
+    return { error: 'Failed to fetch loaded layers' };
+  }
+};
