@@ -36,7 +36,7 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue, mapRef } = useMapLayerContext();
+  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue, mapRef, setTimeStamps, setCollectionId } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -142,6 +142,7 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = endpointUrl;
+        config.loadedDataset = '';
         await saveConfig(config);
 
         toast.success(t('api_endpoint_saved'));
@@ -258,6 +259,9 @@ const SettingsPanel: React.FC<{
       setSliderValue(0);
 
       setLayer('default');
+      setTimeStamps([]);
+      setCollectionId('');
+
       await resetCollections();
       await resetItems();
       await resetDatalayerView();
@@ -302,6 +306,7 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = 'No endpoint saved';
+        config.loadedDataset = '';
         await saveConfig(config);
 
         refreshDatasets(); // Trigger the refresh
