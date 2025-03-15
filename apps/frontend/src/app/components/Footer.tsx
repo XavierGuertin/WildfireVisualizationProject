@@ -254,9 +254,10 @@ const Footer = () => {
 
   const onloadAssetsClick = async () => {
     try {
-      const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
       setIsLoadingAssets(true);
       setLoadedLayers([]);
+
+      const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
       await resetItemAssets();
       const response = await loadAssets(collectionId, itemId);
 
@@ -265,8 +266,7 @@ const Footer = () => {
         setIsLoadingAssets(false);
       } else {
         setLoadedTimestamp(timeStamps[sliderValue]);
-        const interval = setInterval(pollLoadedLayers, 1000);
-        setPollingInterval(interval);
+        await pollLoadedLayersUntilComplete();
       }
     } catch (error) {
       console.error('Error loading assets:', error);
@@ -275,19 +275,52 @@ const Footer = () => {
     }
   };
 
-  const pollLoadedLayers = async () => {
+  const [isLoadingComplete, setIsLoadingComplete] = useState(true);
+
+  const pollLoadedLayersUntilComplete = async () => {
+    // Clear any existing interval first
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
+    setIsLoadingComplete(false);
+
     try {
-      const layers = await getLoadedLayers();
-      if (Array.isArray(layers) && layers.length > 0) {
-        setLoadedLayers(layers);
-        setIsLoadingAssets(false);
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          setPollingInterval(null);
+      let lastLayerCount = 0;
+      let stableCount = 0;
+      const stabilityThreshold = 2;
+
+      while (true) {
+        const layers = await getLoadedLayers();
+
+        if (Array.isArray(layers)) {
+          // Always update UI with the layers we have so far
+          setLoadedLayers(layers);
+
+          // Check if the layer count has stabilized (no new layers added)
+          if (layers.length === lastLayerCount) {
+            stableCount++;
+          } else {
+            stableCount = 0;
+            lastLayerCount = layers.length;
+          }
+
+          // If layer count has been stable for several polling intervals and we have layers
+          if (stableCount >= stabilityThreshold && layers.length > 0) {
+            setIsLoadingComplete(true);
+            setIsLoadingAssets(false);
+            return;
+          }
         }
+
+        // Wait before next poll
+        await new Promise((resolve) => setTimeout(resolve, 250));
       }
     } catch (error) {
       console.error('Error polling loaded layers:', error);
+      setIsLoadingComplete(true);
+      setIsLoadingAssets(false);
     }
   };
 
@@ -524,12 +557,45 @@ const Footer = () => {
                   {hoverBoxLocked && (
                     <>
                       {isLoadingAssets ? (
-                        <div className="loadingSpinner">
-                          <div className="spinner"></div>
-                          <span>{t('loading_label')}</span>
+                        <div className="layerButtonsContainer" style={{ position: 'relative' }}>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              background: 'rgba(255, 255, 255, 0.7)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              zIndex: 10,
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <div className="spinner"></div>
+                            <span>{t('loading_label')}</span>
+                          </div>
+
+                          {/* Display layers as they load */}
+                          {loadedLayers.length > 0 && loadedLayers.map((layer, index) => (
+                            <button
+                              key={index}
+                              className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                              onClick={() => null} // Disabled during loading
+                              disabled={true}
+                              style={{
+                                opacity: 0.7,
+                                cursor: 'default',
+                              }}
+                            >
+                              {getLayerIcon(layer.asset_name)}
+                              {formatLayerName(layer.asset_name)}
+                            </button>
+                          ))}
                         </div>
-                      ) : loadedLayers.length > 0 &&
-                        loadedTimestamp === timeStamps[sliderValue] ? (
+                      ) : loadedLayers.length > 0 && loadedTimestamp === timeStamps[sliderValue] ? (
                         <div className="layerButtonsContainer">
                           {loadedLayers.map((layer, index) => (
                             <button
@@ -553,8 +619,8 @@ const Footer = () => {
                         >
                           <FiDownload
                             color="white"
-                            size={20}
-                            style={{ marginRight: '4px' }}
+                            size={16}
+                            style={{ marginRight: '8px' }}
                           />
                           {t('load_assets_button')}
                         </button>
