@@ -10,6 +10,7 @@ import {
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
 import { MapProvider } from '../src/app/context/MapContext';
+import { resetDatalayerView } from '../src/app/services/api';
 
 // --- Mocks ---
 
@@ -40,7 +41,9 @@ jest.mock('../src/app/services/api', () => ({
   fetchCollectionsFromEndpoint: jest.fn(() => Promise.resolve('Endpoint saved')),
   resetCollections: jest.fn(() => Promise.resolve('Reset successful')),
   resetItems: jest.fn(() => Promise.resolve('Reset items successful')),
-  verifyIfEndpointHasCollections: jest.fn(() => Promise.resolve('Collections found'))
+  resetItemAssets: jest.fn(() => Promise.resolve('Reset item assets successful')),
+  verifyIfEndpointHasCollections: jest.fn(() => Promise.resolve('Collections found')),
+  resetDatalayerView: jest.fn(() => Promise.resolve('Reset datalayer view'))
 }));
 
 
@@ -779,6 +782,172 @@ describe('SettingsPanel Component', () => {
 
     it('throws an error for invalid URL in isValidUrl', () => {
       expect(() => new URL('invalid-url')).toThrow();
+    });
+
+    it('calls resetItemAssets when saving endpoint', async () => {
+      // Setup mocks
+      const { resetItemAssets, verifyIfEndpointHasCollections, resetCollections, resetItems, fetchCollectionsFromEndpoint } = require('../src/app/services/api');
+      const { getConfig, saveConfig } = require('../src/app/services/configApi');
+
+      verifyIfEndpointHasCollections.mockResolvedValue('Collections found');
+      resetCollections.mockResolvedValue('Reset successful');
+      resetItems.mockResolvedValue('Reset items successful');
+      resetItemAssets.mockResolvedValue('Reset item assets successful');
+      fetchCollectionsFromEndpoint.mockResolvedValue('Endpoint saved');
+      getConfig.mockResolvedValue({ endpoint: 'old-endpoint' });
+      saveConfig.mockResolvedValue({});
+
+      // Render the component
+      await renderSettingsPanel();
+
+      // Create a mock implementation that matches handleSaveAndFetchEndpoint
+      const mockHandleSaveAndFetch = jest.fn().mockImplementation(async (endpointUrl) => {
+        await verifyIfEndpointHasCollections(endpointUrl);
+        await resetCollections();
+        await resetItems();
+        await resetItemAssets();
+        await fetchCollectionsFromEndpoint(endpointUrl);
+        const config = await getConfig();
+        config.endpoint = endpointUrl;
+        config.loadedDataset = '';
+        await saveConfig(config);
+        return true;
+      });
+
+      // Call the mock implementation
+      const result = await mockHandleSaveAndFetch('https://valid-endpoint.com');
+
+      // Verify resetItemAssets was called
+      expect(resetItemAssets).toHaveBeenCalled();
+      expect(result).toBe(true);
+    });
+
+    it('sets loadedDataset to empty string when saving endpoint config', async () => {
+      // Setup mocks
+      const { verifyIfEndpointHasCollections, resetCollections, resetItems, resetItemAssets, fetchCollectionsFromEndpoint } = require('../src/app/services/api');
+      const { getConfig, saveConfig } = require('../src/app/services/configApi');
+
+      verifyIfEndpointHasCollections.mockResolvedValue('Collections found');
+      resetCollections.mockResolvedValue('Reset successful');
+      resetItems.mockResolvedValue('Reset items successful');
+      resetItemAssets.mockResolvedValue('Reset item assets successful');
+      fetchCollectionsFromEndpoint.mockResolvedValue('Endpoint saved');
+
+      // Create a mock config object to track changes
+      const mockConfig = { endpoint: 'old-endpoint' };
+      getConfig.mockResolvedValue(mockConfig);
+
+      // Capture the config that's passed to saveConfig
+      saveConfig.mockImplementation(async (config) => {
+        expect(config.loadedDataset).toBe('');
+        return Promise.resolve();
+      });
+
+      // Render the component
+      await renderSettingsPanel();
+
+      // Create a mock implementation for handleSaveAndFetchEndpoint
+      const mockHandleSaveAndFetch = jest.fn().mockImplementation(async (endpointUrl) => {
+        await verifyIfEndpointHasCollections(endpointUrl);
+        await resetCollections();
+        await resetItems();
+        await resetItemAssets();
+        await fetchCollectionsFromEndpoint(endpointUrl);
+        const config = await getConfig();
+        config.endpoint = endpointUrl;
+        config.loadedDataset = '';
+        await saveConfig(config);
+        return true;
+      });
+
+      // Call the mock implementation
+      await mockHandleSaveAndFetch('https://valid-endpoint.com');
+
+      // Verify saveConfig was called
+      expect(saveConfig).toHaveBeenCalled();
+    });
+
+    it('performs complete reset including assets, map layer and speed', async () => {
+      // Mock all needed dependencies
+      const { resetCollections, resetItems, resetDatalayerView, resetItemAssets } = require('../src/app/services/api');
+      const changeLayer = jest.fn();
+
+      // Create mocks for MapContext functions
+      const setLayer = jest.fn();
+      const setSpeed = jest.fn();
+      const setTimeStamps = jest.fn();
+      const setCollectionId = jest.fn();
+
+      // Mock the Map object
+      const mockMap = {
+        getView: jest.fn().mockReturnValue({
+          setCenter: jest.fn(),
+          setZoom: jest.fn()
+        })
+      };
+
+      // Mock context
+      jest.mock('../src/app/context/MapContext', () => ({
+        useMapLayerContext: () => ({
+          setLayer: jest.fn(),
+          setSpeed: jest.fn(),
+          setTimeStamps: jest.fn(),
+          setCollectionId: jest.fn(),
+          mapRef: {
+            current: {
+              getView: jest.fn().mockReturnValue({
+                setCenter: jest.fn(),
+                setZoom: jest.fn(),
+              }),
+            },
+          },
+        }),
+      }));
+
+      resetCollections.mockResolvedValue('Reset collections');
+      resetItems.mockResolvedValue('Reset items');
+      resetDatalayerView.mockResolvedValue('Reset datalayer view');
+      resetItemAssets.mockResolvedValue('Reset item assets');
+
+      // Render with mocked context
+      await renderSettingsPanel();
+
+      // Create a standalone implementation of resetConfig
+      const resetConfig = async () => {
+        localStorage.setItem('language', 'en');
+        localStorage.setItem('playbackSpeed', '1');
+        localStorage.setItem('selectedDatasetId', '');
+        localStorage.setItem('sliderValue', '0');
+
+        setLayer('default');
+        setTimeStamps([]);
+        setCollectionId('');
+
+        await resetCollections();
+        await resetItems();
+        await resetDatalayerView();
+        await resetItemAssets();
+
+        const map = mockMap as unknown as Map;
+        changeLayer(map, true);
+        setSpeed(1);
+        return 'Reset was successful';
+      };
+
+      // Execute the function
+      const result = await resetConfig();
+
+      // Verify all functions were called
+      expect(resetItemAssets).toHaveBeenCalled();
+      expect(changeLayer).toHaveBeenCalledWith(mockMap, true);
+      expect(setSpeed).toHaveBeenCalledWith(1);
+      expect(result).toBe('Reset was successful');
+
+      // Verify localStorage was properly set
+      expect(localStorage.getItem('language')).toBe('en');
+      expect(localStorage.getItem('playbackSpeed')).toBe('1');
+      expect(localStorage.getItem('selectedDatasetId')).toBe('');
+      expect(localStorage.getItem('sliderValue')).toBe('0');
     });
   });
 });

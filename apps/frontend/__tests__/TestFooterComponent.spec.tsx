@@ -6,6 +6,7 @@ import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
 import { fetchTimestamps, getLoadedLayers, loadAssets, resetItemAssets } from '../src/app/services/api';
 import { changeLayer, removeAllAssetLayers } from '../src/app/components/MapView';
 import * as api from '../src/app/services/api';
+import { toast } from 'react-toastify';
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 
@@ -548,5 +549,319 @@ describe('Footer component interactions', () => {
         <Footer />
       </MapProvider>
     );
+  });
+});
+
+describe('Footer error and edge case coverage tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: {
+        current: {
+          getView: jest.fn(() => ({
+            setCenter: jest.fn(),
+            setZoom: jest.fn(),
+          })),
+          removeLayers: jest.fn(),
+          addLayer: jest.fn(),
+        },
+      },
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: ['2023-05-15T14:30:45Z'],
+      loadedLayers: [],
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      loadedTimestamp: null,
+      setLoadedTimestamp: jest.fn(),
+      setTimeStamps: jest.fn(),
+      collectionId: 'error-collection',
+    });
+    (fetchTimestamps as jest.Mock).mockResolvedValue(['2023-05-15T14:30:45Z']);
+  });
+
+  it('handles loadAssets returning an error object gracefully', async () => {
+    (loadAssets as jest.Mock).mockResolvedValueOnce({ error: 'Load error' });
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    const button = screen.getByTestId('loadAssetsButton');
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to load assets');
+  });
+
+  it('handles loadAssets throwing an error gracefully', async () => {
+    (loadAssets as jest.Mock).mockRejectedValueOnce(new Error('Some error'));
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    const button = screen.getByTestId('loadAssetsButton');
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to load assets');
+  });
+
+  it('exits polling loop when stableCount threshold is reached and layers are present', async () => {
+    let callCount = 0;
+    (getLoadedLayers as jest.Mock).mockImplementation(async () => {
+      callCount++;
+      // First calls return the same layer list
+      if (callCount < 3) return [{ asset_name: 'testLayer', layer_url: 'url' }];
+      // Once stable, should exit
+      return [{ asset_name: 'testLayer', layer_url: 'url' }];
+    });
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+      // polling tries multiple times
+      jest.advanceTimersByTime(3000);
+    });
+
+    // Should have ended polling, no error, no more calls needed
+    // Just checking that we indeed never called toast.error for this scenario
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('handles error during loaded layers polling', async () => {
+    (getLoadedLayers as jest.Mock).mockRejectedValueOnce(new Error('Polling fail'));
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+      jest.advanceTimersByTime(1000); // Move timers so polling occurs
+    });
+
+    expect(toast.error).not.toHaveBeenCalledWith('Failed to load assets');
+  });
+
+
+  it('displays toast if map is not initialized', () => {
+    (useMapLayerContext as jest.Mock).mockReturnValueOnce({
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: { current: null },
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      timeStamps: ['2023-05-15T14:30:45Z'],
+      loadedLayers: [{ asset_name: 'wind_force', layer_url: 'url' }],
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      loadedTimestamp: '2023-05-15T14:30:45Z',
+      setLoadedTimestamp: jest.fn(),
+      setTimeStamps: jest.fn(),
+      collectionId: 'error-collection',
+    });
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+  });
+
+  it('displays toast if layer not found or layer_url missing', () => {
+    (useMapLayerContext as jest.Mock).mockReturnValueOnce({
+      speed: 1,
+      setSpeed: jest.fn(),
+      // Map is non-null so we do NOT fail on "Map not initialized"
+      mapRef: { current: {} },
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      // The single timestamp...
+      timeStamps: ['2023-05-15T14:30:45Z'],
+      // ...must match the loadedTimestamp for the layer button to appear
+      loadedTimestamp: '2023-05-15T14:30:45Z',
+      loadedLayers: [{ asset_name: 'wind_force', layer_url: '' }], // missing URL triggers the toast
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      setLoadedTimestamp: jest.fn(),
+      setTimeStamps: jest.fn(),
+      collectionId: 'error-collection',
+    });
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>
+    );
+
+    // 1) Open the "weather assets" popup
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+    // 2) Lock it open (click again)
+    fireEvent.click(screen.getByText(/weather_assets_label/i));
+  });
+
+  it('handles error response from loadAssets', async () => {
+    // Setup mocks for this test
+    const mockContext = {
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: { current: { getLayers: () => ({ getArray: () => [] }) } },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      loadedLayers: [],
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      collectionId: 'test',
+      setTimeStamps: jest.fn(),
+    };
+
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+
+    // Mock API to return error
+    (api.loadAssets as jest.Mock).mockResolvedValue({ error: 'Test error' });
+    (api.resetItemAssets as jest.Mock).mockResolvedValue({});
+
+    render(<Footer />);
+
+    // Reveal and click load assets button
+    fireEvent.click(screen.getByText('weather_assets_label'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+    });
+
+    // Verify error handling
+    expect(toast.error).toHaveBeenCalledWith('Failed to load assets');
+    expect(mockContext.setIsLoadingAssets).toHaveBeenCalledWith(false);
+  });
+
+  it('handles exception during loadAssets', async () => {
+    // Setup mocks
+    const mockContext = {
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: { current: { getLayers: () => ({ getArray: () => [] }) } },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      loadedLayers: [],
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      collectionId: 'test',
+      setTimeStamps: jest.fn(),
+    };
+
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+
+    // Mock API to throw error
+    (api.loadAssets as jest.Mock).mockRejectedValue({ error: 'Test exception' });
+    (api.resetItemAssets as jest.Mock).mockResolvedValue({});
+
+    render(<Footer />);
+
+    // Reveal and click load assets button
+    fireEvent.click(screen.getByText('weather_assets_label'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+    });
+
+    // Verify error handling
+    expect(toast.error).toHaveBeenCalledWith('Failed to load assets');
+    expect(mockContext.setIsLoadingAssets).toHaveBeenCalledWith(false);
+  });
+
+  it('handles polling interval cleanup and completion', async () => {
+    // Setup mocks
+    const mockContext = {
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: { current: { getLayers: () => ({ getArray: () => [] }) } },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      loadedLayers: [],
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      collectionId: 'test',
+      setTimeStamps: jest.fn(),
+      setLoadedTimestamp: jest.fn(),
+    };
+
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+
+    // First call returns empty array, second call returns layers
+    (api.getLoadedLayers as jest.Mock)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ asset_name: 'layer1', layer_url: 'url1' }]);
+
+    (api.loadAssets as jest.Mock).mockResolvedValue({});
+
+    (api.resetItemAssets as jest.Mock).mockResolvedValue(mockContext);
+
+    // Setup timer spy
+    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+
+    const { unmount } = render(<Footer />);
+
+    // Reveal and click load assets button
+    fireEvent.click(screen.getByText('weather_assets_label'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+    });
+
+    // Advance time to trigger polling
+    await act(async () => {
+      jest.advanceTimersByTime(500);
+    });
+
+    // Verify polling cleanup
+    expect(clearIntervalSpy).toHaveBeenCalled();
+    expect(mockContext.setLoadedLayers).toHaveBeenCalled();
+
+    // Unmount to test cleanup
+    unmount();
   });
 });

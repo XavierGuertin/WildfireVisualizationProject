@@ -6,6 +6,7 @@ import MapView, {
   changeLayer,
   refreshLayer,
   toggleAssetLayer,
+  removeAllAssetLayers
 } from '../src/app/components/MapView';
 import { MapProvider } from '../src/app/context/MapContext';
 import Polygon from 'ol/geom/Polygon';
@@ -735,5 +736,61 @@ describe(MapView, () => {
     // Should remove and add layers
     expect(mockMap.removeLayer).toHaveBeenCalled();
     expect(mockMap.addLayer).toHaveBeenCalled();
+  });
+});
+
+describe('Asset Layer Removal Tests', () => {
+  let mockLayer: any;
+  let mockMap: any;
+
+  beforeEach(() => {
+    // Dummy layer that simulates an asset layer
+    mockLayer = {
+      get: jest.fn((key: string) => {
+        if (key === 'name') return 'testLayer';
+        if (key === 'type') return 'asset';
+        return null;
+      }),
+    };
+
+    // Dummy map with layer storage and removeLayer implementation
+    mockMap = {
+      _layers: [mockLayer],
+      getLayers: jest.fn(() => ({
+        getArray: jest.fn(() => mockMap._layers),
+      })),
+      addLayer: jest.fn(),
+      removeLayer: jest.fn((layer: any) => {
+        mockMap._layers = mockMap._layers.filter((l: any) => l !== layer);
+      }),
+      renderSync: jest.fn(),
+    };
+  });
+
+  test('toggleAssetLayer removes an existing asset layer when add is false', () => {
+    // Call toggleAssetLayer to remove the existing asset layer
+    toggleAssetLayer(mockMap, 'testLayer', 'http://example.com/wms', false);
+
+    // Check that removeLayer was called with the dummy asset layer
+    expect(mockMap.removeLayer).toHaveBeenCalledWith(mockLayer);
+    expect(mockMap.renderSync).toHaveBeenCalled();
+  });
+
+  test('removeAllAssetLayers removes only asset layers', () => {
+    // Create additional layers: one asset and one non-asset
+    const assetLayer = {
+      get: jest.fn((key: string) => key === 'type' ? 'asset' : null),
+    };
+    const nonAssetLayer = {
+      get: jest.fn((key: string) => key === 'type' ? 'other' : null),
+    };
+
+    mockMap._layers = [assetLayer, nonAssetLayer];
+
+    removeAllAssetLayers(mockMap);
+
+    // Check that asset layer has been removed, but non-asset layer remains
+    expect(mockMap.removeLayer).toHaveBeenCalledWith(assetLayer);
+    expect(mockMap._layers).toEqual([nonAssetLayer]);
   });
 });
