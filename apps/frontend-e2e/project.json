@@ -7,8 +7,8 @@
     "e2e": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "./",
-        "command": "concurrently -k -s first \"npx nx dev frontend --configuration=coverage\" \"npx wait-on http://localhost:3000 && npx cypress run --config-file apps/frontend-e2e/cypress.config.ts\""
+        "cwd": "apps/frontend-e2e",
+        "command": "concurrently -k -s first \"npx nx dev frontend --configuration=coverage\" \"npx wait-on http://localhost:3000 && npx cypress run \""
       }
     },
     "e2e-open": {
