@@ -52,6 +52,7 @@ const SettingsPanel: React.FC<{
     mapRef,
     setTimeStamps,
     setCollectionId,
+    setIsPlaying
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -71,7 +72,6 @@ const SettingsPanel: React.FC<{
         if (savedLanguage !== i18n.language) {
           i18n.changeLanguage(savedLanguage); // Change language only if different from current one
         }
-        toast.success(t('language_retrieved')); // Show success message if language is retrieved
       } else {
         // If no language is saved, use the default language
         localStorage.setItem('language', 'en');
@@ -89,7 +89,6 @@ const SettingsPanel: React.FC<{
       }
       if (config.language && config.language !== i18n.language) {
         i18n.changeLanguage(config.language);
-        toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
 
@@ -162,8 +161,6 @@ const SettingsPanel: React.FC<{
         config.loadedDataset = '';
         await saveConfig(config);
 
-        toast.success(t('api_endpoint_saved'));
-
         refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
@@ -202,9 +199,9 @@ const SettingsPanel: React.FC<{
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
         localStorage.setItem('sliderValue', '0');
+        setIsPlaying(false);
         setSliderValue(0);
         setSpeed(1);
-        // put to pause when reset.
 
         toast.success(t('reset_completed'));
       }
@@ -275,11 +272,12 @@ const SettingsPanel: React.FC<{
       localStorage.setItem('playbackSpeed', '1');
       localStorage.setItem('selectedDatasetId', '');
       localStorage.setItem('sliderValue', '0');
+      setIsPlaying(false);
       setSliderValue(0);
-
       setLayer('default');
       setTimeStamps([]);
       setCollectionId('');
+      setSpeed(1);
 
       await resetCollections();
       await resetItems();

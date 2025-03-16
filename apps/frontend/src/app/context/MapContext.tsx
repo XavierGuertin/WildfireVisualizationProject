@@ -31,6 +31,8 @@ interface MapLayerContextValue {
   setIsLoadingAssets: React.Dispatch<React.SetStateAction<boolean>>;
   selectedAssetLayers: string[];
   setSelectedAssetLayers: React.Dispatch<React.SetStateAction<string[]>>;
+  isPlaying: boolean;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(
@@ -46,6 +48,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [selectedAssetLayers, setSelectedAssetLayers] = useState<string[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Timeline playback speed
   const [speed, setSpeed] = useState<number>(1);
@@ -87,8 +90,10 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setIsLoadingAssets,
       selectedAssetLayers,
       setSelectedAssetLayers,
+      isPlaying,
+      setIsPlaying
     }),
-    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers]
+    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers, isPlaying]
   );
 
   return (

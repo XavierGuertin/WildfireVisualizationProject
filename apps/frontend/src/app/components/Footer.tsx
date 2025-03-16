@@ -27,7 +27,6 @@ import { changeLayer, removeAllAssetLayers, toggleAssetLayer } from './MapView';
 
 const Footer = () => {
   const { t } = useTranslation();
-  const [isPlaying, setIsPlaying] = useState(false);
   const {
     speed,
     setSpeed,
@@ -36,13 +35,14 @@ const Footer = () => {
     sliderValue,
     setSliderValue,
     setTimeStamps,
-    collectionId,
     loadedLayers,
     setLoadedLayers,
     isLoadingAssets,
     setIsLoadingAssets,
     selectedAssetLayers,
     setSelectedAssetLayers,
+    isPlaying,
+    setIsPlaying
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
@@ -63,7 +63,6 @@ const Footer = () => {
         const savedSpeed = localStorage.getItem('playbackSpeed');
         if (savedSpeed) {
           setSpeed(parseFloat(savedSpeed));
-          toast.success(t('speed_retrieved'), { toastId: 'speed-success' });
         } else {
           toast.info(t('default_speed_retrieved'), {
             toastId: 'speed-default',
@@ -88,8 +87,10 @@ const Footer = () => {
     }
   }, [speed, speedInitialized]);
 
-  const handlePlayPause = () => setIsPlaying((prev) => !prev);
-
+  const handlePlayPause = () => {
+    if (timeStamps.length === 0) return;
+    setIsPlaying(prev => !prev);
+  };
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
   };
