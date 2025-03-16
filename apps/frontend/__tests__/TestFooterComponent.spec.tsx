@@ -1083,7 +1083,9 @@ describe('Line coverage (358–441) in Footer', () => {
       ...firstContext,
       loadedTimestamp: '2023-01-01T00:00:00Z',
       loadedLayers: [
-        { asset_name: 'humidity_layer', layer_url: 'http://example.com/h' },
+        { asset_name: 'humidity', layer_url: 'http://example.com/h' },
+        { asset_name: 'wind_force', layer_url: 'http://example.com/h' },
+        { asset_name: 'wind_direction', layer_url: 'http://example.com/h' },
       ],
     };
     (useMapLayerContext as jest.Mock).mockReturnValue(secondContext);
@@ -1117,6 +1119,8 @@ describe('Line coverage (358–441) in Footer', () => {
       loadedTimestamp: '2023-01-01T00:00:00Z',
       loadedLayers: [
         { asset_name: 'humidity', layer_url: 'http://example.com/h' },
+        { asset_name: 'wind_force', layer_url: 'http://example.com/h' },
+        { asset_name: 'wind_direction', layer_url: 'http://example.com/h' },
       ],
       selectedAssetLayers: [],
       setSelectedAssetLayers: jest.fn(),
@@ -1131,7 +1135,10 @@ describe('Line coverage (358–441) in Footer', () => {
       collectionId: 'testCollection',
     });
 
-    const { container } = render(<Footer />);
+    // Re-render inside act
+    await act(async () => {
+      render(<Footer />);
+    });
 
     await act(async () => {
       fireEvent.click(screen.getAllByTestId('hoverBox')[0]);
@@ -1142,18 +1149,24 @@ describe('Line coverage (358–441) in Footer', () => {
     expect(layerButtons).toBeInTheDocument();
 
     // Confirm we see the layerButtonsContainer
-    const layerButton = screen.getByTestId('layerButton-humidity_layer');
-    expect(layerButton).toBeInTheDocument();
+    const layerButtonHumidity = screen.getByTestId('layerButton-humidity');
+    expect(layerButtonHumidity).toBeInTheDocument();
+
+    const layerButtonWindForce = screen.getByTestId('layerButton-wind_force');
+    expect(layerButtonWindForce).toBeInTheDocument();
+
+    const layerButtonWindDirection = screen.getByTestId('layerButton-wind_direction');
+    expect(layerButtonWindDirection).toBeInTheDocument();
 
     // 4) Click => toggles ON
     await act(async () => {
-      fireEvent.click(layerButton!);
+      fireEvent.click(layerButtonHumidity!);
     });
 
     // 5) Confirm toggleAssetLayer was called
     expect(toggleAssetLayer).toHaveBeenCalledWith(
       {},
-      'humidity_layer',
+      'humidity',
       'http://example.com/h',
       true
     );
