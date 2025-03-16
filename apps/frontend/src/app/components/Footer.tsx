@@ -201,7 +201,7 @@ const Footer = () => {
   const initializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
     if (timestampsResponse) {
-      setTimeStamps(timestampsResponse);
+      await setTimeStamps(timestampsResponse);
       const stringCurrentSliderValue = localStorage.getItem('sliderValue');
 
       // Check if there's a saved slider value in localStorage, otherwise default to 0
@@ -210,6 +210,11 @@ const Footer = () => {
         : 0;
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
+
+      const loadedAssetSilderValue = localStorage.getItem('loadedAssetSilderValue');
+      if (loadedAssetSilderValue) {
+        setLoadedTimestamp(timestampsResponse[parseInt(loadedAssetSilderValue)]);
+      }
     }
   };
 
@@ -232,7 +237,9 @@ const Footer = () => {
 
   useEffect(() => {
     // Reset loadedTimestamp when timestamps array changes (new dataset loaded)
-    setLoadedTimestamp(null);
+    if (timeStamps.length == 0){
+      setLoadedTimestamp(null);
+    }
     setHoverBoxLocked(false);
   }, [timeStamps]);
 
@@ -249,6 +256,7 @@ const Footer = () => {
         removeAllAssetLayers(mapRef.current);
       }
     }
+
     // If we are returning to the loaded timestamp, refresh the layers data
     else if (currentTimestamp === loadedTimestamp) {
       getLoadedLayers().then(layers => {
@@ -270,15 +278,27 @@ const Footer = () => {
       setIsLoadingAssets(true);
       setLoadedLayers([]);
 
+      // To be fixed
+      const selectedCollectionId = localStorage.getItem("selectedDatasetId");
       const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
+      if (!selectedCollectionId) {
+        setIsLoadingAssets(false);
+        return;
+      }
       await resetItemAssets();
-      const response = await loadAssets(collectionId, itemId);
+      const response = await loadAssets(selectedCollectionId, itemId);
 
       if (typeof response === 'object' && response.error) {
         toast.error(`Failed to load assets`);
         setIsLoadingAssets(false);
       } else {
+
+        // To be fixed
+        localStorage.setItem('loadedAssetSilderValue', sliderValue.toString());
         setLoadedTimestamp(timeStamps[sliderValue]);
+
+
+
         await pollLoadedLayersUntilComplete();
       }
     } catch (error) {

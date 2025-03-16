@@ -30,6 +30,7 @@ import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 
+
 const MySwal = withReactContent(Swal);
 
 const SettingsPanel: React.FC<{
@@ -202,6 +203,8 @@ const SettingsPanel: React.FC<{
         localStorage.setItem('playbackSpeed', '1');
         localStorage.setItem('sliderValue', '0');
         setSliderValue(0);
+        setSpeed(1);
+        // put to pause when reset.
 
         toast.success(t('reset_completed'));
       }
@@ -284,6 +287,7 @@ const SettingsPanel: React.FC<{
       await resetItemAssets();
       const map = mapRef.current as Map;
       changeLayer(map, true);
+      changeLayer(map, false, "reset");
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
