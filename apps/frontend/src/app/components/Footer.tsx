@@ -524,6 +524,7 @@ const Footer = () => {
 
                 <div
                   className="timeMarkerHoverBox"
+                  data-testid="hoverBox"
                   style={{
                     left: `${
                       timeStamps.length > 1
@@ -596,6 +597,7 @@ const Footer = () => {
                             <button
                               key={index}
                               className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                              data-testid={`layerButton-${layer.asset_name}`}
                               onClick={() => null} // Disabled during loading
                               disabled={true}
                               style={{
@@ -609,10 +611,11 @@ const Footer = () => {
                           ))}
                         </div>
                       ) : loadedLayers.length > 0 && loadedTimestamp === timeStamps[sliderValue] ? (
-                        <div className="layerButtonsContainer">
+                        <div className="layerButtonsContainer" data-testid="layerButtonsContainer">
                           {loadedLayers.map((layer, index) => (
                             <button
                               key={index}
+                              data-testid={`layerButton-${layer.asset_name}`}
                               className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
                               onClick={() => handleLayerClick(layer.asset_name)}
                             >
@@ -624,12 +627,12 @@ const Footer = () => {
                       ) : (
                         <button
                           className="loadAssetsButton"
+                          data-testid="loadAssetsButton"
                           onClick={(e) => {
                             e.stopPropagation();
                             onloadAssetsClick();
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
-                          data-testid="loadAssetsButton"
                         >
                           <FiDownload
                             color="white"

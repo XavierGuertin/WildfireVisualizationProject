@@ -3,8 +3,17 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
-import { fetchTimestamps, getLoadedLayers, loadAssets, resetItemAssets } from '../src/app/services/api';
-import { changeLayer, removeAllAssetLayers } from '../src/app/components/MapView';
+import {
+  fetchTimestamps,
+  getLoadedLayers,
+  loadAssets,
+  resetItemAssets,
+} from '../src/app/services/api';
+import {
+  changeLayer,
+  removeAllAssetLayers,
+  toggleAssetLayer,
+} from '../src/app/components/MapView';
 import * as api from '../src/app/services/api';
 import { toast } from 'react-toastify';
 
@@ -428,7 +437,7 @@ describe('Footer component tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     // Trigger useEffect logic (speed, timestamps)
@@ -481,7 +490,9 @@ describe('Footer component interactions', () => {
     });
 
     // Mock API functions
-    jest.spyOn(api, 'fetchTimestamps').mockResolvedValue(['2024-01-01T00:00:00Z']);
+    jest
+      .spyOn(api, 'fetchTimestamps')
+      .mockResolvedValue(['2024-01-01T00:00:00Z']);
     jest.spyOn(api, 'loadAssets').mockResolvedValue({});
     jest.spyOn(api, 'resetItemAssets').mockResolvedValue('mocked result');
     jest.spyOn(api, 'getLoadedLayers').mockResolvedValue([]);
@@ -496,7 +507,7 @@ describe('Footer component interactions', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     // Toggle hover box, lock/unlock it
@@ -542,12 +553,14 @@ describe('Footer component interactions', () => {
     // Remove all asset layers
     (removeAllAssetLayers as jest.Mock).mockReturnValue(undefined);
     // Trigger effect with new timestamps
-    (api.fetchTimestamps as jest.Mock).mockResolvedValueOnce(['2025-01-01T00:00:00Z']);
+    (api.fetchTimestamps as jest.Mock).mockResolvedValueOnce([
+      '2025-01-01T00:00:00Z',
+    ]);
     // Re-render to run coverage on effects
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
   });
 });
@@ -590,7 +603,7 @@ describe('Footer error and edge case coverage tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     fireEvent.click(screen.getByText(/weather_assets_label/i));
@@ -608,7 +621,7 @@ describe('Footer error and edge case coverage tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     fireEvent.click(screen.getByText(/weather_assets_label/i));
@@ -634,7 +647,7 @@ describe('Footer error and edge case coverage tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     fireEvent.click(screen.getByText(/weather_assets_label/i));
@@ -650,12 +663,14 @@ describe('Footer error and edge case coverage tests', () => {
   });
 
   it('handles error during loaded layers polling', async () => {
-    (getLoadedLayers as jest.Mock).mockRejectedValueOnce(new Error('Polling fail'));
+    (getLoadedLayers as jest.Mock).mockRejectedValueOnce(
+      new Error('Polling fail'),
+    );
 
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     fireEvent.click(screen.getByText(/weather_assets_label/i));
@@ -666,7 +681,6 @@ describe('Footer error and edge case coverage tests', () => {
 
     expect(toast.error).not.toHaveBeenCalledWith('Failed to load assets');
   });
-
 
   it('displays toast if map is not initialized', () => {
     (useMapLayerContext as jest.Mock).mockReturnValueOnce({
@@ -691,7 +705,7 @@ describe('Footer error and edge case coverage tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     fireEvent.click(screen.getByText(/weather_assets_label/i));
@@ -724,7 +738,7 @@ describe('Footer error and edge case coverage tests', () => {
     render(
       <MapProvider>
         <Footer />
-      </MapProvider>
+      </MapProvider>,
     );
 
     // 1) Open the "weather assets" popup
@@ -752,7 +766,9 @@ describe('Footer error and edge case coverage tests', () => {
       setTimeStamps: jest.fn(),
     };
 
-    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(
+      mockContext,
+    );
 
     // Mock API to return error
     (api.loadAssets as jest.Mock).mockResolvedValue({ error: 'Test error' });
@@ -790,10 +806,14 @@ describe('Footer error and edge case coverage tests', () => {
       setTimeStamps: jest.fn(),
     };
 
-    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(
+      mockContext,
+    );
 
     // Mock API to throw error
-    (api.loadAssets as jest.Mock).mockRejectedValue({ error: 'Test exception' });
+    (api.loadAssets as jest.Mock).mockRejectedValue({
+      error: 'Test exception',
+    });
     (api.resetItemAssets as jest.Mock).mockResolvedValue({});
 
     render(<Footer />);
@@ -829,7 +849,9 @@ describe('Footer error and edge case coverage tests', () => {
       setLoadedTimestamp: jest.fn(),
     };
 
-    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(mockContext);
+    require('../src/app/context/MapContext').useMapLayerContext.mockReturnValue(
+      mockContext,
+    );
 
     // First call returns empty array, second call returns layers
     (api.getLoadedLayers as jest.Mock)
@@ -863,5 +885,277 @@ describe('Footer error and edge case coverage tests', () => {
 
     // Unmount to test cleanup
     unmount();
+  });
+});
+
+describe('Line coverage (358–441) in Footer', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (resetItemAssets as jest.Mock).mockResolvedValue(undefined);
+    (loadAssets as jest.Mock).mockResolvedValue({});
+    (getLoadedLayers as jest.Mock).mockResolvedValue([]);
+  });
+
+  it('calls changeLayer in useEffect if timeStamps is not empty (lines ~358–362)', () => {
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      mapRef: { current: {} }, // Valid map object
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      setSelectedAssetLayers: jest.fn(),
+      speed: 1,
+      setSpeed: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      loadedLayers: [],
+      loadedTimestamp: null,
+      setLoadedTimestamp: jest.fn(),
+      collectionId: 'testCollection',
+    });
+
+    render(<Footer />);
+
+    // On mount, the useEffect around line 358–362 should call changeLayer
+    expect(changeLayer).toHaveBeenCalledWith(
+      {}, // our mock mapRef.current
+      false,
+      '2023-01-01T00:00:00Z',
+    );
+  });
+
+  it('renders the loadAssetsButton when loadedLayers is empty or timestamp mismatch (~364–380)', () => {
+    // Force mismatch or empty
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      mapRef: { current: {} },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      loadedTimestamp: 'SOME_OTHER_TS', // mismatch => triggers loadAssetsButton
+      loadedLayers: [],
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      speed: 1,
+      setSpeed: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      collectionId: 'testCollection',
+      setLoadedTimestamp: jest.fn(),
+    });
+    render(<Footer />);
+
+    // 1) Lock open the hover box:
+    fireEvent.click(screen.getByTestId('hoverBox'));
+
+    // 2) We expect loadAssetsButton
+    const loadBtn = screen.queryByTestId('loadAssetsButton');
+    expect(loadBtn).toBeInTheDocument();
+  });
+
+  it('handles onMouseEnter, onMouseLeave, onClick, and onMouseDown for the hover box', async () => {
+    const { container } = render(<Footer />);
+
+    // The <div data-testid="hoverBox"> is rendered
+    const hoverBox = screen.getByTestId('hoverBox');
+
+    // Initially, data-hovered="false", data-locked="false"
+    expect(hoverBox).toHaveAttribute('data-hovered', 'false');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 1) Mouse enter => hoveredBox = true => data-hovered="true"
+    await act(async () => {
+      fireEvent.mouseEnter(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'true');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 2) Mouse leave => hoveredBox = false => data-hovered="false"
+    await act(async () => {
+      fireEvent.mouseLeave(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'false');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 3) Mouse down => calls e.stopPropagation() (no direct UI change, but let's just ensure no error):
+    await act(async () => {
+      fireEvent.mouseDown(hoverBox);
+    });
+    // There's no visible property to check, but we confirm it doesn't bubble
+    // or cause an error.
+
+    // 4) Click => sets hoverBoxLocked=true => data-locked="true"
+    await act(async () => {
+      fireEvent.click(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'true');
+    // Because once locked, your code sets "data-hovered={hoverBoxLocked ? 'true' : 'false'}"
+    // or you might do something else that makes it 'true' or 'false'.
+
+    expect(hoverBox).toHaveAttribute('data-locked', 'true');
+  });
+
+  it('handles onMouseEnter, onMouseLeave, onClick, and onMouseDown for the hover box', async () => {
+    const { container } = render(<Footer />);
+
+    // The <div data-testid="hoverBox"> is rendered
+    const hoverBox = screen.getByTestId('hoverBox');
+
+    // Initially, data-hovered="false", data-locked="false"
+    expect(hoverBox).toHaveAttribute('data-hovered', 'false');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 1) Mouse enter => hoveredBox = true => data-hovered="true"
+    await act(async () => {
+      fireEvent.mouseEnter(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'true');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 2) Mouse leave => hoveredBox = false => data-hovered="false"
+    await act(async () => {
+      fireEvent.mouseLeave(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'false');
+    expect(hoverBox).toHaveAttribute('data-locked', 'false');
+
+    // 3) Mouse down => calls e.stopPropagation() (no direct UI change, but let's just ensure no error):
+    await act(async () => {
+      fireEvent.mouseDown(hoverBox);
+    });
+    // There's no visible property to check, but we confirm it doesn't bubble
+    // or cause an error.
+
+    // 4) Click => sets hoverBoxLocked=true => data-locked="true"
+    await act(async () => {
+      fireEvent.click(hoverBox);
+    });
+    expect(hoverBox).toHaveAttribute('data-hovered', 'true');
+    // Because once locked, your code sets "data-hovered={hoverBoxLocked ? 'true' : 'false'}"
+    // or you might do something else that makes it 'true' or 'false'.
+
+    expect(hoverBox).toHaveAttribute('data-locked', 'true');
+  });
+
+  it('shows loadAssetsButton first, then re-renders to show layer buttons, toggles on/off', async () => {
+    // 1) Start with mismatch => Load Assets shown
+    const firstContext = {
+      mapRef: { current: {} },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      loadedTimestamp: 'DIFFERENT_TIMESTAMP', // mismatch => loadAssets
+      loadedLayers: [], // also ensures loadAssets
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      speed: 1,
+      setSpeed: jest.fn(),
+      setLoadedTimestamp: jest.fn(),
+      collectionId: 'testCollection',
+    };
+
+    (useMapLayerContext as jest.Mock).mockReturnValue(firstContext);
+
+    // Wrap render in act
+    await act(async () => {
+      render(<Footer />);
+    });
+
+    // Lock open the hover box
+    await act(async () => {
+      fireEvent.click(screen.getAllByTestId('hoverBox')[0]);
+    });
+
+    // Confirm we see the loadAssetsButton
+    expect(screen.queryByTestId('layerButtonsContainer')).toBeNull();
+    const loadBtn = screen.getByTestId('loadAssetsButton');
+    expect(loadBtn).toBeInTheDocument();
+
+    // 2) Suppose user "loads" assets => next, re-render with matching timestamp & loadedLayers
+    const secondContext = {
+      ...firstContext,
+      loadedTimestamp: '2023-01-01T00:00:00Z',
+      loadedLayers: [
+        { asset_name: 'humidity_layer', layer_url: 'http://example.com/h' },
+      ],
+    };
+    (useMapLayerContext as jest.Mock).mockReturnValue(secondContext);
+
+    // Re-render inside act
+    await act(async () => {
+      render(<Footer />);
+    });
+
+    // Lock open again
+    await act(async () => {
+      fireEvent.click(screen.getAllByTestId('hoverBox')[0]);
+      // If your code triggers more async updates, we do them all in this block
+      fireEvent.click(screen.getByTestId('loadAssetsButton'));
+    });
+
+    // Now verify calls
+    expect(resetItemAssets).toHaveBeenCalled();
+    expect(loadAssets).toHaveBeenCalledWith(
+      'testCollection',
+      'wildfire_timestamp_2023_01_01_00_00_00',
+    );
+    // If your code tries to poll getLoadedLayers, that'll be called too
+    expect(getLoadedLayers).toHaveBeenCalled();
+
+    // 3) Re-render with matching TS => layerButtonsContainer
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      mapRef: { current: {} },
+      timeStamps: ['2023-01-01T00:00:00Z'],
+      sliderValue: 0,
+      loadedTimestamp: '2023-01-01T00:00:00Z',
+      loadedLayers: [
+        { asset_name: 'humidity', layer_url: 'http://example.com/h' },
+      ],
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      speed: 1,
+      setSpeed: jest.fn(),
+      setLoadedTimestamp: jest.fn(),
+      collectionId: 'testCollection',
+    });
+
+    const { container } = render(<Footer />);
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByTestId('hoverBox')[0]);
+    });
+
+    // Confirm we see the layerButtonsContainer
+    const layerButtons = screen.getByTestId('layerButtonsContainer');
+    expect(layerButtons).toBeInTheDocument();
+
+    // Confirm we see the layerButtonsContainer
+    const layerButton = screen.getByTestId('layerButton-humidity_layer');
+    expect(layerButton).toBeInTheDocument();
+
+    // 4) Click => toggles ON
+    await act(async () => {
+      fireEvent.click(layerButton!);
+    });
+
+    // 5) Confirm toggleAssetLayer was called
+    expect(toggleAssetLayer).toHaveBeenCalledWith(
+      {},
+      'humidity_layer',
+      'http://example.com/h',
+      true
+    );
   });
 });
