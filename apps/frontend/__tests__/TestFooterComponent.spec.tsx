@@ -92,6 +92,8 @@ jest.mock('../src/app/context/MapContext', () => ({
     setSelectedAssetLayers: jest.fn(),
     loadedTimestamp: null,
     setLoadedTimestamp: jest.fn(),
+    isPlaying: false,
+    setIsPlaying : jest.fn(),
   }),
 }));
 
@@ -341,6 +343,7 @@ describe('Footer component tests', () => {
   });
 
   it('triggers load assets and polling logic', async () => {
+    // Set up the necessary mock functions and state
     const setIsLoadingAssets = jest.fn();
     const setLoadedLayers = jest.fn();
     const setSelectedAssetLayers = jest.fn();
@@ -348,7 +351,8 @@ describe('Footer component tests', () => {
     const setTimeStamps = jest.fn();
     const setSliderValue = jest.fn();
 
-    // Override the context values for this test.
+    localStorage.setItem('selectedDatasetId', 'testCollection');
+
     (useMapLayerContext as jest.Mock).mockReturnValue({
       speed: 1,
       setSpeed: jest.fn(),
@@ -375,48 +379,44 @@ describe('Footer component tests', () => {
       setLoadedTimestamp,
       setTimeStamps,
       collectionId: 'testCollection',
+      isPlaying: false,
+      setIsPlaying: jest.fn(),
     });
 
-    // Override API functions.
-    const {
-      loadAssets,
-      resetItemAssets,
-      getLoadedLayers,
-    } = require('../src/app/services/api');
+    // Override the API functions.
+    const { loadAssets, resetItemAssets, getLoadedLayers } = require('../src/app/services/api');
     loadAssets.mockResolvedValue({});
     resetItemAssets.mockResolvedValue();
 
     let callCount = 0;
     getLoadedLayers.mockImplementation(() => {
+      // First call returns empty; second or later calls return a layer
       if (callCount === 0) {
         callCount++;
         return Promise.resolve([]);
       }
-      return Promise.resolve([
-        { asset_name: 'testLayer', layer_url: 'http://example.com' },
-      ]);
+      return Promise.resolve([{ asset_name: 'testLayer', layer_url: 'http://example.com' }]);
     });
 
+    // Render the component
     render(
       <MapProvider>
         <Footer />
       </MapProvider>,
     );
 
-    // Reveal the asset loader by triggering the hover box click.
+    // Reveal the asset loader by clicking the hover box
     const hoverBox = screen.getByText(/weather_assets_label/i);
     fireEvent.click(hoverBox);
 
-    // Find and click the load assets button.
+    // Find and click the load-assets button
     await act(async () => {
       fireEvent.click(screen.getByTestId('loadAssetsButton'));
-      await Promise.resolve();
     });
 
     // Advance timers to progress the polling loop.
     await act(async () => {
       jest.advanceTimersByTime(1000);
-      await Promise.resolve();
     });
 
     // Verify that the poll completed by checking that setLoadedLayers and setLoadedTimestamp were called.
@@ -428,11 +428,14 @@ describe('Footer component tests', () => {
   });
 
   it('covers hovering, dragging, speed, load, polling, etc.', async () => {
+
     let callCount = 0;
     (getLoadedLayers as jest.Mock).mockImplementation(() => {
       if (callCount++ === 0) return Promise.resolve([]);
       return Promise.resolve([{ asset_name: 'layer', layer_url: 'testUrl' }]);
     });
+
+    localStorage.setItem('selectedDatasetId', 'testCollection');
 
     render(
       <MapProvider>
@@ -440,10 +443,10 @@ describe('Footer component tests', () => {
       </MapProvider>,
     );
 
-    // Trigger useEffect logic (speed, timestamps)
+    // Wait until the footer container is in DOM
     expect(await screen.findByTestId('footer-container')).toBeInTheDocument();
 
-    // Hover and lock hover box
+    // Hover and lock the hover box
     fireEvent.mouseEnter(screen.getByText(/weather_assets_label/i));
     fireEvent.click(screen.getByText(/weather_assets_label/i));
 
@@ -461,15 +464,15 @@ describe('Footer component tests', () => {
     fireEvent.mouseMove(document, { clientX: 200 });
     fireEvent.mouseUp(document);
 
-    // Load assets
+    // Load assets button
     await act(async () => {
       fireEvent.click(screen.getByTestId('loadAssetsButton'));
-      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(1000); // let the polling logic proceed
     });
 
     expect(loadAssets).toHaveBeenCalled();
-    expect(changeLayer).toHaveBeenCalled();
     expect(resetItemAssets).toHaveBeenCalled();
+    expect(changeLayer).toHaveBeenCalled();
   });
 });
 
@@ -600,6 +603,8 @@ describe('Footer error and edge case coverage tests', () => {
 
   it('handles loadAssets returning an error object gracefully', async () => {
     (loadAssets as jest.Mock).mockResolvedValueOnce({ error: 'Load error' });
+    localStorage.setItem('selectedDatasetId', 'testCollection');
+
     render(
       <MapProvider>
         <Footer />
@@ -1170,5 +1175,49 @@ describe('Line coverage (358–441) in Footer', () => {
       'http://example.com/h',
       true
     );
+  });
+
+  it('does not toggle play/pause when timeStamps is empty', async () => {
+    const setIsPlayingMock = jest.fn();
+
+    (useMapLayerContext as jest.Mock).mockReturnValue({
+      speed: 1,
+      setSpeed: jest.fn(),
+      mapRef: {
+        current: {
+          getView: jest.fn(() => ({
+            setCenter: jest.fn(),
+            setZoom: jest.fn(),
+          })),
+        },
+      },
+      timeStamps: [],
+      sliderValue: 0,
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      loadedLayers: [],
+      setLoadedLayers: jest.fn(),
+      isLoadingAssets: false,
+      setIsLoadingAssets: jest.fn(),
+      selectedAssetLayers: [],
+      setSelectedAssetLayers: jest.fn(),
+      loadedTimestamp: null,
+      setLoadedTimestamp: jest.fn(),
+      isPlaying: false,
+      setIsPlaying: setIsPlayingMock,
+    });
+
+    render(
+      <MapProvider>
+        <Footer />
+      </MapProvider>,
+    );
+
+    // Click the play/pause button
+    const playPauseButton = screen.getByTestId('play-pause-button');
+    fireEvent.click(playPauseButton);
+
+    // Verify that setIsPlaying was not called since timeStamps is empty
+    expect(setIsPlayingMock).not.toHaveBeenCalled();
   });
 });

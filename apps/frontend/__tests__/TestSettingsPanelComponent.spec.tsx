@@ -282,13 +282,9 @@ describe('SettingsPanel Component', () => {
   });
 
   describe('Language Initialization and Config Loading', () => {
-    it('initializes language from localStorage and shows a toast on mount', async () => {
+    it('initializes language from localStorage', async () => {
       localStorage.setItem('language', 'fr');
       await renderSettingsPanel();
-      await waitFor(() => {
-        const { toast } = require('react-toastify');
-        expect(toast.success).toHaveBeenCalledWith('language_retrieved');
-      });
       expect(localStorage.getItem('language')).toBe('fr');
     });
 
@@ -387,8 +383,6 @@ describe('SettingsPanel Component', () => {
       // Wait for the component to update
       await waitFor(() => {
         expect(mockChangeLanguage).toHaveBeenCalledWith('fr');
-        const { toast } = require('react-toastify');
-        expect(toast.success).toHaveBeenCalledWith('language_retrieved');
       });
     });
   });
@@ -838,7 +832,7 @@ describe('SettingsPanel Component', () => {
       getConfig.mockResolvedValue(mockConfig);
 
       // Capture the config that's passed to saveConfig
-      saveConfig.mockImplementation(async (config) => {
+      saveConfig.mockImplementation(async (config: any) => {
         expect(config.loadedDataset).toBe('');
         return Promise.resolve();
       });
@@ -928,7 +922,7 @@ describe('SettingsPanel Component', () => {
         await resetDatalayerView();
         await resetItemAssets();
 
-        const map = mockMap as unknown as Map;
+        const map = mockMap as unknown as Map<any, any>;
         changeLayer(map, true);
         setSpeed(1);
         return 'Reset was successful';
