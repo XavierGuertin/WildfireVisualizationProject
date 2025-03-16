@@ -136,7 +136,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
             }
           };
 
-          await pollProgress(); // Call the async function for polling
+          pollProgress(); // Call the async function for polling
         } catch (error) {
           toast.error('Error loading dataset: ' + error),
             { toastId: 'loading-dataset-error' };
