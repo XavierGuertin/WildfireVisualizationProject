@@ -304,6 +304,7 @@ describe('MapMetaData', () => {
       setLoadedLayers: jest.fn(),
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
+      setCollectionId: jest.fn(),
     });
 
     const mockTimestamps = ['2024-01-01', '2024-01-02'];
@@ -478,6 +479,12 @@ describe('MapMetaData', () => {
   });
 
   it('completes polling when progress reaches 100%', async () => {
+    const mockCtx = require('../src/app/context/MapContext');
+    mockCtx.useMapLayerContext.mockReturnValue({
+      ...mockCtx.useMapLayerContext(),
+      setCollectionId: jest.fn(),
+    });
+
     (fetchItems as jest.Mock).mockResolvedValue(
       'Fetching started in the background. Check progress separately.',
     );
