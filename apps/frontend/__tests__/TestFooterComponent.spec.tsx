@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
+import * as api from '../src/app/services/api';
 import {
   fetchTimestamps,
   getLoadedLayers,
@@ -14,7 +15,6 @@ import {
   removeAllAssetLayers,
   toggleAssetLayer,
 } from '../src/app/components/MapView';
-import * as api from '../src/app/services/api';
 import { toast } from 'react-toastify';
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
@@ -93,7 +93,7 @@ jest.mock('../src/app/context/MapContext', () => ({
     loadedTimestamp: null,
     setLoadedTimestamp: jest.fn(),
     isPlaying: false,
-    setIsPlaying : jest.fn(),
+    setIsPlaying: jest.fn(),
   }),
 }));
 
@@ -160,7 +160,7 @@ describe('Footer component tests', () => {
     expect(fetchTimestamps).toHaveBeenCalled();
   });
 
-  it('loads saved speed from localStorage and plays/pauses', () => {
+  it('loads saved speed from localStorage and plays/pauses', async () => {
     localStorage.setItem('playbackSpeed', '1.5');
     render(
       <MapProvider>
@@ -170,8 +170,12 @@ describe('Footer component tests', () => {
 
     // \Play/pause toggles
     const playPauseButton = screen.getByTestId('play-pause-button');
-    fireEvent.click(playPauseButton); // \Play
-    fireEvent.click(playPauseButton); // \Pause
+    await act(async () => {
+      fireEvent.click(playPauseButton); // Play
+    });
+    await act(async () => {
+      fireEvent.click(playPauseButton); // Pause
+    });
   });
 
   it('changes speed on speed point click', () => {
@@ -384,7 +388,11 @@ describe('Footer component tests', () => {
     });
 
     // Override the API functions.
-    const { loadAssets, resetItemAssets, getLoadedLayers } = require('../src/app/services/api');
+    const {
+      loadAssets,
+      resetItemAssets,
+      getLoadedLayers,
+    } = require('../src/app/services/api');
     loadAssets.mockResolvedValue({});
     resetItemAssets.mockResolvedValue();
 
@@ -395,7 +403,9 @@ describe('Footer component tests', () => {
         callCount++;
         return Promise.resolve([]);
       }
-      return Promise.resolve([{ asset_name: 'testLayer', layer_url: 'http://example.com' }]);
+      return Promise.resolve([
+        { asset_name: 'testLayer', layer_url: 'http://example.com' },
+      ]);
     });
 
     // Render the component
@@ -428,7 +438,6 @@ describe('Footer component tests', () => {
   });
 
   it('covers hovering, dragging, speed, load, polling, etc.', async () => {
-
     let callCount = 0;
     (getLoadedLayers as jest.Mock).mockImplementation(() => {
       if (callCount++ === 0) return Promise.resolve([]);
@@ -455,8 +464,12 @@ describe('Footer component tests', () => {
 
     // Play, then pause
     const playPauseButton = screen.getByTestId('play-pause-button');
-    fireEvent.click(playPauseButton);
-    fireEvent.click(playPauseButton);
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
 
     // Drag slider
     const slider = screen.getByTestId('slider');
@@ -527,8 +540,12 @@ describe('Footer component interactions', () => {
 
     // Play, then pause, then stop
     const playPauseButton = screen.getByTestId('play-pause-button');
-    fireEvent.click(playPauseButton);
-    fireEvent.click(playPauseButton);
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
     const stopButton = screen.getByTestId('stop-button');
     fireEvent.click(stopButton);
 
@@ -1160,7 +1177,9 @@ describe('Line coverage (358–441) in Footer', () => {
     const layerButtonWindForce = screen.getByTestId('layerButton-wind_force');
     expect(layerButtonWindForce).toBeInTheDocument();
 
-    const layerButtonWindDirection = screen.getByTestId('layerButton-wind_direction');
+    const layerButtonWindDirection = screen.getByTestId(
+      'layerButton-wind_direction',
+    );
     expect(layerButtonWindDirection).toBeInTheDocument();
 
     // 4) Click => toggles ON
@@ -1173,7 +1192,7 @@ describe('Line coverage (358–441) in Footer', () => {
       {},
       'humidity',
       'http://example.com/h',
-      true
+      true,
     );
   });
 
@@ -1215,7 +1234,12 @@ describe('Line coverage (358–441) in Footer', () => {
 
     // Click the play/pause button
     const playPauseButton = screen.getByTestId('play-pause-button');
-    fireEvent.click(playPauseButton);
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
+    await act(async () => {
+      fireEvent.click(playPauseButton);
+    });
 
     // Verify that setIsPlaying was not called since timeStamps is empty
     expect(setIsPlayingMock).not.toHaveBeenCalled();

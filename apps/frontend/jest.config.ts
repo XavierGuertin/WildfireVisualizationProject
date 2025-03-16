@@ -22,6 +22,7 @@ module.exports = {
   coverageReporters: ['json', 'lcov', 'text', 'clover'],
   roots: ['<rootDir>/__tests__'],
   testMatch: ["**/*.(spec|test).[jt]s?(x)"],
+  fakeTimers: { enableGlobally: true },
 
   // Add moduleNameMapper to mock CSS files
   moduleNameMapper: {

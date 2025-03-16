@@ -10,9 +10,10 @@ import {
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
 import { MapProvider } from '../src/app/context/MapContext';
-import { resetDatalayerView } from '../src/app/services/api';
+
 
 // --- Mocks ---
+jest.useRealTimers();
 
 // Mock react-i18next to return a simple t function and a dummy i18n object.
 jest.mock('react-i18next', () => ({
