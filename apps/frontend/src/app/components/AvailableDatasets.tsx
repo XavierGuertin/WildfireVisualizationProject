@@ -25,6 +25,8 @@ import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import { getConfig } from '../services/configApi';
+import { StorageServer } from '../model/storage';
+import { ConfigService } from '../model/config';
 
 export interface DatasetEntry {
   key: number;
@@ -120,8 +122,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         return;
       }
 
-      const config = await getConfig();
-      setLoadedDataset(config.loadedDataset || null);
+      const configLoadedDataset = await ConfigService.getLoadedDataset();
+      setLoadedDataset(configLoadedDataset);
 
       setDatasets(response);
       setFetchError(null);
@@ -138,7 +140,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
  * Fetches datasets when the refresh key or filter changes.
  */
   useEffect(() => {
-    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    const selectedDatasetId = StorageServer.getSelectedDatasetId()
     if(selectedDatasetId !== null){
       setSelectedDataset(selectedDatasetId)
     }
@@ -224,14 +226,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleLocalStorageOnDatasetClick = async (id: string) => {
-    const selectedDatasetId = localStorage.getItem('selectedDatasetId')
+    const selectedDatasetId = StorageServer.getSelectedDatasetId()
     if(selectedDatasetId === null || selectedDatasetId !== id){
       await insertDatalayerView(id);
-      localStorage.setItem('selectedDatasetId',id)
-      setSelectedDataset(id);
+      StorageServer.setSelectedDatasetId(id)
+      setSelectedDataset(StorageServer.getSelectedDatasetId());
     } else {
       await resetDatalayerView()
-      localStorage.setItem('selectedDatasetId', '')
+      StorageServer.setSelectedDatasetId('')
       setSelectedDataset(null)
     }
   }
