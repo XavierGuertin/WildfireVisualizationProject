@@ -9,7 +9,7 @@
   padding: 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 999;
   border-radius: 8px;
   transition: width 0.3s ease, height 0.3s ease, padding 0.3s ease, transform 0.3s ease;
   display: flex;

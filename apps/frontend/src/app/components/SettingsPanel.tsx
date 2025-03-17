@@ -8,13 +8,18 @@ import {
   IoSettingsOutline,
   IoTrashOutline,
 } from 'react-icons/io5';
-import { PiArrowClockwiseFill, PiGlobeXLight, PiGlobeLight } from 'react-icons/pi';
+import {
+  PiArrowClockwiseFill,
+  PiGlobeLight,
+  PiGlobeXLight,
+} from 'react-icons/pi';
 import {
   fetchCollectionsFromEndpoint,
   resetCollections,
   resetDatalayerView,
+  resetItemAssets,
   resetItems,
-  verifyIfEndpointHasCollections
+  verifyIfEndpointHasCollections,
 } from '../services/api';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -24,6 +29,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
+
 
 const MySwal = withReactContent(Swal);
 
@@ -36,7 +42,18 @@ const SettingsPanel: React.FC<{
     activeButton: string | null;
     isOpen: boolean;
   }>({ activeButton: null, isOpen: false });
-  const { setLayer, setSpeed, resetView, isOnline, setIsOnline, setSliderValue, mapRef } = useMapLayerContext();
+  const {
+    setLayer,
+    setSpeed,
+    resetView,
+    isOnline,
+    setIsOnline,
+    setSliderValue,
+    mapRef,
+    setTimeStamps,
+    setCollectionId,
+    setIsPlaying
+  } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
@@ -55,7 +72,6 @@ const SettingsPanel: React.FC<{
         if (savedLanguage !== i18n.language) {
           i18n.changeLanguage(savedLanguage); // Change language only if different from current one
         }
-        toast.success(t('language_retrieved')); // Show success message if language is retrieved
       } else {
         // If no language is saved, use the default language
         localStorage.setItem('language', 'en');
@@ -73,11 +89,10 @@ const SettingsPanel: React.FC<{
       }
       if (config.language && config.language !== i18n.language) {
         i18n.changeLanguage(config.language);
-        toast.success(t('language_retrieved'));
       }
       setLanguageInitialized(true);
 
-      if(config.onlineMode != undefined){
+      if (config.onlineMode != undefined) {
         setIsOnline(config.onlineMode);
       }
 
@@ -129,6 +144,7 @@ const SettingsPanel: React.FC<{
         // Reset collections before fetching new ones
         await resetCollections();
         await resetItems();
+        await resetItemAssets();
 
         const message = await fetchCollectionsFromEndpoint(endpointUrl);
         toast.success(message);
@@ -142,9 +158,8 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = endpointUrl;
+        config.loadedDataset = '';
         await saveConfig(config);
-
-        toast.success(t('api_endpoint_saved'));
 
         refreshDatasets(); // Trigger the refresh
 
@@ -183,8 +198,10 @@ const SettingsPanel: React.FC<{
         // reset localStorage properties to default properties
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
-        localStorage.setItem('sliderValue', '0')
-        setSliderValue(0)
+        localStorage.setItem('sliderValue', '0');
+        setIsPlaying(false);
+        setSliderValue(0);
+        setSpeed(1);
 
         toast.success(t('reset_completed'));
       }
@@ -194,7 +211,7 @@ const SettingsPanel: React.FC<{
   };
 
   const handleFactoryReset = async () => {
-    if(!isOnline){
+    if (!isOnline) {
       toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
         toastId: 'online-disabled',
       });
@@ -253,16 +270,22 @@ const SettingsPanel: React.FC<{
     try {
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
-      localStorage.setItem('selectedDatasetId','')
+      localStorage.setItem('selectedDatasetId', '');
       localStorage.setItem('sliderValue', '0');
+      setIsPlaying(false);
       setSliderValue(0);
-
       setLayer('default');
+      setTimeStamps([]);
+      setCollectionId('');
+      setSpeed(1);
+
       await resetCollections();
       await resetItems();
       await resetDatalayerView();
+      await resetItemAssets();
       const map = mapRef.current as Map;
-      changeLayer(map, true)
+      changeLayer(map, true);
+      changeLayer(map, false, "reset");
       setSpeed(1);
       return 'Reset was successful';
     } catch (error: any) {
@@ -302,6 +325,7 @@ const SettingsPanel: React.FC<{
         }
 
         config.endpoint = 'No endpoint saved';
+        config.loadedDataset = '';
         await saveConfig(config);
 
         refreshDatasets(); // Trigger the refresh
@@ -417,21 +441,21 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-            className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('internet')}
-            aria-expanded={dropdownState.activeButton === 'internet'}
-            aria-label="internet"
-            data-testid="internet-dropdown-button"
-          >
-            {isOnline ? (
-              <PiGlobeLight size={32} data-testid="online-icon"/>
-              ) : (
-              <PiGlobeXLight size={32} data-testid="offline-icon"/>
-              )}
-          </button>
+          className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
+          onClick={() => toggleDropdown('internet')}
+          aria-expanded={dropdownState.activeButton === 'internet'}
+          aria-label="internet"
+          data-testid="internet-dropdown-button"
+        >
+          {isOnline ? (
+            <PiGlobeLight size={32} data-testid="online-icon" />
+          ) : (
+            <PiGlobeXLight size={32} data-testid="offline-icon" />
+          )}
+        </button>
         {dropdownState.activeButton === 'internet' && (
-        <div className="dropdown-content show">
-          <button onClick={() => handleSelectOnlineMode(true)}>
+          <div className="dropdown-content show">
+            <button onClick={() => handleSelectOnlineMode(true)}>
               {isOnline ? (
                 <IoCheckmark size={24} fill="black" />
               ) : (
@@ -447,7 +471,7 @@ const SettingsPanel: React.FC<{
               )}
               {t('offline')}
             </button>
-        </div>
+          </div>
         )}
       </div>
 

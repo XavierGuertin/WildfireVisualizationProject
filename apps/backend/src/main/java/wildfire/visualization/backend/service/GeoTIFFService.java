@@ -39,8 +39,7 @@ public class GeoTIFFService {
   public boolean processGeoTIFF(String itemId, String collectionId, String assetName, String tiffUrl) {
     try {
       String localFilePath = tiffStoragePath + "/" + assetName + ".tif";
-      String layerName = collectionId + "_" + itemId + "_" + assetName;
-      String layerUrl = geoServerUrl + "/" + workspace + "/wms?service=WMS&request=GetMap&layers=" + workspace + ":" + layerName;
+      String layerUrl = geoServerUrl + "/" + workspace + "/wms?service=WMS&request=GetMap&layers=" + workspace + ":" + assetName;
 
       // Download TIFF to GeoServer storage
       downloadFile(tiffUrl, localFilePath);
