@@ -47,6 +47,7 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           CONFIG_FILE_PATH: /var/config/app-config.json
           GEOSERVER_DATA_DIR: /var/geoserver/data_dir/tiffs
+          GEOSERVER_URL: http://geoserver:8080/geoserver
 
       # Push Docker images to Docker Hub
       - name: Push Docker Images
