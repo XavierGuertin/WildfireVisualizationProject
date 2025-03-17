@@ -1,17 +1,13 @@
 package wildfire.visualization.backend.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import wildfire.visualization.backend.service.DataService;
 import wildfire.visualization.backend.exception.DataException;
-import wildfire.visualization.backend.service.GeoTIFFService;
+import wildfire.visualization.backend.service.DataService;
 
 import java.net.URI;
 import java.net.URLDecoder;
@@ -394,7 +390,6 @@ public class DataController {
   /**
    * Endpoint responsible for fetching the GeoTIFF data from a given URL
    *
-   * @param url String object representing the URL to fetch the GeoTIFF data from
    * @return ResponseEntity object containing a String object indicating if the
    *         GeoTIFF data was fetched successfully
    */

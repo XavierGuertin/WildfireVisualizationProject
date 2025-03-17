@@ -43,7 +43,7 @@ const resources = {
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
-      loaded: 'Loaded', 
+      loaded: 'Loaded',
       //Datasets - Toggle
       toggle_datasets: 'Toggle Datasets',
       filtering_by_map_view: 'Only Show Datasets in View',
@@ -83,6 +83,10 @@ const resources = {
       error_fetching_data_by_date: 'Failed to fetch data by date',
       error_fetching_config_file:
         'Failed to fetch config file. Please validate app-config.json.',
+      //Footer Component
+      weather_assets_label: 'Weather Assets',
+      load_assets_button: 'Load Assets',
+      loading_label: 'Loading...',
     },
   },
   fr: {
@@ -167,6 +171,11 @@ const resources = {
       error_fetching_data_by_date: 'Échec de la récupération des données par date',
       error_fetching_config_file:
         "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
+      //Footer Component
+      weather_assets_label: 'Données Météo',
+      load_assets_button: 'Charger les Données',
+      loading_label: 'Chargement...',
+
     },
   },
 };
