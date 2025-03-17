@@ -616,6 +616,7 @@ describe('Footer error and edge case coverage tests', () => {
       collectionId: 'error-collection',
     });
     (fetchTimestamps as jest.Mock).mockResolvedValue(['2023-05-15T14:30:45Z']);
+    localStorage.setItem('selectedDatasetId', 'testCollection');
   });
 
   it('handles loadAssets returning an error object gracefully', async () => {
@@ -916,6 +917,7 @@ describe('Line coverage (358–441) in Footer', () => {
     (resetItemAssets as jest.Mock).mockResolvedValue(undefined);
     (loadAssets as jest.Mock).mockResolvedValue({});
     (getLoadedLayers as jest.Mock).mockResolvedValue([]);
+    localStorage.setItem('selectedDatasetId', 'testCollection');
   });
 
   it('calls changeLayer in useEffect if timeStamps is not empty (lines ~358–362)', () => {
