@@ -1,17 +1,14 @@
 .footerContainer {
   width: 100%;
   background: transparent;
-  color: #00467E;
+  color: #00447E;
   position: fixed;
   bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-x: hidden;
-  overflow-y: hidden;
   z-index: 1000;
   margin-bottom: 5px;
-  padding-top: 25px;
 }
 
 .sliderContainer {
@@ -23,7 +20,7 @@
 
 .simulationSlider {
   width: 90%;
-  accent-color: #00467E;
+  accent-color: #00447E;
   vertical-align: middle;
 }
 
@@ -31,7 +28,7 @@
   border: none;
   margin-bottom: 15px;
   cursor: pointer;
-  color: #00467E;
+  color: #00447E;
   background: none;
 }
 
@@ -125,7 +122,7 @@
   width: 37px;
   height: 37px;
   font-size: 12px;
-  color: #00467E;
+  color: #00447E;
   background-color: white;
   margin-left: 10px;
   cursor: pointer;
@@ -199,10 +196,10 @@
 
 .timeMarkerThumb {
   position: absolute;
-  width: 140px;
-  height: 32px;
+  width: 175px;
+  height: 40px;
   border-radius: 12px;
-  background-color: #00467E;
+  background-color: #00447E;
   transform: translateX(-50%);
   top: -10px;
   display: flex;
@@ -210,7 +207,7 @@
   justify-content: center;
   font-weight: bold;
   color: white;
-  z-index: 4;
+  z-index: 1001;
   transition: left 0.2s ease-out;
 }
 
@@ -228,7 +225,7 @@
 }
 
 .timeMarkerText span {
-  font-size: 13.5px;
+  font-size: 16px;
 }
 
 .timeMarkerThumb.active .timeMarkerText {
@@ -243,6 +240,204 @@
   transform: scale(1.2);
 }
 
-.timeMarkerThumb:hover {
-  transform: translateX(-50%) scale(1.05);
+.timeMarkerHoverBox {
+  position: absolute;
+  bottom: 25px;
+  width: 170px;
+  background-color: white;
+  border: 2px solid #00447E;
+  border-radius: 8px 8px 0 0;
+  padding: 5px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: -15px;
+  z-index: 100;
+  transform: translate(-50%, 20px);
+  pointer-events: none;
+  transition: left 0.2s ease-out;
+}
+
+.timeMarkerHoverBox[data-hovered="true"] {
+  animation: slideUp 0.3s ease forwards;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.timeMarkerHoverBox[data-hovered="false"] {
+  animation: slideDown 0.3s ease forwards;
+  visibility: visible;
+}
+
+.timeMarkerHoverBox[data-hovered="false"] {
+  visibility: hidden;
+  transition: visibility 0s 0.3s;
+}
+
+.hoverBoxIcon {
+  color: #00447E;
+  margin-top: -5px;
+}
+
+.hoverBoxText {
+  color: #00447E;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: -6px;
+  padding-bottom: 12px;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+}
+
+.timeMarkerHoverBox[data-locked="true"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translate(-50%, 0) !important;
+  animation: none !important;
+  pointer-events: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: auto;
+}
+
+.timeMarkerHoverBox[data-locked="true"] .hoverBoxIcon {
+  cursor: pointer;
+  margin-bottom: 5px;
+  transition: transform 0.2s ease;
+}
+
+.timeMarkerHoverBox[data-locked="true"] .hoverBoxIcon:hover {
+  transform: scale(1.2);
+}
+
+.timeMarkerHoverBox[data-locked="true"] .hoverBoxText {
+  padding-bottom: 3px;
+}
+
+.loadAssetsButton {
+  background-color: #00447E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  width: 75%;
+  text-align: left;
+  margin: 5px auto 10px;
+}
+
+.loadAssetsButton:hover {
+  background-color: #003057;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #00447E;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.layerButtonsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 3px;
+  width: 90%;
+  margin: 10px auto;
+}
+
+.layerButton {
+  background-color: white;
+  color: #00447E;
+  border: 2px solid #00447E;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.layerButton:hover {
+  background-color: #f0f5fa;
+}
+
+.layerButton.active {
+  background-color: #00447E;
+  color: white;
+}
+
+.layerButtonIcon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.slider-loaded-tag {
+  position: absolute;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  transform: translateX(-50%);
+  bottom: -5px;
+  z-index: 3;
+  transition: left 0.2s ease-out;
+  white-space: nowrap;
+  font-weight: bold;
 }

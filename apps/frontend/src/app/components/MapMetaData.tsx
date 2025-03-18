@@ -7,6 +7,7 @@ import {
   fetchItems,
   fetchProgress,
   fetchTimestamps,
+  resetItemAssets,
   resetItems,
 } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';
@@ -37,7 +38,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   datasetSource = '',
   visible,
   refreshDatasets,
-})  => {
+}) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
@@ -45,7 +46,13 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const [progress, setProgress] = useState(0);
 
   const MySwal = withReactContent(Swal);
-  const { setTimeStamps, isOnline, setSliderValue } = useMapLayerContext();
+  const {
+    setTimeStamps,
+    isOnline,
+    setSliderValue,
+    setCollectionId,
+    setLoadedLayers,
+  } = useMapLayerContext();
 
   const onLoadDataset = async () => {
     if (!isOnline) {
@@ -75,6 +82,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         setSliderValue(0);
         setProgress(0);
         await resetItems();
+        await resetItemAssets();
+        setLoadedLayers([]);
 
         try {
           // Start fetching items asynchronously
@@ -97,12 +106,15 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                 setProgress(progressResponse.progress);
                 const timestamps = await fetchTimestamps();
                 setTimeStamps(timestamps);
+                setCollectionId(id);
                 // Stop the loop when progress reaches 100%
                 if (progressResponse.progress >= 100) {
                   // sleep for 1 second to allow the items to be loaded
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   setLoading(false);
-                  toast.success(t("items_fetch_success"), {toastId: 'items-success',});
+                  toast.success(t('items_fetch_success'), {
+                    toastId: 'items-success',
+                  });
 
                   try {
                     const config = await getConfig();
@@ -110,7 +122,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                     await saveConfig(config);
                     refreshDatasets?.();
                   } catch (err) {
-                    console.error("Error updating loadedDataset in config:", err);
+                    console.error(
+                      'Error updating loadedDataset in config:',
+                      err,
+                    );
                   }
                   return;
                 }

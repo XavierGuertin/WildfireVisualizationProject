@@ -38,6 +38,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: password
           GEOSERVER_DATA_DIR: /var/geoserver/data_dir/tiffs
+          GEOSERVER_URL: http://geoserver:8080/geoserver
 
       # Wait for Database to be Ready using Health Check
       - name: Wait for Database

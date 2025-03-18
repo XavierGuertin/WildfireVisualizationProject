@@ -1,71 +1,112 @@
-import React, { createContext, useContext, useState, PropsWithChildren, useRef, useMemo  } from "react";
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Map } from 'ol';
 
 interface MapLayerContextValue {
-    layer: string | null;
-    setLayer: React.Dispatch<React.SetStateAction<string | null>>;
-    mapRef: React.MutableRefObject<Map | null>;
-    resetView: () => void;
-    speed: number;
-    setSpeed: React.Dispatch<React.SetStateAction<number>>;
-    dataItems: object[];
-    setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
-    isOnline: boolean;
-    setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
-    timeStamps: string[];
-    setTimeStamps: (ts: string[]) => void;
-    sliderValue: number;
-    setSliderValue: React.Dispatch<React.SetStateAction<number>>;
+  layer: string | null;
+  setLayer: React.Dispatch<React.SetStateAction<string | null>>;
+  mapRef: React.MutableRefObject<Map | null>;
+  resetView: () => void;
+  speed: number;
+  setSpeed: React.Dispatch<React.SetStateAction<number>>;
+  dataItems: object[];
+  setDataItems: React.Dispatch<React.SetStateAction<object[]>>;
+  isOnline: boolean;
+  setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
+  timeStamps: string[];
+  setTimeStamps: (ts: string[]) => void;
+  collectionId: string;
+  setCollectionId: React.Dispatch<React.SetStateAction<string>>;
+  sliderValue: number;
+  setSliderValue: React.Dispatch<React.SetStateAction<number>>;
+  loadedLayers: any[];
+  setLoadedLayers: React.Dispatch<React.SetStateAction<any[]>>;
+  isLoadingAssets: boolean;
+  setIsLoadingAssets: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedAssetLayers: string[];
+  setSelectedAssetLayers: React.Dispatch<React.SetStateAction<string[]>>;
+  isPlaying: boolean;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const MapLayerContext = createContext<MapLayerContextValue | undefined>(undefined);
+const MapLayerContext = createContext<MapLayerContextValue | undefined>(
+  undefined,
+);
 
-export const MapProvider: React.FC<PropsWithChildren> = ({children}) => {
-    const [layer, setLayer] = useState<string | null>('default');
-    const mapRef = useRef<Map | null>(null);
-    const [timeStamps, setTimeStamps] = useState<string[]>([]);
-    const [sliderValue, setSliderValue] = useState<number>(0);
+export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const [layer, setLayer] = useState<string | null>('default');
+  const mapRef = useRef<Map | null>(null);
+  const [timeStamps, setTimeStamps] = useState<string[]>([]);
+  const [collectionId, setCollectionId] = useState<string>(''); // Change to string
+  const [sliderValue, setSliderValue] = useState<number>(0);
+  const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [selectedAssetLayers, setSelectedAssetLayers] = useState<string[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-    //Timeline playback speed
-    const [speed, setSpeed] = useState<number>(1);
-    const [dataItems, setDataItems] = useState<object[]>([]);
-    const [isOnline, setIsOnline] = useState<boolean>(true);
+  // Timeline playback speed
+  const [speed, setSpeed] = useState<number>(1);
+  const [dataItems, setDataItems] = useState<object[]>([]);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
 
-    //Map Specific Functions
-    const resetView = () => {
-        if (mapRef.current) {
-            mapRef.current.getView().animate({
-                center: [-75.6972, 45.4215],
-                zoom: 1,
-            });
-        }
-    };
-    
-    // Memoize the context value to prevent unnecessary re-renders
-    const contextValue = useMemo(() => ({
-        layer, 
-        setLayer, 
-        mapRef, 
-        resetView, 
-        speed, 
-        setSpeed, 
-        dataItems, 
-        setDataItems, 
-        isOnline, 
-        setIsOnline
-    }), [layer, speed, dataItems, isOnline]);
- 
-    return useMemo(() => (
-        <MapLayerContext.Provider value = {{ layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue }}>
-            {children}
-        </MapLayerContext.Provider>
-    ),[layer, setLayer, mapRef, resetView, speed, setSpeed, dataItems, setDataItems, isOnline, setIsOnline, timeStamps, setTimeStamps, sliderValue, setSliderValue])
-}
+  // Map Specific Functions
+  const resetView = () => {
+    if (mapRef.current) {
+      mapRef.current.getView().animate({
+        center: [-75.6972, 45.4215],
+        zoom: 1,
+      });
+    }
+  };
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      layer,
+      setLayer,
+      mapRef,
+      resetView,
+      speed,
+      setSpeed,
+      dataItems,
+      setDataItems,
+      isOnline,
+      setIsOnline,
+      timeStamps,
+      setTimeStamps,
+      collectionId,
+      setCollectionId,
+      sliderValue,
+      setSliderValue,
+      loadedLayers,
+      setLoadedLayers,
+      isLoadingAssets,
+      setIsLoadingAssets,
+      selectedAssetLayers,
+      setSelectedAssetLayers,
+      isPlaying,
+      setIsPlaying
+    }),
+    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers, isPlaying]
+  );
+
+  return (
+    <MapLayerContext.Provider value={contextValue}>
+      {children}
+    </MapLayerContext.Provider>
+  );
+};
 
 export const useMapLayerContext = () => {
-    const mapLayerContext = useContext(MapLayerContext);
-    if (!mapLayerContext) {
-      throw new Error('useMapLayerContext must be inside a MapProvider');
-    }
-    return mapLayerContext;
+  const mapLayerContext = useContext(MapLayerContext);
+  if (!mapLayerContext) {
+    throw new Error('useMapLayerContext must be inside a MapProvider');
+  }
+  return mapLayerContext;
 };
