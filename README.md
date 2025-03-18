@@ -55,6 +55,7 @@ The Wildfire Visualization Platform is an innovative tool designed to provide hi
 | Cheng, Justin       | 40210279   | [justncheng](https://github.com/justncheng)       | chengjustin2002@gmail.com   |
 | Guertin, Xavier     | 40213525   | [XavierGuertin](https://github.com/XavierGuertin) | xavierguertin@gmail.com     |
 | Oliel, Eden         | 40211989   | [eo2000](https://github.com/eo2000)        | olieleden0@gmail.com        |
+
 ---
 
 ## Running the Application
@@ -71,16 +72,36 @@ To run the application, follow these steps:
    cd WildfireVisualizationProject
    ```
 
-3. **Run the Application using Docker Compose**
+3. **Run the Application using Docker Compose**  
+   Start the application in detached mode (`-d` runs it in the background) and always pull the latest images:
    ```bash
-   docker-compose up --pull always
+   docker compose up -d --pull always
+   ```  
+   Once started, you can manage the application from **Docker Desktop** or via command-line tools.
+
+4. **Updating to the Latest Images (Optional)**  
+   If you need to update and get the latest images again, **run the following before starting the application**:
+   ```bash
+   docker compose pull
+   ```  
+   Then, restart the application:
+   ```bash
+   docker compose up -d
    ```
 
-4. **Access the Application**
+5. **Access the Application**  
    Once the project is running, open your browser and navigate to:
    ```
    http://localhost:3000
    ```
+
+---
+
+## Bug Reports & Feature Requests
+
+If you encounter any bugs or have feature suggestions, please report them on GitHub.  
+👉 [Click here to create a new issue](https://github.com/XavierGuertin/WildfireVisualizationProject/issues/new/choose)
+
 
 ---
 
