@@ -26,7 +26,6 @@ const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
 const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
-
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
   source: new XYZ({
@@ -66,7 +65,7 @@ const topographicLayer = new TileLayer({
  *
  * @returns {VectorLayer} The generated collection data layer for the map.
  */
-const createCollectionDataLayer = (): VectorLayer => {
+const createCollectionDataLayer = (map: Map): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
 
   const vectorSource = new VectorSource({
@@ -83,6 +82,20 @@ const createCollectionDataLayer = (): VectorLayer => {
   });
 
   newLayer.set('id', 'dataLayer');
+  vectorSource.once('featuresloadend', () => {
+    const extent = vectorSource.getExtent();
+    if (extent) {
+      const view = map.getView();
+      const resolution = view.getResolutionForExtent(extent, map.getSize());
+      const zoom = view.getZoomForResolution(resolution);
+      view.animate({
+        center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
+        zoom: zoom ? zoom - 1 : 1, 
+        duration: 1000 
+      });
+    }
+  });
+
   return newLayer;
 };
 
@@ -126,7 +139,7 @@ export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) 
     if (dataLayer) {
       map.removeLayer(dataLayer);
     }
-    const newLayer = createCollectionDataLayer()
+    const newLayer = createCollectionDataLayer(map);
     map.addLayer(newLayer);
   }
 
@@ -185,7 +198,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: [getLayer(), createCollectionDataLayer()],
+        layers: mapRef.current ? [getLayer(), createCollectionDataLayer(mapRef.current)] : [getLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
