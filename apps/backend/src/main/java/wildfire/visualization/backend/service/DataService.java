@@ -59,7 +59,7 @@ public class DataService {
    *
    * @param collectionId The database id of the collection
    * @return A String object that represents the List of key value pairs from the
-   *         given collection's metadata
+   * given collection's metadata
    * @throws JsonProcessingException Exception thrown when there's an error in the
    *                                 JSON Processing
    */
@@ -214,7 +214,7 @@ public class DataService {
    */
   public List<Map<String, Object>> getCollections(double[] bbox) {
     logger.debug("Fetching collections from database with bbox: {}",
-        bbox != null ? Arrays.toString(bbox) : "No bbox");
+      bbox != null ? Arrays.toString(bbox) : "No bbox");
 
     try {
       // Fetch collections from repository
@@ -223,11 +223,11 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-          .map(collection -> Map.of(
-              "key", collection.get("key") == null ? "" : collection.get("key"),
-              "id", collection.get("id") == null ? "" : collection.get("id"),
-              "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")))
-          .collect(Collectors.toList());
+        .map(collection -> Map.of(
+          "key", collection.get("key") == null ? "" : collection.get("key"),
+          "id", collection.get("id") == null ? "" : collection.get("id"),
+          "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")))
+        .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections", e);
@@ -262,8 +262,8 @@ public class DataService {
    * This method queries collections ordered by their name (`id` field) and
    * restructures the response for client consumption.
    *
-   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                     null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
@@ -300,8 +300,8 @@ public class DataService {
    * date and
    * restructures the response for client consumption.
    *
-   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
-   *             null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
@@ -513,7 +513,7 @@ public class DataService {
    * @param id         String object representing the pgSTAC item's id
    * @param collection String object representing the pgSTAC collection's id
    * @return List object that contains the data of the given item relating to the
-   *         given collection
+   * given collection
    */
   public List<Map<String, Object>> getItem(String id, String collection) {
     logger.info("Fetching item from database with id: {} and collection: {}", id, collection);
@@ -535,7 +535,7 @@ public class DataService {
    * Method responsible for removing all items from the database
    *
    * @return String object clarifying whether the removal of all items from the
-   *         database was successful
+   * database was successful
    */
   public String removeAllItems() {
     logger.info("Removing all items from database");
@@ -553,7 +553,7 @@ public class DataService {
    *
    * @param collectionId String object representing the id of the given collection
    * @return String clarifying if the removal of the items from the given
-   *         collection was successful
+   * collection was successful
    */
   public String removeItemsFromCollection(String collectionId) {
     logger.info("Removing items from collection: {}", collectionId);
@@ -601,83 +601,231 @@ public class DataService {
     }
   }
 
-
   /**
-   * Method responsible for processing all assets of a given item
+   * Method responsible for registering all assets for a specific item.
+   * <p>
+   * This fetches the item from the database and registers its GeoTIFF assets one by one.
+   * This is intended to be used when refreshing/re-registering existing assets.
    *
-   * @param collectionId String object representing the id of the collection
-   * @param itemId       String object representing the id of the item
+   * @param itemId ID of the item to process
+   * @return true if all assets were registered successfully, false otherwise
    */
-  @Async
-  public void processItemAssets(String collectionId, String itemId) {
-    List<Map<String, Object>> queryResults = stacRepository.getItem(itemId);
-    if (queryResults.isEmpty()) return;
+  public boolean processItemAssetsRefresh(String itemId) {
+    itemAssetsReset(false);
+    List<Map<String, Object>> items = stacRepository.getItem(itemId);
+    if (items.isEmpty()) {
+      logger.warn("No item found with ID: {}", itemId);
+      return false;
+    }
 
-    fetchProgress.put(itemId, new AtomicInteger(0)); // Initialize progress
-
-    // Extract JSON from `pgstac.get_item()`
-    Object jsonObject = queryResults.get(0).get("get_item");
+    Object jsonObject = items.get(0).get("get_item");
     String itemJson;
     if (jsonObject instanceof PGobject) {
       itemJson = ((PGobject) jsonObject).getValue();
     } else {
-      throw new RuntimeException("Unexpected data type from database");
+      logger.error("Unexpected data type returned for item {}: {}", itemId, jsonObject.getClass().getSimpleName());
+      return false;
     }
 
     try {
       JsonNode jsonNode = objectMapper.readTree(itemJson);
       JsonNode assets = jsonNode.get("assets");
 
-      if (assets == null || assets.isEmpty()) return;
-
-      itemAssetsReset(); // Reset previously registered layers
-
-      // Get total number of assets
-      int totalAssets = assets.size();
-      int counter = 0;
+      if (assets == null || assets.isEmpty()) {
+        logger.info("Item {} has no assets to register", itemId);
+        return false;
+      }
 
       for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
         String assetKey = it.next();
-        JsonNode asset = assets.get(assetKey);
-        String tiffUrl = asset.get("href").asText();
 
-        boolean success = geoTIFFService.processGeoTIFF(itemId, collectionId, assetKey, tiffUrl);
-        counter++;
-        fetchProgress.put(itemId, new AtomicInteger((int) Math.floor(((double) counter / totalAssets) * 100)));
-        if (!success) return;
-      }
-      fetchProgress.put(itemId, new AtomicInteger(100));
-    } catch (Exception e) {
-      logger.error("Error processing item assets: {}", e.getMessage(), e);
-      fetchProgress.put(itemId, new AtomicInteger(-1)); // Set error state
-    }
-  }
-
-  public boolean itemAssetsReset() {
-    try {
-      List<Map<String, Object>> existingLayers = stacRepository.getLoadedLayers();
-
-      for (Map<String, Object> layer : existingLayers) {
-        String layerName = (String) layer.get("asset_name");
-
-        try {
-          geoServerService.unregisterLayer(layerName);
-        } catch (Exception e) {
-          logger.error("Layer not found in GeoServer (likely already deleted): {}", layerName);
+        boolean success = geoTIFFService.registerGeoTIFF(itemId, assetKey);
+        if (!success) {
+          logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
+          return false; // Stop on first failure (optional: allow partial success if needed)
         }
-
-        // Always delete the database trace of the asset, whether unregister succeeds or fails
-        stacRepository.deleteItemAssetLayer(layerName);
       }
 
-      // Finally, clear all registered layers from the database
-      stacRepository.clearLayers();
+      logger.info("Successfully registered all assets for item {}", itemId);
       return true;
+
     } catch (Exception e) {
-      logger.error("Error resetting item assets: {}", e.getMessage(), e);
+      logger.error("Failed to parse or register assets for item {}: {}", itemId, e.getMessage(), e);
       return false;
     }
   }
+
+
+
+  /**
+   * Method responsible for processing all assets for all items in a given collection.
+   * <p>
+   * This fetches all items from the collection and processes their assets one by one.
+   * Layers are reset before processing begins, but data is preserved if unregistering fails.
+   *
+   * @param collectionId ID of the collection
+   */
+  @Async
+  public void processItemAssets(String collectionId) {
+    String collectionProgressKey = collectionId + "_assets";
+    fetchProgress.put(collectionProgressKey, new AtomicInteger(0)); // Initialize progress
+    try {
+      List<Map<String, Object>> results = stacRepository.getAllItems(collectionId);
+
+      if (results.isEmpty()) {
+        logger.warn("No results returned from getAllItems for collection {}", collectionId);
+      }
+
+      // Extract JSON from the first (and only) row of the query
+      Object rawJson = results.get(0).get("search");
+      String json = "";
+      if (rawJson instanceof PGobject) {
+        json = ((PGobject) rawJson).getValue();
+      } else if (rawJson instanceof String) {
+        json = (String) rawJson;
+      } else {
+        logger.error("Unexpected JSON type: {}", rawJson.getClass().getSimpleName());
+      }
+
+      JsonNode root = objectMapper.readTree(json);
+      JsonNode features = root.get("features");
+
+      if (features == null || !features.isArray()) {
+        logger.warn("No features found in FeatureCollection");
+      }
+
+      int totalItems = features.size();
+      logger.info("Processing {} items in collection: {}", totalItems, collectionId);
+
+      int count = 0;
+
+      for (JsonNode feature : features) {
+        String itemId = feature.get("id").asText();
+        String collId = feature.get("collection").asText();  // Prefer the per-feature collection
+
+        JsonNode assets = feature.get("assets");
+        if (assets == null || assets.isEmpty()) {
+          logger.info("No assets found for item {}", itemId);
+          continue;
+        }
+
+        for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
+          String assetKey = it.next();
+          JsonNode asset = assets.get(assetKey);
+          String href = asset.get("href").asText();
+
+          boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href);
+          if (!success) {
+            logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
+          }
+        }
+
+        count++;
+        fetchProgress.put(collectionProgressKey, new AtomicInteger((int) Math.floor(((double) count / totalItems) * 100)));
+        logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
+      }
+
+      logger.info("Finished registering all assets in collection {}", collectionId);
+      // Optionally remove progress key or set to -1 or totalItems to indicate completion
+      fetchProgress.put(collectionProgressKey, new AtomicInteger(100));
+
+    } catch (Exception e) {
+      logger.error("Exception while processing assets for collection {}: {}", collectionId, e.getMessage(), e);
+      fetchProgress.put(collectionProgressKey, new AtomicInteger(-1)); // Set error state
+    }
+  }
+
+  /**
+   * Overloaded method to reset item assets with full reset as default.
+   */
+  public boolean itemAssetsReset() {
+    return itemAssetsReset(true); // default fullReset = true
+  }
+
+  /**
+   * Method responsible for unregistering all registered asset layers from GeoServer.
+   * Also updates their registration status in the database.
+   * If all layers are successfully unregistered, clears the entire Assets and Items tables.
+   *
+   * @param fullReset Whether to fully clear the Assets and Items tables after unregistering
+   * @return true if the full reset succeeded, false otherwise
+   */
+  public boolean itemAssetsReset(boolean fullReset) {
+    final int maxAttempts = 3;
+    final long retryDelayMillis = 1000;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      logger.info("Attempt {}/{} to reset item assets...", attempt, maxAttempts);
+      boolean success = tryItemAssetsResetOnce(fullReset);
+
+      if (success) {
+        logger.info("Item assets reset succeeded on attempt {}", attempt);
+        return true;
+      }
+
+      if (attempt < maxAttempts) {
+        try {
+          Thread.sleep(retryDelayMillis);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt(); // Preserve interrupt flag
+          logger.error("Interrupted during retry wait", e);
+          break;
+        }
+      }
+    }
+
+    logger.error("Failed to reset item assets after {} attempts", maxAttempts);
+    return false;
+  }
+
+  /**
+   * Internal helper method that performs the reset logic once.
+   */
+  private boolean tryItemAssetsResetOnce(boolean fullReset) {
+    List<Map<String, Object>> assetsToProcess = fullReset
+      ? stacRepository.getItemsWithAssets()
+      : stacRepository.getLoadedLayers();
+
+    boolean allUnregisteredSuccessfully = true;
+
+    for (Map<String, Object> asset : assetsToProcess) {
+      String itemId = (String) asset.get("item_id");
+      String assetName = (String) asset.get("asset_name");
+      String layerName = itemId + "_" + assetName;
+
+      try {
+        boolean shouldUnregister = !fullReset || Boolean.TRUE.equals(asset.get("is_registered"));
+
+        if (shouldUnregister) {
+          boolean deleted = geoServerService.unregisterLayer(layerName);
+          logger.info("Unregistered layer {}: {}", layerName, deleted);
+          if (deleted) {
+            stacRepository.markAssetAsUnregistered(itemId, assetName);
+          } else {
+            logger.warn("Layer {} could not be unregistered", layerName);
+            allUnregisteredSuccessfully = false;
+          }
+        }
+
+        if (fullReset) {
+          geoServerService.deleteTifFile(layerName);
+        }
+
+      } catch (Exception e) {
+        logger.error("Exception while processing layer {}: {}", layerName, e.getMessage(), e);
+        allUnregisteredSuccessfully = false;
+      }
+    }
+
+    if (allUnregisteredSuccessfully && fullReset) {
+      stacRepository.clearLayers();
+    }
+
+    return allUnregisteredSuccessfully;
+  }
+
+
+
 
   /**
    * Method responsible for retrieving all loaded layers
