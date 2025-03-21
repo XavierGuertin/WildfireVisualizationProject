@@ -68,7 +68,24 @@ jest.mock('ol/control.js', () => ({
   defaults: jest.fn(() => ({ extend: jest.fn() })),
 }));
 
-jest.mock('ol/source/Vector', () => jest.fn().mockImplementation(() => ({})));
+jest.mock('ol/source/Vector', () => {
+  return jest.fn().mockImplementation(() => {
+    const properties: Record<string, any> = {};
+    return {
+      set: jest.fn((key: string, value: any) => {
+        properties[key] = value;
+      }),
+      get: jest.fn((key: string) => properties[key]),
+      once: jest.fn((event: string, callback: () => void) => {
+        // Simulate the event being triggered immediately
+        if (event === 'featuresloadend') {
+          callback();
+        }
+      }),
+      getExtent: jest.fn(() => [-120, 30, -110, 40]), // Mock extent
+    };
+  });
+});
 
 jest.mock('ol/layer/Vector', () =>
   jest.fn().mockImplementation(() => {
@@ -111,6 +128,9 @@ jest.mock('ol/Map', () => {
       trigger: (event: string) => {
         (eventListeners[event] || []).forEach((callback) => callback());
       },
+      getResolutionForExtent: jest.fn(() => 1), // Mock resolution
+      getZoomForResolution: jest.fn(() => 5), // Mock zoom level
+      animate: jest.fn(), // Mock animate method
     };
 
     return {
@@ -267,6 +287,12 @@ describe(MapView, () => {
 
   it('calls changeLayer without errors', () => {
     const mockMapInstance = {
+      getView: jest.fn(() => ({
+        getResolutionForExtent: jest.fn(),
+        getZoomForResolution: jest.fn(),
+        animate: jest.fn(),
+      })),
+      getSize: jest.fn(() => [800, 600]),
       getLayers: jest.fn(() => ({
         getArray: jest.fn(() => []),
       })),
@@ -290,6 +316,12 @@ describe(MapView, () => {
 
   it('refreshes the map layer correctly', () => {
     const mockMap = {
+      getView: jest.fn(() => ({
+        getResolutionForExtent: jest.fn(),
+        getZoomForResolution: jest.fn(),
+        animate: jest.fn(),
+      })),
+      getSize: jest.fn(() => [800, 600]),
       getLayers: jest.fn(() => ({
         getArray: jest.fn(() => [
           { get: jest.fn(() => 'dataLayer'), set: jest.fn() },
