@@ -782,7 +782,7 @@ public class DataService {
   /**
    * Internal helper method that performs the reset logic once.
    */
-  private boolean tryItemAssetsResetOnce(boolean fullReset) {
+  public boolean tryItemAssetsResetOnce(boolean fullReset) {
     List<Map<String, Object>> assetsToProcess = fullReset
       ? stacRepository.getItemsWithAssets()
       : stacRepository.getLoadedLayers();

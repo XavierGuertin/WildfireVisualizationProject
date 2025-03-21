@@ -991,5 +991,40 @@ class DataServiceTests {
     assertThat(result).isTrue();
   }
 
+  @Test
+  void itemAssetsReset_shouldSucceedOnFirstAttempt() {
+    Map<String, Object> asset = Map.of(
+      "item_id", "item1",
+      "asset_name", "a1",
+      "is_registered", true
+    );
+
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
+
+    boolean result = dataService.itemAssetsReset(true);
+
+    assertThat(result).isTrue();
+    verify(geoServerService).unregisterLayer("item1_a1");
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
+  }
+
+  @Test
+  void itemAssetsReset_shouldRetryAndFailAfterMaxAttempts() {
+    // Spy on dataService
+    DataService spyService = spy(dataService);
+
+    // Force the internal retry method to fail 3 times
+    doReturn(false).when(spyService).tryItemAssetsResetOnce(true);
+
+    // Execute
+    boolean result = spyService.itemAssetsReset(true);
+
+    // Assert
+    assertThat(result).isFalse();
+    verify(spyService, times(3)).tryItemAssetsResetOnce(true); // Retries 3 times
+  }
 
 }

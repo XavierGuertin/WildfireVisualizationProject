@@ -152,6 +152,27 @@ class GeoServerServiceTests {
   }
 
   @Test
+  void testUnregisterLayer_Failure_Exception() {
+    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+
+    // Simulate RestTemplate throwing an exception
+    when(restTemplate.exchange(
+      eq(expectedUrl),
+      eq(HttpMethod.DELETE),
+      any(HttpEntity.class),
+      eq(String.class))
+    ).thenThrow(new RuntimeException("Test exception"));
+
+    // Execute
+    boolean result = geoServerService.unregisterLayer(layerName);
+
+    // Verify
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+    assertThat(result).isFalse();
+  }
+
+
+  @Test
   void deleteTifFile_shouldDeleteFile_ifExists() throws Exception {
     // Arrange
     setField(geoServerService, "geoserverDownloadDir", tempDir.toString());
