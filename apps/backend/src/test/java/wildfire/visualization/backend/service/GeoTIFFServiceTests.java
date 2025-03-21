@@ -44,73 +44,69 @@ class GeoTIFFServiceTests {
   }
 
   @Test
-  void testProcessGeoTIFF_Success() throws Exception {
-    // ✅ Prevent actual file download
+  void processGeoTIFF_shouldReturnTrue_onSuccess() throws Exception {
+    String itemId = "item1", collectionId = "col1", assetName = "a1", url = "http://example.com/file.tif";
+
+    // Mock file download (assume it's a void method)
     doNothing().when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    // ✅ Mock GeoServer interactions
-    when(geoServerService.registerCoverageStore(assetName)).thenReturn(true);
-    when(geoServerService.registerCoverageLayer(assetName)).thenReturn(true);
+    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, url);
 
-    // ✅ Mock database save
-    doNothing().when(stacRepository).saveLayer(anyString(), anyString(), anyString(), anyString());
-
-    // Execute method
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, tiffUrl);
-
-    // Verify interactions
-    verify(geoTIFFService, times(1)).downloadFile(tiffUrl, localFilePath);
-    verify(geoServerService, times(1)).registerCoverageStore(assetName);
-    verify(geoServerService, times(1)).registerCoverageLayer(assetName);
-    verify(stacRepository, times(1)).saveLayer(anyString(), anyString(), anyString(), anyString());
-
-    // Assert success
     assertThat(result).isTrue();
+    verify(stacRepository).saveLayer(eq(itemId), eq(collectionId), eq(assetName), contains("GetMap"));
+    verify(geoTIFFService).downloadFile(eq(url), contains(assetName + ".tif"));
   }
 
   @Test
-  void testProcessGeoTIFF_FailureOnDownload() throws Exception {
+  void processGeoTIFF_shouldReturnFalse_onException() throws Exception {
     doThrow(new IOException("Download failed")).when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, tiffUrl);
-
-    verify(geoTIFFService, times(1)).downloadFile(tiffUrl, localFilePath);
-    verify(geoServerService, never()).registerCoverageStore(anyString());
-    verify(geoServerService, never()).registerCoverageLayer(anyString());
-    verify(stacRepository, never()).saveLayer(anyString(), anyString(), anyString(), anyString());
+    boolean result = geoTIFFService.processGeoTIFF("item1", "col1", "a1", "url");
 
     assertThat(result).isFalse();
+    verify(stacRepository).deleteItemAssetLayer("a1", "item1");
   }
 
   @Test
-  void testProcessGeoTIFF_FailureOnRegisterStore() throws Exception {
-    doNothing().when(geoTIFFService).downloadFile(anyString(), anyString());
-    when(geoServerService.registerCoverageStore(assetName)).thenReturn(false);
+  void registerGeoTIFF_shouldReturnTrue_onSuccess() {
+    when(geoServerService.registerCoverageStore("item1_a1")).thenReturn(true);
+    when(geoServerService.registerCoverageLayer("item1_a1")).thenReturn(true);
 
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, tiffUrl);
+    boolean result = geoTIFFService.registerGeoTIFF("item1", "a1");
 
-    verify(geoTIFFService, times(1)).downloadFile(tiffUrl, localFilePath);
-    verify(geoServerService, times(1)).registerCoverageStore(assetName);
-    verify(geoServerService, never()).registerCoverageLayer(anyString());
-    verify(stacRepository, never()).saveLayer(anyString(), anyString(), anyString(), anyString());
-
-    assertThat(result).isFalse();
+    assertThat(result).isTrue();
+    verify(stacRepository).markAssetAsRegistered("item1", "a1");
   }
 
   @Test
-  void testProcessGeoTIFF_FailureOnRegisterLayer() throws Exception {
-    doNothing().when(geoTIFFService).downloadFile(anyString(), anyString());
-    when(geoServerService.registerCoverageStore(assetName)).thenReturn(true);
-    when(geoServerService.registerCoverageLayer(assetName)).thenReturn(false);
+  void registerGeoTIFF_shouldReturnFalse_ifStoreFails() {
+    when(geoServerService.registerCoverageStore("item1_a1")).thenReturn(false);
 
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, tiffUrl);
-
-    verify(geoTIFFService, times(1)).downloadFile(tiffUrl, localFilePath);
-    verify(geoServerService, times(1)).registerCoverageStore(assetName);
-    verify(geoServerService, times(1)).registerCoverageLayer(assetName);
-    verify(stacRepository, never()).saveLayer(anyString(), anyString(), anyString(), anyString());
+    boolean result = geoTIFFService.registerGeoTIFF("item1", "a1");
 
     assertThat(result).isFalse();
+    verify(stacRepository, never()).markAssetAsRegistered(any(), any());
+  }
+
+  @Test
+  void registerGeoTIFF_shouldReturnFalse_ifLayerFails() {
+    when(geoServerService.registerCoverageStore("item1_a1")).thenReturn(true);
+    when(geoServerService.registerCoverageLayer("item1_a1")).thenReturn(false);
+
+    boolean result = geoTIFFService.registerGeoTIFF("item1", "a1");
+
+    assertThat(result).isFalse();
+    verify(stacRepository, never()).markAssetAsRegistered(any(), any());
+  }
+
+  @Test
+  void registerGeoTIFF_shouldHandleExceptionAndDeleteAsset() {
+    when(geoServerService.registerCoverageStore(any())).thenThrow(new RuntimeException("fail"));
+
+    boolean result = geoTIFFService.registerGeoTIFF("item1", "a1");
+
+    assertThat(result).isFalse();
+    verify(stacRepository).deleteItemAssetLayer("a1", "item1");
   }
 
   @Test

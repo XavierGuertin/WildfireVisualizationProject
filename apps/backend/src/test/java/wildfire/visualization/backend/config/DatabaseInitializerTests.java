@@ -29,6 +29,6 @@ class DatabaseInitializerTests {
     databaseInitializer.initializeDatabase();
 
     // Verify that SQL was executed
-    verify(jdbcTemplate, times(1)).execute(anyString());
+    verify(jdbcTemplate, times(3)).execute(anyString());
   }
 }

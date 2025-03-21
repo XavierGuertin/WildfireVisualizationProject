@@ -17,7 +17,6 @@ import wildfire.visualization.backend.exception.DataException;
 import wildfire.visualization.backend.exception.RepositoryException;
 import wildfire.visualization.backend.repository.StacRepository;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -925,91 +924,72 @@ class DataServiceTests {
   }
 
   @Test
-  void testProcessItemAssets_Success() throws Exception {
-    // Arrange
-    String collectionId = "testCollection";
-    String itemId = "testItem";
+  void processItemAssetsRefresh_shouldReturnFalse_whenItemNotFound() {
+    when(stacRepository.getItem("item123")).thenReturn(List.of());
 
-    // Mock database query result
-    PGobject pgObject = new PGobject();
-    pgObject.setType("jsonb");
-    pgObject.setValue("""
-        {
-            "assets": {
-                "asset1": {"href": "http://example.com/test1.tif"},
-                "asset2": {"href": "http://example.com/test2.tif"}
-            }
-        }
-    """);
-    List<Map<String, Object>> queryResults = List.of(Map.of("get_item", pgObject));
-    when(stacRepository.getItem(itemId)).thenReturn(queryResults);
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Mock parsing JSON
-    JsonNode mockJsonNode = new ObjectMapper().readTree(pgObject.getValue());
-    when(objectMapper.readTree(anyString())).thenReturn(mockJsonNode);
-
-    // Mock layers
-    List<Map<String, Object>> existingLayers = List.of(Map.of("asset_name", "oldLayer"));
-    when(stacRepository.getLoadedLayers()).thenReturn(existingLayers);
-
-    // Mock services
-    when(geoServerService.unregisterLayer(anyString())).thenReturn(true);
-    doNothing().when(stacRepository).clearLayers();
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString())).thenReturn(true);
-
-    // Act
-    dataService.processItemAssets(collectionId, itemId);
-
-    // Allow some time for async execution (optional)
-    Thread.sleep(200);
-
-    // Assert
-    verify(stacRepository, times(1)).getItem(itemId);
-    verify(objectMapper, times(1)).readTree(anyString());
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("oldLayer");
-    verify(stacRepository, times(1)).clearLayers();
-    verify(geoTIFFService, times(2)).processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString());
+    assertThat(result).isFalse();
   }
 
   @Test
-  void itemAssetsReset_Success() {
-    // Arrange: Mock database layers
-    List<Map<String, Object>> mockLayers = List.of(
-      Map.of("asset_name", "layer1"),
-      Map.of("asset_name", "layer2")
-    );
-    when(stacRepository.getLoadedLayers()).thenReturn(mockLayers);
+  void processItemAssetsRefresh_shouldReturnFalse_whenUnexpectedDataType() {
+    Map<String, Object> item = Map.of("get_item", 12345); // Not PGobject
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("layer1");
-    verify(geoServerService, times(1)).unregisterLayer("layer2");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer1");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer2");
-    verify(stacRepository, times(1)).clearLayers();
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldReturnFalse_onJsonParsingException() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{invalid json}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldRegisterAssetsSuccessfully() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{\"assets\": {\"a1\": {}, \"a2\": {}}}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+
+    JsonNode mockRoot = mock(JsonNode.class);
+    JsonNode mockAssets = mock(JsonNode.class);
+
+    when(objectMapper.readTree(anyString())).thenReturn(mockRoot);
+    when(mockRoot.get("assets")).thenReturn(mockAssets);
+    when(mockAssets.fieldNames()).thenReturn(List.of("a1", "a2").iterator());
+    when(geoTIFFService.registerGeoTIFF("item123", "a1")).thenReturn(true);
+    when(geoTIFFService.registerGeoTIFF("item123", "a2")).thenReturn(true);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
     assertThat(result).isTrue();
   }
 
   @Test
-  void itemAssetsReset_TotalFailure_ReturnsFalse() {
-    // Arrange: Simulate an exception when getting loaded layers
-    when(stacRepository.getLoadedLayers()).thenThrow(new RuntimeException("Database error"));
+  void itemAssetsReset_shouldUnregisterAndClear_whenSuccessful() {
+    Map<String, Object> asset = Map.of("item_id", "item1", "asset_name", "a1", "is_registered", true);
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.itemAssetsReset(true);
 
-    // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, never()).unregisterLayer(anyString());
-    verify(stacRepository, never()).deleteItemAssetLayer(anyString());
-    verify(stacRepository, never()).clearLayers();
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
 
-    assertThat(result).isFalse();
+    assertThat(result).isTrue();
   }
+
 
 }
