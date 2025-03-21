@@ -59,7 +59,7 @@ public class DataService {
    *
    * @param collectionId The database id of the collection
    * @return A String object that represents the List of key value pairs from the
-   * given collection's metadata
+   *         given collection's metadata
    * @throws JsonProcessingException Exception thrown when there's an error in the
    *                                 JSON Processing
    */
@@ -214,7 +214,7 @@ public class DataService {
    */
   public List<Map<String, Object>> getCollections(double[] bbox) {
     logger.debug("Fetching collections from database with bbox: {}",
-      bbox != null ? Arrays.toString(bbox) : "No bbox");
+        bbox != null ? Arrays.toString(bbox) : "No bbox");
 
     try {
       // Fetch collections from repository
@@ -223,11 +223,11 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-        .map(collection -> Map.of(
-          "key", collection.get("key") == null ? "" : collection.get("key"),
-          "id", collection.get("id") == null ? "" : collection.get("id"),
-          "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of(
+              "key", collection.get("key") == null ? "" : collection.get("key"),
+              "id", collection.get("id") == null ? "" : collection.get("id"),
+              "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections", e);
@@ -262,8 +262,8 @@ public class DataService {
    * This method queries collections ordered by their name (`id` field) and
    * restructures the response for client consumption.
    *
-   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                      null, no filter is applied.
+   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
+   *                     null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
@@ -300,8 +300,8 @@ public class DataService {
    * date and
    * restructures the response for client consumption.
    *
-   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                      null, no filter is applied.
+   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
+   *             null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
@@ -513,7 +513,7 @@ public class DataService {
    * @param id         String object representing the pgSTAC item's id
    * @param collection String object representing the pgSTAC collection's id
    * @return List object that contains the data of the given item relating to the
-   * given collection
+   *         given collection
    */
   public List<Map<String, Object>> getItem(String id, String collection) {
     logger.info("Fetching item from database with id: {} and collection: {}", id, collection);
@@ -535,7 +535,7 @@ public class DataService {
    * Method responsible for removing all items from the database
    *
    * @return String object clarifying whether the removal of all items from the
-   * database was successful
+   *         database was successful
    */
   public String removeAllItems() {
     logger.info("Removing all items from database");
@@ -553,7 +553,7 @@ public class DataService {
    *
    * @param collectionId String object representing the id of the given collection
    * @return String clarifying if the removal of the items from the given
-   * collection was successful
+   *         collection was successful
    */
   public String removeItemsFromCollection(String collectionId) {
     logger.info("Removing items from collection: {}", collectionId);
@@ -600,6 +600,7 @@ public class DataService {
       return "No internet connection could be established";
     }
   }
+
 
   /**
    * Method responsible for registering all assets for a specific item.
@@ -823,9 +824,6 @@ public class DataService {
 
     return allUnregisteredSuccessfully;
   }
-
-
-
 
   /**
    * Method responsible for retrieving all loaded layers
