@@ -88,11 +88,11 @@ const createCollectionDataLayer = (map: Map): VectorLayer => {
       const view = map.getView();
       const resolution = view.getResolutionForExtent(extent, map.getSize());
       const zoom = view.getZoomForResolution(resolution);
-      view.animate({
-        center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
-        zoom: zoom ? zoom - 1 : 1, 
-        duration: 1000 
-      });
+      // view.animate({
+      //   center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
+      //   zoom: zoom ? zoom - 1 : 1,
+      //   duration: 1000
+      // });
     }
   });
 

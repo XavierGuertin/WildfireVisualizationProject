@@ -35,6 +35,8 @@ interface MapLayerContextValue {
   setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   itemIds: string[];
   setItemIds: React.Dispatch<React.SetStateAction<string[]>>;
+  isProcessLoading: boolean;
+  setIsProcessLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(
@@ -52,6 +54,8 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [selectedAssetLayers, setSelectedAssetLayers] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [itemIds, setItemIds] = useState<string[]>([])
+  const [isProcessLoading, setIsProcessLoading] = useState<boolean>(false);
+
 
   // Timeline playback speed
   const [speed, setSpeed] = useState<number>(1);
@@ -61,12 +65,25 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   // Map Specific Functions
   const resetView = () => {
     if (mapRef.current) {
-      mapRef.current.getView().animate({
+      const map = mapRef.current;
+
+      // Remove all layers except the one with ID 'baseLayer'
+      const layersToRemove = map.getLayers().getArray().filter((layer) => {
+        return layer.get('id') !== 'baseLayer';
+      });
+
+      layersToRemove.forEach((layer) => {
+        map.removeLayer(layer);
+      });
+
+      // Reset the view
+      map.getView().animate({
         center: [-75.6972, 45.4215],
         zoom: 1,
       });
     }
   };
+
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -96,9 +113,11 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       isPlaying,
       setIsPlaying,
       itemIds,
-      setItemIds
+      setItemIds,
+      isProcessLoading,
+      setIsProcessLoading
     }),
-    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers, isPlaying, itemIds, setItemIds]
+    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers, isPlaying, itemIds, isProcessLoading]
   );
 
   return (

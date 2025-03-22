@@ -47,29 +47,48 @@ const Footer = () => {
     setIsPlaying,
     itemIds,
     setItemIds,
+    isProcessLoading
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    null,
-  );
-  const [loadedTimestamp, setLoadedTimestamp] = useState<string | null>(null);
 
   const speedValues = [0.5, 1, 1.5, 2, 4];
 
   const processLoadedLayers = async (itemId: string) => {
     console.log(itemId);
-    await loadAssetLayers(itemId);
-    const response = await getLoadedLayers();
-    if (response.error !== 'Failed to fetch loaded layers') {
-      setLoadedLayers(response);
-      console.log(response);
-      console.log('loadedLayers: ' + loadedLayers);
+    if (!isProcessLoading){
+      if (itemId) {
+        await loadAssetLayers(itemId);
+        const response = await getLoadedLayers();
+        if (response.error !== 'Failed to fetch loaded layers') {
+          setLoadedLayers(response);
+          console.log(response);
+          console.log('loadedLayers: ' + loadedLayers);
+
+          const map = mapRef.current as Map;
+          if (selectedAssetLayers.length > 0) {
+            selectedAssetLayers.forEach((layer) => {
+              if (response.length > 0) {
+                const layerData = response.find(
+                  (obj: { asset_name: string }) => obj.asset_name === layer,
+                );
+                toggleAssetLayer(map, layer, "", false);
+                toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
+              }
+            });
+          }
+        }
+      }
     }
   };
+
+  useEffect(() => {
+    if (!isProcessLoading)
+      processLoadedLayers(itemIds[sliderValue]);
+  }, [isProcessLoading]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -225,15 +244,6 @@ const Footer = () => {
       await setTimeStamps(timestampsResponse);
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
-
-      const loadedAssetSilderValue = localStorage.getItem(
-        'loadedAssetSilderValue',
-      );
-      if (loadedAssetSilderValue) {
-        setLoadedTimestamp(
-          timestampsResponse[parseInt(loadedAssetSilderValue)],
-        );
-      }
     }
     const itemIdsResponse = await fetchItemIds();
     if (itemIdsResponse) {
@@ -250,43 +260,12 @@ const Footer = () => {
     // Always update the base map layer
     if (timeStamps.length > 0) {
       if (itemIds.length > 0) {
-        console.log(itemIds);
-        console.log(
-          'slider value change, item id should be displayed: ' +
-            itemIds[sliderValue],
-        );
         processLoadedLayers(itemIds[sliderValue]);
       }
       const map = mapRef.current as Map;
       changeLayer(map, false, currentTimestamp);
     }
-  }, [sliderValue, timeStamps, loadedTimestamp]);
-
-  /**
-   * Add layer if the timeStamps list is populated
-   */
-  useEffect(() => {
-    if (timeStamps.length > 0) {
-      const map = mapRef.current as Map;
-      changeLayer(map, false, timeStamps[sliderValue]);
-    }
-  }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change DO WE ADD LOADED LAYERS ON THIS?
-
-  useEffect(() => {
-    const map = mapRef.current as Map;
-    if (selectedAssetLayers.length > 0) {
-      selectedAssetLayers.forEach((layer) => {
-        if (loadedLayers.length > 0) {
-          const layerData = loadedLayers.find(
-            (layerName) => layerName.asset_name === layer,
-          );
-          console.log(layer)
-          toggleAssetLayer(map, layer, layerData.layer_url, false);
-          toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
-        }
-      });
-    }
-  }, [sliderValue]);
+  }, [sliderValue, timeStamps]);
 
   return (
     <div className="footerContainer" data-testid="footer-container">

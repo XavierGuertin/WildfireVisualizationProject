@@ -49,6 +49,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [targetLoading, setTargetLoading] = useState(name);
 
   const MySwal = withReactContent(Swal);
   const {
@@ -58,6 +59,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setCollectionId,
     setLoadedLayers,
     setItemIds,
+    setIsProcessLoading,
+    setSelectedAssetLayers,
+    mapRef,
+    setIsPlaying
   } = useMapLayerContext();
 
   const onLoadDataset = async () => {
@@ -83,13 +88,30 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       });
 
       if (result.isConfirmed) {
+        setTargetLoading("collection items");
         setLoading(true); // Show loading overlay
+        setIsProcessLoading(true);
         localStorage.setItem('sliderValue', '0');
         setSliderValue(0);
         setProgress(0);
         await resetItems();
         await resetItemAssets();
         setLoadedLayers([]);
+        setSelectedAssetLayers([]);
+        setIsPlaying(false);
+        if (mapRef.current) {
+          const map = mapRef.current;
+
+          // Remove all layers except those with ID 'baseLayer' or 'dataLayer'
+          const layersToRemove = map.getLayers().getArray().filter((layer) => {
+            const id = layer.get('id');
+            return id !== 'baseLayer' && id !== 'dataLayer';
+          });
+
+          layersToRemove.forEach((layer) => {
+            map.removeLayer(layer);
+          });
+        }
 
         try {
           // Start fetching items asynchronously
@@ -163,6 +185,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           };
 
           await pollProgress();
+          setTargetLoading("collection item assets")
           setLoading(true);
           setProgress(0);
 
@@ -182,6 +205,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                   toast.success(t('assets_fetch_success'), {
                     toastId: 'assets-success',
                   });
+                  setIsProcessLoading(false);
                   return;
                 }
               }
@@ -219,7 +243,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const NonCollapsedMetaData = (
     <div className="metadata-container">
       <div className="header" onClick={toggleCollapse} data-testid="name-div">
-        {name || t('unknown_name')}
+        {targetLoading || t('unknown_name')}
         <span className="collapse-icon">
           <RiCollapseDiagonalFill size={20} />
         </span>
@@ -261,7 +285,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           <LoadingModule
             progress={progress}
             isVisible={loading}
-            datasetBeingLoaded={name}
+            datasetBeingLoaded={targetLoading}
             data-testid="loading-module"
           />
           {t('load_dataset')}

@@ -52,7 +52,8 @@ const SettingsPanel: React.FC<{
     mapRef,
     setTimeStamps,
     setCollectionId,
-    setIsPlaying
+    setIsPlaying,
+    setSelectedAssetLayers
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -145,6 +146,7 @@ const SettingsPanel: React.FC<{
         await resetCollections();
         await resetItems();
         await resetItemAssets();
+        setSelectedAssetLayers([]);
 
         const message = await fetchCollectionsFromEndpoint(endpointUrl);
         toast.success(message);
@@ -232,6 +234,7 @@ const SettingsPanel: React.FC<{
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
         resetView();
+        setSelectedAssetLayers([]);
         try {
           await resetConfig();
           await promptForEndpoint(
