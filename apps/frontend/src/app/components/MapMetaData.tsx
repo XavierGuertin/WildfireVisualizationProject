@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
 import { getConfig, saveConfig } from '../services/configApi';
+import AssetsDropdown from './AssetsDropdown';
 
 interface MapMetaDataProps {
   id?: string;
@@ -212,6 +213,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           />
           {t('load_dataset')}
         </button>
+        <AssetsDropdown />
       </div>
     </div>
   );
