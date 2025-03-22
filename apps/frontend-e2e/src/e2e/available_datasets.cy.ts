@@ -48,4 +48,20 @@ describe('dataset', () => {
     cy.get('[data-testid=collapse-button]').click()
     cy.get(".datasets-container").should('not.have.class', 'collapsed')
   });
+
+  it('filters by name ascending', () => {
+
+  })
+
+  it('filters by name descending', () => {
+    
+  })
+
+  it('filters by date ascending', () => {
+
+  })
+  
+  it('filters by date descending', () => {
+    
+  })
 });
