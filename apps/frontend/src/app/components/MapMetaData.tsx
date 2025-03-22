@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -9,6 +9,10 @@ import {
   fetchTimestamps,
   resetItemAssets,
   resetItems,
+  loadAssets,
+  loadAssetLayers,
+  getLoadedLayers,
+  fetchItemIds,
 } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
@@ -53,6 +57,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setSliderValue,
     setCollectionId,
     setLoadedLayers,
+    setItemIds,
   } = useMapLayerContext();
 
   const onLoadDataset = async () => {
@@ -100,17 +105,37 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           });
 
           const pollProgress = async () => {
+            let lastProgress = -1;
+            let stableCount = 0;
+            const maxStableCount = 10; // e.g., 10 seconds with 1s interval
+
             while (true) {
               const progressResponse = await fetchProgress(id);
 
               if ('progress' in progressResponse) {
-                setProgress(progressResponse.progress);
+                const currentProgress = progressResponse.progress;
+                setProgress(currentProgress);
+
                 const timestamps = await fetchTimestamps();
                 setTimeStamps(timestamps);
+                const itemIds = await fetchItemIds();
+                setItemIds(itemIds);
                 setCollectionId(id);
-                // Stop the loop when progress reaches 100%
-                if (progressResponse.progress >= 100) {
-                  // sleep for 1 second to allow the items to be loaded
+
+                if (currentProgress === lastProgress) {
+                  stableCount++;
+                } else {
+                  stableCount = 0;
+                  lastProgress = currentProgress;
+                }
+
+                // Consider done if stable for too long or if progress reaches 100
+                if (currentProgress >= 100 || stableCount >= maxStableCount) {
+                  // Optional: Set progress to 100 if stuck
+                  if (currentProgress < 100) {
+                    setProgress(100);
+                  }
+
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   setLoading(false);
                   toast.success(t('items_fetch_success'), {
@@ -128,16 +153,44 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                       err,
                     );
                   }
+
                   return;
                 }
               }
 
-              // Increase the polling interval to 1 second (1000ms)
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           };
 
-          pollProgress(); // Call the async function for polling
+          await pollProgress();
+          setLoading(true);
+          setProgress(0);
+
+          await loadAssets(id); // triggers backend async processing
+
+          // Now start polling for progress on the asset load
+          const pollAssetProgress = async () => {
+            while (true) {
+              const progressResponse = await fetchProgress(id + '_assets');
+
+              if ('progress' in progressResponse) {
+                setProgress(progressResponse.progress);
+
+                if (progressResponse.progress >= 100) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                  setLoading(false);
+                  toast.success(t('assets_fetch_success'), {
+                    toastId: 'assets-success',
+                  });
+                  return;
+                }
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          };
+
+          pollAssetProgress();
         } catch (error) {
           toast.error('Error loading dataset: ' + error),
             { toastId: 'loading-dataset-error' };

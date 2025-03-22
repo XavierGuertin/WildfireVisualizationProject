@@ -296,6 +296,20 @@ export const fetchTimestamps = async (): Promise<string[]> => {
   }
 };
 
+export const fetchItemIds = async (): Promise<string[]> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-item-ids`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching ids:', error.message);
+    throw new Error(`Failed to fetch ids: ${error.message}`);
+  }
+};
+
 export const fetchItem = async (
   itemId: string,
   collectionId?: string
@@ -364,9 +378,9 @@ export const verifyInternetConnection = async (
   }
 };
 
-export const loadAssets = async (collectionId: string, itemId: string) : Promise<any> => {
+export const loadAssets = async (collectionId: string) : Promise<any> => {
   try {
-    const url = `${BASE_URL}/api/load-assets/${collectionId}/${itemId}`;
+    const url = `${BASE_URL}/api/load-assets/${collectionId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
@@ -385,6 +399,7 @@ export const getLoadedLayers = async (): Promise<any> => {
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
+    console.log(response.body)
     return await response.json();
   } catch (error: any) {
     console.error('Error fetching loaded layers:', error);
@@ -407,5 +422,19 @@ export const resetItemAssets = async (): Promise<string | { error: string }> => 
   } catch (error: any) {
     console.error('Error resetting item assets:', error);
     return { error: `Error resetting item assets: ${error.message}` };
+  }
+};
+
+export const loadAssetLayers = async (itemId: string) : Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/load-asset-layers/${itemId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.text();
+  } catch (error: any) {
+    console.error('Error fetching assets:', error);
+    return { error: 'Failed to fetch assets' };
   }
 };

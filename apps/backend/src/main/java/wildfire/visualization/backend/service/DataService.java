@@ -485,6 +485,16 @@ public class DataService {
     }
   }
 
+  public List<String> getItemsIdsOrderedByTimestamp() {
+    logger.debug("Fetching item timestamp ids from database");
+    try {
+      return stacRepository.getItemsIdsOrderedByTimestamp();
+    } catch (Exception e) {
+      logger.error("Error fetching item timestamp ids: {}", e.getMessage(), e);
+      throw new DataException("Failed to fetch item timestamps", e);
+    }
+  }
+
   /**
    * Method responsible for retrieving a single pgSTAC item from the database
    *

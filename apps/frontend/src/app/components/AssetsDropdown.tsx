@@ -8,34 +8,23 @@ import { toast } from 'react-toastify';
 import { toggleAssetLayer } from './MapView';
 import { Map } from 'ol';
 import '../styles/AssetsDropdown.css';
+import { fetchItemIds } from '../services/api';
 
 const AssetsDropdown = () => {
   const [assetsMenuOpen, setAssetsMenuOpen] = useState(false);
-  const [loadedLayers, setLoadedLayers] = useState<any[]>([]);
+  const [hardcodedLoadedLayers, setHardcodedLoadedLayers] = useState<any[]>([]);
   const { t } = useTranslation();
 
   const {
     mapRef,
-    // loadedLayers,
-    // setLoadedLayers,
-
+    loadedLayers,
+    setLoadedLayers,
+    isLoadingAssets,
+    setIsLoadingAssets,
     selectedAssetLayers,
     setSelectedAssetLayers,
+    setItemIds,
   } = useMapLayerContext();
-
-  useEffect(() => {
-    // Simulating an API call
-    setTimeout(() => {
-      const fetchedAssets = [
-        { asset_id: 501, asset_name: 'wind_direction' },
-        { asset_id: 500, asset_name: 'wind_force' },
-        { asset_id: 499, asset_name: 'humidity' },
-        { asset_id: 498, asset_name: 'iq methane' },
-        { asset_id: 497, asset_name: 'os methane' },
-      ];
-      setLoadedLayers(fetchedAssets);
-    }, 1000);
-  }, []);
 
   // Function to get the appropriate icon for a layer
   const getLayerIcon = (layerName: string) => {
@@ -94,35 +83,47 @@ const AssetsDropdown = () => {
   };
 
   return (
-    <div className="weather-dropdown">
-      {/* Clickable header that ONLY toggles the menu */}
-      <div className="menuHeader" onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}>
-        <span>{t('weather_assets_label')}</span>
-        {assetsMenuOpen ? (
-        <FaAngleUp className="dropdown-icon" size={20} />
-        ) : (
-        <FaAngleRight className="dropdown-icon" size={20} />
-        )}
-      </div>
+    <>
+    {/* isLoadingAssets || !(loadedLayers.length > 0) */}
+      {false ? (
+        <></>
+      ) : (
+        <div className="weather-dropdown">
+          {/* Clickable header that ONLY toggles the menu */}
+          <div
+            className="menuHeader"
+            onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
+          >
+            <span>{t('weather_assets_label')}</span>
+            {assetsMenuOpen ? (
+              <FaAngleUp className="dropdown-icon" size={20} />
+            ) : (
+              <FaAngleRight className="dropdown-icon" size={20} />
+            )}
+          </div>
 
-      {/* Asset list: Clicking these should NOT close the menu */}
-      {assetsMenuOpen && (
-        <div className="assets-list-container">
-          {loadedLayers.length > 0 &&
-            loadedLayers.map((layer, index) => (
-              <button
-                key={index}
-                className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                data-testid={`layerButton-${layer.asset_name}`}
-                onClick={() => handleLayerClick(layer.asset_name)} // Prevents menu closing
-              >
-                {getLayerIcon(layer.asset_name)}
-                {formatLayerName(layer.asset_name)}
-              </button>
-            ))}
+          {/* Asset list: Clicking these should NOT close the menu */}
+          {assetsMenuOpen && (
+            <div className="assets-list-container">
+              {loadedLayers.length > 0 &&
+                [...loadedLayers]
+                  .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+                  .map((layer, index) => (
+                    <button
+                      key={index}
+                      className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                      data-testid={`layerButton-${layer.asset_name}`}
+                      onClick={() => handleLayerClick(layer.asset_name)}
+                    >
+                      {getLayerIcon(layer.asset_name)}
+                      {formatLayerName(layer.asset_name)}
+                    </button>
+                  ))}
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 

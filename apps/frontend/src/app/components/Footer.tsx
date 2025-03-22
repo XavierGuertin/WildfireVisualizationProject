@@ -22,6 +22,8 @@ import {
   getLoadedLayers,
   loadAssets,
   resetItemAssets,
+  loadAssetLayers,
+  fetchItemIds,
 } from '../services/api';
 import { changeLayer, removeAllAssetLayers, toggleAssetLayer } from './MapView';
 
@@ -42,7 +44,9 @@ const Footer = () => {
     selectedAssetLayers,
     setSelectedAssetLayers,
     isPlaying,
-    setIsPlaying
+    setIsPlaying,
+    itemIds,
+    setItemIds,
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
@@ -55,6 +59,17 @@ const Footer = () => {
   const [loadedTimestamp, setLoadedTimestamp] = useState<string | null>(null);
 
   const speedValues = [0.5, 1, 1.5, 2, 4];
+
+  const processLoadedLayers = async (itemId: string) => {
+    console.log(itemId);
+    await loadAssetLayers(itemId);
+    const response = await getLoadedLayers();
+    if (response.error !== 'Failed to fetch loaded layers') {
+      setLoadedLayers(response);
+      console.log(response);
+      console.log('loadedLayers: ' + loadedLayers);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -89,7 +104,7 @@ const Footer = () => {
 
   const handlePlayPause = () => {
     if (timeStamps.length === 0) return;
-    setIsPlaying(prev => !prev);
+    setIsPlaying((prev) => !prev);
   };
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
@@ -125,7 +140,7 @@ const Footer = () => {
           localStorage.setItem('sliderValue', newValue.toString());
           return newValue;
         });
-      }, 1000 / speed);
+      }, 5000 / speed);
     } else {
       clearInterval(intervalRef.current!);
     }
@@ -201,170 +216,51 @@ const Footer = () => {
    */
   const initializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
+    const stringCurrentSliderValue = localStorage.getItem('sliderValue');
+    // Check if there's a saved slider value in localStorage, otherwise default to 0
+    const currentSliderValue = stringCurrentSliderValue
+    ? parseInt(stringCurrentSliderValue)
+    : 0;
     if (timestampsResponse) {
       await setTimeStamps(timestampsResponse);
-      const stringCurrentSliderValue = localStorage.getItem('sliderValue');
-
-      // Check if there's a saved slider value in localStorage, otherwise default to 0
-      const currentSliderValue = stringCurrentSliderValue
-        ? parseInt(stringCurrentSliderValue)
-        : 0;
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
 
-      const loadedAssetSilderValue = localStorage.getItem('loadedAssetSilderValue');
+      const loadedAssetSilderValue = localStorage.getItem(
+        'loadedAssetSilderValue',
+      );
       if (loadedAssetSilderValue) {
-        setLoadedTimestamp(timestampsResponse[parseInt(loadedAssetSilderValue)]);
+        setLoadedTimestamp(
+          timestampsResponse[parseInt(loadedAssetSilderValue)],
+        );
       }
     }
-  };
-
-  const [hoveredThumb, setHoveredThumb] = useState(false);
-  const [hoverBoxLocked, setHoverBoxLocked] = useState(false);
-  const [hoveredBox, setHoveredBox] = useState(false);
-
-  const formatTimestampForItemId = (timestamp: string): string => {
-    const date = new Date(timestamp);
-
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-
-    return `wildfire_timestamp_${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
-  };
-
-  useEffect(() => {
-    // Reset loadedTimestamp when timestamps array changes (new dataset loaded)
-    if (timeStamps.length == 0){
-      setLoadedTimestamp(null);
+    const itemIdsResponse = await fetchItemIds();
+    if (itemIdsResponse) {
+      await setItemIds(itemIdsResponse);
     }
-    setHoverBoxLocked(false);
-  }, [timeStamps]);
+    if(itemIdsResponse.length > 0)
+      await processLoadedLayers(itemIdsResponse[currentSliderValue])
+  };
 
   // Handle slider value changes
   useEffect(() => {
     const currentTimestamp = timeStamps[sliderValue];
 
-    // Only reset assets if we're not returning to the previously loaded timestamp
-    if (currentTimestamp !== loadedTimestamp) {
-      setLoadedLayers([]);
-      setSelectedAssetLayers([]);
-
-      if (mapRef.current) {
-        removeAllAssetLayers(mapRef.current);
-      }
-    }
-
-    // If we are returning to the loaded timestamp, refresh the layers data
-    else if (currentTimestamp === loadedTimestamp) {
-      getLoadedLayers().then(layers => {
-        if (Array.isArray(layers) && layers.length > 0) {
-          setLoadedLayers(layers);
-        }
-      });
-    }
-
     // Always update the base map layer
     if (timeStamps.length > 0) {
+      if (itemIds.length > 0) {
+        console.log(itemIds);
+        console.log(
+          'slider value change, item id should be displayed: ' +
+            itemIds[sliderValue],
+        );
+        processLoadedLayers(itemIds[sliderValue]);
+      }
       const map = mapRef.current as Map;
       changeLayer(map, false, currentTimestamp);
     }
   }, [sliderValue, timeStamps, loadedTimestamp]);
-
-  const onloadAssetsClick = async () => {
-    try {
-      setIsLoadingAssets(true);
-      setLoadedLayers([]);
-
-      // To be fixed
-      const selectedCollectionId = localStorage.getItem("selectedDatasetId");
-      const itemId = formatTimestampForItemId(timeStamps[sliderValue]);
-      if (!selectedCollectionId) {
-        setIsLoadingAssets(false);
-        return;
-      }
-      await resetItemAssets();
-      const response = await loadAssets(selectedCollectionId, itemId);
-
-      if (typeof response === 'object' && response.error) {
-        toast.error(`Failed to load assets`);
-        setIsLoadingAssets(false);
-      } else {
-
-        // To be fixed
-        localStorage.setItem('loadedAssetSilderValue', sliderValue.toString());
-        setLoadedTimestamp(timeStamps[sliderValue]);
-
-
-
-        await pollLoadedLayersUntilComplete();
-      }
-    } catch (error) {
-      console.error('Error loading assets:', error);
-      toast.error('Failed to load assets');
-      setIsLoadingAssets(false);
-    }
-  };
-
-  const [isLoadingComplete, setIsLoadingComplete] = useState(true);
-
-  const pollLoadedLayersUntilComplete = async () => {
-    // Clear any existing interval first
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
-
-    setIsLoadingComplete(false);
-
-    try {
-      let lastLayerCount = 0;
-      let stableCount = 0;
-      const stabilityThreshold = 2;
-
-      while (true) {
-        const layers = await getLoadedLayers();
-
-        if (Array.isArray(layers)) {
-          // Always update UI with the layers we have so far
-          setLoadedLayers(layers);
-
-          // Check if the layer count has stabilized (no new layers added)
-          if (layers.length === lastLayerCount) {
-            stableCount++;
-          } else {
-            stableCount = 0;
-            lastLayerCount = layers.length;
-          }
-
-          // If layer count has been stable for several polling intervals and we have layers
-          if (stableCount >= stabilityThreshold && layers.length > 0) {
-            setIsLoadingComplete(true);
-            setIsLoadingAssets(false);
-            return;
-          }
-        }
-
-        // Wait before next poll
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
-    } catch (error) {
-      console.error('Error polling loaded layers:', error);
-      setIsLoadingComplete(true);
-      setIsLoadingAssets(false);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
 
   /**
    * Add layer if the timeStamps list is populated
@@ -374,92 +270,23 @@ const Footer = () => {
       const map = mapRef.current as Map;
       changeLayer(map, false, timeStamps[sliderValue]);
     }
-  }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change
+  }, [sliderValue, timeStamps]); // Runs whenever sliderValue or timeStamps change DO WE ADD LOADED LAYERS ON THIS?
 
-  const handleLayerClick = (layerName: string) => {
+  useEffect(() => {
     const map = mapRef.current as Map;
-    if (!map) {
-      toast.error('Map not initialized');
-      return;
+    if (selectedAssetLayers.length > 0) {
+      selectedAssetLayers.forEach((layer) => {
+        if (loadedLayers.length > 0) {
+          const layerData = loadedLayers.find(
+            (layerName) => layerName.asset_name === layer,
+          );
+          console.log(layer)
+          toggleAssetLayer(map, layer, layerData.layer_url, false);
+          toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
+        }
+      });
     }
-
-    // Find the layer data
-    const layerData = loadedLayers.find(
-      (layer) => layer.asset_name === layerName,
-    );
-    if (!layerData || !layerData.layer_url) {
-      toast.error(`Layer URL not found for ${layerName}`);
-      return;
-    }
-
-    // Check if this layer is already selected
-    const isSelected = selectedAssetLayers.includes(layerName);
-
-    if (isSelected) {
-      // Remove from selected layers
-      setSelectedAssetLayers((prev) =>
-        prev.filter((name) => name !== layerName),
-      );
-      // Remove from map
-      toggleAssetLayer(map, layerName, layerData.layer_url, false);
-    } else {
-      // Add to selected layers
-      setSelectedAssetLayers((prev) => [...prev, layerName]);
-      // Add to map
-      toggleAssetLayer(map, layerName, layerData.layer_url, true);
-    }
-  };
-
-  // Function to format layer name
-  const formatLayerName = (name: string): string => {
-    return name
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  // Function to get the appropriate icon for a layer
-  // Function to get the appropriate icon for a layer
-  const getLayerIcon = (layerName: string) => {
-    switch (layerName) {
-      case 'humidity':
-        return (
-          <BsDropletFill
-            className="layerButtonIcon"
-            color={
-              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
-            }
-          />
-        );
-      case 'wind_force':
-        return (
-          <FaWind
-            className="layerButtonIcon"
-            color={
-              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
-            }
-          />
-        );
-      case 'wind_direction':
-        return (
-          <FaRegCompass
-            className="layerButtonIcon"
-            color={
-              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
-            }
-          />
-        );
-      default:
-        return (
-          <IoIosSettings
-            className="layerButtonIcon"
-            color={
-              selectedAssetLayers.includes(layerName) ? 'white' : '#00447E'
-            }
-          />
-        );
-    }
-  };
+  }, [sliderValue]);
 
   return (
     <div className="footerContainer" data-testid="footer-container">
@@ -520,167 +347,20 @@ const Footer = () => {
           <div className="sliderTrack">
             {timeStamps.length > 0 && (
               <>
-                {loadedTimestamp && (
-                  <div
-                    className="slider-loaded-tag"
-                    style={{
-                      left: `${
-                        timeStamps.indexOf(loadedTimestamp) >= 0
-                          ? (timeStamps.indexOf(loadedTimestamp) /
-                              (timeStamps.length - 1)) *
-                              94 +
-                            3
-                          : 0
-                      }%`,
-                      display:
-                        timeStamps.indexOf(loadedTimestamp) >= 0
-                          ? 'block'
-                          : 'none',
-                    }}
-                    title="Assets loaded for this timestamp"
-                  >
-                    {t('loaded')}
-                  </div>
-                )}
-
-                <div
-                  className="timeMarkerHoverBox"
-                  data-testid="hoverBox"
-                  style={{
-                    left: `${
-                      timeStamps.length > 1
-                        ? Math.min(96, Math.max(4, (sliderValue / (timeStamps.length - 1)) * 92 + 4))
-                        : 4
-                    }%`,
-                  }}
-                  data-hovered={
-                    hoveredThumb || hoveredBox || hoverBoxLocked
-                      ? 'true'
-                      : 'false'
-                  }
-                  data-locked={hoverBoxLocked ? 'true' : 'false'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setHoverBoxLocked(true);
-                  }}
-                  onMouseEnter={(e) => {
-                    e.stopPropagation();
-                    setHoveredBox(true);
-                  }}
-                  onMouseLeave={(e) => {
-                    e.stopPropagation();
-                    setHoveredBox(false);
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  {hoverBoxLocked ? (
-                    <FaAngleDown
-                      className="hoverBoxIcon"
-                      size={20}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setHoverBoxLocked(false);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  ) : (
-                    <FaAngleUp className="hoverBoxIcon" size={20} />
-                  )}
-                  <span className="hoverBoxText">
-                    {t('weather_assets_label')}
-                  </span>
-                  {hoverBoxLocked && (
-                    <>
-                      {isLoadingAssets ? (
-                        <div className="layerButtonsContainer" style={{ position: 'relative' }}>
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              zIndex: 10,
-                              borderRadius: '4px',
-                            }}
-                          >
-                            <div className="spinner"></div>
-                            <span>{t('loading_label')}</span>
-                          </div>
-
-                          {/* Display layers as they load */}
-                          {loadedLayers.length > 0 && loadedLayers.map((layer, index) => (
-                            <button
-                              key={index}
-                              className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                              data-testid={`layerButton-${layer.asset_name}`}
-                              onClick={() => null} // Disabled during loading
-                              disabled={true}
-                              style={{
-                                opacity: 0.7,
-                                cursor: 'default',
-                              }}
-                            >
-                              {getLayerIcon(layer.asset_name)}
-                              {formatLayerName(layer.asset_name)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : loadedLayers.length > 0 && loadedTimestamp === timeStamps[sliderValue] ? (
-                        <div className="layerButtonsContainer" data-testid="layerButtonsContainer">
-                          {loadedLayers.map((layer, index) => (
-                            <button
-                              key={index}
-                              data-testid={`layerButton-${layer.asset_name}`}
-                              className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                              onClick={() => handleLayerClick(layer.asset_name)}
-                            >
-                              {getLayerIcon(layer.asset_name)}
-                              {formatLayerName(layer.asset_name)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <button
-                          className="loadAssetsButton"
-                          data-testid="loadAssetsButton"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onloadAssetsClick();
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <FiDownload
-                            color="white"
-                            size={16}
-                            style={{ marginRight: '8px' }}
-                          />
-                          {t('load_assets_button')}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
                 <div
                   className="timeMarkerThumb"
                   style={{
                     left: `${
                       timeStamps.length > 1
-                        ? Math.min(96, Math.max(4, (sliderValue / (timeStamps.length - 1)) * 92 + 4))
+                        ? Math.min(
+                            96,
+                            Math.max(
+                              4,
+                              (sliderValue / (timeStamps.length - 1)) * 92 + 4,
+                            ),
+                          )
                         : 4
                     }%`,
-                  }}
-                  onMouseEnter={() => setHoveredThumb(true)}
-                  onMouseLeave={() => setHoveredThumb(false)}
-                  onClick={() => {
-                    if (hoveredBox || hoveredThumb) {
-                      setHoverBoxLocked(!hoverBoxLocked);
-                    }
                   }}
                 >
                   <span className="timeMarkerText">
