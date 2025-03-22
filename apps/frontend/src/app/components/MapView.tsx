@@ -5,7 +5,7 @@ import 'ol/ol.css';
 import '../styles/map.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { defaults as defaultControls, FullScreen } from 'ol/control.js';
+import { defaults as defaultControls, FullScreen, Attribution  } from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
@@ -18,8 +18,12 @@ import { Style, Stroke, Fill } from 'ol/style';
 import ImageLayer from 'ol/layer/Image';
 import { ImageWMS } from 'ol/source';
 
-const attributions =
-  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+// Attributions
+const attribution = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const arcGIS_attribution = 'ArcGIS Online map hosted by Esri';
+const opentopomap_attribution = '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
+
+// Map layers
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
 const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
@@ -30,7 +34,7 @@ const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 const offlineLayer = new TileLayer({
   source: new XYZ({
     url: OFFLINE_LAYER_URL,
-    attributions: attributions,
+    attributions: attribution,
   }),
   zIndex: -10,
 });
@@ -39,7 +43,7 @@ const offlineLayer = new TileLayer({
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: DEFAULT_LAYER_URL,
-    attributions: attributions,
+    attributions: attribution,
   }),
   zIndex: -10,
 });
@@ -47,7 +51,7 @@ const defaultLayer = new TileLayer({
 const satelliteLayer = new TileLayer({
   source: new XYZ({
     url: SATELLITE_LAYER_URL,
-    attributions: attributions,
+    attributions: arcGIS_attribution,
   }),
   zIndex: -10,
 });
@@ -55,7 +59,7 @@ const satelliteLayer = new TileLayer({
 const topographicLayer = new TileLayer({
   source: new XYZ({
     url: TOPOGRAPHIC_LAYER_URL,
-    attributions: attributions,
+    attributions: `${attribution} | ${opentopomap_attribution}`,
   }),
   zIndex: -10,
 });
@@ -197,7 +201,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
-        controls: defaultControls().extend([new FullScreen()]),
+        controls: defaultControls({attribution: false}).extend([new FullScreen, new Attribution({collapsible: false})]),
         layers: mapRef.current ? [getLayer(), createCollectionDataLayer(mapRef.current)] : [getLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
