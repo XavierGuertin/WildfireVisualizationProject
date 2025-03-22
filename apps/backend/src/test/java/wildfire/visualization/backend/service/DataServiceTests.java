@@ -17,7 +17,6 @@ import wildfire.visualization.backend.exception.DataException;
 import wildfire.visualization.backend.exception.RepositoryException;
 import wildfire.visualization.backend.repository.StacRepository;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -925,91 +924,220 @@ class DataServiceTests {
   }
 
   @Test
-  void testProcessItemAssets_Success() throws Exception {
-    // Arrange
-    String collectionId = "testCollection";
-    String itemId = "testItem";
+  void processItemAssetsRefresh_shouldReturnFalse_whenItemNotFound() {
+    when(stacRepository.getItem("item123")).thenReturn(List.of());
 
-    // Mock database query result
-    PGobject pgObject = new PGobject();
-    pgObject.setType("jsonb");
-    pgObject.setValue("""
-        {
-            "assets": {
-                "asset1": {"href": "http://example.com/test1.tif"},
-                "asset2": {"href": "http://example.com/test2.tif"}
-            }
-        }
-    """);
-    List<Map<String, Object>> queryResults = List.of(Map.of("get_item", pgObject));
-    when(stacRepository.getItem(itemId)).thenReturn(queryResults);
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Mock parsing JSON
-    JsonNode mockJsonNode = new ObjectMapper().readTree(pgObject.getValue());
-    when(objectMapper.readTree(anyString())).thenReturn(mockJsonNode);
-
-    // Mock layers
-    List<Map<String, Object>> existingLayers = List.of(Map.of("asset_name", "oldLayer"));
-    when(stacRepository.getLoadedLayers()).thenReturn(existingLayers);
-
-    // Mock services
-    when(geoServerService.unregisterLayer(anyString())).thenReturn(true);
-    doNothing().when(stacRepository).clearLayers();
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString())).thenReturn(true);
-
-    // Act
-    dataService.processItemAssets(collectionId, itemId);
-
-    // Allow some time for async execution (optional)
-    Thread.sleep(200);
-
-    // Assert
-    verify(stacRepository, times(1)).getItem(itemId);
-    verify(objectMapper, times(1)).readTree(anyString());
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("oldLayer");
-    verify(stacRepository, times(1)).clearLayers();
-    verify(geoTIFFService, times(2)).processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString());
+    assertThat(result).isFalse();
   }
 
   @Test
-  void itemAssetsReset_Success() {
-    // Arrange: Mock database layers
-    List<Map<String, Object>> mockLayers = List.of(
-      Map.of("asset_name", "layer1"),
-      Map.of("asset_name", "layer2")
-    );
-    when(stacRepository.getLoadedLayers()).thenReturn(mockLayers);
+  void processItemAssetsRefresh_shouldReturnFalse_whenUnexpectedDataType() {
+    Map<String, Object> item = Map.of("get_item", 12345); // Not PGobject
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("layer1");
-    verify(geoServerService, times(1)).unregisterLayer("layer2");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer1");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer2");
-    verify(stacRepository, times(1)).clearLayers();
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldReturnFalse_onJsonParsingException() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{invalid json}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldRegisterAssetsSuccessfully() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{\"assets\": {\"a1\": {}, \"a2\": {}}}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+
+    JsonNode mockRoot = mock(JsonNode.class);
+    JsonNode mockAssets = mock(JsonNode.class);
+
+    when(objectMapper.readTree(anyString())).thenReturn(mockRoot);
+    when(mockRoot.get("assets")).thenReturn(mockAssets);
+    when(mockAssets.fieldNames()).thenReturn(List.of("a1", "a2").iterator());
+    when(geoTIFFService.registerGeoTIFF("item123", "a1")).thenReturn(true);
+    when(geoTIFFService.registerGeoTIFF("item123", "a2")).thenReturn(true);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
     assertThat(result).isTrue();
   }
 
   @Test
-  void itemAssetsReset_TotalFailure_ReturnsFalse() {
-    // Arrange: Simulate an exception when getting loaded layers
-    when(stacRepository.getLoadedLayers()).thenThrow(new RuntimeException("Database error"));
+  void itemAssetsReset_shouldUnregisterAndClear_whenSuccessful() {
+    Map<String, Object> asset = Map.of("item_id", "item1", "asset_name", "a1", "is_registered", true);
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.itemAssetsReset(true);
+
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void itemAssetsReset_shouldSucceedOnFirstAttempt() {
+    Map<String, Object> asset = Map.of(
+      "item_id", "item1",
+      "asset_name", "a1",
+      "is_registered", true
+    );
+
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
+
+    boolean result = dataService.itemAssetsReset(true);
+
+    assertThat(result).isTrue();
+    verify(geoServerService).unregisterLayer("item1_a1");
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
+  }
+
+  @Test
+  void itemAssetsReset_shouldRetryAndFailAfterMaxAttempts() {
+    // Spy on dataService
+    DataService spyService = spy(dataService);
+
+    // Force the internal retry method to fail 3 times
+    doReturn(false).when(spyService).tryItemAssetsResetOnce(true);
+
+    // Execute
+    boolean result = spyService.itemAssetsReset(true);
 
     // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, never()).unregisterLayer(anyString());
-    verify(stacRepository, never()).deleteItemAssetLayer(anyString());
-    verify(stacRepository, never()).clearLayers();
-
     assertThat(result).isFalse();
+    verify(spyService, times(3)).tryItemAssetsResetOnce(true); // Retries 3 times
   }
+
+  @Test
+  void processItemAssets_shouldHandleEmptyResults() {
+    when(stacRepository.getAllItems("empty-collection")).thenReturn(List.of());
+
+    dataService.processItemAssets("empty-collection");
+
+    assertThat(dataService.getProgress("empty-collection_assets")).isEqualTo(-1); // completed without items
+  }
+
+  @Test
+  void processItemAssets_shouldHandleUnexpectedSearchType() {
+    Map<String, Object> mockRow = Map.of("search", 123); // Not PGobject or String
+    when(stacRepository.getAllItems("bad-search")).thenReturn(List.of(mockRow));
+
+    dataService.processItemAssets("bad-search");
+
+    assertThat(dataService.getProgress("bad-search_assets")).isEqualTo(-1); // No crash, handled gracefully
+  }
+
+  @Test
+  void processItemAssets_shouldHandleJsonParsingError() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{ invalid json");
+
+    Map<String, Object> mockRow = Map.of("search", pgObject);
+    when(stacRepository.getAllItems("error-case")).thenReturn(List.of(mockRow));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    dataService.processItemAssets("error-case");
+
+    assertThat(dataService.getProgress("error-case_assets")).isEqualTo(-1); // Error state
+  }
+
+  @Test
+  void processItemAssets_shouldSkipFeaturesWithNoAssets() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("""
+    {
+      "features": [{
+        "id": "item-no-assets",
+        "collection": "collectionX",
+        "assets": {}
+      }]
+    }
+  """);
+
+    Map<String, Object> mockRow = Map.of("search", pgObject);
+    when(stacRepository.getAllItems("no-assets")).thenReturn(List.of(mockRow));
+
+    dataService.processItemAssets("no-assets");
+
+    assertThat(dataService.getProgress("no-assets_assets")).isEqualTo(-1);
+    verifyNoInteractions(geoTIFFService);
+  }
+
+  @Test
+  void processItemAssets_ShouldProcessAssetsForEachFeature() throws Exception {
+    // Arrange
+    String collectionId = "test-collection";
+    String itemId = "item1";
+    String assetKey = "B01";
+    String href = "https://somehost.com/asset1.tif";
+
+    // Build the JSON string to simulate the "search" PGobject
+    String json = String.format("""
+    {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "id": "%s",
+          "collection": "%s",
+          "assets": {
+            "%s": {
+              "href": "%s"
+            }
+          }
+        }
+      ]
+    }
+    """, itemId, collectionId, assetKey, href);
+
+    PGobject pgObject = new PGobject();
+    pgObject.setType("json");
+    pgObject.setValue(json);
+
+    Map<String, Object> row = Map.of("search", pgObject);
+    when(stacRepository.getAllItems(eq(collectionId))).thenReturn(List.of(row));
+
+    // Mock ObjectMapper to parse the JSON string
+    ObjectMapper realMapper = new ObjectMapper(); // Use real one to parse actual JSON
+    JsonNode rootNode = realMapper.readTree(json);
+    when(objectMapper.readTree(anyString())).thenReturn(rootNode);
+
+    // Ensure GeoTIFFService is mocked properly
+    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href))).thenReturn(true);
+
+    // Act
+    dataService.processItemAssets(collectionId);
+
+    // Allow async execution to complete (adjust if needed)
+    Thread.sleep(150);
+
+    // Assert
+    verify(stacRepository).getAllItems(eq(collectionId));
+    verify(objectMapper).readTree(anyString());
+    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href));
+
+    // Check progress is 100%
+    assertThat(dataService.getProgress(collectionId + "_assets")).isEqualTo(100);
+  }
+
+
 
 }
