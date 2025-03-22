@@ -30,16 +30,19 @@ describe('metadata', () => {
 
   });
   it('collapses', () => {
-    // cy.get('.metadata-container').first().should('be.visible');
-    //
-    // //Click on the expanded box
-    // cy.get('[data-testid=name-div]').click();
-    //
-    // cy.get('[data-testid=collapsedMetaData]').should('be.visible');
-    //
-    // //Click on collapsed box
-    // cy.get('[data-testid=collapsedMetaData]').click();
-    //
-    // cy.get('.metadata-container').first().should('be.visible');
+
+    //Select a dataset
+    cy.get('.dataset-button').first().click()
+
+    //Check if metadata container is not collapsed and click it
+    cy.get('.metadata-container').should('exist')
+    cy.get('[data-testid=name-div]').click()
+
+    //Check if metadata container is collapsed and click it
+    cy.get('[data-testid=collapsedMetaData]').should('exist')
+    cy.get('[data-testid=collapsedMetaData]').click()
+
+    //Check if metadata container is not collapsed
+    cy.get('.metadata-container').should('exist')
   });
 });
