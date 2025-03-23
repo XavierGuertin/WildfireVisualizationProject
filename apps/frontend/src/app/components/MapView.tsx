@@ -23,7 +23,8 @@ const attributions =
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
 const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
-const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const SATELLITE_LAYER_URL =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
 // Offline fallback layer for cases with no internet connection
@@ -65,7 +66,7 @@ const topographicLayer = new TileLayer({
  *
  * @returns {VectorLayer} The generated collection data layer for the map.
  */
-const createCollectionDataLayer = (map: Map): VectorLayer => {
+const createCollectionDataLayer = (map: Map | null): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
 
   const vectorSource = new VectorSource({
@@ -77,24 +78,27 @@ const createCollectionDataLayer = (map: Map): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: 'rgba(0, 0, 255, 0.1)' }), // Keeping blue for distinction
-      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 })
-    })
+      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 }),
+    }),
   });
 
   newLayer.set('id', 'dataLayer');
-  vectorSource.once('featuresloadend', () => {
-    const extent = vectorSource.getExtent();
-    if (extent) {
-      const view = map.getView();
-      const resolution = view.getResolutionForExtent(extent, map.getSize());
-      const zoom = view.getZoomForResolution(resolution);
-      // view.animate({
-      //   center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
-      //   zoom: zoom ? zoom - 1 : 1,
-      //   duration: 1000
-      // });
-    }
-  });
+
+  if (map) {
+    vectorSource.once('featuresloadend', () => {
+      const extent = vectorSource.getExtent();
+      if (extent) {
+        const view = map.getView();
+        const resolution = view.getResolutionForExtent(extent, map.getSize());
+        const zoom = view.getZoomForResolution(resolution);
+        view.animate({
+          center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
+          zoom: zoom ? zoom - 1 : 1,
+          duration: 1000,
+        });
+      }
+    });
+  }
 
   return newLayer;
 };
@@ -116,8 +120,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: 'rgba(255, 0, 0, 0.1)' }),
-      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 })
-    })
+      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 }),
+    }),
   });
 
   newLayer.set('id', 'itemLayer');
@@ -130,12 +134,16 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) => {
+export const refreshLayer = (
+  map: Map,
+  collection: boolean,
+  timestamp?: string,
+) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find((layer) => layer.get('id') === 'dataLayer');
   const itemLayer = layers.find((layer) => layer.get('id') === 'itemLayer');
 
-  if(collection){
+  if (collection) {
     if (dataLayer) {
       map.removeLayer(dataLayer);
     }
@@ -143,7 +151,7 @@ export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) 
     map.addLayer(newLayer);
   }
 
-  if(timestamp){
+  if (timestamp) {
     if (itemLayer) {
       map.removeLayer(itemLayer);
     }
@@ -198,7 +206,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
         controls: defaultControls().extend([new FullScreen()]),
-        layers: mapRef.current ? [getLayer(), createCollectionDataLayer(mapRef.current)] : [getLayer()],
+        layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -254,12 +262,16 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const changeLayer = (map: Map, collection: boolean, timestamp?: string) => {
-  if(collection){
-    refreshLayer(map, collection=true)
+export const changeLayer = (
+  map: Map,
+  collection: boolean,
+  timestamp?: string,
+) => {
+  if (collection) {
+    refreshLayer(map, (collection = true));
   }
-  if(timestamp){
-    refreshLayer(map, collection=false, timestamp);
+  if (timestamp) {
+    refreshLayer(map, (collection = false), timestamp);
   }
 };
 
@@ -271,7 +283,12 @@ export const changeLayer = (map: Map, collection: boolean, timestamp?: string) =
  * @param {string} layerUrl - The URL for the tile source
  * @param {boolean} add - Whether to add (true) or remove (false) the layer
  */
-export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, add: boolean): void => {
+export const toggleAssetLayer = (
+  map: Map,
+  layerName: string,
+  layerUrl: string,
+  add: boolean,
+): void => {
   // First check if layer already exists
   const layers = map.getLayers().getArray();
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
@@ -283,7 +300,7 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
-        params: { STYLES: layerName},
+        params: { STYLES: layerName },
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
@@ -318,7 +335,7 @@ export const removeAllAssetLayers = (map: Map): void => {
   const layers = map.getLayers().getArray();
   const assetLayers = layers.filter((layer) => layer.get('type') === 'asset');
 
-  assetLayers.forEach(layer => {
+  assetLayers.forEach((layer) => {
     map.removeLayer(layer);
   });
 };

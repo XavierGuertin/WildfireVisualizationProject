@@ -37,6 +37,8 @@ interface MapLayerContextValue {
   setItemIds: React.Dispatch<React.SetStateAction<string[]>>;
   isProcessLoading: boolean;
   setIsProcessLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  loadedDatasetId: string;
+  setLoadedDatasetId: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(
@@ -53,9 +55,9 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [selectedAssetLayers, setSelectedAssetLayers] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [itemIds, setItemIds] = useState<string[]>([])
+  const [itemIds, setItemIds] = useState<string[]>([]);
   const [isProcessLoading, setIsProcessLoading] = useState<boolean>(false);
-
+  const [loadedDatasetId, setLoadedDatasetId] = useState<string>('');
 
   // Timeline playback speed
   const [speed, setSpeed] = useState<number>(1);
@@ -68,9 +70,12 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       const map = mapRef.current;
 
       // Remove all layers except the one with ID 'baseLayer'
-      const layersToRemove = map.getLayers().getArray().filter((layer) => {
-        return layer.get('id') !== 'baseLayer';
-      });
+      const layersToRemove = map
+        .getLayers()
+        .getArray()
+        .filter((layer) => {
+          return layer.get('id') !== 'baseLayer';
+        });
 
       layersToRemove.forEach((layer) => {
         map.removeLayer(layer);
@@ -83,7 +88,6 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       });
     }
   };
-
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -115,9 +119,26 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       itemIds,
       setItemIds,
       isProcessLoading,
-      setIsProcessLoading
+      setIsProcessLoading,
+      loadedDatasetId,
+      setLoadedDatasetId,
     }),
-    [layer, speed, dataItems, isOnline, timeStamps, collectionId, sliderValue, loadedLayers, isLoadingAssets, selectedAssetLayers, isPlaying, itemIds, isProcessLoading]
+    [
+      layer,
+      speed,
+      dataItems,
+      isOnline,
+      timeStamps,
+      collectionId,
+      sliderValue,
+      loadedLayers,
+      isLoadingAssets,
+      selectedAssetLayers,
+      isPlaying,
+      itemIds,
+      isProcessLoading,
+      loadedDatasetId,
+    ],
   );
 
   return (

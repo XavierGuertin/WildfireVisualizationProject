@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -10,8 +10,6 @@ import {
   resetItemAssets,
   resetItems,
   loadAssets,
-  loadAssetLayers,
-  getLoadedLayers,
   fetchItemIds,
 } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';
@@ -164,18 +162,6 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                     toastId: 'items-success',
                   });
 
-                  try {
-                    const config = await getConfig();
-                    config.loadedDataset = id;
-                    await saveConfig(config);
-                    refreshDatasets?.();
-                  } catch (err) {
-                    console.error(
-                      'Error updating loadedDataset in config:',
-                      err,
-                    );
-                  }
-
                   return;
                 }
               }
@@ -206,6 +192,20 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                     toastId: 'assets-success',
                   });
                   setIsProcessLoading(false);
+
+                  // Set the config attribute for loadedDataset and refreshDatasets list to update state
+                  try {
+                    const config = await getConfig();
+                    config.loadedDataset = id;
+                    await saveConfig(config);
+                    refreshDatasets?.();
+                  } catch (err) {
+                    console.error(
+                      'Error updating loadedDataset in config:',
+                      err,
+                    );
+                  }
+
                   return;
                 }
               }
@@ -243,7 +243,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const NonCollapsedMetaData = (
     <div className="metadata-container">
       <div className="header" onClick={toggleCollapse} data-testid="name-div">
-        {targetLoading || t('unknown_name')}
+        {name || t('unknown_name')}
         <span className="collapse-icon">
           <RiCollapseDiagonalFill size={20} />
         </span>

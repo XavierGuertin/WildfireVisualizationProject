@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaAngleUp, FaAngleRight, FaWind, FaRegCompass } from 'react-icons/fa';
 import { BsDropletFill } from 'react-icons/bs';
 import { IoIosSettings } from 'react-icons/io';
@@ -8,22 +8,17 @@ import { toast } from 'react-toastify';
 import { toggleAssetLayer } from './MapView';
 import { Map } from 'ol';
 import '../styles/AssetsDropdown.css';
-import { fetchItemIds } from '../services/api';
 
 const AssetsDropdown = () => {
   const [assetsMenuOpen, setAssetsMenuOpen] = useState(false);
-  const [hardcodedLoadedLayers, setHardcodedLoadedLayers] = useState<any[]>([]);
   const { t } = useTranslation();
 
   const {
     mapRef,
     loadedLayers,
-    setLoadedLayers,
-    isLoadingAssets,
-    setIsLoadingAssets,
     selectedAssetLayers,
     setSelectedAssetLayers,
-    setItemIds,
+    loadedDatasetId,
   } = useMapLayerContext();
 
   // Function to get the appropriate icon for a layer
@@ -84,7 +79,7 @@ const AssetsDropdown = () => {
 
   return (
     <>
-    {/* isLoadingAssets || !(loadedLayers.length > 0) */}
+      {/* isLoadingAssets || !(loadedLayers.length > 0) */}
       {false ? (
         <></>
       ) : (
@@ -95,6 +90,11 @@ const AssetsDropdown = () => {
             onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
           >
             <span>{t('weather_assets_label')}</span>
+            {loadedDatasetId ? (
+              <span className="loadedAssetDataset">{loadedDatasetId}</span>
+            ) : (
+              <></>
+            )}
             {assetsMenuOpen ? (
               <FaAngleUp className="dropdown-icon" size={20} />
             ) : (

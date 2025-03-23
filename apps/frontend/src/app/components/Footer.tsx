@@ -1,17 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
 import {
-  FaAngleDown,
-  FaAngleUp,
   FaBackward,
   FaPause,
   FaPlay,
-  FaRegCompass,
-  FaWind,
 } from 'react-icons/fa';
-import { FiDownload } from 'react-icons/fi';
-import { IoIosSettings } from 'react-icons/io';
-import { BsDropletFill } from 'react-icons/bs';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -20,12 +13,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import {
   fetchTimestamps,
   getLoadedLayers,
-  loadAssets,
-  resetItemAssets,
   loadAssetLayers,
   fetchItemIds,
 } from '../services/api';
-import { changeLayer, removeAllAssetLayers, toggleAssetLayer } from './MapView';
+import { changeLayer, toggleAssetLayer } from './MapView';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -39,10 +30,7 @@ const Footer = () => {
     setTimeStamps,
     loadedLayers,
     setLoadedLayers,
-    isLoadingAssets,
-    setIsLoadingAssets,
     selectedAssetLayers,
-    setSelectedAssetLayers,
     isPlaying,
     setIsPlaying,
     itemIds,
