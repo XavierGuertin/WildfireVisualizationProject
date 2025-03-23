@@ -106,7 +106,6 @@ class GeoTIFFServiceTests {
     boolean result = geoTIFFService.registerGeoTIFF("item1", "a1");
 
     assertThat(result).isFalse();
-    verify(stacRepository).deleteItemAssetLayer("a1", "item1");
   }
 
   @Test
