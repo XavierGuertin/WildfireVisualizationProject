@@ -280,6 +280,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       className="metadata-container"
       ref={containerRef}
       style={{ width: `${width}px` }}
+      data-testid="metadata-container"
     >
       <div className="header" onClick={toggleCollapse} data-testid="name-div">
         {name || t('unknown_name')}
