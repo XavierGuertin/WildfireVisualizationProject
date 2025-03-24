@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import '../styles/BurntAreaPrediction.css';
 import { useTranslation } from 'react-i18next';
+const spatialCoordinatesMap = '/assets/spatial-coordinates-map.png';
 
 interface BurntAreaPredictionProps {
   dropdownState: {
@@ -17,6 +18,7 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const { t } = useTranslation();
   const formRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showMap, setShowMap] = useState(false);
 
   // Define the valid ranges for each field
   const ranges = {
@@ -85,6 +87,11 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     console.log("Form cleared!");
   };
 
+  // Toggle map visibility
+  const toggleMap = () => {
+    setShowMap((prev) => !prev);
+  };
+
   return (
     <div className="form-button-container" ref={formRef}>
       {/* Button for Burnt Area Predictions */}
@@ -104,12 +111,20 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
             {/* Form inside dropdown */}
             <form onSubmit={handleFormSubmit}>
               <h3>{t('burnt_area_prediction')}</h3>
+              <p className="location-info">{t('montesinho_park_portugal')}</p>
               <div className="form-group">
                 <label>{t('spatial_coordinates')}</label>
                 <div className="coordinate-inputs">
                   <input type="number" placeholder="X:" required />
                   <input type="number" placeholder="Y:" required />
                 </div>
+                <button
+                  type="button"
+                  className="view-map-button"
+                  onClick={toggleMap}
+                >
+                  {t('view_spatial_coordinates_map')}
+                </button>
               </div>
               <div className="form-group">
                 <label>{t('temperature')}</label>
@@ -181,6 +196,22 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
           </div>
         )}
       </div>
+
+      {/* Map Modal */}
+      {showMap && (
+        <div className="map-modal">
+          <div className="map-modal-content">
+            <button className="close-modal-button" onClick={toggleMap}>
+              &times;
+            </button>
+            <img
+              src={spatialCoordinatesMap}
+              alt={t('spatial_coordinates_map')}
+              className="map-image"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

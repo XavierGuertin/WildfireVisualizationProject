@@ -44,6 +44,7 @@ const resources = {
       confirm_deletion_items_from_previous_collection: "Items from the previous collection will be deleted and overwritten by the new one. \nDo you want to proceed?",
       //Burnt Area Prediction
       burnt_area_prediction: 'Burnt Area Prediction',
+      montesinho_park_portugal: "(Montesinho Park, Portugal)",
       spatial_coordinates: 'Spatial Coordinates',
       temperature: 'Temperature',
       relative_humidity: 'Relative Humidity',
@@ -53,6 +54,7 @@ const resources = {
       clear_simulation: 'Clear Simulation',
       invalid_number: "Please enter a valid number",
       value_out_of_range: "Value out of range. Must be between",
+      view_spatial_coordinates_map: "View Spatial Coordinates Map",
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
@@ -180,6 +182,7 @@ const resources = {
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
       //Burnt Area Prediction
       burnt_area_prediction: "Prédiction de la zone brûlée",
+      montesinho_park_portugal: "(Parc de Montesinho, Portugal)",
       spatial_coordinates: "Coordonnées spatiales",
       temperature: "Température",
       relative_humidity: "Humidité relative",
@@ -189,6 +192,7 @@ const resources = {
       clear_simulation: "Effacer la simulation",
       invalid_number: "Veuillez entrer un nombre valide",
       value_out_of_range: "Valeur hors de portée. Doit être entre",
+      view_spatial_coordinates_map: "Voir la carte des coordonnées spatiales",
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
