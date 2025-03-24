@@ -38,7 +38,7 @@ const Footer = () => {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
 
-  const speedValues = [0.5, 1, 1.5, 2, 4];
+  const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
   const processLoadedLayers = async (itemId: string) => {
     if (!isProcessLoading) {

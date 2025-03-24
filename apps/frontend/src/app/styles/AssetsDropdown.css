@@ -62,12 +62,14 @@
 
 /* Assets List Container (Scrollable) */
 .assets-list-container {
-  max-height: 150px;
+  height: 120px;
   overflow-y: auto;
-  overflow-x: hidden;
   padding: 6px 0;
-  background-color: white;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
 }
+
 
 /* Custom Scrollbar */
 .assets-list-container::-webkit-scrollbar {
@@ -147,4 +149,11 @@
   display: inline-block;
   max-width: 100%;
   vertical-align: middle;
+}
+
+.no-layers-message {
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
 }
