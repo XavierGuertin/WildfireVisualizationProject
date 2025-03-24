@@ -12,6 +12,7 @@ export const returnListOfCollectionsFromEndpoint = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }
@@ -179,6 +180,7 @@ export const fetchCollectionsFromEndpointByName = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }
@@ -216,6 +218,7 @@ export const fetchCollectionsFromEndpointByDate = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }

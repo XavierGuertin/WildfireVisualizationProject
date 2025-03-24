@@ -29,6 +29,7 @@ import { getConfig } from '../services/configApi';
 export interface DatasetEntry {
   key: number;
   id: string;
+  title: string;
 }
 
 export interface DatasetMetadata {
@@ -258,7 +259,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             onClick={() => handleDatasetClick(dataset.id)}
             data-testid={`dataset-button-${dataset.id}`}
           >
-            {dataset.id} {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
+            {dataset.title} {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
           </button>
         );
       });

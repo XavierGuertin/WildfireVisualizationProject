@@ -161,10 +161,10 @@ public class StacRepository {
     try {
       // Base SQL query for fetching collections
       String sql = "WITH bbox_data AS ( " +
-        "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
+        "  SELECT key, id, content->>'title' AS title, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
         "  FROM pgstac.collections " +
         ") " +
-        "SELECT key, id, bbox_array AS bbox " +
+        "SELECT key, id, title, bbox_array AS bbox " +
         "FROM bbox_data ";
 
       // Apply bounding box filtering if provided
