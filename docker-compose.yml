@@ -44,7 +44,7 @@ services:
         NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
-      - NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8090/geoserver/Default/wms
+      - NEXT_PUBLIC_GEOSERVER_URL=http://localhost:8091/geoserver/Default/wms
       - NEXT_PUBLIC_TILESERVER_URL=http://localhost:8081/data/OAM-World-1-8-min-J80
     image: xavierguertin/wildfirevisualization-frontend:latest
     ports:
@@ -124,14 +124,16 @@ services:
           cpus: "0.5"
 
   geoserver:
-    image: kartoza/geoserver:latest
+    image: kartoza/geoserver:2.23.1
     ports:
-      - "8090:8080"
+      - "8091:8080"
     environment:
       - GEOSERVER_ADMIN_USER=geoserver
       - GEOSERVER_ADMIN_PASSWORD=password
       - GEOSERVER_DATA_DIR=/var/geoserver/data_dir
-      - RUN_AS_ROOT=TRUE
+      - INITIAL_MEMORY=2G
+      - MAXIMUM_MEMORY=4G
+      - DISABLE_FIGLET_BANNER=true  # Explicitly disable figlet
     networks:
       - app-network
     volumes:
