@@ -39,6 +39,8 @@ describe('AssetsDropdown component', () => {
     selectedAssetLayers: [],
     setSelectedAssetLayers: jest.fn(),
     loadedDatasetId: 'dataset-2025',
+    itemIds: [],
+    sliderValue: 0,
     t: (str: string) => str,
   };
 
