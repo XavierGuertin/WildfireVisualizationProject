@@ -19,6 +19,8 @@ const AssetsDropdown = () => {
     selectedAssetLayers,
     setSelectedAssetLayers,
     loadedDatasetId,
+    itemIds,
+    sliderValue,
   } = useMapLayerContext();
 
   // Function to get the appropriate icon for a layer
@@ -104,6 +106,7 @@ const AssetsDropdown = () => {
           {loadedLayers.length > 0 &&
             [...loadedLayers]
               .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+              .filter((a) => a.item_id === itemIds[sliderValue])
               .map((layer, index) => (
                 <button
                   key={index}
