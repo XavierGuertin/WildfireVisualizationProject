@@ -212,6 +212,20 @@ public class DataController {
   }
 
   /**
+   * Endpoint responsible for fetching timestamps of items.
+   *
+   * @return ResponseEntity containing a list of item timestamps or an error
+   *         message.
+   */
+  @GetMapping("/api/fetch-item-ids")
+  public ResponseEntity<List<String>> getItemsIdsOrderedByTimestamp() {
+    logger.info("Received request to fetch items' ids");
+    List<String> timestamps = dataService.getItemsIdsOrderedByTimestamp();
+    logger.debug("Successfully fetched items's ids");
+    return ResponseEntity.ok(timestamps);
+  }
+
+  /**
    * Endpoint responsible for retrieving an item given a specific id and
    * collection id
    *

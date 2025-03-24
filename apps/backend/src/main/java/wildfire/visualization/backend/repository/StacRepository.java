@@ -78,9 +78,9 @@ public class StacRepository {
     logger.debug("Attempting to insert collection");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_collection(?::jsonb)",
-        Object.class,
-        collectionJson);
+          "SELECT pgstac.create_collection(?::jsonb)",
+          Object.class,
+          collectionJson);
       logger.info("Successfully inserted collection");
     } catch (DataAccessException e) {
       logger.error("Error inserting collection: {}", e.getMessage(), e);
@@ -98,9 +98,9 @@ public class StacRepository {
     logger.debug("Attempting to insert item");
     try {
       jdbcTemplate.queryForObject(
-        "SELECT pgstac.create_item(?::jsonb)",
-        Object.class,
-        itemJson);
+          "SELECT pgstac.create_item(?::jsonb)",
+          Object.class,
+          itemJson);
       logger.info("Successfully inserted item");
     } catch (DataAccessException e) {
       logger.error("Error inserting item: {}", e.getMessage(), e);
@@ -132,12 +132,16 @@ public class StacRepository {
    * Fetches a list of collections from the database, optionally filtered by a
    * bounding box (BBOX) and sorted with specified column and direction.
    *
-   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
    *                      null, no filter is applied.
-   * @param orderBy       The column by which to order results (e.g., "id" or "datetime").
+   * @param orderBy       The column by which to order results (e.g., "id" or
+   *                      "datetime").
    *                      If empty, no ordering is applied.
-   * @param sortDirection The direction to sort ("asc" or "desc"). Defaults to "asc" if invalid.
-   * @return A list of collections as key-value maps, containing collection metadata.
+   * @param sortDirection The direction to sort ("asc" or "desc"). Defaults to
+   *                      "asc" if invalid.
+   * @return A list of collections as key-value maps, containing collection
+   *         metadata.
    * @throws RepositoryException If a database error occurs or inputs are invalid
    */
   List<Map<String, Object>> fetchCollections(double[] bbox, String orderBy, String sortDirection) {
@@ -148,35 +152,36 @@ public class StacRepository {
 
     // Validate sort direction
     String direction = "asc".equalsIgnoreCase(sortDirection) || "desc".equalsIgnoreCase(sortDirection)
-      ? sortDirection.toLowerCase()
-      : "asc";
+        ? sortDirection.toLowerCase()
+        : "asc";
 
     // Log query type (bbox filtering or not)
     if (bbox == null) {
       logger.debug(FETCHING_ALL_COLLECTIONS + (orderBy.isEmpty() ? "" : " sorted by " + orderBy + " " + direction));
     } else {
-      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox) + (orderBy.isEmpty() ? "" : " sorted by " + orderBy + " " + direction));
+      logger.debug(FETCHING_WITH_BBOX + Arrays.toString(bbox)
+          + (orderBy.isEmpty() ? "" : " sorted by " + orderBy + " " + direction));
     }
 
     try {
       // Base SQL query for fetching collections
       String sql = "WITH bbox_data AS ( " +
-        "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
-        "  FROM pgstac.collections " +
-        ") " +
-        "SELECT key, id, bbox_array AS bbox " +
-        "FROM bbox_data ";
+          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
+          "  FROM pgstac.collections " +
+          ") " +
+          "SELECT key, id, bbox_array AS bbox " +
+          "FROM bbox_data ";
 
       // Apply bounding box filtering if provided
       if (bbox != null) {
         sql += "WHERE ST_Intersects( " +
-          "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
-          "  ST_SetSRID(ST_MakeEnvelope( " +
-          "    (bbox_array->0->>0)::double precision, " +
-          "    (bbox_array->0->>1)::double precision, " +
-          "    (bbox_array->0->>2)::double precision, " +
-          "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
-          ") ";
+            "  ST_MakeEnvelope(?, ?, ?, ?, 4326), " +
+            "  ST_SetSRID(ST_MakeEnvelope( " +
+            "    (bbox_array->0->>0)::double precision, " +
+            "    (bbox_array->0->>1)::double precision, " +
+            "    (bbox_array->0->>2)::double precision, " +
+            "    (bbox_array->0->>3)::double precision, 4326), 4326) " +
+            ") ";
       }
 
       // Validate and apply ordering if provided
@@ -189,8 +194,8 @@ public class StacRepository {
 
       // Execute query and fetch results
       List<Map<String, Object>> results = (bbox != null)
-        ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
-        : jdbcTemplate.queryForList(sql);
+          ? jdbcTemplate.queryForList(sql, bbox[0], bbox[1], bbox[2], bbox[3])
+          : jdbcTemplate.queryForList(sql);
 
       logger.info("Successfully fetched {} collections.", results.size());
       return results;
@@ -250,6 +255,26 @@ public class StacRepository {
   }
 
   /**
+   * 
+   * Retrieves item IDs from the database, ordered by datetime ascending (UTC).*
+   * 
+   * @return List of item IDs
+   * @throws RepositoryException if a database error occurs
+   */
+  public List<String> getItemsIdsOrderedByTimestamp() {
+    String sql = "SELECT id FROM pgstac.items ORDER BY datetime AT TIME ZONE 'UTC' ASC";
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("UTC")); // Match behavior of getItemsTimestamps()
+      List<String> itemIds = jdbcTemplate.queryForList(sql, String.class);
+      logger.info("Fetched {} item IDs ordered by UTC datetime", itemIds.size());
+      return itemIds;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching item IDs: {}", e.getMessage(), e);
+      throw new RepositoryException("Error fetching item IDs", e);
+    }
+  }
+
+  /**
    * Deletes all items from the database
    *
    * @throws RepositoryException if a database error occurs
@@ -268,9 +293,11 @@ public class StacRepository {
 
   /**
    * Retrieves all collections from the database, optionally filtered by a
-   * bounding box (BBOX), and sorted by collection name (ID) with specified direction.
+   * bounding box (BBOX), and sorted by collection name (ID) with specified
+   * direction.
    *
-   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
    *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections sorted by name.
@@ -285,7 +312,8 @@ public class StacRepository {
    * bounding box (BBOX),
    * and sorted by date with specified direction.
    *
-   * @param bbox          An optional bounding box filter (minX, minY, maxX, maxY). If
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
    *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections sorted by date.
@@ -307,12 +335,12 @@ public class StacRepository {
     logger.debug("Querying metadata for: {}", collectionId);
     try {
       String sql = "SELECT (content ->> 'title') AS title," +
-        " (content ->> 'description') AS description," +
-        " datetime AS datetime," +
-        " end_datetime AS end_datetime," +
-        " (content -> 'links') AS links," +
-        " (content -> 'stats:items' ->> 'count')::int AS item_count " + // Extract item count
-        " FROM pgstac.collections WHERE id = ?";
+          " (content ->> 'description') AS description," +
+          " datetime AS datetime," +
+          " end_datetime AS end_datetime," +
+          " (content -> 'links') AS links," +
+          " (content -> 'stats:items' ->> 'count')::int AS item_count " + // Extract item count
+          " FROM pgstac.collections WHERE id = ?";
 
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
 
@@ -336,16 +364,16 @@ public class StacRepository {
     logger.debug("Fetching items for collection: {}", collectionId);
     try {
       String sql = "SELECT * FROM pgstac.search(" +
-        "    '{" +
-        "        \"filter\": {" +
-        "            \"op\": \"=\"," +
-        "            \"args\": [" +
-        "                { \"property\": \"collection\" }," +
-        "                \"" + collectionId + "\"" +
-        "            ]" +
-        "        }" +
-        "    }'::jsonb" +
-        ")";
+          "    '{" +
+          "        \"filter\": {" +
+          "            \"op\": \"=\"," +
+          "            \"args\": [" +
+          "                { \"property\": \"collection\" }," +
+          "                \"" + collectionId + "\"" +
+          "            ]" +
+          "        }" +
+          "    }'::jsonb" +
+          ")";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
       logger.debug("Query returned {} results", results.size());
       return results;
@@ -382,7 +410,7 @@ public class StacRepository {
    * @param id         Database ID of item to be retrieved
    * @param collection Database ID of collection to retrieve items from
    * @return List object containing the item with the given id from the given
-   * collection
+   *         collection
    * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getItem(String id, String collection) {
@@ -415,7 +443,7 @@ public class StacRepository {
       jdbcTemplate.execute(sqlDrop);
 
       String sqlInsert = "CREATE VIEW DataLayer AS" +
-        " SELECT geometry FROM pgstac.collections WHERE id = '" + safeCollectionId + "'";
+          " SELECT geometry FROM pgstac.collections WHERE id = '" + safeCollectionId + "'";
 
       jdbcTemplate.execute(sqlInsert);
 
@@ -475,15 +503,15 @@ public class StacRepository {
     logger.debug("Removing all items");
     try {
       String sql = "DO $$ \n" +
-        "DECLARE\n" +
-        "    rec RECORD;\n" +
-        "BEGIN\n" +
-        "    SET search_path = pgstac, public;\n" +
-        "\n" +
-        "    FOR rec IN SELECT id, collection FROM items LOOP\n" +
-        "        PERFORM delete_item(rec.id, rec.collection);\n" +
-        "    END LOOP;\n" +
-        "END $$;\n";
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id, collection FROM items LOOP\n" +
+          "        PERFORM delete_item(rec.id, rec.collection);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
 
       jdbcTemplate.execute(sql);
       return "Successfully Removed All Items";
@@ -505,16 +533,16 @@ public class StacRepository {
     logger.debug("Removing all items from collection: {}", collectionId);
     try {
       String sql = "DO $$ \n" +
-        "DECLARE\n" +
-        "    rec RECORD;\n" +
-        "    target_collection_id text := '" + collectionId + "';\n" +
-        "BEGIN\n" +
-        "    SET search_path = pgstac, public;\n" +
-        "\n" +
-        "    FOR rec IN SELECT id FROM items WHERE collection = target_collection_id LOOP\n" +
-        "        PERFORM delete_item(rec.id, target_collection_id);\n" +
-        "    END LOOP;\n" +
-        "END $$;\n";
+          "DECLARE\n" +
+          "    rec RECORD;\n" +
+          "    target_collection_id text := '" + collectionId + "';\n" +
+          "BEGIN\n" +
+          "    SET search_path = pgstac, public;\n" +
+          "\n" +
+          "    FOR rec IN SELECT id FROM items WHERE collection = target_collection_id LOOP\n" +
+          "        PERFORM delete_item(rec.id, target_collection_id);\n" +
+          "    END LOOP;\n" +
+          "END $$;\n";
 
       jdbcTemplate.execute(sql);
       return "Successfully Removed All Items From Collection";
@@ -559,26 +587,26 @@ public class StacRepository {
   public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl) {
     // Ensure the collection exists
     String insertCollection = """
-        INSERT INTO TIFF_Collections (collection_id)
-        VALUES (?)
-        ON CONFLICT (collection_id) DO NOTHING;
-    """;
+            INSERT INTO TIFF_Collections (collection_id)
+            VALUES (?)
+            ON CONFLICT (collection_id) DO NOTHING;
+        """;
     jdbcTemplate.update(insertCollection, collectionId);
 
     // Ensure the item exists
     String insertItem = """
-        INSERT INTO TIFF_Items (item_id, collection_id)
-        VALUES (?, ?)
-        ON CONFLICT (item_id) DO NOTHING;
-    """;
+            INSERT INTO TIFF_Items (item_id, collection_id)
+            VALUES (?, ?)
+            ON CONFLICT (item_id) DO NOTHING;
+        """;
     jdbcTemplate.update(insertItem, itemId, collectionId);
 
     // Insert asset with default is_registered = FALSE
     String insertAsset = """
-        INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered)
-        VALUES (?, ?, ?, FALSE)
-        ON CONFLICT (item_id, asset_name) DO NOTHING;
-    """;
+            INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered)
+            VALUES (?, ?, ?, FALSE)
+            ON CONFLICT (item_id, asset_name) DO NOTHING;
+        """;
     jdbcTemplate.update(insertAsset, itemId, assetName, layerUrl);
   }
 
@@ -590,12 +618,12 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers(String itemId) {
     String sql = """
-        SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
-               i.item_id, i.collection_id
-        FROM TIFF_Assets a
-        JOIN TIFF_Items i ON a.item_id = i.item_id
-        WHERE i.item_id = ?
-    """;
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+                   i.item_id, i.collection_id
+            FROM TIFF_Assets a
+            JOIN TIFF_Items i ON a.item_id = i.item_id
+            WHERE i.item_id = ?
+        """;
     return jdbcTemplate.queryForList(sql, itemId);
   }
 
@@ -615,10 +643,10 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getItemsWithAssets() {
     String sql = """
-        SELECT i.item_id, a.asset_name, a.layer_url, a.is_registered
-        FROM TIFF_Items i
-        JOIN TIFF_Assets a ON i.item_id = a.item_id
-    """;
+            SELECT i.item_id, a.asset_name, a.layer_url, a.is_registered
+            FROM TIFF_Items i
+            JOIN TIFF_Assets a ON i.item_id = a.item_id
+        """;
     return jdbcTemplate.queryForList(sql);
   }
 
@@ -636,8 +664,8 @@ public class StacRepository {
   /**
    * Marks an asset as registered in GeoServer.
    *
-   * @param itemId     ID of the item
-   * @param assetName  Name of the asset
+   * @param itemId    ID of the item
+   * @param assetName Name of the asset
    */
   public void markAssetAsRegistered(String itemId, String assetName) {
     String sql = "UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?";
@@ -647,8 +675,8 @@ public class StacRepository {
   /**
    * Marks an asset as unregistered in GeoServer.
    *
-   * @param itemId     ID of the item
-   * @param assetName  Name of the asset
+   * @param itemId    ID of the item
+   * @param assetName Name of the asset
    */
   public void markAssetAsUnregistered(String itemId, String assetName) {
     String sql = "UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?";
@@ -672,15 +700,13 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers() {
     String sql = """
-        SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
-               i.item_id, i.collection_id
-        FROM TIFF_Assets a
-        JOIN TIFF_Items i ON a.item_id = i.item_id
-        WHERE a.is_registered = TRUE
-    """;
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+                   i.item_id, i.collection_id
+            FROM TIFF_Assets a
+            JOIN TIFF_Items i ON a.item_id = i.item_id
+            WHERE a.is_registered = TRUE
+        """;
     return jdbcTemplate.queryForList(sql);
   }
-
-
 
 }
