@@ -42,6 +42,15 @@ const resources = {
       timestamps_fetch_success: 'Timestamps have been fetched successfully',
       timestamps_fetch_error: 'Error fetching timestamps',
       confirm_deletion_items_from_previous_collection: "Items from the previous collection will be deleted and overwritten by the new one. \nDo you want to proceed?",
+      //Burnt Area Prediction
+      burnt_area_prediction: 'Burnt Area Prediction',
+      spatial_coordinates: 'Spatial Coordinates',
+      temperature: 'Temperature',
+      relative_humidity: 'Relative Humidity',
+      wind: 'Wind',
+      rain: 'Rain',
+      load_simulation: 'Load Simulation',
+      clear_simulation: 'Clear Simulation',
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',
@@ -167,6 +176,15 @@ const resources = {
       timestamps_fetch_success: "Les timestamps ont été récupérés avec succès",
       timestamps_fetch_error: "Erreur lors de la récupération des timestamps",
       confirm_deletion_items_from_previous_collection: "Les items de la collection précédente seront supprimés et remplacés par la nouvelle. \nVoulez-vous continuer",
+      //Burnt Area Prediction
+      "burnt_area_prediction": "Prédiction de la zone brûlée",
+      "spatial_coordinates": "Coordonnées spatiales",
+      "temperature": "Température",
+      "relative_humidity": "Humidité relative",
+      "wind": "Vent",
+      "rain": "Pluie",
+      "load_simulation": "Charger la simulation",
+      "clear_simulation": "Effacer la simulation",
       //Datasets
       available_datasets: 'Collections disponibles',
       no_datasets_available: 'Aucune collections disponible.',
