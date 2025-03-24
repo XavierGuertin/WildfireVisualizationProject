@@ -485,6 +485,10 @@ public class DataService {
     }
   }
 
+  /**
+   * This method fetches order list of item ids
+   * @return returns the list of item ids sorted by timestamp
+   */
   public List<String> getItemsIdsOrderedByTimestamp() {
     logger.debug("Fetching item timestamp ids from database");
     try {

@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -881,14 +882,16 @@ class StacRepositoryTests {
   void testMarkAssetAsRegistered_executesUpdate() {
     stacRepository.markAssetAsRegistered("item1", "asset1");
 
-    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?", "item1", "asset1");
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
   }
 
   @Test
   void testMarkAssetAsUnregistered_executesUpdate() {
     stacRepository.markAssetAsUnregistered("item1", "asset1");
 
-    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?", "item1", "asset1");
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
   }
 
   @Test
@@ -907,6 +910,36 @@ class StacRepositoryTests {
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).get("is_registered")).isEqualTo(true);
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_Success() {
+    // Arrange
+    List<String> expectedIds = List.of("item1", "item2", "item3");
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class))).thenReturn(expectedIds);
+
+    // Act
+    List<String> result = stacRepository.getItemsIdsOrderedByTimestamp();
+
+    // Assert
+    assertThat(result).isEqualTo(expectedIds);
+    verify(jdbcTemplate).queryForList("SELECT id FROM pgstac.items ORDER BY datetime AT TIME ZONE 'UTC' ASC",
+        String.class);
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_ThrowsRepositoryException_OnDatabaseError() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class)))
+        .thenThrow(new DataAccessException("Simulated DB error") {
+        });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getItemsIdsOrderedByTimestamp())
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error fetching item IDs");
+
+    verify(jdbcTemplate).queryForList(anyString(), eq(String.class));
   }
 
 }
