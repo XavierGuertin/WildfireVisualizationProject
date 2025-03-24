@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/footer.css';
-import {
-  FaBackward,
-  FaPause,
-  FaPlay,
-} from 'react-icons/fa';
+import { FaBackward, FaPause, FaPlay } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useMapLayerContext } from '../context/MapContext';
 import { toast } from 'react-toastify';
@@ -28,14 +24,13 @@ const Footer = () => {
     sliderValue,
     setSliderValue,
     setTimeStamps,
-    loadedLayers,
     setLoadedLayers,
     selectedAssetLayers,
     isPlaying,
     setIsPlaying,
     itemIds,
     setItemIds,
-    isProcessLoading
+    isProcessLoading,
   } = useMapLayerContext();
 
   const [speedInitialized, setSpeedInitialized] = useState(false);
@@ -46,15 +41,12 @@ const Footer = () => {
   const speedValues = [0.5, 1, 1.5, 2, 4];
 
   const processLoadedLayers = async (itemId: string) => {
-    console.log(itemId);
-    if (!isProcessLoading){
+    if (!isProcessLoading) {
       if (itemId) {
         await loadAssetLayers(itemId);
         const response = await getLoadedLayers();
         if (response.error !== 'Failed to fetch loaded layers') {
           setLoadedLayers(response);
-          console.log(response);
-          console.log('loadedLayers: ' + loadedLayers);
 
           const map = mapRef.current as Map;
           if (selectedAssetLayers.length > 0) {
@@ -63,7 +55,7 @@ const Footer = () => {
                 const layerData = response.find(
                   (obj: { asset_name: string }) => obj.asset_name === layer,
                 );
-                toggleAssetLayer(map, layer, "", false);
+                toggleAssetLayer(map, layer, '', false);
                 toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
               }
             });
@@ -74,8 +66,7 @@ const Footer = () => {
   };
 
   useEffect(() => {
-    if (!isProcessLoading)
-      processLoadedLayers(itemIds[sliderValue]);
+    if (!isProcessLoading) processLoadedLayers(itemIds[sliderValue]);
   }, [isProcessLoading]);
 
   useEffect(() => {
@@ -226,19 +217,22 @@ const Footer = () => {
     const stringCurrentSliderValue = localStorage.getItem('sliderValue');
     // Check if there's a saved slider value in localStorage, otherwise default to 0
     const currentSliderValue = stringCurrentSliderValue
-    ? parseInt(stringCurrentSliderValue)
-    : 0;
+      ? parseInt(stringCurrentSliderValue)
+      : 0;
     if (timestampsResponse) {
       await setTimeStamps(timestampsResponse);
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
     }
     const itemIdsResponse = await fetchItemIds();
-    if (itemIdsResponse) {
+
+    if (Array.isArray(itemIdsResponse)) {
       await setItemIds(itemIdsResponse);
+
+      if (itemIdsResponse.length > 0) {
+        await processLoadedLayers(itemIdsResponse[currentSliderValue]);
+      }
     }
-    if(itemIdsResponse.length > 0)
-      await processLoadedLayers(itemIdsResponse[currentSliderValue])
   };
 
   // Handle slider value changes
