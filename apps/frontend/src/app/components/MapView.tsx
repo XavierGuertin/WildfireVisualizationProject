@@ -294,8 +294,6 @@ export const toggleAssetLayer = (
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
 
   if (add && !existingLayer) {
-    console.log(`Adding layer: ${layerName} with URL: ${layerUrl}`);
-
     // Add the layer
     const newLayer = new ImageLayer({
       source: new ImageWMS({

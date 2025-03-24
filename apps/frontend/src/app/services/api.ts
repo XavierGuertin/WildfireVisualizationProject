@@ -154,7 +154,6 @@ export const returnCollectionsFromEndpoint = async (): Promise<
 > => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
-    console.log('Fetching from: ', `${BASE_URL}/api/get-collections`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
@@ -399,7 +398,6 @@ export const getLoadedLayers = async (): Promise<any> => {
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
-    console.log(response.body)
     return await response.json();
   } catch (error: any) {
     console.error('Error fetching loaded layers:', error);
