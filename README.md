@@ -101,10 +101,13 @@ For setting up the development environment, follow these additional steps:
 3. **Add Environment Variables**
    ```
    # Navigate to the frontend directory
-   cd frontend
+   cd apps\frontend
 
-   # Create environment files if they don't exist
+   # Create environment files if they don't exist (Unix)
    touch .env.production .env.development
+
+   # Create environment files if they don't exist (PowerShell)
+   New-Item .env.production, .env.development -ItemType File
    ```
 
    Add the following variables to both .env.production and .env.development
