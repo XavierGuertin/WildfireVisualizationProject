@@ -138,7 +138,7 @@ const Footer = () => {
           localStorage.setItem('sliderValue', newValue.toString());
           return newValue;
         });
-      }, 4000 / speed);
+      }, 4500 / speed);
     } else {
       clearInterval(intervalRef.current!);
     }
