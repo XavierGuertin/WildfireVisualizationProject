@@ -228,8 +228,10 @@ describe('MapMetaData Component', () => {
         await Promise.resolve();
       });
 
+      // Test handles error if fetchItems fail
       expect(toast.error).toHaveBeenCalledWith(
         expect.stringContaining('Error loading dataset:'),
+        expect.objectContaining({ toastId: 'loading-dataset-error' })
       );
     });
 
@@ -501,8 +503,10 @@ describe('MapMetaData Component', () => {
         await Promise.resolve(); // Let SweetAlert resolve
       });
 
+      // Test handles error when fetchItems fail
       expect(toast.error).toHaveBeenCalledWith(
         'Error loading dataset: Error: API error',
+        expect.objectContaining({ toastId: 'loading-dataset-error' })
       );
     });
 
@@ -764,12 +768,12 @@ describe('MapMetaData Component', () => {
     beforeAll(() => {
       // Mock getBoundingClientRect for resize tests
       Element.prototype.getBoundingClientRect = jest.fn(() => ({
-        width: 400,
+        width: 350,
         height: 500,
         top: 0,
         left: 0,
         bottom: 500,
-        right: 400,
+        right: 350,
         x: 0,
         y: 0,
         toJSON: () => ({}),
@@ -783,7 +787,7 @@ describe('MapMetaData Component', () => {
     it('initializes with default width', () => {
       render(<MapMetaData {...defaultProps} />);
       const container = screen.getByTestId('metadata-container');
-      expect(container).toHaveStyle('width: 400px');
+      expect(container).toHaveStyle('width: 350px');
     });
 
     it('allows resizing via the handle', () => {
@@ -792,11 +796,11 @@ describe('MapMetaData Component', () => {
       const container = screen.getByTestId('metadata-container');
 
       // No longer need async/await since updates are synchronous
-      fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      fireEvent.mouseMove(document, { clientX: 450 });
+      fireEvent.mouseDown(resizeHandle, { clientX: 350 });
+      fireEvent.mouseMove(document, { clientX: 400 });
       
       // Immediate width update check
-      expect(container).toHaveStyle('width: 450px');
+      expect(container).toHaveStyle('width: 400px');
       
       fireEvent.mouseUp(document);
     });
@@ -830,8 +834,8 @@ describe('MapMetaData Component', () => {
       const header = screen.getByTestId('name-div');
 
       // Resize first (synchronous)
-      fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      fireEvent.mouseMove(document, { clientX: 450 });
+      fireEvent.mouseDown(resizeHandle, { clientX: 350 });
+      fireEvent.mouseMove(document, { clientX: 400 });
       fireEvent.mouseUp(document);
 
       // Toggle collapse
@@ -839,7 +843,7 @@ describe('MapMetaData Component', () => {
       fireEvent.click(screen.getByTestId('collapsedMetaData'));
 
       // Verify width maintained
-      expect(screen.getByTestId('metadata-container')).toHaveStyle('width: 450px');
+      expect(screen.getByTestId('metadata-container')).toHaveStyle('width: 400px');
     });
 
     it('cleans up event listeners on unmount', () => {
@@ -852,7 +856,7 @@ describe('MapMetaData Component', () => {
       fireEvent.mouseDown(resizeHandle);
       unmount();
 
-      expect(removeListenerSpy).toHaveBeenCalledTimes(2);
+      expect(removeListenerSpy).toHaveBeenCalledTimes(6);
       addListenerSpy.mockRestore();
       removeListenerSpy.mockRestore();
     });
