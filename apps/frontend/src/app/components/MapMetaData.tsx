@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -44,18 +44,20 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [width, setWidth] = useState(350); // Default width
+  const [width, setWidth] = useState(350);
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+  const animationRef = useRef<number | null>(null); // Initialize as null
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [targetLoading, setTargetLoading] = useState(name);
 
-  // Calculate max width as 1/3 of screen width
   const maxWidth = typeof window !== 'undefined' ? window.innerWidth / 3 : 500;
-  const minWidth = 300; // Minimum width to ensure usability
+  const minWidth = 300;
 
   const MySwal = withReactContent(Swal);
   const {
@@ -71,32 +73,60 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setIsPlaying
   } = useMapLayerContext();
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = containerRef.current.offsetWidth;
+    
+    // Hint browser about upcoming changes for better performance
+    if (containerRef.current) {
+      containerRef.current.style.willChange = 'width';
+    }
+    
+    e.preventDefault();
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+    
+    const dx = e.clientX - startXRef.current;
+    let newWidth = startWidthRef.current + dx;
+    
+    // Apply constraints
+    newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+    
+    // DIRECT DOM UPDATE (no React state lag)
+    containerRef.current.style.width = `${newWidth}px`;
+  }, [isResizing, maxWidth, minWidth]);
+
+  const handleMouseUp = useCallback(() => {
+    if (!isResizing || !containerRef.current) return;
+    
+    // Only update React state AFTER dragging finishes
+    setWidth(containerRef.current.offsetWidth);
+    containerRef.current.style.willChange = 'auto';
+    setIsResizing(false);
+  }, [isResizing]);
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing || !containerRef.current) return;
-      
-      const containerRect = containerRef.current.getBoundingClientRect();
-      let newWidth = e.clientX - containerRect.left;
-      
-      // Apply constraints
-      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-      setWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+    }
     };
-  }, [isResizing, maxWidth, minWidth]);
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const onLoadDataset = async () => {
     if (!isOnline) {
@@ -336,7 +366,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       <div 
         className="resize-handle"
         ref={resizeRef}
-        onMouseDown={() => setIsResizing(true)}
+        onMouseDown={handleMouseDown}
         title="Drag to resize"
       />
     </div>

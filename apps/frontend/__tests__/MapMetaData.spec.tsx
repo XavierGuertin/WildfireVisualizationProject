@@ -759,6 +759,7 @@ describe('MapMetaData Component', () => {
       expect(screen.getByTestId('dataset-description')).toBeInTheDocument();
     });
   });
+
   describe('Resizing Behavior', () => {
     beforeAll(() => {
       // Mock getBoundingClientRect for resize tests
@@ -774,6 +775,11 @@ describe('MapMetaData Component', () => {
         toJSON: () => ({}),
       }));
     });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('initializes with default width', () => {
       render(<MapMetaData {...defaultProps} />);
       const container = screen.getByTestId('metadata-container');
@@ -785,13 +791,14 @@ describe('MapMetaData Component', () => {
       const resizeHandle = screen.getByTitle('Drag to resize');
       const container = screen.getByTestId('metadata-container');
 
+      // No longer need async/await since updates are synchronous
       fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      act(() => {
-        fireEvent.mouseMove(document, { clientX: 450 });
-      });
-      fireEvent.mouseUp(document);
-
+      fireEvent.mouseMove(document, { clientX: 450 });
+      
+      // Immediate width update check
       expect(container).toHaveStyle('width: 450px');
+      
+      fireEvent.mouseUp(document);
     });
 
     it('respects minimum width constraint', () => {
@@ -800,12 +807,9 @@ describe('MapMetaData Component', () => {
       const container = screen.getByTestId('metadata-container');
 
       fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      act(() => {
-        fireEvent.mouseMove(document, { clientX: 200 });
-      });
+      fireEvent.mouseMove(document, { clientX: 200 });
+      expect(container).toHaveStyle('width: 300px'); // Immediate check
       fireEvent.mouseUp(document);
-
-      expect(container).toHaveStyle('width: 300px');
     });
 
     it('respects maximum width constraint', () => {
@@ -815,12 +819,9 @@ describe('MapMetaData Component', () => {
       const container = screen.getByTestId('metadata-container');
 
       fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      act(() => {
-        fireEvent.mouseMove(document, { clientX: 1000 });
-      });
+      fireEvent.mouseMove(document, { clientX: 1000 });
+      expect(container).toHaveStyle('width: 400px'); // Immediate check
       fireEvent.mouseUp(document);
-
-      expect(container).toHaveStyle('width: 400px');
     });
 
     it('maintains width when toggling collapse', () => {
@@ -828,11 +829,9 @@ describe('MapMetaData Component', () => {
       const resizeHandle = screen.getByTitle('Drag to resize');
       const header = screen.getByTestId('name-div');
 
-      // Resize first
+      // Resize first (synchronous)
       fireEvent.mouseDown(resizeHandle, { clientX: 400 });
-      act(() => {
-        fireEvent.mouseMove(document, { clientX: 450 });
-      });
+      fireEvent.mouseMove(document, { clientX: 450 });
       fireEvent.mouseUp(document);
 
       // Toggle collapse
@@ -849,6 +848,7 @@ describe('MapMetaData Component', () => {
 
       const { unmount } = render(<MapMetaData {...defaultProps} />);
       const resizeHandle = screen.getByTitle('Drag to resize');
+      
       fireEvent.mouseDown(resizeHandle);
       unmount();
 
