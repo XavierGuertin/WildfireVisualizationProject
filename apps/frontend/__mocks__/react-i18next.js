@@ -6,7 +6,7 @@ module.exports = {
     return {
       t: (key) => key,
       i18n: {
-        changeLanguage: () => new Promise(() => {}),
+        changeLanguage: () => new Promise(() => {/*intentional*/}),
       },
     };
   },

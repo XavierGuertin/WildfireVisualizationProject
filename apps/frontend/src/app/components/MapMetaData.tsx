@@ -244,6 +244,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           // Now start polling for progress on the asset load
           const pollAssetProgress = async () => {
+            // eslint-disable-next-line no-constant-condition
             while (true) {
               const progressResponse = await fetchProgress(id + '_assets');
 
@@ -281,8 +282,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           pollAssetProgress();
         } catch (error) {
-          toast.error('Error loading dataset: ' + error),
-            { toastId: 'loading-dataset-error' };
+          toast.error(`Error loading dataset: ${error}`, {
+            toastId: 'loading-dataset-error'
+          });
           setLoading(false);
         }
       }
