@@ -43,6 +43,7 @@ const AssetsDropdown = () => {
       .join(' ');
   };
 
+  // Handles clicking on an asset layer button
   const handleLayerClick = (layerName: string) => {
     const map = mapRef.current as Map;
     if (!map) {
@@ -78,52 +79,45 @@ const AssetsDropdown = () => {
   };
 
   return (
-    <>
-      {/* isLoadingAssets || !(loadedLayers.length > 0) */}
-      {false ? (
-        <></>
-      ) : (
-        <div className="weather-dropdown">
-          {/* Clickable header that ONLY toggles the menu */}
-          <div
-            className="menuHeader"
-            onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
-          >
-            <span>{t('weather_assets_label')}</span>
-            {loadedDatasetId ? (
-              <span className="loadedAssetDataset">{loadedDatasetId}</span>
-            ) : (
-              <></>
-            )}
-            {assetsMenuOpen ? (
-              <FaAngleUp className="dropdown-icon" size={20} />
-            ) : (
-              <FaAngleRight className="dropdown-icon" size={20} />
-            )}
-          </div>
+    <div className="weather-dropdown">
+      {/* Clickable header that toggles the menu */}
+      <div
+        className="menuHeader"
+        onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
+      >
+        <span>{t('weather_assets_label')}</span>
+        {loadedDatasetId ? (
+          <span className="loadedAssetDataset">{loadedDatasetId}</span>
+        ) : (
+          <></>
+        )}
+        {assetsMenuOpen ? (
+          <FaAngleUp className="dropdown-icon" size={20} />
+        ) : (
+          <FaAngleRight className="dropdown-icon" size={20} />
+        )}
+      </div>
 
-          {/* Asset list: Clicking these should NOT close the menu */}
-          {assetsMenuOpen && (
-            <div className="assets-list-container">
-              {loadedLayers.length > 0 &&
-                [...loadedLayers]
-                  .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
-                  .map((layer, index) => (
-                    <button
-                      key={index}
-                      className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                      data-testid={`layerButton-${layer.asset_name}`}
-                      onClick={() => handleLayerClick(layer.asset_name)}
-                    >
-                      {getLayerIcon(layer.asset_name)}
-                      {formatLayerName(layer.asset_name)}
-                    </button>
-                  ))}
-            </div>
-          )}
+      {/* Render the asset options when menu is open */}
+      {assetsMenuOpen && (
+        <div className="assets-list-container">
+          {loadedLayers.length > 0 &&
+            [...loadedLayers]
+              .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+              .map((layer, index) => (
+                <button
+                  key={index}
+                  className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                  data-testid={`layerButton-${layer.asset_name}`}
+                  onClick={() => handleLayerClick(layer.asset_name)}
+                >
+                  {getLayerIcon(layer.asset_name)}
+                  {formatLayerName(layer.asset_name)}
+                </button>
+              ))}
         </div>
       )}
-    </>
+    </div>
   );
 };
 
