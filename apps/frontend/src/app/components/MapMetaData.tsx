@@ -282,14 +282,14 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           onClick={onLoadDataset}
           data-testid="load-dataset-button"
         >
-          <LoadingModule
-            progress={progress}
-            isVisible={loading}
-            datasetBeingLoaded={targetLoading}
-            data-testid="loading-module"
-          />
           {t('load_dataset')}
         </button>
+        <LoadingModule
+          progress={progress}
+          isVisible={loading}
+          datasetBeingLoaded={targetLoading}
+          data-testid="loading-module"
+        />
         <AssetsDropdown />
       </div>
     </div>
