@@ -29,6 +29,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 import { updateLayerStyle } from './MapView';
 import { LuPalette } from 'react-icons/lu';
+import BurntAreaPrediction from './BurntAreaPredictions';
 
 const MySwal = withReactContent(Swal);
 
@@ -72,16 +73,14 @@ const SettingsPanel: React.FC<{
     ) {
       const savedLanguage = localStorage.getItem('language');
       if (savedLanguage) {
-        // If a language is saved in localStorage, use it
         if (savedLanguage !== i18n.language) {
-          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
+          i18n.changeLanguage(savedLanguage);
         }
       } else {
-        // If no language is saved, use the default language
         localStorage.setItem('language', 'en');
-        toast.info(t('default_language_retrieved')); // Show default language message
+        toast.info(t('default_language_retrieved'));
       }
-      setLanguageInitialized(true); // Mark language initialization as done
+      setLanguageInitialized(true);
     }
   }, [i18n, t, languageInitialized]);
 
@@ -100,7 +99,6 @@ const SettingsPanel: React.FC<{
         setIsOnline(config.onlineMode);
       }
 
-      // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
       if (
         config.endpoint === 'No endpoint saved' ||
         config.endpoint === undefined
@@ -137,7 +135,6 @@ const SettingsPanel: React.FC<{
   ): Promise<boolean> => {
     if (isValidUrl(endpointUrl)) {
       try {
-        // Check if the URL retrieves collections
         const verificationMessage =
           await verifyIfEndpointHasCollections(endpointUrl);
         if (verificationMessage !== 'Collections found') {
@@ -145,7 +142,6 @@ const SettingsPanel: React.FC<{
           return false;
         }
 
-        // Reset collections before fetching new ones
         await resetCollections();
         await resetItems();
         await resetItemAssets();
@@ -156,9 +152,7 @@ const SettingsPanel: React.FC<{
           toast.success(t('collections_fetched_saved'));
         }
 
-        // Save the new endpoint to config file
         const config = await getConfig();
-        // If an error occurred during fetching config, show error and do not save changes
         if (config.error) {
           toast.error(t('error_fetching_config_file'));
           return false;
@@ -168,8 +162,7 @@ const SettingsPanel: React.FC<{
         config.loadedDataset = { id: '', title: '' };
         await saveConfig(config);
 
-        refreshDatasets(); // Trigger the refresh
-
+        refreshDatasets();
         setDropdownState({ activeButton: null, isOpen: false });
 
         return true;
@@ -203,7 +196,6 @@ const SettingsPanel: React.FC<{
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
-        // reset localStorage properties to default properties
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
         localStorage.setItem('sliderValue', '0');
@@ -250,7 +242,7 @@ const SettingsPanel: React.FC<{
             getConfig,
             saveConfig,
           );
-          setMetadataVisible(false); // Hide metadata container
+          setMetadataVisible(false);
         } catch (error: any) {
           toast.error(error.message);
         }
@@ -264,7 +256,6 @@ const SettingsPanel: React.FC<{
     setIsOnline(onlineMode);
 
     const config = await getConfig();
-    // If an error occurred during fetching config, show error and do not save changes
     if (config.error) {
       toast.error(t('error_fetching_config_file'));
       return false;
@@ -792,6 +783,13 @@ const SettingsPanel: React.FC<{
             </button>
           </div>
         )}
+      </div>
+
+      <div className="dropdown-button">
+        <BurntAreaPrediction
+          dropdownState={dropdownState}
+          toggleDropdown={toggleDropdown}
+        />
       </div>
     </div>
   );
