@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -44,10 +44,18 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [width, setWidth] = useState(350); // Default width
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [targetLoading, setTargetLoading] = useState(name);
+
+  // Calculate max width as 1/3 of screen width
+  const maxWidth = typeof window !== 'undefined' ? window.innerWidth / 3 : 500;
+  const minWidth = 300; // Minimum width to ensure usability
 
   const MySwal = withReactContent(Swal);
   const {
@@ -62,6 +70,33 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     mapRef,
     setIsPlaying
   } = useMapLayerContext();
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !containerRef.current) return;
+      
+      const containerRect = containerRef.current.getBoundingClientRect();
+      let newWidth = e.clientX - containerRect.left;
+      
+      // Apply constraints
+      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+      setWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, maxWidth, minWidth]);
 
   const onLoadDataset = async () => {
     if (!isOnline) {
@@ -241,7 +276,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   );
 
   const NonCollapsedMetaData = (
-    <div className="metadata-container">
+    <div 
+      className="metadata-container"
+      ref={containerRef}
+      style={{ width: `${width}px` }}
+    >
       <div className="header" onClick={toggleCollapse} data-testid="name-div">
         {name || t('unknown_name')}
         <span className="collapse-icon">
@@ -292,6 +331,13 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         />
         <AssetsDropdown />
       </div>
+      {/* Resize handle */}
+      <div 
+        className="resize-handle"
+        ref={resizeRef}
+        onMouseDown={() => setIsResizing(true)}
+        title="Drag to resize"
+      />
     </div>
   );
 
