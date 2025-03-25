@@ -36,10 +36,14 @@ public class GeoServerService {
 
   private static final Logger logger = LoggerFactory.getLogger(GeoServerService.class);
 
+  private static final String GEOSERVER_WORKSPACES_PATH = "/rest/workspaces/";
+
   /**
-   * Creates and returns HTTP headers with basic authentication for GeoServer interaction.
+   * Creates and returns HTTP headers with basic authentication for GeoServer
+   * interaction.
    *
-   * @return HttpHeaders object with content type set to JSON and basic authentication included.
+   * @return HttpHeaders object with content type set to JSON and basic
+   *         authentication included.
    */
   private HttpHeaders createHeaders() {
     HttpHeaders headers = new HttpHeaders();
@@ -49,13 +53,14 @@ public class GeoServerService {
   }
 
   /**
-   * Registers a new coverage store in the GeoServer under the specified workspace.
+   * Registers a new coverage store in the GeoServer under the specified
+   * workspace.
    *
    * @param layerName the name of the coverage store to be registered
    * @return true if the registration was successful, false otherwise
    */
   public boolean registerCoverageStore(String layerName) {
-    String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores";
+    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores";
 
     String body = """
             {
@@ -76,13 +81,14 @@ public class GeoServerService {
   }
 
   /**
-   * Registers a new coverage layer in the GeoServer under the specified workspace and coverage store.
+   * Registers a new coverage layer in the GeoServer under the specified workspace
+   * and coverage store.
    *
    * @param layerName the name of the layer to be registered
    * @return true if the registration was successful, false otherwise
    */
   public boolean registerCoverageLayer(String layerName) {
-    String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "/coverages";
+    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores/" + layerName + "/coverages";
 
     String body = """
             {
@@ -109,9 +115,10 @@ public class GeoServerService {
    * @return true if the layer was successfully unregistered, false otherwise
    */
   public boolean unregisterLayer(String layerName) {
-    String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores/" + layerName
+        + "?purge=all&recurse=true";
 
-    try{
+    try {
       boolean apiSuccess = sendDeleteRequest(url);
       return apiSuccess;
     } catch (Exception e) {
@@ -135,7 +142,8 @@ public class GeoServerService {
   }
 
   /**
-   * Deletes the .tif file corresponding to a given layer or store from the local storage.
+   * Deletes the .tif file corresponding to a given layer or store from the local
+   * storage.
    *
    * @param layerName the name of the file to be deleted (without extension)
    */

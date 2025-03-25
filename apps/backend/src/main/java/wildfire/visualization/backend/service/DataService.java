@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
 
+  private static final String KEY_PROGRESS = "progress";
+  private static final String LOG_NO_BBOX = "No bbox";
+
   @Autowired
   private StacRepository stacRepository;
 
@@ -84,8 +87,8 @@ public class DataService {
     ResponseEntity<Map<String, Object>> response = fetchData(collectionId);
     Map<String, Object> responseBody = response.getBody();
 
-    if (responseBody != null && responseBody.containsKey("progress")) {
-      int progress = ((Number) responseBody.get("progress")).intValue();
+    if (responseBody != null && responseBody.containsKey(KEY_PROGRESS)) {
+      int progress = ((Number) responseBody.get(KEY_PROGRESS)).intValue();
     } else {
       logger.error("Progress not found in response body for collection: {}", collectionId);
       fetchProgress.get(collectionId).set(-1); // Set error state
@@ -214,7 +217,7 @@ public class DataService {
    */
   public List<Map<String, Object>> getCollections(double[] bbox) {
     logger.debug("Fetching collections from database with bbox: {}",
-        bbox != null ? Arrays.toString(bbox) : "No bbox");
+        bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections from repository
@@ -262,15 +265,16 @@ public class DataService {
    * This method queries collections ordered by their name (`id` field) and
    * restructures the response for client consumption.
    *
-   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                     null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
   public List<Map<String, Object>> getCollectionsByName(double[] bbox, String sortDirection) {
     logger.debug("Fetching collections from database sorted by name ({}) with bbox: {}",
-      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
+        sortDirection, bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections sorted by name (id) from repository
@@ -280,12 +284,12 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-        .map(collection -> Map.of(
-          "key", collection.get("key"),
-          "id", collection.get("id"),
-          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-        ))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+          ))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by name", e);
@@ -300,15 +304,16 @@ public class DataService {
    * date and
    * restructures the response for client consumption.
    *
-   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
-   *             null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
   public List<Map<String, Object>> getCollectionsByDate(double[] bbox, String sortDirection) {
     logger.debug("Fetching collections from database sorted by date ({}) with bbox: {}",
-      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
+        sortDirection, bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections sorted by date from repository
@@ -318,12 +323,12 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-        .map(collection -> Map.of(
-          "key", collection.get("key"),
-          "id", collection.get("id"),
-          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-        ))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+          ))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by date", e);
@@ -462,7 +467,7 @@ public class DataService {
       // Construct API response body
       responseBody.put("collectionId", collectionId);
       responseBody.put("totalFetched", totalFetched);
-      responseBody.put("progress", progress);
+      responseBody.put(KEY_PROGRESS, progress);
       responseBody.put("insertedItems", insertedItems);
       responseBody.put("insertedTimestamps", insertedTimestamps);
       responseBody.put("nextPage", nextUrl);
@@ -487,6 +492,7 @@ public class DataService {
 
   /**
    * This method fetches order list of item ids
+   * 
    * @return returns the list of item ids sorted by timestamp
    */
   public List<String> getItemsIdsOrderedByTimestamp() {
@@ -615,11 +621,11 @@ public class DataService {
     }
   }
 
-
   /**
    * Method responsible for registering all assets for a specific item.
    * <p>
-   * This fetches the item from the database and registers its GeoTIFF assets one by one.
+   * This fetches the item from the database and registers its GeoTIFF assets one
+   * by one.
    * This is intended to be used when refreshing/re-registering existing assets.
    *
    * @param itemId ID of the item to process
@@ -651,7 +657,7 @@ public class DataService {
         return false;
       }
 
-      for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
+      for (Iterator<String> it = assets.fieldNames(); it.hasNext();) {
         String assetKey = it.next();
 
         boolean success = geoTIFFService.registerGeoTIFF(itemId, assetKey);
@@ -670,13 +676,14 @@ public class DataService {
     }
   }
 
-
-
   /**
-   * Method responsible for processing all assets for all items in a given collection.
+   * Method responsible for processing all assets for all items in a given
+   * collection.
    * <p>
-   * This fetches all items from the collection and processes their assets one by one.
-   * Layers are reset before processing begins, but data is preserved if unregistering fails.
+   * This fetches all items from the collection and processes their assets one by
+   * one.
+   * Layers are reset before processing begins, but data is preserved if
+   * unregistering fails.
    *
    * @param collectionId ID of the collection
    */
@@ -716,7 +723,7 @@ public class DataService {
 
       for (JsonNode feature : features) {
         String itemId = feature.get("id").asText();
-        String collId = feature.get("collection").asText();  // Prefer the per-feature collection
+        String collId = feature.get("collection").asText(); // Prefer the per-feature collection
 
         JsonNode assets = feature.get("assets");
         if (assets == null || assets.isEmpty()) {
@@ -724,7 +731,7 @@ public class DataService {
           continue;
         }
 
-        for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
+        for (Iterator<String> it = assets.fieldNames(); it.hasNext();) {
           String assetKey = it.next();
           JsonNode asset = assets.get(assetKey);
           String href = asset.get("href").asText();
@@ -736,12 +743,14 @@ public class DataService {
         }
 
         count++;
-        fetchProgress.put(collectionProgressKey, new AtomicInteger((int) Math.floor(((double) count / totalItems) * 100)));
+        fetchProgress.put(collectionProgressKey,
+            new AtomicInteger((int) Math.floor(((double) count / totalItems) * 100)));
         logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
       }
 
       logger.info("Finished registering all assets in collection {}", collectionId);
-      // Optionally remove progress key or set to -1 or totalItems to indicate completion
+      // Optionally remove progress key or set to -1 or totalItems to indicate
+      // completion
       fetchProgress.put(collectionProgressKey, new AtomicInteger(100));
 
     } catch (Exception e) {
@@ -758,11 +767,14 @@ public class DataService {
   }
 
   /**
-   * Method responsible for unregistering all registered asset layers from GeoServer.
+   * Method responsible for unregistering all registered asset layers from
+   * GeoServer.
    * Also updates their registration status in the database.
-   * If all layers are successfully unregistered, clears the entire Assets and Items tables.
+   * If all layers are successfully unregistered, clears the entire Assets and
+   * Items tables.
    *
-   * @param fullReset Whether to fully clear the Assets and Items tables after unregistering
+   * @param fullReset Whether to fully clear the Assets and Items tables after
+   *                  unregistering
    * @return true if the full reset succeeded, false otherwise
    */
   public boolean itemAssetsReset(boolean fullReset) {
@@ -798,8 +810,8 @@ public class DataService {
    */
   public boolean tryItemAssetsResetOnce(boolean fullReset) {
     List<Map<String, Object>> assetsToProcess = fullReset
-      ? stacRepository.getItemsWithAssets()
-      : stacRepository.getLoadedLayers();
+        ? stacRepository.getItemsWithAssets()
+        : stacRepository.getLoadedLayers();
 
     boolean allUnregisteredSuccessfully = true;
 

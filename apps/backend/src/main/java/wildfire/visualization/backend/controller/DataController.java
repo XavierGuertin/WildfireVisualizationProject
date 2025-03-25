@@ -27,6 +27,8 @@ public class DataController {
 
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
+  private static final String LOG_RECEIVED_REMOVE_ALL_ITEMS = "Received request to remove all items";
+
   private final DataService dataService;
 
   public DataController(DataService dataService) {
@@ -35,8 +37,7 @@ public class DataController {
 
   @GetMapping("/api/load-assets/{collectionId}")
   public ResponseEntity<String> loadAssets(
-    @PathVariable String collectionId
-  ) {
+      @PathVariable String collectionId) {
     logger.info("Received request to load assets asynchronously for collection: {}", collectionId);
     try {
       // Run the processing task asynchronously
@@ -67,7 +68,6 @@ public class DataController {
   public ResponseEntity<List<Map<String, Object>>> getLoadedLayers() {
     return ResponseEntity.ok(dataService.getLoadedLayers());
   }
-
 
   /**
    * Parses a bounding box (BBOX) string from a request parameter.
@@ -250,7 +250,7 @@ public class DataController {
    */
   @DeleteMapping("/api/remove-all-items")
   public ResponseEntity<String> removeAllItems() {
-    logger.info("Received request to remove all items");
+    logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeAllItems();
     logger.debug("Successfully removed all items");
     return ResponseEntity.ok(result);
@@ -266,7 +266,7 @@ public class DataController {
    */
   @DeleteMapping("/api/remove-items-from-collection/{collectionId}")
   public ResponseEntity<String> removeItemsFromCollection(@PathVariable("collectionId") String collectionId) {
-    logger.info("Received request to remove all items");
+    logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeItemsFromCollection(collectionId);
     logger.debug("Successfully removed all items");
     return ResponseEntity.ok(result);
@@ -284,7 +284,7 @@ public class DataController {
   @DeleteMapping("/api/remove-item/{id}/{collection}")
   public ResponseEntity<String> removeItem(@PathVariable("id") String itemId,
       @PathVariable("collection") String collectionId) {
-    logger.info("Received request to remove all items");
+    logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeItem(itemId, collectionId);
     logger.debug("Successfully removed all items");
     return ResponseEntity.ok(result);
@@ -332,17 +332,20 @@ public class DataController {
   }
 
   /**
-   * Fetches collections sorted by name, optionally filtering by a bounding box (BBOX)
+   * Fetches collections sorted by name, optionally filtering by a bounding box
+   * (BBOX)
    * with specified sort direction.
    *
-   * @param bboxStr       The bounding box string in "minX,minY,maxX,maxY" format (optional).
-   * @param sortDirection The direction to sort collections ("asc" or "desc"). Default is "asc".
+   * @param bboxStr       The bounding box string in "minX,minY,maxX,maxY" format
+   *                      (optional).
+   * @param sortDirection The direction to sort collections ("asc" or "desc").
+   *                      Default is "asc".
    * @return A ResponseEntity containing a list of collections sorted by name.
    */
   @GetMapping("/api/get-collections-by-name")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByName(
-    @RequestParam(value = "bbox", required = false) String bboxStr,
-    @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+      @RequestParam(value = "bbox", required = false) String bboxStr,
+      @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
     logger.info("Processing request to fetch collections sorted by name with direction: {}", sortDirection);
 
     double[] bbox = parseBbox(bboxStr);
@@ -354,15 +357,15 @@ public class DataController {
    * Fetches collections sorted by date, optionally filtering by a bounding box
    * (BBOX) with specified sort direction.
    *
-   * @param bboxStr The bounding box string in "minX,minY,maxX,maxY" format
-   *                (optional).
+   * @param bboxStr       The bounding box string in "minX,minY,maxX,maxY" format
+   *                      (optional).
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A ResponseEntity containing a list of collections sorted by date.
    */
   @GetMapping("/api/get-collections-by-date")
   public ResponseEntity<List<Map<String, Object>>> getCollectionsByDate(
-    @RequestParam(value = "bbox", required = false) String bboxStr,
-    @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+      @RequestParam(value = "bbox", required = false) String bboxStr,
+      @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
     logger.info("Processing request to fetch collections sorted by date with direction: {}", sortDirection);
 
     double[] bbox = parseBbox(bboxStr);
@@ -427,7 +430,7 @@ public class DataController {
       return ResponseEntity.ok("Item asset layers reset successfully.");
     } else {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body("Failed to reset item asset layers.");
+          .body("Failed to reset item asset layers.");
     }
   }
 }
