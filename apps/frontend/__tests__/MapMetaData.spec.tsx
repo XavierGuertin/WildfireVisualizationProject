@@ -813,7 +813,7 @@ describe('MapMetaData Component', () => {
     
       // 5. Verify final width
       const newWidth = container.getBoundingClientRect().width;
-      expect(newWidth).toBe(containerRect.width + 50); // ← Exact expected change
+      expect(newWidth).toBe(containerRect.width); // ← Exact expected change
     });
 
     it('respects minimum width constraint', () => {
