@@ -609,6 +609,7 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
+      {/* Customize Polygon and DataLayer colors */}
       <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
@@ -622,51 +623,120 @@ const SettingsPanel: React.FC<{
         {dropdownState.activeButton === 'style' && (
           <div className="dropdown-content show">
             <div className="style-options">
-              <h2>{t('polygon_style')}</h2>
-
-              <div className="style-option">
-                <label>{t('fill')}:</label>
-                <input
-                  type="color"
-                  value={fillColor}
-                  onChange={(e) => setFillColor(e.target.value)}
-                />
+              <div className="style-tabs">
+                <button
+                  className={`style-tab ${selectedStyleTab === 'polygon' ? 'active' : ''}`}
+                  onClick={() => setSelectedStyleTab('polygon')}
+                >
+                  {t('polygon')}
+                </button>
+                <button
+                  className={`style-tab ${selectedStyleTab === 'dataLayer' ? 'active' : ''}`}
+                  onClick={() => setSelectedStyleTab('dataLayer')}
+                >
+                  {t('data_layer')}
+                </button>
               </div>
 
-              <div className="style-option">
-                <label>{t('fill_opacity')}:</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={fillOpacity}
-                  onChange={(e) => setFillOpacity(e.target.value)}
-                />
-                <span>{fillOpacity}</span>
-              </div>
+              <h2>
+                {selectedStyleTab === 'polygon' ? t('polygon_style') : t('data_layer_style')}
+              </h2>
 
-              <div className="style-option">
-                <label>{t('stroke')}:</label>
-                <input
-                  type="color"
-                  value={strokeColor}
-                  onChange={(e) => setStrokeColor(e.target.value)}
-                />
-              </div>
+              {selectedStyleTab === 'polygon' ? (
+                // Polygon style controls
+                <>
+                  <div className="style-option">
+                    <label>{t('fill')}:</label>
+                    <input
+                      type="color"
+                      value={polygonFillColor}
+                      onChange={(e) => setPolygonFillColor(e.target.value)}
+                    />
+                  </div>
 
-              <div className="style-option">
-                <label>{t('stroke_width')}:</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.5"
-                  value={strokeWidth}
-                  onChange={(e) => setStrokeWidth(e.target.value)}
-                />
-                <span>{strokeWidth}</span>
-              </div>
+                  <div className="style-option">
+                    <label>{t('fill_opacity')}:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={polygonFillOpacity}
+                      onChange={(e) => setPolygonFillOpacity(e.target.value)}
+                    />
+                    <span>{polygonFillOpacity}</span>
+                  </div>
+
+                  <div className="style-option">
+                    <label>{t('stroke')}:</label>
+                    <input
+                      type="color"
+                      value={polygonStrokeColor}
+                      onChange={(e) => setPolygonStrokeColor(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="style-option">
+                    <label>{t('stroke_width')}:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.5"
+                      value={polygonStrokeWidth}
+                      onChange={(e) => setPolygonStrokeWidth(e.target.value)}
+                    />
+                    <span>{polygonStrokeWidth}</span>
+                  </div>
+                </>
+              ) : (
+                // Data layer style controls
+                <>
+                  <div className="style-option">
+                    <label>{t('fill')}:</label>
+                    <input
+                      type="color"
+                      value={dataLayerFillColor}
+                      onChange={(e) => setDataLayerFillColor(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="style-option">
+                    <label>{t('fill_opacity')}:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={dataLayerFillOpacity}
+                      onChange={(e) => setDataLayerFillOpacity(e.target.value)}
+                    />
+                    <span>{dataLayerFillOpacity}</span>
+                  </div>
+
+                  <div className="style-option">
+                    <label>{t('stroke')}:</label>
+                    <input
+                      type="color"
+                      value={dataLayerStrokeColor}
+                      onChange={(e) => setDataLayerStrokeColor(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="style-option">
+                    <label>{t('stroke_width')}:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.5"
+                      value={dataLayerStrokeWidth}
+                      onChange={(e) => setDataLayerStrokeWidth(e.target.value)}
+                    />
+                    <span>{dataLayerStrokeWidth}</span>
+                  </div>
+                </>
+              )}
 
               <div className="style-buttons">
                 <button
