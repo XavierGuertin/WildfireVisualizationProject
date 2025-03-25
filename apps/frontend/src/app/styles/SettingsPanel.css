@@ -58,9 +58,9 @@
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   padding: 5px 0;
   border-radius: 10px;
-  z-index: 1;
   margin-top: 3px;
   user-select: none;
+  z-index: 1000;
 }
 
 /* Show dropdown content when it's open */
@@ -84,7 +84,7 @@
 }
 
 /* Hover effect for dropdown buttons */
-.dropdown-content button:hover::before {
+.dropdown-content button:not(.update-style-btn):not(.reset-style-btn):not(.style-tab):hover::before {
   content: "";
   position: absolute;
   left: 3%;
@@ -206,7 +206,7 @@
 }
 
 /* Settings information styling */
-.settings-information{
+.settings-information {
   display: flex;
   align-items: center;
   width: 175px;
@@ -214,7 +214,7 @@
 }
 
 /* Label for the settings information */
-.settings-information label{
+.settings-information label {
   background: none;
   color: black;
   border: none;
@@ -227,4 +227,117 @@
   align-items: center;
   position: relative;
   gap: 10px;
+}
+
+.dropdown-content .update-style-btn, .dropdown-content .reset-style-btn {
+  display: block;
+  width: 90%;
+  margin: 12px auto 5px auto;
+  background-color: #00447E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.dropdown-content .update-style-btn:hover, .dropdown-content .reset-style-btn:hover {
+  background-color: #005a9e;
+  transform: scale(1.02);
+}
+
+.dropdown-content .style-options {
+  padding: 5px 20px;
+  margin: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: 250px;
+  max-width: 90vw;
+}
+
+.style-options h2 {
+  margin-top: 1px;
+  text-align: center;
+  font-size: 1.5em;
+}
+
+.style-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.style-option label {
+  flex: 1;
+}
+
+.style-option input[type="color"] {
+  margin-right: 10px;
+  width: 35px;
+  height: 35px;
+}
+
+.style-option input[type="range"] {
+  accent-color: #3e3e3e;
+  height: 6px;
+  background: #ddd;
+  outline: none;
+  width: 120px;
+  margin-right: 10px;
+  position: relative;
+}
+
+.style-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.dropdown-content .style-tab {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: center;
+  display: block;
+}
+
+.style-tab.active {
+  opacity: 1;
+  color: #00447E;
+}
+
+.style-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #00447E;
+  border-radius: 2px;
+}
+
+.dropdown-content .style-tab:hover {
+  opacity: 1;
+  background-color: #f0f0f0;
+  border-radius: 5px 5px 0 0;
+}
+
+.style-option span {
+  min-width: 30px;
+  text-align: right;
+  display: inline-block;
 }
