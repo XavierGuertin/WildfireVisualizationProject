@@ -90,6 +90,9 @@ const resources = {
       loading_label: 'Loading...',
       // Polygon Style
       polygon_style: 'Polygon Style',
+      polygon: 'Polygon',
+      data_layer: 'Data Layer',
+      data_layer_style: 'Data Layer Style',
       fill: 'Fill',
       fill_opacity: 'Fill Opacity',
       stroke: 'Stroke',
@@ -187,6 +190,9 @@ const resources = {
       loading_label: 'Chargement...',
       // Polygon Style
       polygon_style: 'Style du Polygone',
+      polygon: 'Polygone',
+      data_layer: 'Couche de données',
+      data_layer_style: 'Style de la couche de données',
       fill: 'Remplissage',
       fill_opacity: 'Opacité',
       stroke: 'Contour',
