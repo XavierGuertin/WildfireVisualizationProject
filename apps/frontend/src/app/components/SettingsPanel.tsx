@@ -149,7 +149,9 @@ const SettingsPanel: React.FC<{
         setSelectedAssetLayers([]);
 
         const message = await fetchCollectionsFromEndpoint(endpointUrl);
-        toast.success(message);
+        if (message === 'Collections fetched and saved successfully') {
+          toast.success(t('collections_fetched_saved'));
+        }
 
         // Save the new endpoint to config file
         const config = await getConfig();
