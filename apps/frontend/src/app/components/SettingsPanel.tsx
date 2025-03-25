@@ -418,38 +418,31 @@ const SettingsPanel: React.FC<{
         : 'rgb(0,0,0)';
     };
 
-    // Update both item and datalayer polygons
-    updateLayerStyle(
-      mapRef.current,
-      'itemLayer',
-      hexToRgb(fillColor),
-      fillOpacity,
-      hexToRgb(strokeColor),
-      strokeWidth
-    );
-
-    // updateLayerStyle(
-    //   mapRef.current,
-    //   'dataLayer',
-    //   hexToRgb(fillColor),
-    //   fillOpacity,
-    //   hexToRgb(strokeColor),
-    //   strokeWidth
-    // );
-
-    setDropdownState({ activeButton: null, isOpen: false });
+    if (selectedStyleTab === 'polygon') {
+      updateLayerStyle(
+        mapRef.current,
+        'itemLayer',
+        hexToRgb(polygonFillColor),
+        polygonFillOpacity,
+        hexToRgb(polygonStrokeColor),
+        polygonStrokeWidth
+      );
+    } else {
+      updateLayerStyle(
+        mapRef.current,
+        'dataLayer',
+        hexToRgb(dataLayerFillColor),
+        dataLayerFillOpacity,
+        hexToRgb(dataLayerStrokeColor),
+        dataLayerStrokeWidth
+      );
+    }
   };
 
+  // Reset polygon and dataLayer style
   const handleResetLayerStyle = () => {
     if (!mapRef.current) return;
 
-    // Reset state to default values
-    setFillColor(DEFAULT_FILL_COLOR);
-    setFillOpacity(DEFAULT_FILL_OPACITY);
-    setStrokeColor(DEFAULT_STROKE_COLOR);
-    setStrokeWidth(DEFAULT_STROKE_WIDTH);
-
-    // Convert hex color to RGB
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
@@ -457,24 +450,37 @@ const SettingsPanel: React.FC<{
         : 'rgb(0,0,0)';
     };
 
-    // Apply default styles
-    updateLayerStyle(
-      mapRef.current,
-      'items',
-      hexToRgb(DEFAULT_FILL_COLOR),
-      DEFAULT_FILL_OPACITY,
-      hexToRgb(DEFAULT_STROKE_COLOR),
-      DEFAULT_STROKE_WIDTH
-    );
+    if (selectedStyleTab === 'polygon') {
+      // Reset polygon state
+      setPolygonFillColor(DEFAULT_FILL_COLOR);
+      setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
+      setPolygonStrokeColor(DEFAULT_STROKE_COLOR);
+      setPolygonStrokeWidth(DEFAULT_STROKE_WIDTH);
 
-    // updatePolygonStyle(
-    //   mapRef.current,
-    //   'dataLayer',
-    //   hexToRgb(DEFAULT_FILL_COLOR),
-    //   DEFAULT_FILL_OPACITY,
-    //   hexToRgb(DEFAULT_STROKE_COLOR),
-    //   DEFAULT_STROKE_WIDTH
-    // );
+      updateLayerStyle(
+        mapRef.current,
+        'itemLayer',
+        hexToRgb(DEFAULT_FILL_COLOR),
+        DEFAULT_FILL_OPACITY,
+        hexToRgb(DEFAULT_STROKE_COLOR),
+        DEFAULT_STROKE_WIDTH
+      );
+    } else {
+      // Reset data layer state with blue defaults
+      setDataLayerFillColor('#0000ff');
+      setDataLayerFillOpacity('0.1');
+      setDataLayerStrokeColor('#0000ff');
+      setDataLayerStrokeWidth('2');
+
+      updateLayerStyle(
+        mapRef.current,
+        'dataLayer',
+        hexToRgb('#0000ff'),
+        '0.1',
+        hexToRgb('#0000ff'),
+        '2'
+      );
+    }
   };
 
   return (
