@@ -17,6 +17,7 @@ import { GeoJSON } from 'ol/format';
 import { Style, Stroke, Fill } from 'ol/style';
 import ImageLayer from 'ol/layer/Image';
 import { ImageWMS } from 'ol/source';
+import { createItemAssetStyle } from '../styles/ItemAssetSyle';
 
 // Attributions
 const attribution = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
@@ -292,17 +293,25 @@ export const toggleAssetLayer = (
   layerName: string,
   layerUrl: string,
   add: boolean,
+  min: number,
+  max: number
 ): void => {
   // First check if layer already exists
   const layers = map.getLayers().getArray();
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
+
+  const result = /layers=(.*)/.exec(layerUrl);
+    let geoServerLayerName = ''
+    if(result){
+      geoServerLayerName = result[1];
+    }
 
   if (add && !existingLayer) {
     // Add the layer
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
-        params: { STYLES: layerName },
+        params: { SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max) },
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
