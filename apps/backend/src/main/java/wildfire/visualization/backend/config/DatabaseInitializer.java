@@ -3,6 +3,7 @@ package wildfire.visualization.backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+
 import jakarta.annotation.PostConstruct;
 
 @Component
@@ -37,6 +38,8 @@ public class DatabaseInitializer {
               asset_name TEXT NOT NULL,
               layer_url TEXT NOT NULL,
               is_registered BOOLEAN DEFAULT FALSE,
+              min INT NOT NULL,
+              max INT NOT NULL,
               UNIQUE (item_id, asset_name)
           );
       """;
