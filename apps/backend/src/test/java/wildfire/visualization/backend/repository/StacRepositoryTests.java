@@ -1,17 +1,5 @@
 package wildfire.visualization.backend.repository;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import wildfire.visualization.backend.exception.RepositoryException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +7,26 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import wildfire.visualization.backend.exception.RepositoryException;
 
 @ExtendWith(MockitoExtension.class)
 class StacRepositoryTests {
@@ -833,11 +836,11 @@ class StacRepositoryTests {
 
   @Test
   void testSaveLayer_insertsCollectionItemAndAsset() {
-    stacRepository.saveLayer("item1", "col1", "asset1", "url1");
+    stacRepository.saveLayer("item1", "col1", "asset1", "url1", 0, 100);//FIXTEST -> done?
 
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Collections"), eq("col1"));
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Items"), eq("item1"), eq("col1"));
-    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Assets"), eq("item1"), eq("asset1"), eq("url1"));
+    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Assets"), eq("item1"), eq("asset1"), eq("url1"), eq(0), eq(100));
   }
 
   @Test
