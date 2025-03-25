@@ -379,20 +379,34 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Add default style constants
-  const DEFAULT_FILL_COLOR = '#ff0000';
+  // Default style values for Polygon
+  const DEFAULT_FILL_COLOR = '#ff0000'; // Red
   const DEFAULT_FILL_OPACITY = '0.1';
-  const DEFAULT_STROKE_COLOR = '#ff0000';
+  const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
   const DEFAULT_STROKE_WIDTH = '2';
 
-  // Add state for style options
-  const [fillColor, setFillColor] = useState(DEFAULT_FILL_COLOR);
-  const [fillOpacity, setFillOpacity] = useState(DEFAULT_FILL_OPACITY);
-  const [strokeColor, setStrokeColor] = useState(DEFAULT_STROKE_COLOR);
-  const [strokeWidth, setStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+// Default style values for DataLayer
+  const DEFAULT_DATA_FILL_COLOR = '#0000ff'; // Blue
+  const DEFAULT_DATA_FILL_OPACITY = '0.1';
+  const DEFAULT_DATA_STROKE_COLOR = '#0000ff'; // Blue
+  const DEFAULT_DATA_STROKE_WIDTH = '2';
 
+  // Tab selection state
+  const [selectedStyleTab, setSelectedStyleTab] = useState<'polygon' | 'dataLayer'>('polygon');
 
-// Add this handler function
+  // Polygon style state
+  const [polygonFillColor, setPolygonFillColor] = useState(DEFAULT_FILL_COLOR);
+  const [polygonFillOpacity, setPolygonFillOpacity] = useState(DEFAULT_FILL_OPACITY);
+  const [polygonStrokeColor, setPolygonStrokeColor] = useState(DEFAULT_STROKE_COLOR);
+  const [polygonStrokeWidth, setPolygonStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+
+  // DataLayer style state
+  const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
+  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(DEFAULT_DATA_FILL_OPACITY);
+  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
+  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
+
+  // Update polygon and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
 
