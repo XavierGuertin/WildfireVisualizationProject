@@ -37,6 +37,11 @@ const SATELLITE_LAYER_URL =
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
+// Default style values that can be overridden
+let currentFillColor = 'rgba(255, 0, 0, 0.1)';
+let currentStrokeColor = 'rgba(255, 0, 0, 0.5)';
+let currentStrokeWidth = 2;
+
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
   source: new XYZ({
@@ -129,8 +134,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(255, 0, 0, 0.1)' }),
-      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 }),
+      fill: new Fill({ color: currentFillColor }),
+      stroke: new Stroke({ color: currentStrokeColor, width: currentStrokeWidth }),
     }),
   });
 
@@ -359,6 +364,11 @@ export const updateLayerStyle = (
   const fillRgba = fill.replace('rgb', 'rgba').replace(')', `,${fillOpacity})`);
   const strokeRgba = stroke.replace('rgb', 'rgba').replace(')', ',0.5)');
 
+  // Store current style values for later use
+  currentFillColor = fillRgba;
+  currentStrokeColor = strokeRgba;
+  currentStrokeWidth = parseInt(strokeWidth);
+
   layer.setStyle(
     new Style({
       fill: new Fill({
@@ -366,7 +376,7 @@ export const updateLayerStyle = (
       }),
       stroke: new Stroke({
         color: strokeRgba,
-        width: parseInt(strokeWidth),
+        width: currentStrokeWidth,
       }),
     }),
   );
