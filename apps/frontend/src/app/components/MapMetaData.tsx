@@ -86,7 +86,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       });
 
       if (result.isConfirmed) {
-        setTargetLoading("collection items");
+        setTargetLoading(t('collection_items'));
         setLoading(true); // Show loading overlay
         setIsProcessLoading(true);
         localStorage.setItem('sliderValue', '0');
@@ -171,7 +171,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           };
 
           await pollProgress();
-          setTargetLoading("collection item assets")
+          setTargetLoading(t('collection_item_assets'));
           setLoading(true);
           setProgress(0);
 
@@ -216,9 +216,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           pollAssetProgress();
         } catch (error) {
-          toast.error('Error loading dataset: ' + error),
-            { toastId: 'loading-dataset-error' };
-          setLoading(false);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+        toast.error(`${t('error_loading_dataset')}: ${errorMessage}`,
+          {toastId: 'loading-dataset-error',});
+        setLoading(false);
         }
       }
     } catch (error) {

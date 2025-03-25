@@ -1,3 +1,4 @@
+import i18n from '../resources/i18n';
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
 export const getConfig = async (): Promise<any> => {
@@ -8,8 +9,8 @@ export const getConfig = async (): Promise<any> => {
     }
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching config:', error);
-    return { error: 'Failed to fetch config' };
+    console.error(`${i18n.t('error_fetching_config')}:`, error);
+    return { error: i18n.t('error_failed_fetch_config') };
   }
 };
 
@@ -26,7 +27,7 @@ export const saveConfig = async (config: any): Promise<void> => {
       throw new Error(`Error: ${response.statusText}`);
     }
   } catch (error: any) {
-    console.error('Error saving config:', error);
-    throw new Error(`Failed to save config: ${error.message}`);
+    console.error(`${i18n.t('error_saving_config')}:`, error);
+    throw new Error(`${i18n.t('error_saving_config')}: ${error.message}`);
   }
 };
