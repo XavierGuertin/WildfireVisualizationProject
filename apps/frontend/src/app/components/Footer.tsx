@@ -55,8 +55,8 @@ const Footer = () => {
                 const layerData = response.find(
                   (obj: { asset_name: string, item_id: string }) => obj.asset_name === layer && obj.item_id === itemId,
                 );
-                toggleAssetLayer(map, layer, '', false);
-                toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
+                toggleAssetLayer(map, layer, '', false, layerData.min, layerData.max);
+                toggleAssetLayer(map, layer, layerData.layer_url, true, layerData.min, layerData.max);
               }
             });
           }
