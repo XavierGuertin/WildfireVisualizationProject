@@ -228,7 +228,8 @@ describe('MapMetaData', () => {
     });
 
     expect(toast.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error loading dataset:'),
+      expect.stringContaining('error_loading_dataset:'),
+      expect.objectContaining({ toastId: 'loading-dataset-error' })
     );
   });
 
