@@ -33,11 +33,13 @@ public class ConfigService {
     try {
       File configFile = new File(CONFIG_FILE_PATH);
       if (configFile.exists()) {
+        logger.info("Reading configuration from file: {}", CONFIG_FILE_PATH);
         return objectMapper.readValue(configFile, Map.class);
       } else {
         return Map.of();
       }
     } catch (Exception e) {
+      logger.error("Failed to retrieve configuration from {}: {}", CONFIG_FILE_PATH, e.getMessage(), e);
       throw new ConfigException("Failed to retrieve configuration", e);
     }
   }
@@ -50,8 +52,11 @@ public class ConfigService {
    */
   public void saveConfig(Map<String, Object> config) {
     try {
+      logger.info("Saving configuration to file: {}", CONFIG_FILE_PATH);
       objectMapper.writeValue(new File(CONFIG_FILE_PATH), config);
+      logger.debug("Configuration saved successfully");
     } catch (Exception e) {
+      logger.error("Failed to save configuration to {}: {}", CONFIG_FILE_PATH, e.getMessage(), e);
       throw new ConfigException("Failed to save configuration", e);
     }
   }
