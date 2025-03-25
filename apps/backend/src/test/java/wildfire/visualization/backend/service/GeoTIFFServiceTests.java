@@ -29,12 +29,6 @@ class GeoTIFFServiceTests {
   @InjectMocks
   private GeoTIFFService geoTIFFService;
 
-  private final String itemId = "wildfire_timestamp_2023_08_30_12_00_00";
-  private final String collectionId = "montreal_2023";
-  private final String assetName = "humidity";
-  private final String tiffUrl = "https://example.com/humidity.tif"; // Fake URL
-  private final String localFilePath = "./geoserver_data/tiffs/humidity.tif";
-
   @BeforeEach
   void setUp() {
     // ✅ FIX: Use Reflection to set private fields correctly
