@@ -290,3 +290,42 @@
   margin-right: 10px;
   position: relative;
 }
+
+.style-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.style-tab {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.style-tab.active {
+  opacity: 1;
+  color: #00447E;
+}
+
+.style-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background-color: #00447E;
+  border-radius: 2px;
+}
+
+.style-tab:hover {
+  opacity: 1;
+}
