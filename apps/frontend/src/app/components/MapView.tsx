@@ -5,7 +5,11 @@ import 'ol/ol.css';
 import '../styles/map.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { defaults as defaultControls, FullScreen, Attribution  } from 'ol/control.js';
+import {
+  Attribution,
+  defaults as defaultControls,
+  FullScreen,
+} from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
@@ -14,14 +18,16 @@ import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
-import { Style, Stroke, Fill } from 'ol/style';
+import { Fill, Stroke, Style } from 'ol/style';
 import ImageLayer from 'ol/layer/Image';
 import { ImageWMS } from 'ol/source';
 
 // Attributions
-const attribution = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const attribution =
+  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 const arcGIS_attribution = 'ArcGIS Online map hosted by Esri';
-const opentopomap_attribution = '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
+const opentopomap_attribution =
+  '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
 
 // Map layers
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
@@ -30,6 +36,16 @@ const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
 const SATELLITE_LAYER_URL =
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+
+// Default style values for polygon (itemLayer)
+let currentPolygonFillColor = 'rgba(255, 0, 0, 0.1)';
+let currentPolygonStrokeColor = 'rgba(255, 0, 0, 0.5)';
+let currentPolygonStrokeWidth = 2;
+
+// Default style values for dataLayer
+let currentDataLayerFillColor = 'rgba(0, 0, 255, 0.1)';
+let currentDataLayerStrokeColor = 'rgba(0, 0, 255, 0.5)';
+let currentDataLayerStrokeWidth = 2;
 
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
@@ -81,8 +97,8 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(0, 0, 255, 0.1)' }), // Keeping blue for distinction
-      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 }),
+      fill: new Fill({ color: currentDataLayerFillColor }),
+      stroke: new Stroke({ color: currentDataLayerStrokeColor, width: currentDataLayerStrokeWidth }),
     }),
   });
 
@@ -123,8 +139,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(255, 0, 0, 0.1)' }),
-      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 }),
+      fill: new Fill({ color: currentPolygonFillColor }),
+      stroke: new Stroke({ color: currentPolygonStrokeColor, width: currentPolygonStrokeWidth }),
     }),
   });
 
@@ -209,7 +225,10 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
-        controls: defaultControls({attribution: false}).extend([new FullScreen, new Attribution({collapsible: false})]),
+        controls: defaultControls({ attribution: false }).extend([
+          new FullScreen(),
+          new Attribution({ collapsible: false }),
+        ]),
         layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
@@ -326,6 +345,65 @@ export const toggleAssetLayer = (
     map.removeLayer(existingLayer);
     map.renderSync();
   }
+};
+
+/**
+ * Updates the style of a layer on the map
+ * @param map
+ * @param layerName
+ * @param fill
+ * @param fillOpacity
+ * @param stroke
+ * @param strokeWidth
+ */
+export const updateLayerStyle = (
+  map: Map,
+  layerName: string,
+  fill: string, // RGB
+  fillOpacity: string, // value
+  stroke: string, // RGB
+  strokeWidth: string, // value
+): void => {
+  const layers = map.getLayers().getArray();
+  const layer = layers.find(
+    (layer) => layer.get('id') === layerName || layer.get('name') === layerName,
+  ) as VectorLayer<VectorSource<any>>;
+
+  if (!layer) {
+    console.error(`Layer "${layerName}" not found`);
+    return;
+  }
+
+  // Create rgba values from the RGB and opacity inputs
+  const fillRgba = fill.replace('rgb', 'rgba').replace(')', `,${fillOpacity})`);
+  const strokeRgba = stroke.replace('rgb', 'rgba').replace(')', ',0.5)');
+  const widthValue = parseInt(strokeWidth);
+
+  // Store current style values based on which layer is being updated
+  if (layerName === 'itemLayer') {
+    currentPolygonFillColor = fillRgba;
+    currentPolygonStrokeColor = strokeRgba;
+    currentPolygonStrokeWidth = widthValue;
+  } else if (layerName === 'dataLayer') {
+    currentDataLayerFillColor = fillRgba;
+    currentDataLayerStrokeColor = strokeRgba;
+    currentDataLayerStrokeWidth = widthValue;
+  }
+
+  layer.setStyle(
+    new Style({
+      fill: new Fill({
+        color: fillRgba,
+      }),
+      stroke: new Stroke({
+        color: strokeRgba,
+        width: widthValue,
+      }),
+    }),
+  );
+
+  // Force render update
+  map.renderSync();
 };
 
 /**

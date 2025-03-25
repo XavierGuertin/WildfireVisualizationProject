@@ -1,4 +1,5 @@
 import '../styles/LoadingModule.css';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 
 interface LoadingModuleProps {
@@ -9,6 +10,7 @@ interface LoadingModuleProps {
 }
 
 const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progress, isVisible, errorMessage }) => {
+  const { t } = useTranslation();
   if (!isVisible) return null;
 
   return (
@@ -20,7 +22,7 @@ const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progr
       ) : (
         <>
           <p className="progress-text">
-            {`Loading ${datasetBeingLoaded} - ${progress}%`}
+            {`${t('loading')} ${datasetBeingLoaded} - ${progress}%`}
           </p>
           <div className="progress-bar-background">
             <div
