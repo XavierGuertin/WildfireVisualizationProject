@@ -38,14 +38,19 @@ public class DatabaseInitializer {
               asset_name TEXT NOT NULL,
               layer_url TEXT NOT NULL,
               is_registered BOOLEAN DEFAULT FALSE,
-              min INT NOT NULL,
-              max INT NOT NULL,
               UNIQUE (item_id, asset_name)
           );
+      """;
+
+    String alterAssets = """
+          ALTER TABLE TIFF_Assets
+          ADD COLUMN IF NOT EXISTS min INT NOT NULL,
+          ADD COLUMN IF NOT EXISTS max INT NOT NULL;
       """;
 
     jdbcTemplate.execute(createCollections);
     jdbcTemplate.execute(createItems);      // Must be before Assets
     jdbcTemplate.execute(createAssets);     // Must be after Items
+    jdbcTemplate.execute(alterAssets);      // Alter exisiting table since it is already present in the db
   }
 }
