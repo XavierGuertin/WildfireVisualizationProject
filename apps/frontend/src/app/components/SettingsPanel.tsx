@@ -379,6 +379,47 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
+  // Add state for style options
+  const [fillColor, setFillColor] = useState(DEFAULT_FILL_COLOR);
+  const [fillOpacity, setFillOpacity] = useState(DEFAULT_FILL_OPACITY);
+  const [strokeColor, setStrokeColor] = useState(DEFAULT_STROKE_COLOR);
+  const [strokeWidth, setStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+
+
+// Add this handler function
+  const handleUpdatePolygonStyle = () => {
+    if (!mapRef.current) return;
+
+    // Convert hex color to RGB format
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
+        : 'rgb(0,0,0)';
+    };
+
+    // Update both item and datalayer polygons
+    updateLayerStyle(
+      mapRef.current,
+      'itemLayer',
+      hexToRgb(fillColor),
+      fillOpacity,
+      hexToRgb(strokeColor),
+      strokeWidth
+    );
+
+    // updateLayerStyle(
+    //   mapRef.current,
+    //   'dataLayer',
+    //   hexToRgb(fillColor),
+    //   fillOpacity,
+    //   hexToRgb(strokeColor),
+    //   strokeWidth
+    // );
+
+    setDropdownState({ activeButton: null, isOpen: false });
+  };
+
   return (
     <div className="button-container" ref={dropdownRef}>
       <div className="dropdown-button">
