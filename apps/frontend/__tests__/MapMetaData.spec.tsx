@@ -501,7 +501,8 @@ describe('MapMetaData', () => {
     });
 
     expect(toast.error).toHaveBeenCalledWith(
-      'Error loading dataset: Error: API error',
+      'error_loading_dataset: API error', 
+      { toastId: 'loading-dataset-error' }
     );
   });
 
