@@ -29,7 +29,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer, updateLayerStyle } from './MapView';
 import { Map } from 'ol';
-
+import { LuPalette } from 'react-icons/lu';
 
 const MySwal = withReactContent(Swal);
 
@@ -586,6 +586,19 @@ const SettingsPanel: React.FC<{
               <IoTrashOutline size={24} fill="red" />
               {t('factory_reset')}
             </button>
+          </div>
+        )}
+      </div>
+      <div className="dropdown-button">
+        <button
+          className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
+          onClick={() => toggleDropdown('style')}
+          aria-expanded={dropdownState.activeButton === 'style'}
+          aria-label="style"
+          data-testid="style-dropdown-button"
+        >
+          <LuPalette size={32} />
+        </button>
           </div>
         )}
       </div>
