@@ -216,9 +216,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           pollAssetProgress();
         } catch (error) {
-          toast.error('Error loading dataset: ' + error),
-            { toastId: 'loading-dataset-error' };
-          setLoading(false);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+        toast.error(`${t('error_loading_dataset')}: ${errorMessage}`,
+          {toastId: 'loading-dataset-error',});
+        setLoading(false);
         }
       }
     } catch (error) {
