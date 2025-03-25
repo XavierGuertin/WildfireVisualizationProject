@@ -88,6 +88,14 @@ const resources = {
       weather_assets_label: 'Weather Assets',
       load_assets_button: 'Load Assets',
       loading_label: 'Loading...',
+      // Polygon Style
+      polygon_style: 'Polygon Style',
+      fill: 'Fill',
+      fill_opacity: 'Fill Opacity',
+      stroke: 'Stroke',
+      stroke_width: 'Stroke Width',
+      update_style: 'Save',
+      reset_style: 'Reset',
     },
   },
   fr: {
@@ -177,7 +185,14 @@ const resources = {
       weather_assets_label: 'Données Météo',
       load_assets_button: 'Charger les Données',
       loading_label: 'Chargement...',
-
+      // Polygon Style
+      polygon_style: 'Style du Polygone',
+      fill: 'Remplissage',
+      fill_opacity: 'Opacité',
+      stroke: 'Contour',
+      stroke_width: 'Largeur du Contour',
+      update_style: 'Enregistrer',
+      reset_style: 'Réinitialiser',
     },
   },
 };
