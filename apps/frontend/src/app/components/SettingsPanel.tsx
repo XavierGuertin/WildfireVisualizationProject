@@ -27,7 +27,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
-import { changeLayer } from './MapView';
+import { changeLayer, updateLayerStyle } from './MapView';
 import { Map } from 'ol';
 
 
@@ -379,6 +379,12 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
+  // Add default style constants
+  const DEFAULT_FILL_COLOR = '#ff0000';
+  const DEFAULT_FILL_OPACITY = '0.1';
+  const DEFAULT_STROKE_COLOR = '#ff0000';
+  const DEFAULT_STROKE_WIDTH = '2';
+
   // Add state for style options
   const [fillColor, setFillColor] = useState(DEFAULT_FILL_COLOR);
   const [fillOpacity, setFillOpacity] = useState(DEFAULT_FILL_OPACITY);
@@ -387,7 +393,7 @@ const SettingsPanel: React.FC<{
 
 
 // Add this handler function
-  const handleUpdatePolygonStyle = () => {
+  const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
 
     // Convert hex color to RGB format
@@ -418,6 +424,43 @@ const SettingsPanel: React.FC<{
     // );
 
     setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const handleResetLayerStyle = () => {
+    if (!mapRef.current) return;
+
+    // Reset state to default values
+    setFillColor(DEFAULT_FILL_COLOR);
+    setFillOpacity(DEFAULT_FILL_OPACITY);
+    setStrokeColor(DEFAULT_STROKE_COLOR);
+    setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+    // Convert hex color to RGB
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
+        : 'rgb(0,0,0)';
+    };
+
+    // Apply default styles
+    updateLayerStyle(
+      mapRef.current,
+      'items',
+      hexToRgb(DEFAULT_FILL_COLOR),
+      DEFAULT_FILL_OPACITY,
+      hexToRgb(DEFAULT_STROKE_COLOR),
+      DEFAULT_STROKE_WIDTH
+    );
+
+    // updatePolygonStyle(
+    //   mapRef.current,
+    //   'dataLayer',
+    //   hexToRgb(DEFAULT_FILL_COLOR),
+    //   DEFAULT_FILL_OPACITY,
+    //   hexToRgb(DEFAULT_STROKE_COLOR),
+    //   DEFAULT_STROKE_WIDTH
+    // );
   };
 
   return (
