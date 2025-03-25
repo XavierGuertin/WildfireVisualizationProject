@@ -37,8 +37,8 @@ interface MapLayerContextValue {
   setItemIds: React.Dispatch<React.SetStateAction<string[]>>;
   isProcessLoading: boolean;
   setIsProcessLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  loadedDatasetId: string;
-  setLoadedDatasetId: React.Dispatch<React.SetStateAction<string>>;
+  loadedDatasetTitle: string;
+  setloadedDatasetTitle: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const MapLayerContext = createContext<MapLayerContextValue | undefined>(
@@ -57,7 +57,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [itemIds, setItemIds] = useState<string[]>([]);
   const [isProcessLoading, setIsProcessLoading] = useState<boolean>(false);
-  const [loadedDatasetId, setLoadedDatasetId] = useState<string>('');
+  const [loadedDatasetTitle, setloadedDatasetTitle] = useState<string>('');
 
   // Timeline playback speed
   const [speed, setSpeed] = useState<number>(1);
@@ -120,8 +120,8 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setItemIds,
       isProcessLoading,
       setIsProcessLoading,
-      loadedDatasetId,
-      setLoadedDatasetId,
+      loadedDatasetTitle,
+      setloadedDatasetTitle,
     }),
     [
       layer,
@@ -137,7 +137,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       isPlaying,
       itemIds,
       isProcessLoading,
-      loadedDatasetId,
+      loadedDatasetTitle,
     ],
   );
 

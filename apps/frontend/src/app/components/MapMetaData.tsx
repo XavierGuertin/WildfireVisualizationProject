@@ -197,6 +197,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                   try {
                     const config = await getConfig();
                     config.loadedDataset = id;
+                    config.loadedDatasetTitle = name;
                     await saveConfig(config);
                     refreshDatasets?.();
                   } catch (err) {

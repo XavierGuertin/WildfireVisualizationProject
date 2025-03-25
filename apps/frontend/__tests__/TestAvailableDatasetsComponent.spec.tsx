@@ -60,7 +60,7 @@ jest.mock('../src/app/components/MapView', () => ({
 jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
-    setLoadedDatasetId: jest.fn(),
+    setloadedDatasetTitle: jest.fn(),
   })),
 }));
 

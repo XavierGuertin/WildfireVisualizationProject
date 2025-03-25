@@ -161,6 +161,7 @@ const SettingsPanel: React.FC<{
 
         config.endpoint = endpointUrl;
         config.loadedDataset = '';
+        config.loadedDatasetTitle = '';
         await saveConfig(config);
 
         refreshDatasets(); // Trigger the refresh
@@ -329,6 +330,7 @@ const SettingsPanel: React.FC<{
 
         config.endpoint = 'No endpoint saved';
         config.loadedDataset = '';
+        config.loadedDatasetTitle = '';
         await saveConfig(config);
 
         refreshDatasets(); // Trigger the refresh

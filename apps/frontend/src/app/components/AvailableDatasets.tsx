@@ -66,7 +66,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mapRef, loadedDatasetId, setLoadedDatasetId } = useMapLayerContext();
+  const { mapRef, loadedDatasetTitle, setloadedDatasetTitle } = useMapLayerContext();
 
   /**
    * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
@@ -130,7 +130,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       }
 
       const config = await getConfig();
-      setLoadedDatasetId(config.loadedDataset || null);
+      setloadedDatasetTitle(config.loadedDatasetTitle || null);
 
       setDatasets(response);
       setFetchError(null);
@@ -259,7 +259,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
     if (datasets.length > 0) {
       return datasets.map((dataset) => {
-        const isLoaded = dataset.id === loadedDatasetId;
+        const isLoaded = dataset.id === loadedDatasetTitle;
         return (
           <button
             key={dataset.id}
