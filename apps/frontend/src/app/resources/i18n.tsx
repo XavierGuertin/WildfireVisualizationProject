@@ -67,6 +67,9 @@ const resources = {
       n_a: 'N/A',
       //Loading Dataset
       loading_dataset: 'Loading Dataset...',
+      collection_items: "Collection items",
+      collection_item_assets: "Collection item assets",
+      loading: "Loading",
       //Views
       views: 'Views',
       view_disabled: 'View disabled',
@@ -177,6 +180,9 @@ const resources = {
       n_a: 'Indisponible',
       //Loading Dataset
       loading_dataset: 'Chargement du jeu de données...',
+      collection_items: "Éléments de la collection",
+      collection_item_assets: "Actifs des éléments de la collection",
+      loading: "Chargement",
       //Views
       views: 'Vues',
       view_disabled: 'Vue désactivée',
