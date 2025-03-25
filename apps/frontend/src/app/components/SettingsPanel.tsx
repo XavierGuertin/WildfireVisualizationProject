@@ -406,17 +406,20 @@ const SettingsPanel: React.FC<{
   const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
   const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
 
+  const hexToRgb = (hex: string): string => {
+    const cleanedHex = hex.replace(/^#/, '');
+    if (cleanedHex.length !== 6) return 'rgb(0,0,0)';
+
+    const r = parseInt(cleanedHex.substring(0, 2), 16);
+    const g = parseInt(cleanedHex.substring(2, 4), 16);
+    const b = parseInt(cleanedHex.substring(4, 6), 16);
+
+    return `rgb(${r},${g},${b})`;
+  };
+
   // Update polygon and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
-
-    // Convert hex color to RGB format
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
-        : 'rgb(0,0,0)';
-    };
 
     if (selectedStyleTab === 'polygon') {
       updateLayerStyle(
@@ -442,13 +445,6 @@ const SettingsPanel: React.FC<{
   // Reset polygon and dataLayer style
   const handleResetLayerStyle = () => {
     if (!mapRef.current) return;
-
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
-        : 'rgb(0,0,0)';
-    };
 
     if (selectedStyleTab === 'polygon') {
       // Reset polygon state
@@ -582,33 +578,6 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      <div className="dropdown-button">
-        <button
-          className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
-          onClick={() => toggleDropdown('reset')}
-          aria-expanded={dropdownState.activeButton === 'reset'}
-          aria-label="reset"
-          data-testid="reset-dropdown-button"
-        >
-          <PiArrowClockwiseFill size={32} />
-        </button>
-        {dropdownState.activeButton === 'reset' && (
-          <div className="dropdown-content show">
-            <button onClick={handleReset} data-testid="reset-button">
-              <PiArrowClockwiseFill size={24} />
-              {t('reset')}
-            </button>
-            <button
-              onClick={handleFactoryReset}
-              data-testid="factory-reset-button"
-              style={{ color: '#dc143c' }}
-            >
-              <IoTrashOutline size={24} fill="red" />
-              {t('factory_reset')}
-            </button>
-          </div>
-        )}
-      </div>
       {/* Customize Polygon and DataLayer colors */}
       <div className="dropdown-button">
         <button
@@ -753,6 +722,35 @@ const SettingsPanel: React.FC<{
                 </button>
               </div>
             </div>
+
+          </div>
+        )}
+      </div>
+
+      <div className="dropdown-button">
+        <button
+          className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
+          onClick={() => toggleDropdown('reset')}
+          aria-expanded={dropdownState.activeButton === 'reset'}
+          aria-label="reset"
+          data-testid="reset-dropdown-button"
+        >
+          <PiArrowClockwiseFill size={32} />
+        </button>
+        {dropdownState.activeButton === 'reset' && (
+          <div className="dropdown-content show">
+            <button onClick={handleReset} data-testid="reset-button">
+              <PiArrowClockwiseFill size={24} />
+              {t('reset')}
+            </button>
+            <button
+              onClick={handleFactoryReset}
+              data-testid="factory-reset-button"
+              style={{ color: '#dc143c' }}
+            >
+              <IoTrashOutline size={24} fill="red" />
+              {t('factory_reset')}
+            </button>
           </div>
         )}
       </div>
