@@ -1,8 +1,17 @@
 package wildfire.visualization.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,18 +19,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.postgresql.util.PGobject;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import wildfire.visualization.backend.controller.ConfigController;
 import wildfire.visualization.backend.exception.DataException;
 import wildfire.visualization.backend.helper.UtilHelper;
 import wildfire.visualization.backend.repository.StacRepository;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * The service responsible for the business logic of data retrieval from the
@@ -728,8 +734,11 @@ public class DataService {
           String assetKey = it.next();
           JsonNode asset = assets.get(assetKey);
           String href = asset.get("href").asText();
+          JsonNode valueRange = asset.get("value_range");
+          int min = valueRange.get(0).asInt();
+          int max = valueRange.get(1).asInt();
 
-          boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href);
+          boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max);
           if (!success) {
             logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
           }
