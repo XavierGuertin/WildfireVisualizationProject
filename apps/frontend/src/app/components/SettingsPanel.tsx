@@ -599,6 +599,70 @@ const SettingsPanel: React.FC<{
         >
           <LuPalette size={32} />
         </button>
+        {dropdownState.activeButton === 'style' && (
+          <div className="dropdown-content show">
+            <div className="style-options">
+              <h2>{t('polygon_style')}</h2>
+
+              <div className="style-option">
+                <label>{t('fill')}:</label>
+                <input
+                  type="color"
+                  value={fillColor}
+                  onChange={(e) => setFillColor(e.target.value)}
+                />
+              </div>
+
+              <div className="style-option">
+                <label>{t('fill_opacity')}:</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={fillOpacity}
+                  onChange={(e) => setFillOpacity(e.target.value)}
+                />
+                <span>{fillOpacity}</span>
+              </div>
+
+              <div className="style-option">
+                <label>{t('stroke')}:</label>
+                <input
+                  type="color"
+                  value={strokeColor}
+                  onChange={(e) => setStrokeColor(e.target.value)}
+                />
+              </div>
+
+              <div className="style-option">
+                <label>{t('stroke_width')}:</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.5"
+                  value={strokeWidth}
+                  onChange={(e) => setStrokeWidth(e.target.value)}
+                />
+                <span>{strokeWidth}</span>
+              </div>
+
+              <div className="style-buttons">
+                <button
+                  className="update-style-btn"
+                  onClick={handleUpdateLayerStyle}
+                >
+                  {t('update_style')}
+                </button>
+                <button
+                  className="reset-style-btn"
+                  onClick={handleResetLayerStyle}
+                >
+                  {t('reset_style')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
