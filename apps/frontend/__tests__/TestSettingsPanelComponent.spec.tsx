@@ -946,3 +946,165 @@ describe('SettingsPanel Component', () => {
     });
   });
 });
+
+describe('Style Customization Dropdown', () => {
+  // Mock updateLayerStyle function
+  const mockUpdateLayerStyle = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock the MapView module
+    jest.mock('../src/app/components/MapView', () => ({
+      updateLayerStyle: mockUpdateLayerStyle,
+      changeLayer: jest.fn(),
+    }));
+  });
+
+  it('renders the style dropdown button with palette icon', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+    expect(styleButton).toBeInTheDocument();
+  });
+
+  it('opens the style dropdown when clicked', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    expect(styleButton).toHaveClass('active');
+    expect(screen.getByText('polygon')).toBeInTheDocument();
+    expect(screen.getByText('data_layer')).toBeInTheDocument();
+  });
+
+  it('shows polygon style tab by default', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    expect(screen.getByText('polygon_style')).toBeInTheDocument();
+    // Check that polygon tab is active
+    const polygonTab = screen.getByText('polygon').closest('button');
+    expect(polygonTab).toHaveClass('active');
+  });
+
+  it('switches to data layer tab when clicked', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    const dataLayerTab = screen.getByText('data_layer');
+    await act(async () => {
+      fireEvent.click(dataLayerTab);
+    });
+
+    expect(screen.getByText('data_layer_style')).toBeInTheDocument();
+    // Confirm data layer tab is now active
+    const dataTab = screen.getByText('data_layer').closest('button');
+    expect(dataTab).toHaveClass('active');
+  });
+
+  it('updates polygon fill color when color picker changes', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    // Find the fill color input in the polygon tab
+    const fillLabels = screen.getAllByText('fill:');
+    const styleOption = fillLabels[0].closest('.style-option');
+    const colorInput = styleOption?.querySelector('input[type="color"]') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(colorInput, { target: { value: '#00ff00' } });
+    });
+
+    expect(colorInput.value).toBe('#00ff00');
+  });
+
+  it('updates polygon fill opacity when slider changes', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    // Find the opacity slider in the polygon tab
+    const opacityLabels = screen.getAllByText('fill_opacity:');
+    const styleOption = opacityLabels[0].closest('.style-option');
+    const opacitySlider = styleOption?.querySelector('input[type="range"]') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(opacitySlider, { target: { value: '0.5' } });
+    });
+
+    expect(opacitySlider.value).toBe('0.5');
+    const valueDisplay = styleOption?.querySelector('span');
+    expect(valueDisplay?.textContent).toBe('0.5');
+  });
+
+  it('updates data layer styling when switched to data layer tab', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    // Switch to data layer tab
+    const dataLayerTab = screen.getByText('data_layer');
+    await act(async () => {
+      fireEvent.click(dataLayerTab);
+    });
+
+    // Find the data layer fill color input
+    const fillLabels = screen.getAllByText('fill:');
+    const styleOption = fillLabels[0].closest('.style-option');
+    const colorInput = styleOption?.querySelector('input[type="color"]') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(colorInput, { target: { value: '#0000aa' } });
+    });
+
+    expect(colorInput.value).toBe('#0000aa');
+
+    // Test update button functionality
+    const updateButton = screen.getByText('update_style');
+    await act(async () => {
+      fireEvent.click(updateButton);
+    });
+  });
+
+  it('resets style values when reset button is clicked', async () => {
+    await renderSettingsPanel();
+    const styleButton = screen.getByTestId('style-dropdown-button');
+
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    // Click the reset style button
+    const resetButton = screen.getByText('reset_style');
+    await act(async () => {
+      fireEvent.click(resetButton);
+    });
+
+    // Check that default values are restored
+    const fillLabels = screen.getAllByText('fill:');
+    const styleOption = fillLabels[0].closest('.style-option');
+    const colorInput = styleOption?.querySelector('input[type="color"]') as HTMLInputElement;
+
+    expect(colorInput.value).toBe('#ff0000'); // Default polygon fill color
+  });
+});
