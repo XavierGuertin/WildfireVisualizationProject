@@ -37,10 +37,15 @@ const SATELLITE_LAYER_URL =
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
-// Default style values that can be overridden
-let currentFillColor = 'rgba(255, 0, 0, 0.1)';
-let currentStrokeColor = 'rgba(255, 0, 0, 0.5)';
-let currentStrokeWidth = 2;
+// Default style values for polygon (itemLayer)
+let currentPolygonFillColor = 'rgba(255, 0, 0, 0.1)';
+let currentPolygonStrokeColor = 'rgba(255, 0, 0, 0.5)';
+let currentPolygonStrokeWidth = 2;
+
+// Default style values for dataLayer
+let currentDataLayerFillColor = 'rgba(0, 0, 255, 0.1)';
+let currentDataLayerStrokeColor = 'rgba(0, 0, 255, 0.5)';
+let currentDataLayerStrokeWidth = 2;
 
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
@@ -92,8 +97,8 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(0, 0, 255, 0.1)' }), // Keeping blue for distinction
-      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 }),
+      fill: new Fill({ color: currentDataLayerFillColor }),
+      stroke: new Stroke({ color: currentDataLayerStrokeColor, width: currentDataLayerStrokeWidth }),
     }),
   });
 
@@ -134,8 +139,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: currentFillColor }),
-      stroke: new Stroke({ color: currentStrokeColor, width: currentStrokeWidth }),
+      fill: new Fill({ color: currentPolygonFillColor }),
+      stroke: new Stroke({ color: currentPolygonStrokeColor, width: currentPolygonStrokeWidth }),
     }),
   });
 
@@ -342,6 +347,15 @@ export const toggleAssetLayer = (
   }
 };
 
+/**
+ * Updates the style of a layer on the map
+ * @param map
+ * @param layerName
+ * @param fill
+ * @param fillOpacity
+ * @param stroke
+ * @param strokeWidth
+ */
 export const updateLayerStyle = (
   map: Map,
   layerName: string,
@@ -363,11 +377,18 @@ export const updateLayerStyle = (
   // Create rgba values from the RGB and opacity inputs
   const fillRgba = fill.replace('rgb', 'rgba').replace(')', `,${fillOpacity})`);
   const strokeRgba = stroke.replace('rgb', 'rgba').replace(')', ',0.5)');
+  const widthValue = parseInt(strokeWidth);
 
-  // Store current style values for later use
-  currentFillColor = fillRgba;
-  currentStrokeColor = strokeRgba;
-  currentStrokeWidth = parseInt(strokeWidth);
+  // Store current style values based on which layer is being updated
+  if (layerName === 'itemLayer') {
+    currentPolygonFillColor = fillRgba;
+    currentPolygonStrokeColor = strokeRgba;
+    currentPolygonStrokeWidth = widthValue;
+  } else if (layerName === 'dataLayer') {
+    currentDataLayerFillColor = fillRgba;
+    currentDataLayerStrokeColor = strokeRgba;
+    currentDataLayerStrokeWidth = widthValue;
+  }
 
   layer.setStyle(
     new Style({
@@ -376,7 +397,7 @@ export const updateLayerStyle = (
       }),
       stroke: new Stroke({
         color: strokeRgba,
-        width: currentStrokeWidth,
+        width: widthValue,
       }),
     }),
   );
