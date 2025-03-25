@@ -406,15 +406,11 @@ const SettingsPanel: React.FC<{
   const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
   const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
 
-  const hexToRgb = (hex: string): string => {
-    const cleanedHex = hex.replace(/^#/, '');
-    if (cleanedHex.length !== 6) return 'rgb(0,0,0)';
-
-    const r = parseInt(cleanedHex.substring(0, 2), 16);
-    const g = parseInt(cleanedHex.substring(2, 4), 16);
-    const b = parseInt(cleanedHex.substring(4, 6), 16);
-
-    return `rgb(${r},${g},${b})`;
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
+      : 'rgb(0,0,0)';
   };
 
   // Update polygon and dataLayer style
