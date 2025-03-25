@@ -79,7 +79,6 @@ public class GeoTIFFService {
 
       return true;
     } catch (Exception e) {
-      stacRepository.deleteItemAssetLayer(assetName, itemId);
       return false;
     }
   }
