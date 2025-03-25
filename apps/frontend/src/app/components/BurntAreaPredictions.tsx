@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import '../styles/BurntAreaPrediction.css';
 import { useTranslation } from 'react-i18next';
 const spatialCoordinatesMap = '/assets/spatial-coordinates-map.png';
@@ -19,6 +19,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const formRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showMap, setShowMap] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>('jan');
+  const [selectedDay, setSelectedDay] = useState<string>('sun');
 
   // Define the valid ranges for each field
   const ranges = {
@@ -27,6 +29,13 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     wind: { min: 0.4, max: 9.4, unit: 'km/h' },
     rain: { min: 0.0, max: 6.4, unit: 'mm/m²' },
   };
+
+  // Define the options for months and days
+  const months = [
+    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+  ];
+  const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
   // Validation function for input fields
   const validateInput = (name: string, value: string) => {
@@ -72,7 +81,11 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted!");
+      console.log("Form submitted!", {
+        month: formData.get('month'),
+        day: formData.get('day'),
+        // Include other form data as needed
+      });
       // Proceed with form submission logic here
     }
   };
@@ -84,6 +97,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
       form.reset();
     }
     setErrors({});
+    setSelectedMonth('jan');
+    setSelectedDay('sun');
     console.log("Form cleared!");
   };
 
@@ -91,6 +106,23 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const toggleMap = () => {
     setShowMap((prev) => !prev);
   };
+
+  // Add Escape key support for closing the modal
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMap(false);
+      }
+    };
+
+    if (showMap) {
+      window.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showMap]);
 
   return (
     <div className="form-button-container" ref={formRef}>
@@ -112,80 +144,128 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
             <form onSubmit={handleFormSubmit}>
               <h3>{t('burnt_area_prediction')}</h3>
               <p className="location-info">{t('montesinho_park_portugal')}</p>
-              <div className="form-group">
-                <label>{t('spatial_coordinates')}</label>
-                <div className="coordinate-inputs">
-                  <input type="number" placeholder="X:" required />
-                  <input type="number" placeholder="Y:" required />
+
+              {/* Row 1: Spatial Coordinates (X, Y) */}
+              <div className="form-group form-row">
+                <div className="form-item">
+                  <label>{t('spatial_coordinates')} X</label>
+                  <input type="number" name="x" placeholder="X:" required />
                 </div>
-                <button
-                  type="button"
-                  className="view-map-button"
-                  onClick={toggleMap}
-                >
-                  {t('view_spatial_coordinates_map')}
-                </button>
+                <div className="form-item">
+                  <label>{t('spatial_coordinates')} Y</label>
+                  <input type="number" name="y" placeholder="Y:" required />
+                </div>
               </div>
-              <div className="form-group">
-                <label>{t('temperature')}</label>
-                <input
-                  type="number"
-                  name="temperature"
-                  placeholder={`${t('temperature')} (${ranges.temperature.unit})`}
-                  step="0.1"
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="range-info">
-                  {t('range')}: {ranges.temperature.min} - {ranges.temperature.max} {ranges.temperature.unit}
-                </span>
-                {errors.temperature && <span className="error">{errors.temperature}</span>}
+              <button
+                type="button"
+                className="view-map-button"
+                onClick={toggleMap}
+              >
+                {t('view_spatial_coordinates_map')}
+              </button>
+
+              {/* Row 2: Month and Day */}
+              <div className="form-group form-row">
+                <div className="form-item">
+                  <label>{t('month')}</label>
+                  <select
+                    name="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    required
+                  >
+                    {months.map((month) => (
+                      <option key={month} value={month}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label>{t('day')}</label>
+                  <select
+                    name="day"
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(e.target.value)}
+                    required
+                  >
+                    {days.map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="form-group">
-                <label>{t('relative_humidity')}</label>
-                <input
-                  type="number"
-                  name="relative_humidity"
-                  placeholder={`${t('relative_humidity')} (${ranges.relative_humidity.unit})`}
-                  step="0.1"
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="range-info">
-                  {t('range')}: {ranges.relative_humidity.min} - {ranges.relative_humidity.max} {ranges.relative_humidity.unit}
-                </span>
-                {errors.relative_humidity && <span className="error">{errors.relative_humidity}</span>}
+
+              {/* Row 3: Temperature and Relative Humidity */}
+              <div className="form-group form-row">
+                <div className="form-item">
+                  <label>{t('temperature')}</label>
+                  <input
+                    type="number"
+                    name="temperature"
+                    placeholder={`${t('temperature')} (${ranges.temperature.unit})`}
+                    step="0.1"
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <span className="range-info">
+                    {t('range')}: {ranges.temperature.min} - {ranges.temperature.max} {ranges.temperature.unit}
+                  </span>
+                  {errors.temperature && <span className="error">{errors.temperature}</span>}
+                </div>
+                <div className="form-item">
+                  <label>{t('relative_humidity')}</label>
+                  <input
+                    type="number"
+                    name="relative_humidity"
+                    placeholder={`${t('relative_humidity')} (${ranges.relative_humidity.unit})`}
+                    step="0.1"
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <span className="range-info">
+                    {t('range')}: {ranges.relative_humidity.min} - {ranges.relative_humidity.max} {ranges.relative_humidity.unit}
+                  </span>
+                  {errors.relative_humidity && <span className="error">{errors.relative_humidity}</span>}
+                </div>
               </div>
-              <div className="form-group">
-                <label>{t('wind')}</label>
-                <input
-                  type="number"
-                  name="wind"
-                  placeholder={`${t('wind')} (${ranges.wind.unit})`}
-                  step="0.1"
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="range-info">
-                  {t('range')}: {ranges.wind.min} - {ranges.wind.max} {ranges.wind.unit}
-                </span>
-                {errors.wind && <span className="error">{errors.wind}</span>}
+
+              {/* Row 4: Wind and Rain */}
+              <div className="form-group form-row">
+                <div className="form-item">
+                  <label>{t('wind')}</label>
+                  <input
+                    type="number"
+                    name="wind"
+                    placeholder={`${t('wind')} (${ranges.wind.unit})`}
+                    step="0.1"
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <span className="range-info">
+                    {t('range')}: {ranges.wind.min} - {ranges.wind.max} {ranges.wind.unit}
+                  </span>
+                  {errors.wind && <span className="error">{errors.wind}</span>}
+                </div>
+                <div className="form-item">
+                  <label>{t('rain')}</label>
+                  <input
+                    type="number"
+                    name="rain"
+                    placeholder={`${t('rain')} (${ranges.rain.unit})`}
+                    step="0.1"
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <span className="range-info">
+                    {t('range')}: {ranges.rain.min} - {ranges.rain.max} {ranges.rain.unit}
+                  </span>
+                  {errors.rain && <span className="error">{errors.rain}</span>}
+                </div>
               </div>
-              <div className="form-group">
-                <label>{t('rain')}</label>
-                <input
-                  type="number"
-                  name="rain"
-                  placeholder={`${t('rain')} (${ranges.rain.unit})`}
-                  step="0.1"
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="range-info">
-                  {t('range')}: {ranges.rain.min} - {ranges.rain.max} {ranges.rain.unit}
-                </span>
-                {errors.rain && <span className="error">{errors.rain}</span>}
-              </div>
+
               <div className="form-buttons">
                 <button type="submit">{t('load_simulation')}</button>
                 <button type="button" onClick={handleClearForm}>
@@ -202,7 +282,7 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
         <div className="map-modal">
           <div className="map-modal-content">
             <button className="close-modal-button" onClick={toggleMap}>
-              &times;
+              ×
             </button>
             <img
               src={spatialCoordinatesMap}
