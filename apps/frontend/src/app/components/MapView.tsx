@@ -5,7 +5,11 @@ import 'ol/ol.css';
 import '../styles/map.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { defaults as defaultControls, FullScreen, Attribution  } from 'ol/control.js';
+import {
+  Attribution,
+  defaults as defaultControls,
+  FullScreen,
+} from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
@@ -14,14 +18,16 @@ import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
-import { Style, Stroke, Fill } from 'ol/style';
+import { Fill, Stroke, Style } from 'ol/style';
 import ImageLayer from 'ol/layer/Image';
 import { ImageWMS } from 'ol/source';
 
 // Attributions
-const attribution = '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const attribution =
+  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 const arcGIS_attribution = 'ArcGIS Online map hosted by Esri';
-const opentopomap_attribution = '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
+const opentopomap_attribution =
+  '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
 
 // Map layers
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
@@ -209,7 +215,10 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
-        controls: defaultControls({attribution: false}).extend([new FullScreen, new Attribution({collapsible: false})]),
+        controls: defaultControls({ attribution: false }).extend([
+          new FullScreen(),
+          new Attribution({ collapsible: false }),
+        ]),
         layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
@@ -326,6 +335,44 @@ export const toggleAssetLayer = (
     map.removeLayer(existingLayer);
     map.renderSync();
   }
+};
+
+export const updateLayerStyle = (
+  map: Map,
+  layerName: string,
+  fill: string, // RGB
+  fillOpacity: string, // value
+  stroke: string, // RGB
+  strokeWidth: string, // value
+): void => {
+  const layers = map.getLayers().getArray();
+  const layer = layers.find(
+    (layer) => layer.get('id') === layerName || layer.get('name') === layerName,
+  ) as VectorLayer<VectorSource<any>>;
+
+  if (!layer) {
+    console.error(`Layer "${layerName}" not found`);
+    return;
+  }
+
+  // Create rgba values from the RGB and opacity inputs
+  const fillRgba = fill.replace('rgb', 'rgba').replace(')', `,${fillOpacity})`);
+  const strokeRgba = stroke.replace('rgb', 'rgba').replace(')', ',0.5)');
+
+  layer.setStyle(
+    new Style({
+      fill: new Fill({
+        color: fillRgba,
+      }),
+      stroke: new Stroke({
+        color: strokeRgba,
+        width: parseInt(strokeWidth),
+      }),
+    }),
+  );
+
+  // Force render update
+  map.renderSync();
 };
 
 /**
