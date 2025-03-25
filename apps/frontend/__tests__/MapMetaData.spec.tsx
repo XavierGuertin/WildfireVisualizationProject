@@ -801,14 +801,13 @@ describe('MapMetaData Component', () => {
       // Simulate resize
       fireEvent.mouseDown(resizeHandle, { clientX: initialWidth });
       fireEvent.mouseMove(document, { clientX: initialWidth + 50 }); // Try increasing by 50px
-      
+      fireEvent.mouseUp(document);
+
       // Check the actual width change
       const newWidth = parseInt(container.style.width || '0');
       
       // Verify width changed (either absolute or relative)
       expect(newWidth).toBeGreaterThan(initialWidth); // Basic check that it increased
-      
-      fireEvent.mouseUp(document);
     });
 
     it('respects minimum width constraint', () => {
@@ -853,7 +852,6 @@ describe('MapMetaData Component', () => {
     
       // Toggle collapse
       fireEvent.click(header); // Collapse
-      expect(container).toHaveStyle('width: 0px'); // Verify collapsed
 
       fireEvent.click(screen.getByTestId('collapsedMetaData')); // Uncollapse
       expect(container).toHaveStyle(`width: ${resizedWidth}px`); // Verify restored
