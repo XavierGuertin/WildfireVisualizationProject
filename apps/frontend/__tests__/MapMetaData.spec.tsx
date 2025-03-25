@@ -790,24 +790,30 @@ describe('MapMetaData Component', () => {
       expect(container).toHaveStyle('width: 350px');
     });
 
-    it('allows resizing via the handle', () => {
+    it('resizes correctly via handle (accounting for offsets)', () => {
+      // 1. Render component
       render(<MapMetaData {...defaultProps} />);
-      const resizeHandle = screen.getByTitle('Drag to resize');
+      const handle = screen.getByTitle('Drag to resize');
       const container = screen.getByTestId('metadata-container');
     
-      // Get initial width (let's see what it actually is)
-      const initialWidth = parseInt(container.style.width || '350');
+      // 2. Get exact screen positions
+      const containerRect = container.getBoundingClientRect();
       
-      // Simulate resize
-      fireEvent.mouseDown(resizeHandle, { clientX: initialWidth });
-      fireEvent.mouseMove(document, { clientX: initialWidth + 50 }); // Try increasing by 50px
+      // 3. Calculate starting position (right edge INCLUDES all offsets)
+      const startX = containerRect.right; // ← Already includes padding/margin/border
+      
+      // 4. Simulate drag sequence
+      fireEvent.mouseDown(handle, { 
+        clientX: startX // Start drag at container's visible edge
+      });
+      fireEvent.mouseMove(document, { 
+        clientX: startX + 50 // Drag 50px right from edge
+      });
       fireEvent.mouseUp(document);
-
-      // Check the actual width change
-      const newWidth = parseInt(container.style.width || '0');
-      
-      // Verify width changed (either absolute or relative)
-      expect(newWidth).toBeGreaterThan(initialWidth); // Basic check that it increased
+    
+      // 5. Verify final width
+      const newWidth = container.getBoundingClientRect().width;
+      expect(newWidth).toBe(containerRect.width + 50); // ← Exact expected change
     });
 
     it('respects minimum width constraint', () => {
