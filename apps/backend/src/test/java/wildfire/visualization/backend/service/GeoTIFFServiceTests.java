@@ -59,10 +59,10 @@ class GeoTIFFServiceTests {
     // Mock file download (assume it's a void method)
     doNothing().when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, url, min, max);//FIXTEST -> done
+    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, url, min, max);
 
     assertThat(result).isTrue();
-    verify(stacRepository).saveLayer(eq(itemId), eq(collectionId), eq(assetName), contains("GetMap"), eq(min), eq(max));//FIXTEST -> done
+    verify(stacRepository).saveLayer(eq(itemId), eq(collectionId), eq(assetName), contains("GetMap"), eq(min), eq(max));
     verify(geoTIFFService).downloadFile(eq(url), contains(assetName + ".tif"));
   }
 
@@ -70,7 +70,7 @@ class GeoTIFFServiceTests {
   void processGeoTIFF_shouldReturnFalse_onException() throws Exception {
     doThrow(new IOException("Download failed")).when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    boolean result = geoTIFFService.processGeoTIFF("item1", "col1", "a1", "url", 0, 100);//FIXTEST -> done?
+    boolean result = geoTIFFService.processGeoTIFF("item1", "col1", "a1", "url", 0, 100);
 
     assertThat(result).isFalse();
     verify(stacRepository).deleteItemAssetLayer("a1", "item1");

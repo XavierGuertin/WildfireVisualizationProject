@@ -1139,7 +1139,7 @@ class DataServiceTests {
     when(objectMapper.readTree(anyString())).thenReturn(rootNode);
 
     // Ensure GeoTIFFService is mocked properly
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max))).thenReturn(true);//FIXTEST -> done?
+    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max))).thenReturn(true);
 
     // Act
     dataService.processItemAssets(collectionId);
@@ -1150,7 +1150,7 @@ class DataServiceTests {
     // Assert
     verify(stacRepository).getAllItems(eq(collectionId));
     verify(objectMapper).readTree(anyString());
-    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max));//FIXTEST -> done?
+    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max));
 
     // Check progress is 100%
     assertThat(dataService.getProgress(collectionId + "_assets")).isEqualTo(100);

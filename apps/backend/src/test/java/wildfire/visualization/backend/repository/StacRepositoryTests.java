@@ -836,7 +836,7 @@ class StacRepositoryTests {
 
   @Test
   void testSaveLayer_insertsCollectionItemAndAsset() {
-    stacRepository.saveLayer("item1", "col1", "asset1", "url1", 0, 100);//FIXTEST -> done?
+    stacRepository.saveLayer("item1", "col1", "asset1", "url1", 0, 100);
 
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Collections"), eq("col1"));
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Items"), eq("item1"), eq("col1"));
