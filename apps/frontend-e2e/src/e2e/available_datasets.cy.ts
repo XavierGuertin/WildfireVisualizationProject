@@ -7,7 +7,7 @@ describe('dataset', () => {
   it('loads', () => {
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
     cy.get("[data-testid=reset-dropdown-button]").click()
-    cy.contains('button', "Factory Reset").click()
+    cy.contains('button', "Factory Reset").click({force: true})
     cy.contains('button', 'Yes', {timeout:1000}).click()
     cy.wait(2000);  //Wait for the endpoint url to pop up
 
@@ -27,7 +27,7 @@ describe('dataset', () => {
   it('collapses', () => {
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
     cy.get("[data-testid=reset-dropdown-button]").click()
-    cy.contains('button', "Factory Reset").click()
+    cy.contains('button', "Factory Reset").click({force: true})
     cy.contains('button', 'Yes', {timeout:1000}).click()
     cy.wait(2000);  //Wait for the endpoint url to pop up
 
