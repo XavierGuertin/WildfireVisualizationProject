@@ -21,10 +21,12 @@ const mockDatasets: DatasetEntry[] = [
   {
     key: 1,
     id: 'dataset-1',
+    title: 'Dataset One',
   },
   {
     key: 2,
     id: 'dataset-2',
+    title: 'Dataset Two',
   },
 ];
 
@@ -60,7 +62,7 @@ jest.mock('../src/app/components/MapView', () => ({
 jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
-    setloadedDatasetTitle: jest.fn(),
+    setLoadedDataset: jest.fn(),
   })),
 }));
 
