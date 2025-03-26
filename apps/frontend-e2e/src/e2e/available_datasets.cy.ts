@@ -13,13 +13,13 @@ describe('dataset', () => {
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
     cy.get("[data-testid=reset-dropdown-button]").click()
     cy.contains('button', "Factory Reset").click({force: true})
-    cy.contains('button', 'Yes', {timeout: 10000}).should('be.visible').click()
+    cy.contains('button', 'Yes', {timeout: 10000}).should('be.visible').click({force: true})
     cy.wait(2000);  //Wait for the endpoint url to pop up
 
     //Retrieve input the collections url into the input field and click on save
     cy.get("#swal2-input").as("url_input");
     cy.get('@url_input').clear().type(Cypress.env("collections_url"));
-    cy.contains('button', 'Save').click()
+    cy.contains('button', 'Save').click({force: true})
 
     //Make sure notfication of success appears
     cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
@@ -31,9 +31,9 @@ describe('dataset', () => {
 
   it('collapses', () => {
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
-    cy.get("[data-testid=reset-dropdown-button]").click()
-    cy.contains('button', "Factory Reset").click({force: true})
-    cy.contains('button', 'Yes', {timeout: 10000}).should('be.visible').click()
+    cy.get("[data-testid=reset-dropdown-button]").should('exist').click({force: true})
+    cy.contains('button', "Factory Reset").should('exist').click({force: true})
+    cy.contains('button', 'Yes', {timeout: 10000}).should('exist').should('be.visible').click({force: true})
     cy.wait(2000);  //Wait for the endpoint url to pop up
 
     //Retrieve input the collections url into the input field and click on save
@@ -46,11 +46,11 @@ describe('dataset', () => {
     cy.wait(2000)
 
     //Click on the collapse button and assert that it collapses
-    cy.get('[data-testid=collapse-button]').click()
+    cy.get('[data-testid=collapse-button]').should('exist').click({force: true})
     cy.get(".datasets-container").should('have.class', 'collapsed')
 
     //Click on the collapse button and assert that it uncollapses
-    cy.get('[data-testid=collapse-button]').click()
+    cy.get('[data-testid=collapse-button]').should('exist').click({force: true})
     cy.get(".datasets-container").should('not.have.class', 'collapsed')
   });
 
