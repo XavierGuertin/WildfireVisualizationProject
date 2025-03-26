@@ -7,6 +7,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 describe('dataset', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000');
+    cy.viewport(1920, 1080);
   });
 
   it('loads', () => {
