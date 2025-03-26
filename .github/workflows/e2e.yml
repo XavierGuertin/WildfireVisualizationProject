@@ -96,7 +96,7 @@ jobs:
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
-        run: npx nx e2e frontend-e2e
+        run: npx nx e2e-pipeline frontend-e2e
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
