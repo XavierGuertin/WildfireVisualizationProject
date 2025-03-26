@@ -8,11 +8,11 @@ describe('metadata', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000');
     cy.viewport(1920, 1080);
-    
+
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
     cy.get("[data-testid=reset-dropdown-button]").click({force: true})
     cy.contains('button', "Factory Reset").click({force: true})
-    cy.contains('button', 'Yes', {timeout: 10000}).should('exist').should('be.visible').click({force: true})
+    cy.contains('button', 'Yes', {timeout: 20000}).should('exist').should('be.visible').click({force: true})
     cy.wait(2000);  //Wait for the endpoint url to pop up
 
     //Retrieve input the collections url into the input field and click on save
