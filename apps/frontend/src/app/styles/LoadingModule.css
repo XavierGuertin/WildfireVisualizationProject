@@ -5,7 +5,7 @@
   width: 530px;
   height: 50px;
   position: fixed;
-  top: calc(var(--datasets-bottom) + 10px); /* Use datasets-container's bottom + 10px */
+  top: 68%;
   right: 20px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   border: 1px solid #ddd;
@@ -32,8 +32,9 @@
 }
 
 .progress-text {
-  font-size: 0.9em;
-  color: #666;
+  font-size: 1em;
+  font-weight: bold;
+  color: #666;         
   text-align: center;
   margin-top: 10px;
 }

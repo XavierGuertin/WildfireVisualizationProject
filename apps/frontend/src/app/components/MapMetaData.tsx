@@ -9,6 +9,8 @@ import {
   fetchTimestamps,
   resetItemAssets,
   resetItems,
+  loadAssets,
+  fetchItemIds,
 } from '../services/api';
 import { useMapLayerContext } from '../context/MapContext';
 import LoadingModule from './LoadingModule';
@@ -16,6 +18,7 @@ import { toast } from 'react-toastify';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
 import { getConfig, saveConfig } from '../services/configApi';
+import AssetsDropdown from './AssetsDropdown';
 
 interface MapMetaDataProps {
   id?: string;
@@ -44,6 +47,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [targetLoading, setTargetLoading] = useState(name);
 
   const MySwal = withReactContent(Swal);
   const {
@@ -52,6 +56,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setSliderValue,
     setCollectionId,
     setLoadedLayers,
+    setItemIds,
+    setIsProcessLoading,
+    setSelectedAssetLayers,
+    mapRef,
+    setIsPlaying
   } = useMapLayerContext();
 
   const onLoadDataset = async () => {
@@ -77,13 +86,30 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       });
 
       if (result.isConfirmed) {
+        setTargetLoading(t('collection_items'));
         setLoading(true); // Show loading overlay
+        setIsProcessLoading(true);
         localStorage.setItem('sliderValue', '0');
         setSliderValue(0);
         setProgress(0);
         await resetItems();
         await resetItemAssets();
         setLoadedLayers([]);
+        setSelectedAssetLayers([]);
+        setIsPlaying(false);
+        if (mapRef.current) {
+          const map = mapRef.current;
+
+          // Remove all layers except those with ID 'baseLayer' or 'dataLayer'
+          const layersToRemove = map.getLayers().getArray().filter((layer) => {
+            const id = layer.get('id');
+            return id !== 'baseLayer' && id !== 'dataLayer';
+          });
+
+          layersToRemove.forEach((layer) => {
+            map.removeLayer(layer);
+          });
+        }
 
         try {
           // Start fetching items asynchronously
@@ -99,23 +125,75 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           });
 
           const pollProgress = async () => {
+            let lastProgress = -1;
+            let stableCount = 0;
+            const maxStableCount = 10; // e.g., 10 seconds with 1s interval
+
             while (true) {
               const progressResponse = await fetchProgress(id);
 
               if ('progress' in progressResponse) {
-                setProgress(progressResponse.progress);
+                const currentProgress = progressResponse.progress;
+                setProgress(currentProgress);
+
                 const timestamps = await fetchTimestamps();
                 setTimeStamps(timestamps);
+                const itemIds = await fetchItemIds();
+                setItemIds(itemIds);
                 setCollectionId(id);
-                // Stop the loop when progress reaches 100%
-                if (progressResponse.progress >= 100) {
-                  // sleep for 1 second to allow the items to be loaded
+
+                if (currentProgress === lastProgress) {
+                  stableCount++;
+                } else {
+                  stableCount = 0;
+                  lastProgress = currentProgress;
+                }
+
+                // Consider done if stable for too long or if progress reaches 100
+                if (currentProgress >= 100 || stableCount >= maxStableCount) {
+                  // Optional: Set progress to 100 if stuck
+                  if (currentProgress < 100) {
+                    setProgress(100);
+                  }
+
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   setLoading(false);
                   toast.success(t('items_fetch_success'), {
                     toastId: 'items-success',
                   });
 
+                  return;
+                }
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          };
+
+          await pollProgress();
+          setTargetLoading(t('collection_item_assets'));
+          setLoading(true);
+          setProgress(0);
+
+          await loadAssets(id); // triggers backend async processing
+
+          // Now start polling for progress on the asset load
+          const pollAssetProgress = async () => {
+            while (true) {
+              const progressResponse = await fetchProgress(id + '_assets');
+
+              if ('progress' in progressResponse) {
+                setProgress(progressResponse.progress);
+
+                if (progressResponse.progress >= 100) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                  setLoading(false);
+                  toast.success(t('assets_fetch_success'), {
+                    toastId: 'assets-success',
+                  });
+                  setIsProcessLoading(false);
+
+                  // Set the config attribute for loadedDataset and refreshDatasets list to update state
                   try {
                     const config = await getConfig();
                     config.loadedDataset = id;
@@ -127,20 +205,21 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                       err,
                     );
                   }
+
                   return;
                 }
               }
 
-              // Increase the polling interval to 1 second (1000ms)
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           };
 
-          pollProgress(); // Call the async function for polling
+          pollAssetProgress();
         } catch (error) {
-          toast.error('Error loading dataset: ' + error),
-            { toastId: 'loading-dataset-error' };
-          setLoading(false);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+        toast.error(`${t('error_loading_dataset')}: ${errorMessage}`,
+          {toastId: 'loading-dataset-error',});
+        setLoading(false);
         }
       }
     } catch (error) {
@@ -204,14 +283,15 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           onClick={onLoadDataset}
           data-testid="load-dataset-button"
         >
-          <LoadingModule
-            progress={progress}
-            isVisible={loading}
-            datasetBeingLoaded={name}
-            data-testid="loading-module"
-          />
           {t('load_dataset')}
         </button>
+        <LoadingModule
+          progress={progress}
+          isVisible={loading}
+          datasetBeingLoaded={targetLoading}
+          data-testid="loading-module"
+        />
+        <AssetsDropdown />
       </div>
     </div>
   );

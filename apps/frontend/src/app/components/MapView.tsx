@@ -5,7 +5,11 @@ import 'ol/ol.css';
 import '../styles/map.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import { defaults as defaultControls, FullScreen } from 'ol/control.js';
+import {
+  Attribution,
+  defaults as defaultControls,
+  FullScreen,
+} from 'ol/control.js';
 import { useGeographic } from 'ol/proj.js';
 import { useMapLayerContext } from '../context/MapContext';
 import XYZ from 'ol/source/XYZ';
@@ -14,23 +18,41 @@ import debounce from 'lodash/debounce';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
-import { Style, Stroke, Fill } from 'ol/style';
+import { Fill, Stroke, Style } from 'ol/style';
 import ImageLayer from 'ol/layer/Image';
 import { ImageWMS } from 'ol/source';
+import { createItemAssetStyle } from '../styles/ItemAssetSyle';
 
-const attributions =
+// Attributions
+const attribution =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+const arcGIS_attribution = 'ArcGIS Online map hosted by Esri';
+const opentopomap_attribution =
+  '<a href="https://opentopomap.org">&copy; OpenTopoMap</a>';
+
+// Map layers
 const tileserverUrl = process.env.NEXT_PUBLIC_TILESERVER_URL;
 const DEFAULT_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OFFLINE_LAYER_URL = `${tileserverUrl}/{z}/{x}/{y}.jpg`;
-const SATELLITE_LAYER_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const SATELLITE_LAYER_URL =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+
+// Default style values for polygon (itemLayer)
+let currentPolygonFillColor = 'rgba(255, 0, 0, 0.1)';
+let currentPolygonStrokeColor = 'rgba(255, 0, 0, 0.5)';
+let currentPolygonStrokeWidth = 2;
+
+// Default style values for dataLayer
+let currentDataLayerFillColor = 'rgba(0, 0, 255, 0.1)';
+let currentDataLayerStrokeColor = 'rgba(0, 0, 255, 0.5)';
+let currentDataLayerStrokeWidth = 2;
 
 // Offline fallback layer for cases with no internet connection
 const offlineLayer = new TileLayer({
   source: new XYZ({
     url: OFFLINE_LAYER_URL,
-    attributions: attributions,
+    attributions: attribution,
   }),
   zIndex: -10,
 });
@@ -39,7 +61,7 @@ const offlineLayer = new TileLayer({
 const defaultLayer = new TileLayer({
   source: new XYZ({
     url: DEFAULT_LAYER_URL,
-    attributions: attributions,
+    attributions: attribution,
   }),
   zIndex: -10,
 });
@@ -47,7 +69,7 @@ const defaultLayer = new TileLayer({
 const satelliteLayer = new TileLayer({
   source: new XYZ({
     url: SATELLITE_LAYER_URL,
-    attributions: attributions,
+    attributions: arcGIS_attribution,
   }),
   zIndex: -10,
 });
@@ -55,7 +77,7 @@ const satelliteLayer = new TileLayer({
 const topographicLayer = new TileLayer({
   source: new XYZ({
     url: TOPOGRAPHIC_LAYER_URL,
-    attributions: attributions,
+    attributions: `${attribution} | ${opentopomap_attribution}`,
   }),
   zIndex: -10,
 });
@@ -65,7 +87,7 @@ const topographicLayer = new TileLayer({
  *
  * @returns {VectorLayer} The generated collection data layer for the map.
  */
-const createCollectionDataLayer = (map: Map): VectorLayer => {
+const createCollectionDataLayer = (map: Map | null): VectorLayer => {
   const geoserverUrl = process.env.NEXT_PUBLIC_GEOSERVER_URL;
 
   const vectorSource = new VectorSource({
@@ -76,25 +98,28 @@ const createCollectionDataLayer = (map: Map): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(0, 0, 255, 0.1)' }), // Keeping blue for distinction
-      stroke: new Stroke({ color: 'rgba(0, 0, 255, 0.5)', width: 2 })
-    })
+      fill: new Fill({ color: currentDataLayerFillColor }),
+      stroke: new Stroke({ color: currentDataLayerStrokeColor, width: currentDataLayerStrokeWidth }),
+    }),
   });
 
   newLayer.set('id', 'dataLayer');
-  vectorSource.once('featuresloadend', () => {
-    const extent = vectorSource.getExtent();
-    if (extent) {
-      const view = map.getView();
-      const resolution = view.getResolutionForExtent(extent, map.getSize());
-      const zoom = view.getZoomForResolution(resolution);
-      view.animate({
-        center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
-        zoom: zoom ? zoom - 1 : 1, 
-        duration: 1000 
-      });
-    }
-  });
+
+  if (map) {
+    vectorSource.once('featuresloadend', () => {
+      const extent = vectorSource.getExtent();
+      if (extent) {
+        const view = map.getView();
+        const resolution = view.getResolutionForExtent(extent, map.getSize());
+        const zoom = view.getZoomForResolution(resolution);
+        view.animate({
+          center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
+          zoom: zoom ? zoom - 1 : 1,
+          duration: 1000,
+        });
+      }
+    });
+  }
 
   return newLayer;
 };
@@ -115,9 +140,9 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: 'rgba(255, 0, 0, 0.1)' }),
-      stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.5)', width: 2 })
-    })
+      fill: new Fill({ color: currentPolygonFillColor }),
+      stroke: new Stroke({ color: currentPolygonStrokeColor, width: currentPolygonStrokeWidth }),
+    }),
   });
 
   newLayer.set('id', 'itemLayer');
@@ -130,12 +155,16 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) => {
+export const refreshLayer = (
+  map: Map,
+  collection: boolean,
+  timestamp?: string,
+) => {
   const layers = map.getLayers().getArray();
   const dataLayer = layers.find((layer) => layer.get('id') === 'dataLayer');
   const itemLayer = layers.find((layer) => layer.get('id') === 'itemLayer');
 
-  if(collection){
+  if (collection) {
     if (dataLayer) {
       map.removeLayer(dataLayer);
     }
@@ -143,7 +172,7 @@ export const refreshLayer = (map: Map, collection: boolean, timestamp?: string) 
     map.addLayer(newLayer);
   }
 
-  if(timestamp){
+  if (timestamp) {
     if (itemLayer) {
       map.removeLayer(itemLayer);
     }
@@ -197,8 +226,11 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
       // Initialize the map if it hasn't been created yet
       mapRef.current = new Map({
         target: mapElement.current as unknown as HTMLElement,
-        controls: defaultControls().extend([new FullScreen()]),
-        layers: mapRef.current ? [getLayer(), createCollectionDataLayer(mapRef.current)] : [getLayer()],
+        controls: defaultControls({ attribution: false }).extend([
+          new FullScreen(),
+          new Attribution({ collapsible: false }),
+        ]),
+        layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -254,12 +286,16 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  *
  * @param {Map} map - The OpenLayers map instance.
  */
-export const changeLayer = (map: Map, collection: boolean, timestamp?: string) => {
-  if(collection){
-    refreshLayer(map, collection=true)
+export const changeLayer = (
+  map: Map,
+  collection: boolean,
+  timestamp?: string,
+) => {
+  if (collection) {
+    refreshLayer(map, (collection = true));
   }
-  if(timestamp){
-    refreshLayer(map, collection=false, timestamp);
+  if (timestamp) {
+    refreshLayer(map, (collection = false), timestamp);
   }
 };
 
@@ -271,19 +307,30 @@ export const changeLayer = (map: Map, collection: boolean, timestamp?: string) =
  * @param {string} layerUrl - The URL for the tile source
  * @param {boolean} add - Whether to add (true) or remove (false) the layer
  */
-export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, add: boolean): void => {
+export const toggleAssetLayer = (
+  map: Map,
+  layerName: string,
+  layerUrl: string,
+  add: boolean,
+  min: number,
+  max: number
+): void => {
   // First check if layer already exists
   const layers = map.getLayers().getArray();
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
 
-  if (add && !existingLayer) {
-    console.log(`Adding layer: ${layerName} with URL: ${layerUrl}`);
+  const result = /layers=(.*)/.exec(layerUrl);
+    let geoServerLayerName = ''
+    if(result){
+      geoServerLayerName = result[1];
+    }
 
+  if (add && !existingLayer) {
     // Add the layer
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
-        params: { STYLES: layerName},
+        params: { SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max) },
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
@@ -310,6 +357,65 @@ export const toggleAssetLayer = (map: Map, layerName: string, layerUrl: string, 
 };
 
 /**
+ * Updates the style of a layer on the map
+ * @param map
+ * @param layerName
+ * @param fill
+ * @param fillOpacity
+ * @param stroke
+ * @param strokeWidth
+ */
+export const updateLayerStyle = (
+  map: Map,
+  layerName: string,
+  fill: string, // RGB
+  fillOpacity: string, // value
+  stroke: string, // RGB
+  strokeWidth: string, // value
+): void => {
+  const layers = map.getLayers().getArray();
+  const layer = layers.find(
+    (layer) => layer.get('id') === layerName || layer.get('name') === layerName,
+  ) as VectorLayer<VectorSource<any>>;
+
+  if (!layer) {
+    console.error(`Layer "${layerName}" not found`);
+    return;
+  }
+
+  // Create rgba values from the RGB and opacity inputs
+  const fillRgba = fill.replace('rgb', 'rgba').replace(')', `,${fillOpacity})`);
+  const strokeRgba = stroke.replace('rgb', 'rgba').replace(')', ',0.5)');
+  const widthValue = parseInt(strokeWidth);
+
+  // Store current style values based on which layer is being updated
+  if (layerName === 'itemLayer') {
+    currentPolygonFillColor = fillRgba;
+    currentPolygonStrokeColor = strokeRgba;
+    currentPolygonStrokeWidth = widthValue;
+  } else if (layerName === 'dataLayer') {
+    currentDataLayerFillColor = fillRgba;
+    currentDataLayerStrokeColor = strokeRgba;
+    currentDataLayerStrokeWidth = widthValue;
+  }
+
+  layer.setStyle(
+    new Style({
+      fill: new Fill({
+        color: fillRgba,
+      }),
+      stroke: new Stroke({
+        color: strokeRgba,
+        width: widthValue,
+      }),
+    }),
+  );
+
+  // Force render update
+  map.renderSync();
+};
+
+/**
  * Removes all asset layers from the map
  *
  * @param {Map} map - The OpenLayers map instance
@@ -318,7 +424,7 @@ export const removeAllAssetLayers = (map: Map): void => {
   const layers = map.getLayers().getArray();
   const assetLayers = layers.filter((layer) => layer.get('type') === 'asset');
 
-  assetLayers.forEach(layer => {
+  assetLayers.forEach((layer) => {
     map.removeLayer(layer);
   });
 };

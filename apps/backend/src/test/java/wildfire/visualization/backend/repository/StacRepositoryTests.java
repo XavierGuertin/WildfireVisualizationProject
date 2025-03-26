@@ -1,17 +1,5 @@
 package wildfire.visualization.backend.repository;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import wildfire.visualization.backend.exception.RepositoryException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +7,26 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import wildfire.visualization.backend.exception.RepositoryException;
 
 @ExtendWith(MockitoExtension.class)
 class StacRepositoryTests {
@@ -832,11 +836,11 @@ class StacRepositoryTests {
 
   @Test
   void testSaveLayer_insertsCollectionItemAndAsset() {
-    stacRepository.saveLayer("item1", "col1", "asset1", "url1");
+    stacRepository.saveLayer("item1", "col1", "asset1", "url1", 0, 100);
 
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Collections"), eq("col1"));
     verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Items"), eq("item1"), eq("col1"));
-    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Assets"), eq("item1"), eq("asset1"), eq("url1"));
+    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Assets"), eq("item1"), eq("asset1"), eq("url1"), eq(0), eq(100));
   }
 
   @Test
@@ -881,14 +885,16 @@ class StacRepositoryTests {
   void testMarkAssetAsRegistered_executesUpdate() {
     stacRepository.markAssetAsRegistered("item1", "asset1");
 
-    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?", "item1", "asset1");
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
   }
 
   @Test
   void testMarkAssetAsUnregistered_executesUpdate() {
     stacRepository.markAssetAsUnregistered("item1", "asset1");
 
-    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?", "item1", "asset1");
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
   }
 
   @Test
@@ -907,6 +913,36 @@ class StacRepositoryTests {
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).get("is_registered")).isEqualTo(true);
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_Success() {
+    // Arrange
+    List<String> expectedIds = List.of("item1", "item2", "item3");
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class))).thenReturn(expectedIds);
+
+    // Act
+    List<String> result = stacRepository.getItemsIdsOrderedByTimestamp();
+
+    // Assert
+    assertThat(result).isEqualTo(expectedIds);
+    verify(jdbcTemplate).queryForList("SELECT id FROM pgstac.items ORDER BY datetime AT TIME ZONE 'UTC' ASC",
+        String.class);
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_ThrowsRepositoryException_OnDatabaseError() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class)))
+        .thenThrow(new DataAccessException("Simulated DB error") {
+        });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getItemsIdsOrderedByTimestamp())
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error fetching item IDs");
+
+    verify(jdbcTemplate).queryForList(anyString(), eq(String.class));
   }
 
 }

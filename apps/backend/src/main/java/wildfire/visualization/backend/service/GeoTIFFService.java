@@ -1,13 +1,18 @@
 package wildfire.visualization.backend.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import wildfire.visualization.backend.repository.StacRepository;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.file.*;
+import wildfire.visualization.backend.repository.StacRepository;
 
 @Service
 public class GeoTIFFService {
@@ -39,13 +44,13 @@ public class GeoTIFFService {
    * @param tiffUrl      The URL of the GeoTIFF asset.
    * @return true if the asset was successfully processed, false otherwise.
    */
-  public boolean processGeoTIFF(String itemId, String collectionId, String assetName, String tiffUrl) {
+  public boolean processGeoTIFF(String itemId, String collectionId, String assetName, String tiffUrl, int min, int max) {
     try {
       String layerName = itemId + "_" + assetName;
       String localFilePath = tiffStoragePath + "/" + layerName + ".tif";
       String layerUrl = geoServerLocalUrl + "/" + workspace + "/wms?service=WMS&request=GetMap&layers=" + workspace + ":" + layerName;
 
-      stacRepository.saveLayer(itemId, collectionId, assetName, layerUrl);
+      stacRepository.saveLayer(itemId, collectionId, assetName, layerUrl, min, max);
 
       // Download TIFF to GeoServer storage
       downloadFile(tiffUrl, localFilePath);
@@ -79,7 +84,6 @@ public class GeoTIFFService {
 
       return true;
     } catch (Exception e) {
-      stacRepository.deleteItemAssetLayer(assetName, itemId);
       return false;
     }
   }
