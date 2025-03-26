@@ -196,8 +196,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                   // Set the config attribute for loadedDataset and refreshDatasets list to update state
                   try {
                     const config = await getConfig();
-                    config.loadedDataset = id;
-                    config.loadedDatasetTitle = name;
+                    config.loadedDataset = { id: id, title: name };
                     await saveConfig(config);
                     refreshDatasets?.();
                   } catch (err) {

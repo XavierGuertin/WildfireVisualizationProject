@@ -18,7 +18,7 @@ const AssetsDropdown = () => {
     loadedLayers,
     selectedAssetLayers,
     setSelectedAssetLayers,
-    loadedDatasetTitle,
+    loadedDataset,
     itemIds,
     sliderValue,
   } = useMapLayerContext();
@@ -88,8 +88,8 @@ const AssetsDropdown = () => {
         onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
       >
         <span>{t('weather_assets_label')}</span>
-        {loadedDatasetTitle ? (
-          <span className="loadedAssetDataset">{loadedDatasetTitle}</span>
+        {loadedDataset ? (
+          <span className="loadedAssetDataset">{loadedDataset.title}</span>
         ) : (
           <></>
         )}
