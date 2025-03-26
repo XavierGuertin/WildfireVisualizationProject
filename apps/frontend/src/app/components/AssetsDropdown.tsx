@@ -71,12 +71,12 @@ const AssetsDropdown = () => {
         prev.filter((name) => name !== layerName),
       );
       // Remove from map
-      toggleAssetLayer(map, layerName, layerData.layer_url, false);
+      toggleAssetLayer(map, layerName, layerData.layer_url, false, layerData.min, layerData.max);
     } else {
       // Add to selected layers
       setSelectedAssetLayers((prev) => [...prev, layerName]);
       // Add to map
-      toggleAssetLayer(map, layerName, layerData.layer_url, true);
+      toggleAssetLayer(map, layerName, layerData.layer_url, true, layerData.min, layerData.max);
     }
   };
 

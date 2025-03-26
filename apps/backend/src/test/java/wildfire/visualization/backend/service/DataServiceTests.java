@@ -1,22 +1,5 @@
 package wildfire.visualization.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.postgresql.util.PGobject;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import wildfire.visualization.backend.controller.ConfigController;
-import wildfire.visualization.backend.exception.DataException;
-import wildfire.visualization.backend.exception.RepositoryException;
-import wildfire.visualization.backend.repository.StacRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +8,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.postgresql.util.PGobject;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import wildfire.visualization.backend.controller.ConfigController;
+import wildfire.visualization.backend.exception.DataException;
+import wildfire.visualization.backend.exception.RepositoryException;
+import wildfire.visualization.backend.repository.StacRepository;
 
 @ExtendWith(MockitoExtension.class)
 class DataServiceTests {
@@ -1088,6 +1101,8 @@ class DataServiceTests {
     String itemId = "item1";
     String assetKey = "B01";
     String href = "https://somehost.com/asset1.tif";
+    int min = 0;
+    int max = 100;
 
     // Build the JSON string to simulate the "search" PGobject
     String json = String.format("""
@@ -1099,13 +1114,17 @@ class DataServiceTests {
               "collection": "%s",
               "assets": {
                 "%s": {
-                  "href": "%s"
+                  "href": "%s",
+                  "value_range": [
+                    %d,
+                    %d
+                  ]
                 }
               }
             }
           ]
         }
-        """, itemId, collectionId, assetKey, href);
+        """, itemId, collectionId, assetKey, href, min, max);
 
     PGobject pgObject = new PGobject();
     pgObject.setType("json");
@@ -1120,7 +1139,7 @@ class DataServiceTests {
     when(objectMapper.readTree(anyString())).thenReturn(rootNode);
 
     // Ensure GeoTIFFService is mocked properly
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href))).thenReturn(true);
+    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max))).thenReturn(true);
 
     // Act
     dataService.processItemAssets(collectionId);
@@ -1131,7 +1150,7 @@ class DataServiceTests {
     // Assert
     verify(stacRepository).getAllItems(eq(collectionId));
     verify(objectMapper).readTree(anyString());
-    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href));
+    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href), eq(min), eq(max));
 
     // Check progress is 100%
     assertThat(dataService.getProgress(collectionId + "_assets")).isEqualTo(100);
