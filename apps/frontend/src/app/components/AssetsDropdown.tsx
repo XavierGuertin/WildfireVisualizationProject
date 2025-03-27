@@ -21,6 +21,7 @@ const AssetsDropdown = () => {
     loadedDatasetId,
     itemIds,
     sliderValue,
+    isProcessLoading,
   } = useMapLayerContext();
 
   // Function to get the appropriate icon for a layer
@@ -71,56 +72,73 @@ const AssetsDropdown = () => {
         prev.filter((name) => name !== layerName),
       );
       // Remove from map
-      toggleAssetLayer(map, layerName, layerData.layer_url, false, layerData.min, layerData.max);
+      toggleAssetLayer(
+        map,
+        layerName,
+        layerData.layer_url,
+        false,
+        layerData.min,
+        layerData.max,
+      );
     } else {
       // Add to selected layers
       setSelectedAssetLayers((prev) => [...prev, layerName]);
       // Add to map
-      toggleAssetLayer(map, layerName, layerData.layer_url, true, layerData.min, layerData.max);
+      toggleAssetLayer(
+        map,
+        layerName,
+        layerData.layer_url,
+        true,
+        layerData.min,
+        layerData.max,
+      );
     }
   };
 
   return (
-    <div className="weather-dropdown">
-      {/* Clickable header that toggles the menu */}
-      <div
-        className="menuHeader"
-        onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
-      >
-        <span>{t('weather_assets_label')}</span>
-        {loadedDatasetId ? (
-          <span className="loadedAssetDataset">{loadedDatasetId}</span>
-        ) : (
-          <></>
-        )}
-        {assetsMenuOpen ? (
-          <FaAngleUp className="dropdown-icon" size={20} />
-        ) : (
-          <FaAngleRight className="dropdown-icon" size={20} />
-        )}
-      </div>
+    <>
+      {/* Only show weather assets menu if assets loaded and no process is loading */}
+      {loadedDatasetId && !isProcessLoading ? (
+        <div className="weather-dropdown">
+          {/* Clickable header that toggles the menu */}
+          <div
+            className="menuHeader"
+            onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
+          >
+            <span>{t('weather_assets_label')}</span>
+            <span className="loadedAssetDataset">{loadedDatasetId}</span>
+            {assetsMenuOpen ? (
+              <FaAngleUp className="dropdown-icon" size={20} />
+            ) : (
+              <FaAngleRight className="dropdown-icon" size={20} />
+            )}
+          </div>
 
-      {/* Render the asset options when menu is open */}
-      {assetsMenuOpen && (
-        <div className="assets-list-container">
-          {loadedLayers.length > 0 &&
-            [...loadedLayers]
-              .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
-              .filter((a) => a.item_id === itemIds[sliderValue])
-              .map((layer, index) => (
-                <button
-                  key={index}
-                  className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                  data-testid={`layerButton-${layer.asset_name}`}
-                  onClick={() => handleLayerClick(layer.asset_name)}
-                >
-                  {getLayerIcon(layer.asset_name)}
-                  {formatLayerName(layer.asset_name)}
-                </button>
-              ))}
+          {/* Render the asset options when menu is open */}
+          {assetsMenuOpen && (
+            <div className="assets-list-container">
+              {loadedLayers.length > 0 &&
+                [...loadedLayers]
+                  .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+                  .filter((a) => a.item_id === itemIds[sliderValue])
+                  .map((layer, index) => (
+                    <button
+                      key={index}
+                      className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                      data-testid={`layerButton-${layer.asset_name}`}
+                      onClick={() => handleLayerClick(layer.asset_name)}
+                    >
+                      {getLayerIcon(layer.asset_name)}
+                      {formatLayerName(layer.asset_name)}
+                    </button>
+                  ))}
+            </div>
+          )}
         </div>
+      ) : (
+        <></>
       )}
-    </div>
+    </>
   );
 };
 
