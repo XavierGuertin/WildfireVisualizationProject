@@ -107,6 +107,7 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
           NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
+          COLLECTIONS_URL: ${{secrets.COLLECTIONS_URL}}
 
       # Collect logs if tests fail (for debugging)
       - name: Collect Logs on Failure

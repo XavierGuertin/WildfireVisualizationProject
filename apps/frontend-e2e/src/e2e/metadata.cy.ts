@@ -18,7 +18,7 @@ describe('metadata', () => {
 
     //Retrieve input the collections url into the input field and click on save
     cy.get("#swal2-input").as("url_input");
-    cy.get('@url_input').clear().type(Cypress.env("collections_url"));
+    cy.get('@url_input').clear().type(Cypress.env("COLLECTIONS_URL"));
     cy.get('button.swal2-confirm').should('exist').click()
 
     //Make sure notfication of success appears
