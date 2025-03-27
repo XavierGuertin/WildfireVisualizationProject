@@ -718,7 +718,10 @@ const SettingsPanel: React.FC<{
                 </button>
                 <button
                   className="reset-style-btn"
-                  onClick={handleResetLayerStyle}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleResetLayerStyle();
+                  }}
                 >
                   {t('reset_style')}
                 </button>
