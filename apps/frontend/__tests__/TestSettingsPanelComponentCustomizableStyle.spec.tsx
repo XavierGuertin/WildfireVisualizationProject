@@ -411,3 +411,102 @@ describe('handleResetLayerStyle function', () => {
     );
   });
 });
+
+describe('Reset functionality for layer styles', () => {
+  // Create a mock Map instance
+  const mockMap = {
+    getLayers: jest.fn().mockReturnValue({
+      getArray: jest.fn().mockReturnValue([])
+    }),
+    renderSync: jest.fn()
+  };
+
+  beforeEach(() => {
+    // Reset mocks between tests
+    jest.clearAllMocks();
+
+    // Set up the map reference with a valid object
+    jest.spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext').mockReturnValue({
+      mapRef: { current: mockMap },
+      setLayer: jest.fn(),
+      setSpeed: jest.fn(),
+      resetView: jest.fn(),
+      isOnline: true,
+      setIsOnline: jest.fn(),
+      setSliderValue: jest.fn(),
+      setTimeStamps: jest.fn(),
+      setCollectionId: jest.fn(),
+      setIsPlaying: jest.fn(),
+      setSelectedAssetLayers: jest.fn(),
+    });
+
+    // Mock the updateLayerStyle function to check its parameters
+    jest.spyOn(require('../src/app/components/MapView'), 'updateLayerStyle').mockImplementation(jest.fn());
+
+    // Mock SweetAlert2 to resolve with isConfirmed: true
+    const sweetalert2 = require('sweetalert2');
+    sweetalert2.fire.mockResolvedValue({ isConfirmed: true });
+  });
+
+  it('resets both polygon and data layer styles when Reset button is clicked', async () => {
+    await renderSettingsPanel();
+
+    // Open the reset dropdown
+    const resetButton = screen.getByTestId('reset-dropdown-button');
+    await act(async () => {
+      fireEvent.click(resetButton);
+    });
+
+    // Click the reset button within the dropdown
+    const innerResetButton = screen.getByTestId('reset-button');
+    await act(async () => {
+      fireEvent.click(innerResetButton);
+    });
+
+    // Wait for the SweetAlert confirmation to resolve
+    await waitFor(() => {
+      const { updateLayerStyle } = require('../src/app/components/MapView');
+
+      // Verify both layers were reset with their respective default values
+      expect(updateLayerStyle).toHaveBeenCalledWith(
+        mockMap,
+        'itemLayer',
+        'rgb(255,0,0)', // Default red for polygon
+        '0.1',
+        'rgb(255,0,0)',
+        '2'
+      );
+
+      expect(updateLayerStyle).toHaveBeenCalledWith(
+        mockMap,
+        'dataLayer',
+        'rgb(0,0,255)', // Default blue for data layer
+        '0.1',
+        'rgb(0,0,255)',
+        '2'
+      );
+    });
+  });
+
+  it('ensures handleResetLayerStyle handles event objects by defaulting to false', async () => {
+    await renderSettingsPanel();
+
+    // Open the style dropdown
+    const styleButton = screen.getByTestId('style-dropdown-button');
+    await act(async () => {
+      fireEvent.click(styleButton);
+    });
+
+    // Create a spy on updateLayerStyle
+    const { updateLayerStyle } = require('../src/app/components/MapView');
+
+    // Click reset button to trigger handleResetLayerStyle
+    const resetButton = screen.getByText('reset_style');
+    await act(async () => {
+      fireEvent.click(resetButton);
+    });
+
+    // Verify only the selected tab was reset (not both layers)
+    expect(updateLayerStyle).toHaveBeenCalledTimes(1);
+  });
+});
