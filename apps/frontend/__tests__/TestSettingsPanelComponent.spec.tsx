@@ -868,7 +868,7 @@ describe('SettingsPanel Component', () => {
           await fetchCollectionsFromEndpoint(endpointUrl);
           const config = await getConfig();
           config.endpoint = endpointUrl;
-          config.loadedDataset = '';
+          config.loadedDataset = { id: '', title: '' };
           await saveConfig(config);
           return true;
         });
@@ -881,7 +881,7 @@ describe('SettingsPanel Component', () => {
       expect(result).toBe(true);
     });
 
-    it('sets loadedDataset to empty string when saving endpoint config', async () => {
+    it('sets loadedDataset id and title to empty string when saving endpoint config', async () => {
       // Setup mocks
       const {
         verifyIfEndpointHasCollections,
@@ -907,7 +907,7 @@ describe('SettingsPanel Component', () => {
 
       // Capture the config that's passed to saveConfig
       saveConfig.mockImplementation(async (config: any) => {
-        expect(config.loadedDataset).toBe('');
+        expect(config.loadedDataset.id).toBe('');
         return Promise.resolve();
       });
 
@@ -925,7 +925,7 @@ describe('SettingsPanel Component', () => {
           await fetchCollectionsFromEndpoint(endpointUrl);
           const config = await getConfig();
           config.endpoint = endpointUrl;
-          config.loadedDataset = '';
+          config.loadedDataset = { id: '', title: '' };
           await saveConfig(config);
           return true;
         });
