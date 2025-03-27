@@ -29,6 +29,7 @@ import { getConfig } from '../services/configApi';
 export interface DatasetEntry {
   key: number;
   id: string;
+  title: string;
 }
 
 export interface DatasetMetadata {
@@ -65,7 +66,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mapRef, loadedDatasetId, setLoadedDatasetId } = useMapLayerContext();
+  const { mapRef, loadedDataset, setLoadedDataset } = useMapLayerContext();
 
   /**
    * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
@@ -129,8 +130,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       }
 
       const config = await getConfig();
-      setLoadedDatasetId(config.loadedDataset || null);
-
+      if (config?.loadedDataset) {
+        setLoadedDataset({
+          id: config.loadedDataset.id || '', 
+          title: config.loadedDataset.title || ''
+        });
+      } else {
+        setLoadedDataset({id: '', title: ''});
+      }
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
@@ -258,7 +265,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
 
     if (datasets.length > 0) {
       return datasets.map((dataset) => {
-        const isLoaded = dataset.id === loadedDatasetId;
+        const isLoaded = dataset.id === loadedDataset.id;
         return (
           <button
             key={dataset.id}
@@ -266,7 +273,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             onClick={() => handleDatasetClick(dataset.id)}
             data-testid={`dataset-button-${dataset.id}`}
           >
-            {dataset.id}{' '}
+            {dataset.title}{' '}
             {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
           </button>
         );
