@@ -4,7 +4,7 @@ module.exports = {
   ...reactI18next,
   initReactI18next: {
     type: '3rdParty',
-    init: () => {},
+    init: () => {/*intentional*/},
   },
   useTranslation: () => {
     return {
