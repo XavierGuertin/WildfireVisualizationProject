@@ -92,6 +92,7 @@ jest.mock('../src/app/context/MapContext', () => ({
     setCollectionId: jest.fn(),
     setIsProcessLoading: jest.fn(),
     setIsPlaying: jest.fn(),
+    loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
   })),
 }));
 
@@ -268,6 +269,7 @@ describe('MapMetaData Component', () => {
         isOnline: false,
         setSliderValue: jest.fn(),
         setTimeStamps: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       render(<MapMetaData {...defaultProps} />);
@@ -341,6 +343,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(), // optional, if you're testing layer removal
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const mockTimestamps = ['2024-01-01', '2024-01-02'];
@@ -364,6 +367,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(), // optional, if you're testing layer removal
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const mockedFetchItems = fetchItems as jest.MockedFunction<
@@ -461,6 +465,7 @@ describe('MapMetaData Component', () => {
         isOnline: false,
         setTimeStamps: jest.fn(),
         setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const { getByTestId } = render(<MapMetaData {...defaultProps} />);
@@ -494,6 +499,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(), // optional, if you're testing layer removal
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const { getByTestId } = render(<MapMetaData {...defaultProps} />);
@@ -586,6 +592,7 @@ describe('MapMetaData Component', () => {
         isOnline: true,
         setTimeStamps: jest.fn(),
         setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -615,6 +622,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(), // optional, if you're testing layer removal
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       (fetchItems as jest.Mock).mockResolvedValue('Unexpected response');
@@ -642,6 +650,7 @@ describe('MapMetaData Component', () => {
         isOnline: true,
         setTimeStamps: jest.fn(),
         setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       // Spy on console.error
@@ -685,6 +694,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(),
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
     
       // Mock SweetAlert confirmation to resolve as confirmed.
