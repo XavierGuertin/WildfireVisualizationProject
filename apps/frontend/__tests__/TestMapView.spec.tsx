@@ -826,3 +826,150 @@ describe('Asset Layer Removal Tests', () => {
     expect(mockMap._layers).toEqual([nonAssetLayer]);
   });
 });
+
+describe('Layer Style Tests', () => {
+  let mockMap: any;
+  let mockLayer: any;
+  let mockStyle: jest.Mock;
+  let mockFill: jest.Mock;
+  let mockStroke: jest.Mock;
+
+  beforeEach(() => {
+    // Reset module imports to get fresh instances of style-related classes
+    jest.resetModules();
+
+    // Recreate mocks for style classes
+    mockFill = jest.fn().mockImplementation(() => ({}));
+    mockStroke = jest.fn().mockImplementation(() => ({}));
+    mockStyle = jest.fn().mockImplementation(() => ({}));
+
+    jest.mock('ol/style/Fill', () => mockFill);
+    jest.mock('ol/style/Stroke', () => mockStroke);
+    jest.mock('ol/style/Style', () => mockStyle);
+
+    // Create mock layer with setStyle method
+    mockLayer = {
+      get: jest.fn((key) => {
+        if (key === 'id') return 'itemLayer';
+        return null;
+      }),
+      setStyle: jest.fn(),
+    };
+
+    // Create mock map
+    mockMap = {
+      getLayers: jest.fn(() => ({
+        getArray: jest.fn(() => [mockLayer]),
+      })),
+      renderSync: jest.fn(),
+    };
+  });
+
+  it('updates polygon layer style correctly', () => {
+    const { updateLayerStyle } = require('../src/app/components/MapView');
+
+    // Call updateLayerStyle with polygon layer parameters
+    updateLayerStyle(
+      mockMap,
+      'itemLayer',
+      'rgb(100, 150, 200)', // fill color
+      '0.5', // fill opacity
+      'rgb(50, 100, 150)', // stroke color
+      '3', // stroke width
+    );
+
+    // Verify layer was found and style was set
+    expect(mockMap.getLayers).toHaveBeenCalled();
+    expect(mockLayer.setStyle).toHaveBeenCalled();
+
+    // Verify map was rendered
+    expect(mockMap.renderSync).toHaveBeenCalled();
+  });
+
+  it('updates data layer style correctly', () => {
+    const { updateLayerStyle } = require('../src/app/components/MapView');
+
+    // Change mock to return dataLayer
+    mockLayer.get.mockImplementation((key: string) => {
+      if (key === 'id') return 'dataLayer';
+      return null;
+    });
+
+    // Call updateLayerStyle with data layer parameters
+    updateLayerStyle(
+      mockMap,
+      'dataLayer',
+      'rgb(200, 100, 50)',   // fill color
+      '0.7',                 // fill opacity
+      'rgb(150, 50, 25)',    // stroke color
+      '1'                    // stroke width
+    );
+
+    // Verify layer was found and style was set
+    expect(mockLayer.setStyle).toHaveBeenCalled();
+  });
+
+  it('handles layer not found gracefully', () => {
+    // Mock console.error to verify it's called
+    const originalError = console.error;
+    console.error = jest.fn();
+
+    // Empty layers array to simulate layer not found
+    mockMap.getLayers.mockReturnValue({
+      getArray: jest.fn(() => []),
+    });
+
+    const { updateLayerStyle } = require('../src/app/components/MapView');
+
+    // Call updateLayerStyle with a non-existent layer
+    updateLayerStyle(
+      mockMap,
+      'nonExistentLayer',
+      'rgb(255, 0, 0)',
+      '0.5',
+      'rgb(0, 0, 0)',
+      '1'
+    );
+
+    // Verify error was logged
+    expect(console.error).toHaveBeenCalledWith(
+      'Layer "nonExistentLayer" not found'
+    );
+
+    // Restore console.error
+    console.error = originalError;
+  });
+
+  it('finds layer by name if id is not matching', () => {
+    const { updateLayerStyle } = require('../src/app/components/MapView');
+
+    // Create a layer that has a name but no matching id
+    const namedLayer = {
+      get: jest.fn((key) => {
+        if (key === 'id') return null;
+        if (key === 'name') return 'testLayer';
+        return null;
+      }),
+      setStyle: jest.fn(),
+    };
+
+    // Update map to return our named layer
+    mockMap.getLayers.mockReturnValue({
+      getArray: jest.fn(() => [namedLayer]),
+    });
+
+    // Call updateLayerStyle with the layer name
+    updateLayerStyle(
+      mockMap,
+      'testLayer',
+      'rgb(255, 0, 0)',
+      '0.5',
+      'rgb(0, 0, 0)',
+      '1'
+    );
+
+    // Verify style was set on the correct layer
+    expect(namedLayer.setStyle).toHaveBeenCalled();
+    expect(mockMap.renderSync).toHaveBeenCalled();
+  });
+});

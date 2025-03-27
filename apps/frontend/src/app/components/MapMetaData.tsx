@@ -151,7 +151,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       });
 
       if (result.isConfirmed) {
-        setTargetLoading("collection items");
+        setTargetLoading(t('collection_items'));
         setLoading(true); // Show loading overlay
         setIsProcessLoading(true);
         localStorage.setItem('sliderValue', '0');
@@ -236,7 +236,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
           };
 
           await pollProgress();
-          setTargetLoading("collection item assets")
+          setTargetLoading(t('collection_item_assets'));
           setLoading(true);
           setProgress(0);
 

@@ -1,20 +1,28 @@
 package wildfire.visualization.backend.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-import wildfire.visualization.backend.repository.StacRepository;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import wildfire.visualization.backend.repository.StacRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GeoTIFFServiceTests {
@@ -46,14 +54,15 @@ class GeoTIFFServiceTests {
   @Test
   void processGeoTIFF_shouldReturnTrue_onSuccess() throws Exception {
     String itemId = "item1", collectionId = "col1", assetName = "a1", url = "http://example.com/file.tif";
+    int min = 0, max = 100;
 
     // Mock file download (assume it's a void method)
     doNothing().when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, url);
+    boolean result = geoTIFFService.processGeoTIFF(itemId, collectionId, assetName, url, min, max);
 
     assertThat(result).isTrue();
-    verify(stacRepository).saveLayer(eq(itemId), eq(collectionId), eq(assetName), contains("GetMap"));
+    verify(stacRepository).saveLayer(eq(itemId), eq(collectionId), eq(assetName), contains("GetMap"), eq(min), eq(max));
     verify(geoTIFFService).downloadFile(eq(url), contains(assetName + ".tif"));
   }
 
@@ -61,7 +70,7 @@ class GeoTIFFServiceTests {
   void processGeoTIFF_shouldReturnFalse_onException() throws Exception {
     doThrow(new IOException("Download failed")).when(geoTIFFService).downloadFile(anyString(), anyString());
 
-    boolean result = geoTIFFService.processGeoTIFF("item1", "col1", "a1", "url");
+    boolean result = geoTIFFService.processGeoTIFF("item1", "col1", "a1", "url", 0, 100);
 
     assertThat(result).isFalse();
     verify(stacRepository).deleteItemAssetLayer("a1", "item1");

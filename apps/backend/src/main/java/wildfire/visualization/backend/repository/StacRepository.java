@@ -1,17 +1,18 @@
 package wildfire.visualization.backend.repository;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import wildfire.visualization.backend.exception.RepositoryException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import wildfire.visualization.backend.exception.RepositoryException;
 
 /**
  * Repository responsible for directly communicating with the pgSTAC database
@@ -584,7 +585,7 @@ public class StacRepository {
    * @param assetName    Name of the asset
    * @param layerUrl     URL of the layer
    */
-  public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl) {
+  public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl, int min, int max) {
     // Ensure the collection exists
     String insertCollection = """
             INSERT INTO TIFF_Collections (collection_id)
@@ -603,11 +604,11 @@ public class StacRepository {
 
     // Insert asset with default is_registered = FALSE
     String insertAsset = """
-            INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered)
-            VALUES (?, ?, ?, FALSE)
+            INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered, min, max)
+            VALUES (?, ?, ?, FALSE, ?, ?)
             ON CONFLICT (item_id, asset_name) DO NOTHING;
         """;
-    jdbcTemplate.update(insertAsset, itemId, assetName, layerUrl);
+    jdbcTemplate.update(insertAsset, itemId, assetName, layerUrl, min, max);
   }
 
   /**
@@ -618,7 +619,7 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers(String itemId) {
     String sql = """
-            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered, a.min, a.max,
                    i.item_id, i.collection_id
             FROM TIFF_Assets a
             JOIN TIFF_Items i ON a.item_id = i.item_id
@@ -700,7 +701,7 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers() {
     String sql = """
-            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered, a.min, a.max,
                    i.item_id, i.collection_id
             FROM TIFF_Assets a
             JOIN TIFF_Items i ON a.item_id = i.item_id
