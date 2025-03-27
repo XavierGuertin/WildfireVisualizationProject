@@ -55,6 +55,12 @@ jest.mock('ol/Map', () => {
   }));
 });
 
+jest.mock('../src/app/services/configApi', () => ({
+  getConfig: jest.fn().mockResolvedValue({
+    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },
+  })
+}));
+
 jest.mock('../src/app/components/MapView', () => ({
   changeLayer: jest.fn().mockResolvedValue(true), // Mocks a successful layer change
 }));
@@ -62,6 +68,7 @@ jest.mock('../src/app/components/MapView', () => ({
 jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
+    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },  
     setLoadedDataset: jest.fn(),
   })),
 }));

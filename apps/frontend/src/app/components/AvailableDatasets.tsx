@@ -130,7 +130,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       }
 
       const config = await getConfig();
-      setLoadedDataset({id: config.loadedDataset.id || null, title: config.loadedDataset.title || null});
+      if (config?.loadedDataset) {
+        setLoadedDataset({
+          id: config.loadedDataset.id || '', 
+          title: config.loadedDataset.title || ''
+        });
+      } else {
+        setLoadedDataset({id: '', title: ''});
+      }
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
