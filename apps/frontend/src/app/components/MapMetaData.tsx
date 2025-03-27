@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/MapMetaData.css';
 import { IoInformationCircle } from 'react-icons/io5';
 import { RiCollapseDiagonalFill } from 'react-icons/ri';
@@ -44,10 +44,20 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [width, setWidth] = useState(350);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+  const animationRef = useRef<number | null>(null); // Initialize as null
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [targetLoading, setTargetLoading] = useState(name);
+
+  const maxWidth = typeof window !== 'undefined' ? window.innerWidth / 3 : 500;
+  const minWidth = 300;
 
   const MySwal = withReactContent(Swal);
   const {
@@ -62,6 +72,61 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     mapRef,
     setIsPlaying
   } = useMapLayerContext();
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = containerRef.current.offsetWidth;
+    
+    // Hint browser about upcoming changes for better performance
+    if (containerRef.current) {
+      containerRef.current.style.willChange = 'width';
+    }
+    
+    e.preventDefault();
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+    
+    const dx = e.clientX - startXRef.current;
+    let newWidth = startWidthRef.current + dx;
+    
+    // Apply constraints
+    newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+    
+    // DIRECT DOM UPDATE (no React state lag)
+    containerRef.current.style.width = `${newWidth}px`;
+  }, [isResizing, maxWidth, minWidth]);
+
+  const handleMouseUp = useCallback(() => {
+    if (!isResizing || !containerRef.current) return;
+    
+    // Only update React state AFTER dragging finishes
+    setWidth(containerRef.current.offsetWidth);
+    containerRef.current.style.willChange = 'auto';
+    setIsResizing(false);
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const onLoadDataset = async () => {
     if (!isOnline) {
@@ -193,6 +258,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           // Now start polling for progress on the asset load
           const pollAssetProgress = async () => {
+            // eslint-disable-next-line no-constant-condition
             while (true) {
               const progressResponse = await fetchProgress(id + '_assets');
 
@@ -230,10 +296,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           pollAssetProgress();
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-        toast.error(`${t('error_loading_dataset')}: ${errorMessage}`,
-          {toastId: 'loading-dataset-error',});
-        setLoading(false);
+          toast.error(`Error loading dataset: ${error}`, {
+            toastId: 'loading-dataset-error'
+          });
+          setLoading(false);
         }
       }
     } catch (error) {
@@ -256,7 +322,12 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   );
 
   const NonCollapsedMetaData = (
-    <div className="metadata-container">
+    <div 
+      className="metadata-container"
+      ref={containerRef}
+      style={{ width: `${width}px` }}
+      data-testid="metadata-container"
+    >
       <div className="header" onClick={toggleCollapse} data-testid="name-div">
         {name || t('unknown_name')}
         <span className="collapse-icon">
@@ -307,6 +378,13 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         />
         <AssetsDropdown />
       </div>
+      {/* Resize handle */}
+      <div 
+        className="resize-handle"
+        ref={resizeRef}
+        onMouseDown={handleMouseDown}
+        title="Drag to resize"
+      />
     </div>
   );
 
