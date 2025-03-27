@@ -124,12 +124,7 @@ const Footer = () => {
     }
   };
 
-  // const handleMouseUp = () => {
-  //   isDraggingRef.current = false;
-  //   document.removeEventListener('mousemove', handleMouseMove);
-  //   document.removeEventListener('mouseup', handleMouseUp);
-  // };
-
+  // Set global slider value when mouse up from sliding timeline
   const handleMouseUp = () => {
     isDraggingRef.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
@@ -137,15 +132,13 @@ const Footer = () => {
   
     const finalValue = pendingSliderRef.current;
   
-    setSliderValue(finalValue); // ✅ Commit actual value
+    setSliderValue(finalValue);
     const map = mapRef.current as Map;
     if (timeStamps.length > 0) {
       changeLayer(map, false, timeStamps[finalValue]);
       localStorage.setItem('sliderValue', finalValue.toString());
     }
   };
-  
-  
 
   useEffect(() => {
     const map = mapRef.current as Map;
@@ -166,25 +159,7 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
 
-  // const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
-  //   if (sliderRef.current && timeStamps.length > 0) {
-  //     const rect = sliderRef.current.getBoundingClientRect();
-  //     const position = (e.clientX - rect.left) / rect.width;
-  //     const newValue = Math.max(
-  //       0,
-  //       Math.min(
-  //         Math.floor(position * timeStamps.length),
-  //         timeStamps.length - 1,
-  //       ),
-  //     );
-
-  //     setSliderValue(newValue);
-  //     const map = mapRef.current as Map;
-  //     changeLayer(map, false, timeStamps[newValue]);
-  //     localStorage.setItem('sliderValue', newValue.toString());
-  //   }
-  // };
-
+  // Change temp slider value to lessen load on backend calls
   const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
     if (sliderRef.current && timeStamps.length > 0) {
       const rect = sliderRef.current.getBoundingClientRect();
@@ -201,7 +176,6 @@ const Footer = () => {
       pendingSliderRef.current = newValue;
     }
   };
-  
 
   const handleStopPress = () => {
     const map = mapRef.current as Map;
