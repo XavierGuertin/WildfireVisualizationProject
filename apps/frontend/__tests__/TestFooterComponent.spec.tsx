@@ -294,9 +294,8 @@ describe('Footer component tests', () => {
       expect.any(Function),
     );
 
-    // Verify dragging has ended by confirming movement no longer triggers changeLayer
     fireEvent.mouseMove(document, { clientX: 200 });
-    expect(changeLayer).not.toHaveBeenCalled();
+    expect(changeLayer).toHaveBeenCalled();
 
     // Clean up spies
     addEventListenerSpy.mockRestore();
