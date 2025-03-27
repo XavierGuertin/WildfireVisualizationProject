@@ -12,21 +12,17 @@ describe('dataset', () => {
     //Factory Reset before the test to avoid issue with popup not appearing after initial load
     cy.get("[data-testid=reset-dropdown-button]").should('exist').click({force: true})
     cy.contains('button', "Factory Reset").should('exist').click({force: true})
-    cy.wait(10000);
-    cy.contains('button', 'Yes', {timeout: 20000}).should('exist').click({force:true})
+    cy.wait(5000);
+    cy.get('button.swal2-confirm').should('exist').click()
     cy.wait(2000);  //Wait for the endpoint url to pop up
   });
-
-  it('takes screenshot', () => {
-    expect(true).to.equal(false)
-  })
 
   it('loads', () => {
 
     //Retrieve input the collections url into the input field and click on save
     cy.get("#swal2-input").as("url_input");
     cy.get('@url_input').clear().type(Cypress.env("collections_url"));
-    cy.contains('button', 'Save').should('exist').should('be.visible').click({force: true})
+    cy.get('button.swal2-confirm').should('exist').click()
 
     //Make sure notfication of success appears
     cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
