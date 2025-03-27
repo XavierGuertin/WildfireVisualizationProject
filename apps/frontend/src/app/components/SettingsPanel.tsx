@@ -50,10 +50,11 @@ const SettingsPanel: React.FC<{
     setIsOnline,
     setSliderValue,
     mapRef,
+    timeStamps,
     setTimeStamps,
     setCollectionId,
     setIsPlaying,
-    setSelectedAssetLayers
+    setSelectedAssetLayers,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -581,7 +582,8 @@ const SettingsPanel: React.FC<{
       </div>
 
       {/* Customize Polygon and DataLayer colors */}
-      <div className="dropdown-button">
+      {timeStamps && timeStamps.length > 0 && (
+        <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
           onClick={() => toggleDropdown('style')}
@@ -731,6 +733,7 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
+      )}
 
       <div className="dropdown-button">
         <button
