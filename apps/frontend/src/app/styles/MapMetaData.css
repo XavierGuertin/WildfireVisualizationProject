@@ -11,7 +11,7 @@
   position: fixed;
   left: 20px;
   top: 20%;
-  z-index: 1000;
+  z-index: 999;
   transition: width 0.0s ease-out, height 0.3s ease, opacity 0.3s ease;
   user-select: none;
   resize: none; /* Disable default resize */
@@ -31,7 +31,7 @@
   position: fixed;
   left: 20px;
   top: 20%;
-  z-index: 1000;
+  z-index: 999;
   transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
   user-select: none;
 }
@@ -169,7 +169,7 @@
     left: 5% !important;
     padding-right: 12px; /* Add space for the handle */
   }
-  
+
   .metadata-container-collapsed {
     width: auto !important;
   }
