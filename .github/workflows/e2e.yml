@@ -97,7 +97,7 @@ jobs:
       - name: Create cypress.env.json
         run: |
           echo '{
-          "collections_url":"${{secrets.COLLECTIONS_URL}}"
+          "COLLECTIONS_URL":"${{secrets.COLLECTIONS_URL}}"
           }' > cypress.env.json
 
       # Run Cypress for E2E Testing
