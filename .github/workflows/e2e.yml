@@ -94,13 +94,20 @@ jobs:
           NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
           NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
 
+      - name: Create cypress.env.json
+        run: |
+          echo '{
+          "COLLECTIONS_URL":"${{secrets.COLLECTIONS_URL}}"
+          }' > cypress.env.json
+
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
-        run: npx nx e2e frontend-e2e
+        run: npx nx e2e-pipeline frontend-e2e
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
           NEXT_PUBLIC_GEOSERVER_URL: http://localhost:8090/geoserver/Default/wms
           NEXT_PUBLIC_TILESERVER_URL: http://localhost:8081/data/OAM-World-1-8-min-J80
+          COLLECTIONS_URL: ${{secrets.COLLECTIONS_URL}}
 
       # Collect logs if tests fail (for debugging)
       - name: Collect Logs on Failure
@@ -109,6 +116,13 @@ jobs:
           echo "🔍 Collecting logs..."
           docker-compose logs > docker-logs.txt
           cat docker-logs.txt
+      
+      - name: Upload Cypress Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+         name: cypress-screenshots
+         path: cypress/screenshots
 
       # Post-Test Cleanup
       - name: Cleanup
