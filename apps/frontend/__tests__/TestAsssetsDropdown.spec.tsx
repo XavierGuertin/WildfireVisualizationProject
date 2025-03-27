@@ -38,7 +38,7 @@ describe('AssetsDropdown component', () => {
     ],
     selectedAssetLayers: [],
     setSelectedAssetLayers: jest.fn(),
-    loadedDatasetId: 'dataset-2025',
+    loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     itemIds: [],
     sliderValue: 0,
     t: (str: string) => str,
@@ -52,7 +52,7 @@ describe('AssetsDropdown component', () => {
   it('renders dropdown header and dataset ID', () => {
     render(<AssetsDropdown />);
     expect(screen.getByText('weather_assets_label')).toBeInTheDocument();
-    expect(screen.getByText('dataset-2025')).toBeInTheDocument();
+    expect(screen.getByText('Dataset 2025')).toBeInTheDocument();
   });
 
   it('toggles asset menu on header click', () => {

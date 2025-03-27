@@ -232,6 +232,7 @@ public class DataService {
           .map(collection -> Map.of(
               "key", collection.get("key") == null ? "" : collection.get("key"),
               "id", collection.get("id") == null ? "" : collection.get("id"),
+              "title", collection.get("title") == null ? "" : collection.get("title"),
               "bbox", collection.get("bbox") == null ? "[]" : collection.get("bbox")))
           .collect(Collectors.toList());
     } catch (Exception e) {
@@ -621,7 +622,6 @@ public class DataService {
     }
   }
 
-
   /**
    * Method responsible for registering all assets for a specific item.
    * <p>
@@ -675,8 +675,6 @@ public class DataService {
       return false;
     }
   }
-
-
 
   /**
    * Method responsible for processing all assets for all items in a given collection.
