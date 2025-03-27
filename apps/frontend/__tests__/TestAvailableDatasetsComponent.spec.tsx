@@ -83,7 +83,7 @@ describe('Test AvailableDatasets component', () => {
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
     mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {/*intentional*/});
   });
 
   afterEach(() => {
@@ -100,7 +100,7 @@ describe('Test AvailableDatasets component', () => {
   });
 
   it('should show loading message while fetching datasets', async () => {
-    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {})); // Keeps promise pending
+    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {/*intentional*/})); // Keeps promise pending
 
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
