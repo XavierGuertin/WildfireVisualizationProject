@@ -133,7 +133,6 @@ const AssetsDropdown = () => {
                   ))
               ) : (
                 <>
-                <span>Louis</span>
                 <div
                   style={{
                     position: 'absolute',
