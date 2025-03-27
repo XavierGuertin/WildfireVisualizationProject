@@ -17,11 +17,9 @@ describe('dataset', () => {
     cy.wait(2000);  //Wait for the endpoint url to pop up
   });
 
-  afterEach(() => {
-    if (this.currentTest.state === 'failed') {
-      cy.screenshot();
-    }
-  });
+  it('takes screenshot', () => {
+    expect(true).to.equal(false)
+  })
 
   it('loads', () => {
 

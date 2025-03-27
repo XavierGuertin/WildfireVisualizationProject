@@ -31,12 +31,6 @@ describe('simulation', () => {
       cy.get('button').contains('Yes').should('exist').click({force: true})
     });
 
-    afterEach(() => {
-      if (this.currentTest.state === 'failed') {
-        cy.screenshot();
-      }
-    });
-
     it('runs properly', () => {
 
     })
