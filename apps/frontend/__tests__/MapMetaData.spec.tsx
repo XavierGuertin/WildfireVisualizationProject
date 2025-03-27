@@ -92,6 +92,7 @@ jest.mock('../src/app/context/MapContext', () => ({
     setCollectionId: jest.fn(),
     setIsProcessLoading: jest.fn(),
     setIsPlaying: jest.fn(),
+    loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
   })),
 }));
 
@@ -266,6 +267,7 @@ describe('MapMetaData', () => {
       isOnline: false,
       setSliderValue: jest.fn(),
       setTimeStamps: jest.fn(),
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     render(<MapMetaData {...defaultProps} />);
@@ -339,6 +341,7 @@ describe('MapMetaData', () => {
           removeLayer: jest.fn(), // optional, if you're testing layer removal
         },
       },
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     const mockTimestamps = ['2024-01-01', '2024-01-02'];
@@ -459,6 +462,7 @@ describe('MapMetaData', () => {
       isOnline: false,
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     const { getByTestId } = render(<MapMetaData {...defaultProps} />);
@@ -492,6 +496,7 @@ describe('MapMetaData', () => {
           removeLayer: jest.fn(), // optional, if you're testing layer removal
         },
       },
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     const { getByTestId } = render(<MapMetaData {...defaultProps} />);
@@ -583,6 +588,7 @@ describe('MapMetaData', () => {
       isOnline: true,
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -612,6 +618,7 @@ describe('MapMetaData', () => {
           removeLayer: jest.fn(), // optional, if you're testing layer removal
         },
       },
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     (fetchItems as jest.Mock).mockResolvedValue('Unexpected response');
@@ -639,6 +646,7 @@ describe('MapMetaData', () => {
       isOnline: true,
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
 
     // Spy on console.error
@@ -682,6 +690,7 @@ describe('MapMetaData', () => {
           removeLayer: jest.fn(),
         },
       },
+      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     });
   
     // Mock SweetAlert confirmation to resolve as confirmed.
