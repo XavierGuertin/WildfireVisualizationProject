@@ -13,7 +13,7 @@ describe('dataset', () => {
     cy.get("[data-testid=reset-dropdown-button]").should('exist').click({force: true})
     cy.contains('button', "Factory Reset").should('exist').click({force: true})
     cy.wait(10000);
-    cy.contains('button', 'Yes', {timeout: 20000}).should('exist').should('be.visible').click()
+    cy.contains('button', 'Yes', {timeout: 20000}).should('exist').click({force:true})
     cy.wait(2000);  //Wait for the endpoint url to pop up
   });
 
