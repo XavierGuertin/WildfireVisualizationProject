@@ -206,6 +206,7 @@ const SettingsPanel: React.FC<{
         setIsPlaying(false);
         setSliderValue(0);
         setSpeed(1);
+        handleResetLayerStyle(true);
 
         toast.success(t('reset_completed'));
       }
@@ -292,6 +293,7 @@ const SettingsPanel: React.FC<{
       changeLayer(map, true);
       changeLayer(map, false, "reset");
       setSpeed(1);
+      handleResetLayerStyle(true);
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
