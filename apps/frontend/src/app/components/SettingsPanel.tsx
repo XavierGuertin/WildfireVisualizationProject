@@ -443,10 +443,10 @@ const SettingsPanel: React.FC<{
   };
 
   // Reset polygon and dataLayer style
-  const handleResetLayerStyle = () => {
+  const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
 
-    if (selectedStyleTab === 'polygon') {
+    if (resetBoth || selectedStyleTab === 'polygon') {
       // Reset polygon state
       setPolygonFillColor(DEFAULT_FILL_COLOR);
       setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
@@ -461,7 +461,9 @@ const SettingsPanel: React.FC<{
         hexToRgb(DEFAULT_STROKE_COLOR),
         DEFAULT_STROKE_WIDTH
       );
-    } else {
+    }
+
+    if (resetBoth || selectedStyleTab === 'dataLayer') {
       // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
