@@ -24,7 +24,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import { getConfig } from '../services/configApi';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from 'react-query';
 
 export interface DatasetEntry {
   key: number;
