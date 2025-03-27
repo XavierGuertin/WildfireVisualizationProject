@@ -97,7 +97,7 @@ jobs:
       - name: Create cypress.env.json
         run: |
           echo '{
-          "collections_url":"https://hirondelle.crim.ca/stac/collections/"
+          "collections_url":"${{secrets.COLLECTIONS_URL}}"
           }' > cypress.env.json
 
       # Run Cypress for E2E Testing
