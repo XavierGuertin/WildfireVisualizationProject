@@ -17,5 +17,15 @@ module.exports = [
   ...baseConfig,
   ...nx.configs['flat/react-typescript'],
 
+  // Ignore some warnings during testing
+  {
+    files: ['**/__tests__/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off'
+    }
+  },
+
   { ignores: ['.next/**/*'] },
 ];

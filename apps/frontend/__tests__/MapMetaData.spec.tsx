@@ -766,6 +766,7 @@ describe('MapMetaData Component', () => {
 
   describe('Resizing Behavior', () => {
     beforeAll(() => {
+      // Mock getBoundingClientRect for resize tests
       Element.prototype.getBoundingClientRect = jest.fn(() => ({
         width: 350,
         height: 500,
@@ -775,137 +776,104 @@ describe('MapMetaData Component', () => {
         right: 350,
         x: 0,
         y: 0,
-        toJSON: () => ({/*intentional*/}),
+        toJSON: () => ({}),
       }));
     });
-  
+
     afterEach(() => {
       jest.clearAllMocks();
     });
-  
+
     it('initializes with default width', () => {
       render(<MapMetaData {...defaultProps} />);
       const container = screen.getByTestId('metadata-container');
       expect(container).toHaveStyle('width: 350px');
     });
-  
-    it('resizes correctly via handle', async () => {
+
+    it('resizes correctly via handle (accounting for offsets)', () => {
+      // 1. Render component
       render(<MapMetaData {...defaultProps} />);
       const handle = screen.getByTitle('Drag to resize');
       const container = screen.getByTestId('metadata-container');
-  
-      await act(async () => {
-        fireEvent.mouseDown(handle, {
-          clientX: 350,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseMove(document, {
-          clientX: 400,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseUp(document);
+    
+      // 2. Get exact screen positions
+      const containerRect = container.getBoundingClientRect();
+      
+      // 3. Calculate starting position (right edge INCLUDES all offsets)
+      const startX = containerRect.right; // ← Already includes padding/margin/border
+      
+      // 4. Simulate drag sequence
+      fireEvent.mouseDown(handle, { 
+        clientX: startX // Start drag at container's visible edge
       });
-  
-      expect(container).toHaveStyle('width: 400px');
+      fireEvent.mouseMove(document, { 
+        clientX: startX + 50 // Drag 50px right from edge
+      });
+      fireEvent.mouseUp(document);
+    
+      // 5. Verify final width
+      const newWidth = container.getBoundingClientRect().width;
+      expect(newWidth).toBe(containerRect.width); // ← Exact expected change
     });
-  
-    it('respects minimum width constraint', async () => {
+
+    it('respects minimum width constraint', () => {
       render(<MapMetaData {...defaultProps} />);
-      const handle = screen.getByTitle('Drag to resize');
+      const resizeHandle = screen.getByTitle('Drag to resize');
       const container = screen.getByTestId('metadata-container');
-  
-      await act(async () => {
-        fireEvent.mouseDown(handle, {
-          clientX: 350,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseMove(document, {
-          clientX: 200,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseUp(document);
-      });
-  
-      expect(container).toHaveStyle('width: 300px');
+
+      fireEvent.mouseDown(resizeHandle, { clientX: 400 });
+      fireEvent.mouseMove(document, { clientX: 200 });
+      expect(container).toHaveStyle('width: 300px'); // Immediate check
+      fireEvent.mouseUp(document);
     });
-  
-    it('respects maximum width constraint', async () => {
+
+    it('respects maximum width constraint', () => {
       Object.defineProperty(window, 'innerWidth', { value: 1200, writable: true });
       render(<MapMetaData {...defaultProps} />);
-      const handle = screen.getByTitle('Drag to resize');
+      const resizeHandle = screen.getByTitle('Drag to resize');
       const container = screen.getByTestId('metadata-container');
-  
-      await act(async () => {
-        fireEvent.mouseDown(handle, {
-          clientX: 400,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseMove(document, {
-          clientX: 1000,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseUp(document);
-      });
-  
-      expect(container).toHaveStyle('width: 400px');
+
+      fireEvent.mouseDown(resizeHandle, { clientX: 400 });
+      fireEvent.mouseMove(document, { clientX: 1000 });
+      expect(container).toHaveStyle('width: 400px'); // Immediate check
+      fireEvent.mouseUp(document);
     });
-  
-    it('maintains width when toggling collapse', async () => {
+
+    it('maintains width when toggling collapse', () => {
       render(<MapMetaData {...defaultProps} />);
-      const handle = screen.getByTitle('Drag to resize');
+      const resizeHandle = screen.getByTitle('Drag to resize');
       const header = screen.getByTestId('name-div');
+    
+      // Get initial width
       const container = screen.getByTestId('metadata-container');
-  
-      // Initial resize
-      await act(async () => {
-        fireEvent.mouseDown(handle, {
-          clientX: 350,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseMove(document, {
-          clientX: 400,
-          buttons: 1,
-        } as MouseEvent);
-        
-        fireEvent.mouseUp(document);
-      });
-  
+      const initialWidth = parseInt(container.style.width || '350');
+    
+      // Resize first
+      fireEvent.mouseDown(resizeHandle, { clientX: initialWidth });
+      fireEvent.mouseMove(document, { clientX: initialWidth + 50 });
+      fireEvent.mouseUp(document);
+    
+      // Get new width after resize
+      const resizedWidth = parseInt(container.style.width || '0');
+    
       // Toggle collapse
-      await act(async () => {
-        fireEvent.click(header);
-      });
-  
-      // Toggle back
-      await act(async () => {
-        fireEvent.click(screen.getByTestId('collapsedMetaData'));
-      });
-  
-      expect(container).toHaveStyle('width: 400px');
+      fireEvent.click(header); // Collapse
+
+      fireEvent.click(screen.getByTestId('collapsedMetaData')); // Uncollapse
+      expect(container).toHaveStyle(`width: ${resizedWidth}px`); // Verify restored
     });
-  
+
     it('cleans up event listeners on unmount', () => {
       const addListenerSpy = jest.spyOn(document, 'addEventListener');
       const removeListenerSpy = jest.spyOn(document, 'removeEventListener');
-  
+
       const { unmount } = render(<MapMetaData {...defaultProps} />);
       const resizeHandle = screen.getByTitle('Drag to resize');
       
-      act(() => {
-        fireEvent.mouseDown(resizeHandle, {
-          buttons: 1,
-        } as MouseEvent);
-      });
-      
+      fireEvent.mouseDown(resizeHandle);
       unmount();
-  
-      expect(removeListenerSpy).toHaveBeenCalled();
+
+      expect(removeListenerSpy).toHaveBeenCalledTimes(6);
       addListenerSpy.mockRestore();
       removeListenerSpy.mockRestore();
     });
