@@ -98,7 +98,7 @@ const AssetsDropdown = () => {
   return (
     <>
       {/* Only show weather assets menu if assets loaded and no process is loading */}
-      {loadedDataset && !isProcessLoading ? (
+      {loadedDataset.title && !isProcessLoading ? (
         <div className="weather-dropdown">
           {/* Clickable header that toggles the menu */}
           <div
@@ -113,6 +113,26 @@ const AssetsDropdown = () => {
               <FaAngleRight className="dropdown-icon" size={20} />
             )}
           </div>
+          {/* Render the asset options when menu is open */}
+          {assetsMenuOpen && (
+            <div className="assets-list-container">
+              {loadedLayers.length > 0 &&
+                [...loadedLayers]
+                  .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+                  .filter((a) => a.item_id === itemIds[sliderValue])
+                  .map((layer, index) => (
+                    <button
+                      key={index}
+                      className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                      data-testid={`layerButton-${layer.asset_name}`}
+                      onClick={() => handleLayerClick(layer.asset_name)}
+                    >
+                      {getLayerIcon(layer.asset_name)}
+                      {formatLayerName(layer.asset_name)}
+                    </button>
+                  ))}
+            </div>
+          )}
         </div>
       ) : (
         <></>
