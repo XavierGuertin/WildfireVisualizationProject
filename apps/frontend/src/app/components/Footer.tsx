@@ -37,10 +37,13 @@ const Footer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const [pendingSliderValue, setPendingSliderValue] = useState(sliderValue);
+  const pendingSliderRef = useRef(sliderValue);
 
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
   const processLoadedLayers = async (itemId: string) => {
+    console.log(itemId)
     setLoadedLayers([]);
     if (!isProcessLoading) {
       if (itemId) {
@@ -122,11 +125,28 @@ const Footer = () => {
     }
   };
 
+  // const handleMouseUp = () => {
+  //   isDraggingRef.current = false;
+  //   document.removeEventListener('mousemove', handleMouseMove);
+  //   document.removeEventListener('mouseup', handleMouseUp);
+  // };
+
   const handleMouseUp = () => {
     isDraggingRef.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
+  
+    const finalValue = pendingSliderRef.current;
+  
+    setSliderValue(finalValue); // ✅ Commit actual value
+    const map = mapRef.current as Map;
+    if (timeStamps.length > 0) {
+      changeLayer(map, false, timeStamps[finalValue]);
+      localStorage.setItem('sliderValue', finalValue.toString());
+    }
   };
+  
+  
 
   useEffect(() => {
     const map = mapRef.current as Map;
@@ -147,6 +167,25 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
 
+  // const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
+  //   if (sliderRef.current && timeStamps.length > 0) {
+  //     const rect = sliderRef.current.getBoundingClientRect();
+  //     const position = (e.clientX - rect.left) / rect.width;
+  //     const newValue = Math.max(
+  //       0,
+  //       Math.min(
+  //         Math.floor(position * timeStamps.length),
+  //         timeStamps.length - 1,
+  //       ),
+  //     );
+
+  //     setSliderValue(newValue);
+  //     const map = mapRef.current as Map;
+  //     changeLayer(map, false, timeStamps[newValue]);
+  //     localStorage.setItem('sliderValue', newValue.toString());
+  //   }
+  // };
+
   const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
     if (sliderRef.current && timeStamps.length > 0) {
       const rect = sliderRef.current.getBoundingClientRect();
@@ -158,13 +197,14 @@ const Footer = () => {
           timeStamps.length - 1,
         ),
       );
+  
+      setPendingSliderValue(newValue);
+      pendingSliderRef.current = newValue;
 
-      setSliderValue(newValue);
-      const map = mapRef.current as Map;
-      changeLayer(map, false, timeStamps[newValue]);
-      localStorage.setItem('sliderValue', newValue.toString());
+      //setPendingSliderValue(newValue); // ✅ only update local UI state
     }
   };
+  
 
   const handleStopPress = () => {
     const map = mapRef.current as Map;
@@ -250,6 +290,10 @@ const Footer = () => {
     }
   }, [sliderValue, timeStamps]);
 
+  const currentValue = isDraggingRef.current
+  ? pendingSliderValue
+  : sliderValue;
+
   return (
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}
@@ -318,7 +362,7 @@ const Footer = () => {
                             96,
                             Math.max(
                               4,
-                              (sliderValue / (timeStamps.length - 1)) * 92 + 4,
+                              (currentValue / (timeStamps.length - 1)) * 92 + 4,
                             ),
                           )
                         : 4
@@ -326,8 +370,8 @@ const Footer = () => {
                   }}
                 >
                   <span className="timeMarkerText">
-                    {timeStamps[sliderValue]
-                      ? formatTimestamp(timeStamps[sliderValue])
+                    {timeStamps[currentValue]
+                      ? formatTimestamp(timeStamps[currentValue])
                       : ''}
                   </span>
                 </div>
