@@ -43,7 +43,6 @@ const Footer = () => {
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
   const processLoadedLayers = async (itemId: string) => {
-    console.log(itemId)
     setLoadedLayers([]);
     if (!isProcessLoading) {
       if (itemId) {
@@ -200,8 +199,6 @@ const Footer = () => {
   
       setPendingSliderValue(newValue);
       pendingSliderRef.current = newValue;
-
-      //setPendingSliderValue(newValue); // ✅ only update local UI state
     }
   };
   

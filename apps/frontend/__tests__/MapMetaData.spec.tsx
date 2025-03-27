@@ -269,7 +269,7 @@ describe('MapMetaData Component', () => {
         isOnline: false,
         setSliderValue: jest.fn(),
         setTimeStamps: jest.fn(),
-      loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       render(<MapMetaData {...defaultProps} />);
@@ -325,25 +325,26 @@ describe('MapMetaData Component', () => {
       expect(typeof useMapLayerContext().setSliderValue).toBe('function');
     });
 
-  it('calls fetchTimestamps and updates setTimeStamps when progress reaches 100%', async () => {
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setLoadedLayers: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-      setCollectionId: jest.fn(),
-      setIsProcessLoading: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-      setIsPlaying: jest.fn(),
-      mapRef: {
-        current: {
-          getLayers: jest.fn().mockReturnValue({
-            getArray: jest.fn().mockReturnValue([]), // or mock layers
-          }),
-          removeLayer: jest.fn(), // optional, if you're testing layer removal
+    it('calls fetchTimestamps and updates setTimeStamps when progress reaches 100%', async () => {
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setLoadedLayers: jest.fn(),
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        setCollectionId: jest.fn(),
+        setIsProcessLoading: jest.fn(),
+        setSelectedAssetLayers: jest.fn(),
+        setIsPlaying: jest.fn(),
+        mapRef: {
+          current: {
+            getLayers: jest.fn().mockReturnValue({
+              getArray: jest.fn().mockReturnValue([]), // or mock layers
+            }),
+            removeLayer: jest.fn(), // optional, if you're testing layer removal
+          },
         },
-      },
-    });
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       const mockTimestamps = ['2024-01-01', '2024-01-02'];
       const mockSetTimeStamps = jest.fn();
@@ -366,6 +367,7 @@ describe('MapMetaData Component', () => {
             removeLayer: jest.fn(), // optional, if you're testing layer removal
           },
         },
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
 
       const mockedFetchItems = fetchItems as jest.MockedFunction<
@@ -457,13 +459,14 @@ describe('MapMetaData Component', () => {
       });
     });
 
-  it('shows error when offline', async () => {
-    // Mock isOnline as false
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: false,
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-    });
+    it('shows error when offline', async () => {
+      // Mock isOnline as false
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: false,
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       const { getByTestId } = render(<MapMetaData {...defaultProps} />);
 
@@ -478,25 +481,26 @@ describe('MapMetaData Component', () => {
       expect(fetchItems).not.toHaveBeenCalled();
     });
 
-  it('handles error when fetchItems fails', async () => {
-    (fetchItems as jest.Mock).mockRejectedValue(new Error('API error'));
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setLoadedLayers: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-      setIsProcessLoading: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-      setIsPlaying: jest.fn(),
-      mapRef: {
-        current: {
-          getLayers: jest.fn().mockReturnValue({
-            getArray: jest.fn().mockReturnValue([]), // or mock layers
-          }),
-          removeLayer: jest.fn(), // optional, if you're testing layer removal
+    it('handles error when fetchItems fails', async () => {
+      (fetchItems as jest.Mock).mockRejectedValue(new Error('API error'));
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setLoadedLayers: jest.fn(),
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        setIsProcessLoading: jest.fn(),
+        setSelectedAssetLayers: jest.fn(),
+        setIsPlaying: jest.fn(),
+        mapRef: {
+          current: {
+            getLayers: jest.fn().mockReturnValue({
+              getArray: jest.fn().mockReturnValue([]), // or mock layers
+            }),
+            removeLayer: jest.fn(), // optional, if you're testing layer removal
+          },
         },
-      },
-    });
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       const { getByTestId } = render(<MapMetaData {...defaultProps} />);
 
@@ -584,11 +588,12 @@ describe('MapMetaData Component', () => {
         throw new Error('SweetAlert error');
       });
 
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-    });
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -600,24 +605,25 @@ describe('MapMetaData Component', () => {
       consoleErrorSpy.mockRestore();
     });
 
-  it('throws error when fetchItems returns unexpected response', async () => {
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setLoadedLayers: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-      setIsProcessLoading: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-      setIsPlaying: jest.fn(),
-      mapRef: {
-        current: {
-          getLayers: jest.fn().mockReturnValue({
-            getArray: jest.fn().mockReturnValue([]), // or mock layers
-          }),
-          removeLayer: jest.fn(), // optional, if you're testing layer removal
+    it('throws error when fetchItems returns unexpected response', async () => {
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setLoadedLayers: jest.fn(),
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        setIsProcessLoading: jest.fn(),
+        setSelectedAssetLayers: jest.fn(),
+        setIsPlaying: jest.fn(),
+        mapRef: {
+          current: {
+            getLayers: jest.fn().mockReturnValue({
+              getArray: jest.fn().mockReturnValue([]), // or mock layers
+            }),
+            removeLayer: jest.fn(), // optional, if you're testing layer removal
+          },
         },
-      },
-    });
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       (fetchItems as jest.Mock).mockResolvedValue('Unexpected response');
       const sweetAlertMock = require('sweetalert2-react-content')();
@@ -639,12 +645,13 @@ describe('MapMetaData Component', () => {
         throw new Error('SweetAlert error');
       });
 
-    // Mock context
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-    });
+      // Mock context
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
+      });
 
       // Spy on console.error
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -662,103 +669,104 @@ describe('MapMetaData Component', () => {
       consoleErrorSpy.mockRestore();
     });
 
-  it('saves loadedDataset to config after dataset is loaded', async () => {
-    (useMapLayerContext as jest.Mock).mockReturnValue({
-      isOnline: true,
-      setLoadedLayers: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setSliderValue: jest.fn(),
-      setCollectionId: jest.fn(),
-      setItemIds: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-      setIsPlaying: jest.fn(),
-      setLoading: jest.fn(),
-      setProgress: jest.fn(),
-      setIsProcessLoading: jest.fn(),
-      setTargetLoading: jest.fn(),
-      mapRef: {
-        current: {
-          getLayers: jest.fn().mockReturnValue({
-            getArray: jest.fn().mockReturnValue([
-              { get: jest.fn().mockReturnValue('customLayer') },
-              { get: jest.fn().mockReturnValue('baseLayer') },
-            ]),
-          }),
-          removeLayer: jest.fn(),
+    it('saves loadedDataset to config after dataset is loaded', async () => {
+      (useMapLayerContext as jest.Mock).mockReturnValue({
+        isOnline: true,
+        setLoadedLayers: jest.fn(),
+        setTimeStamps: jest.fn(),
+        setSliderValue: jest.fn(),
+        setCollectionId: jest.fn(),
+        setItemIds: jest.fn(),
+        setSelectedAssetLayers: jest.fn(),
+        setIsPlaying: jest.fn(),
+        setLoading: jest.fn(),
+        setProgress: jest.fn(),
+        setIsProcessLoading: jest.fn(),
+        setTargetLoading: jest.fn(),
+        mapRef: {
+          current: {
+            getLayers: jest.fn().mockReturnValue({
+              getArray: jest.fn().mockReturnValue([
+                { get: jest.fn().mockReturnValue('customLayer') },
+                { get: jest.fn().mockReturnValue('baseLayer') },
+              ]),
+            }),
+            removeLayer: jest.fn(),
+          },
         },
-      },
-    });
-  
-    // Mock SweetAlert confirmation to resolve as confirmed.
-    const sweetAlertMock = require('sweetalert2-react-content')();
-    sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: true });
-  
-    const mockRefreshDatasets = jest.fn();
-    const mockConfig = {};
-    const mockSaveConfig = saveConfig as jest.Mock;
-    const mockGetConfig = getConfig as jest.Mock;
-  
-    mockGetConfig.mockImplementation(() => Promise.resolve(mockConfig));
-    (fetchItems as jest.Mock).mockResolvedValue(
-      'Fetching started in the background. Check progress separately.',
-    );
-  
-    // 👇 Extend progress mocks to include both polling stages
-    (fetchProgress as jest.Mock)
-      .mockResolvedValueOnce({ progress: 50 })   // item progress
-      .mockResolvedValueOnce({ progress: 100 })  // item progress done
-      .mockResolvedValueOnce({ progress: 50 })   // asset progress
-      .mockResolvedValueOnce({ progress: 100 }); // asset progress done
-  
-    // Required to prevent undefined errors
-    const fetchTimestamps = require('../src/app/services/api').fetchTimestamps;
-    fetchTimestamps.mockResolvedValue(['2024-01-01', '2024-01-02']);
-    const loadAssets = require('../src/app/services/api').loadAssets;
-    loadAssets.mockResolvedValue('ok');
-  
-    const props = {
-      id: 'test-dataset',
-      name: 'Test dataset',
-      description: 'description',
-      format: 'GeoJSON',
-      processes: 'process info',
-      datasetSource: 'source info',
-      visible: true,
-      refreshDatasets: mockRefreshDatasets,
-      onClose: jest.fn(),
-    };
-  
-    render(<MapMetaData {...props} />);
-  
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('load-dataset-button'));
-      await Promise.resolve(); // Allow SweetAlert
-    });
-  
-    // 🔁 Simulate item polling
-    for (let i = 0; i < 3; i++) {
-      await act(async () => {
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
       });
-    }
-  
-    // 🔁 Simulate asset polling
-    for (let i = 0; i < 3; i++) {
+    
+      // Mock SweetAlert confirmation to resolve as confirmed.
+      const sweetAlertMock = require('sweetalert2-react-content')();
+      sweetAlertMock.fire.mockResolvedValueOnce({ isConfirmed: true });
+    
+      const mockRefreshDatasets = jest.fn();
+      const mockConfig = {};
+      const mockSaveConfig = saveConfig as jest.Mock;
+      const mockGetConfig = getConfig as jest.Mock;
+    
+      mockGetConfig.mockImplementation(() => Promise.resolve(mockConfig));
+      (fetchItems as jest.Mock).mockResolvedValue(
+        'Fetching started in the background. Check progress separately.',
+      );
+    
+      //  Extend progress mocks to include both polling stages
+      (fetchProgress as jest.Mock)
+        .mockResolvedValueOnce({ progress: 50 })   // item progress
+        .mockResolvedValueOnce({ progress: 100 })  // item progress done
+        .mockResolvedValueOnce({ progress: 50 })   // asset progress
+        .mockResolvedValueOnce({ progress: 100 }); // asset progress done
+    
+      // Required to prevent undefined errors
+      const fetchTimestamps = require('../src/app/services/api').fetchTimestamps;
+      fetchTimestamps.mockResolvedValue(['2024-01-01', '2024-01-02']);
+      const loadAssets = require('../src/app/services/api').loadAssets;
+      loadAssets.mockResolvedValue('ok');
+    
+      const props = {
+        id: 'test-dataset',
+        name: 'Test dataset',
+        description: 'description',
+        format: 'GeoJSON',
+        processes: 'process info',
+        datasetSource: 'source info',
+        visible: true,
+        refreshDatasets: mockRefreshDatasets,
+        onClose: jest.fn(),
+      };
+    
+      render(<MapMetaData {...props} />);
+    
       await act(async () => {
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(screen.getByTestId('load-dataset-button'));
+        await Promise.resolve(); // Allow SweetAlert
       });
-    }
-  
-    // ✅ Assert everything completed
-    await waitFor(() => {
-      expect(mockGetConfig).toHaveBeenCalled();
-      expect(mockSaveConfig).toHaveBeenCalled();
-      expect(mockRefreshDatasets).toHaveBeenCalled();
+    
+      //  Simulate item polling
+      for (let i = 0; i < 3; i++) {
+        await act(async () => {
+          jest.advanceTimersByTime(1000);
+          await Promise.resolve();
+        });
+      }
+    
+      //  Simulate asset polling
+      for (let i = 0; i < 3; i++) {
+        await act(async () => {
+          jest.advanceTimersByTime(1000);
+          await Promise.resolve();
+        });
+      }
+    
+      //  Assert everything completed
+      await waitFor(() => {
+        expect(mockGetConfig).toHaveBeenCalled();
+        expect(mockSaveConfig).toHaveBeenCalled();
+        expect(mockRefreshDatasets).toHaveBeenCalled();
+      });
     });
-  });
-  
+    
 
     it('renders non-collapsed content when not collapsed initially', () => {
       render(<MapMetaData {...defaultProps} />);
