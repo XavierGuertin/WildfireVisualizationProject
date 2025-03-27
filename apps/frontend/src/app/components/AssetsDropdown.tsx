@@ -21,6 +21,7 @@ const AssetsDropdown = () => {
     loadedDataset,
     itemIds,
     sliderValue,
+    isProcessLoading,
   } = useMapLayerContext();
 
   // Function to get the appropriate icon for a layer
@@ -71,56 +72,95 @@ const AssetsDropdown = () => {
         prev.filter((name) => name !== layerName),
       );
       // Remove from map
-      toggleAssetLayer(map, layerName, layerData.layer_url, false, layerData.min, layerData.max);
+      toggleAssetLayer(
+        map,
+        layerName,
+        layerData.layer_url,
+        false,
+        layerData.min,
+        layerData.max,
+      );
     } else {
       // Add to selected layers
       setSelectedAssetLayers((prev) => [...prev, layerName]);
       // Add to map
-      toggleAssetLayer(map, layerName, layerData.layer_url, true, layerData.min, layerData.max);
+      toggleAssetLayer(
+        map,
+        layerName,
+        layerData.layer_url,
+        true,
+        layerData.min,
+        layerData.max,
+      );
     }
   };
 
   return (
-    <div className="weather-dropdown">
-      {/* Clickable header that toggles the menu */}
-      <div
-        className="menuHeader"
-        onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
-      >
-        <span>{t('weather_assets_label')}</span>
-        {loadedDataset ? (
-          <span className="loadedAssetDataset">{loadedDataset.title}</span>
-        ) : (
-          <></>
-        )}
-        {assetsMenuOpen ? (
-          <FaAngleUp className="dropdown-icon" size={20} />
-        ) : (
-          <FaAngleRight className="dropdown-icon" size={20} />
-        )}
-      </div>
-
-      {/* Render the asset options when menu is open */}
-      {assetsMenuOpen && (
-        <div className="assets-list-container">
-          {loadedLayers.length > 0 &&
-            [...loadedLayers]
-              .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
-              .filter((a) => a.item_id === itemIds[sliderValue])
-              .map((layer, index) => (
-                <button
-                  key={index}
-                  className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
-                  data-testid={`layerButton-${layer.asset_name}`}
-                  onClick={() => handleLayerClick(layer.asset_name)}
+    <>
+      {/* Only show weather assets menu if assets loaded and no process is loading */}
+      {loadedDataset.title && !isProcessLoading ? (
+        <div className="weather-dropdown">
+          {/* Clickable header that toggles the menu */}
+          <div
+            className="menuHeader"
+            onClick={() => setAssetsMenuOpen(!assetsMenuOpen)}
+          >
+            <span>{t('weather_assets_label')}</span>
+            <span className="loadedAssetDataset">{loadedDataset.title}</span>
+            {assetsMenuOpen ? (
+              <FaAngleUp className="dropdown-icon" size={20} />
+            ) : (
+              <FaAngleRight className="dropdown-icon" size={20} />
+            )}
+          </div>
+          {/* Render the asset options when menu is open, orelse show loading spinner */}
+          {assetsMenuOpen && (
+            <div className="assets-list-container">
+              {loadedLayers.length > 0 ? (
+                [...loadedLayers]
+                  .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
+                  .filter((a) => a.item_id === itemIds[sliderValue])
+                  .map((layer, index) => (
+                    <button
+                      key={index}
+                      className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
+                      data-testid={`layerButton-${layer.asset_name}`}
+                      onClick={() => handleLayerClick(layer.asset_name)}
+                    >
+                      {getLayerIcon(layer.asset_name)}
+                      {formatLayerName(layer.asset_name)}
+                    </button>
+                  ))
+              ) : (
+                <>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10,
+                    borderRadius: '4px',
+                  }}
                 >
-                  {getLayerIcon(layer.asset_name)}
-                  {formatLayerName(layer.asset_name)}
-                </button>
-              ))}
+                  <div className="spinner"></div>
+                  <span>{t('loading_label')}</span>
+                </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
+      ) : (
+        <></>
       )}
-    </div>
+    </>
   );
 };
 

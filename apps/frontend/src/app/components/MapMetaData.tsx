@@ -142,6 +142,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         text: t('confirm_deletion_items_from_previous_collection'),
         icon: 'warning',
         showCancelButton: true,
+        cancelButtonText: t('no'),
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: t('yes'),
@@ -193,6 +194,19 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
             let lastProgress = -1;
             let stableCount = 0;
             const maxStableCount = 10; // e.g., 10 seconds with 1s interval
+
+            // Set the config attribute for loadedDataset and refreshDatasets list to update state
+            try {
+              const config = await getConfig();
+              config.loadedDataset = { id: "", title: "" };
+              await saveConfig(config);
+              refreshDatasets?.();
+            } catch (err) {
+              console.error(
+                'Error updating loadedDataset in config:',
+                err,
+              );
+            }
 
             while (true) {
               const progressResponse = await fetchProgress(id);
@@ -257,7 +271,6 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                   toast.success(t('assets_fetch_success'), {
                     toastId: 'assets-success',
                   });
-                  setIsProcessLoading(false);
 
                   // Set the config attribute for loadedDataset and refreshDatasets list to update state
                   try {
@@ -265,6 +278,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
                     config.loadedDataset = { id: id, title: name };
                     await saveConfig(config);
                     refreshDatasets?.();
+                    setIsProcessLoading(false);
                   } catch (err) {
                     console.error(
                       'Error updating loadedDataset in config:',
