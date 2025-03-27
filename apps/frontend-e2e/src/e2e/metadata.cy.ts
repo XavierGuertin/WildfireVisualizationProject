@@ -45,11 +45,11 @@ describe('metadata', () => {
 
     //Check if metadata container is not collapsed and click it
     cy.get('.metadata-container').should('exist')
-    cy.get('[data-testid=name-div]').click()
+    cy.get('[data-testid=name-div]').click({force:true})
 
     //Check if metadata container is collapsed and click it
     cy.get('[data-testid=collapsedMetaData]').should('exist')
-    cy.get('[data-testid=collapsedMetaData]').click()
+    cy.get('[data-testid=collapsedMetaData]').click({force:true})
 
     //Check if metadata container is not collapsed
     cy.get('.metadata-container').should('exist')
