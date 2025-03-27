@@ -25,6 +25,13 @@ describe('metadata', () => {
     cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
     cy.wait(2000)
   });
+
+  afterEach(() => {
+    if (this.currentTest.state === 'failed') {
+      cy.screenshot();
+    }
+  });
+
   it('loads', () => {
 
     //Select a dataset

@@ -9,6 +9,7 @@ export default defineConfig({
     }),
     screenshotOnRunFailure: true,
     screenshotsFolder: 'cypress/screenshots',
+    trashAssetsBeforeRuns: true,
     baseUrl: 'http://127.0.0.1:3000', // Set only if NX doesn’t set it automatically
     setupNodeEvents(on, config) {
       coverageTask(on, config); // Enable code coverage tasks

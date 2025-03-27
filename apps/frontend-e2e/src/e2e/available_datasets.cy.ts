@@ -17,6 +17,12 @@ describe('dataset', () => {
     cy.wait(2000);  //Wait for the endpoint url to pop up
   });
 
+  afterEach(() => {
+    if (this.currentTest.state === 'failed') {
+      cy.screenshot();
+    }
+  });
+
   it('loads', () => {
 
     //Retrieve input the collections url into the input field and click on save
