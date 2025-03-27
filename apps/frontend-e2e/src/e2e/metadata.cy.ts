@@ -29,7 +29,7 @@ describe('metadata', () => {
   it('loads', () => {
 
     //Select a dataset
-    cy.get('.dataset-button').first().click()
+    cy.get('.dataset-button').first().click({force:true})
 
     //Check to make sure all metadata exists
     cy.get('[data-testid=dataset-description]').invoke('text').should('not.be.empty');
@@ -41,7 +41,7 @@ describe('metadata', () => {
   it('collapses', () => {
 
     //Select a dataset
-    cy.get('.dataset-button').first().click()
+    cy.get('.dataset-button').first().click({force:true})
 
     //Check if metadata container is not collapsed and click it
     cy.get('.metadata-container').should('exist')

@@ -99,14 +99,6 @@ jobs:
           echo '{
           "collections_url":"https://hirondelle.crim.ca/stac/collections/"
           }' > cypress.env.json
-      
-      - name: Upload Cypress Screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-         name: cypress-screenshots
-         path: cypress/screenshots
-        
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
@@ -123,6 +115,13 @@ jobs:
           echo "🔍 Collecting logs..."
           docker-compose logs > docker-logs.txt
           cat docker-logs.txt
+      
+      - name: Upload Cypress Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+         name: cypress-screenshots
+         path: cypress/screenshots
 
       # Post-Test Cleanup
       - name: Cleanup
