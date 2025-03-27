@@ -99,6 +99,14 @@ jobs:
           echo '{
           "collections_url":"https://hirondelle.crim.ca/stac/collections/"
           }' > cypress.env.json
+      
+      - name: Upload Cypress Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+         name: cypress-screenshots
+         path: cypress/screenshots
+        
 
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
