@@ -332,4 +332,28 @@ describe('Style Customization Dropdown', () => {
     // Verify the updateLayerStyle was not called
     expect(mockUpdateLayerStyle).not.toHaveBeenCalled();
   });
+
+  it('does not render style dropdown when timeStamps is empty', async () => {
+    jest
+      .spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext')
+      .mockReturnValue({
+        mapRef: { current: {} },
+        timeStamps: [],
+        setIsPlaying: jest.fn(),
+        setSliderValue: jest.fn(),
+        setSpeed: jest.fn(),
+        setLayer: jest.fn(),
+        resetView: jest.fn(),
+        isOnline: true,
+        setIsOnline: jest.fn(),
+        setTimeStamps: jest.fn(),
+        setCollectionId: jest.fn(),
+        setSelectedAssetLayers: jest.fn(),
+      });
+
+    await renderSettingsPanel();
+
+    const styleButton = screen.queryByTestId('style-dropdown-button');
+    expect(styleButton).not.toBeInTheDocument();
+  });
 });
