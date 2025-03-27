@@ -77,6 +77,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         text: t('confirm_deletion_items_from_previous_collection'),
         icon: 'warning',
         showCancelButton: true,
+        cancelButtonText: t('no'),
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: t('yes'),
