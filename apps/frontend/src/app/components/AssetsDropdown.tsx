@@ -113,10 +113,10 @@ const AssetsDropdown = () => {
               <FaAngleRight className="dropdown-icon" size={20} />
             )}
           </div>
-          {/* Render the asset options when menu is open */}
+          {/* Render the asset options when menu is open, orelse show loading spinner */}
           {assetsMenuOpen && (
             <div className="assets-list-container">
-              {loadedLayers.length > 0 &&
+              {loadedLayers.length > 0 ? (
                 [...loadedLayers]
                   .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
                   .filter((a) => a.item_id === itemIds[sliderValue])
@@ -130,7 +130,31 @@ const AssetsDropdown = () => {
                       {getLayerIcon(layer.asset_name)}
                       {formatLayerName(layer.asset_name)}
                     </button>
-                  ))}
+                  ))
+              ) : (
+                <>
+                <span>Louis</span>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10,
+                    borderRadius: '4px',
+                  }}
+                >
+                  <div className="spinner"></div>
+                  <span>{t('loading_label')}</span>
+                </div>
+                </>
+              )}
             </div>
           )}
         </div>

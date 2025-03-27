@@ -41,6 +41,7 @@ const Footer = () => {
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
   const processLoadedLayers = async (itemId: string) => {
+    setLoadedLayers([]);
     if (!isProcessLoading) {
       if (itemId) {
         await loadAssetLayers(itemId);
