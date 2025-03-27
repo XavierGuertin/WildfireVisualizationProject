@@ -113,10 +113,11 @@ const AssetsDropdown = () => {
               <FaAngleRight className="dropdown-icon" size={20} />
             )}
           </div>
+        </div>
       ) : (
         <></>
       )}
-      </>
+    </>
   );
 };
 
