@@ -3,7 +3,6 @@ package wildfire.visualization.backend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.locationtech.jts.geom.Geometry;
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ import java.util.Map;
  */
 @Data
 @Builder
-@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostGISData {

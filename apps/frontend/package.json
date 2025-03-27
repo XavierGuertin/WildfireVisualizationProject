@@ -1,5 +1,2 @@
 {
-  "scripts": {
-    "lint": "eslint ."
-  }
 }
