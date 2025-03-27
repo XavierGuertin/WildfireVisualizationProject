@@ -161,3 +161,4 @@ generated*
 .nyc_output/
 config/app-config.json
 apps/frontend/package-lock.json
+apps/frontend-e2e/cypress.env.json
