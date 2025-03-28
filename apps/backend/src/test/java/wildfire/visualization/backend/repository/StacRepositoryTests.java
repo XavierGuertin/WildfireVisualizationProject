@@ -303,15 +303,15 @@ class StacRepositoryTests {
   @Test
   void getAllCollectionsByName_Success_NoBbox() {
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString());
   }
 
@@ -319,8 +319,8 @@ class StacRepositoryTests {
   void getAllCollectionsByName_Success_WithBbox() {
     double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
@@ -328,7 +328,7 @@ class StacRepositoryTests {
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
 

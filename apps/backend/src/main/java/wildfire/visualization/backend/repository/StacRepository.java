@@ -187,7 +187,7 @@ public class StacRepository {
 
       // Validate and apply ordering if provided
       if (!orderBy.isEmpty()) {
-        if (!Arrays.asList("id", "datetime").contains(orderBy)) {
+        if (!Arrays.asList("id", "datetime", "title").contains(orderBy)) {
           throw new RepositoryException("Invalid orderBy column: " + orderBy);
         }
         sql += " ORDER BY " + orderBy + " " + direction;
@@ -305,7 +305,7 @@ public class StacRepository {
    * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox, String sortDirection) {
-    return fetchCollections(bbox, "id", sortDirection);
+    return fetchCollections(bbox, "title", sortDirection);
   }
 
   /**
