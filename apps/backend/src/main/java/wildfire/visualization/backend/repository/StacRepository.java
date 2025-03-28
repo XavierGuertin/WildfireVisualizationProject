@@ -256,9 +256,9 @@ public class StacRepository {
   }
 
   /**
-   * 
+   *
    * Retrieves item IDs from the database, ordered by datetime ascending (UTC).*
-   * 
+   *
    * @return List of item IDs
    * @throws RepositoryException if a database error occurs
    */
@@ -383,6 +383,26 @@ public class StacRepository {
       throw new RepositoryException("Error fetching items for collection: " + collectionId, e);
     }
   }
+
+  /**
+   * Retrieves all items from the database
+   *
+   * @return List of maps containing item data
+   * @throws RepositoryException if a database error occurs
+   */
+  public List<Map<String, Object>> getAllItemsFromCollection(String collectionId) {
+    logger.debug("Fetching items for collection: {}", collectionId);
+    try {
+      String sql = "SELECT * FROM pgstac.items WHERE collection = ?";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching items: {}", e.getMessage(), e);
+      throw new RepositoryException("Error fetching items for collection: " + collectionId, e);
+    }
+  }
+
 
   /**
    * Method responsible for retrieving an item from the database
