@@ -687,52 +687,59 @@ public class DataService {
   @Async
   public void processItemAssets(String collectionId) {
     String collectionProgressKey = collectionId + "_assets";
-    fetchProgress.put(collectionProgressKey, new AtomicInteger(0)); // Initialize progress
+    fetchProgress.put(collectionProgressKey, new AtomicInteger(0));
+
     try {
-      List<Map<String, Object>> results = stacRepository.getAllItems(collectionId);
-
+      List<Map<String, Object>> results = stacRepository.getAllItemsFromCollection(collectionId);
       if (results.isEmpty()) {
-        logger.warn("No results returned from getAllItems for collection {}", collectionId);
+        logger.warn("No items returned from getAllItems for collection {}", collectionId);
       }
 
-      // Extract JSON from the first (and only) row of the query
-      Object rawJson = results.get(0).get("search");
-      String json = "";
-      if (rawJson instanceof PGobject) {
-        json = ((PGobject) rawJson).getValue();
-      } else if (rawJson instanceof String) {
-        json = (String) rawJson;
-      } else {
-        logger.error("Unexpected JSON type: {}", rawJson.getClass().getSimpleName());
-      }
-
-      JsonNode root = objectMapper.readTree(json);
-      JsonNode features = root.get("features");
-
-      if (features == null || !features.isArray()) {
-        logger.warn("No features found in FeatureCollection");
-      }
-
-      int totalItems = features.size();
+      int totalItems = results.size();
       logger.info("Processing {} items in collection: {}", totalItems, collectionId);
 
       int count = 0;
+      for (Map<String, Object> row : results) {
+        String itemId = (String) row.get("id");
+        String collId = (String) row.get("collection");
+        String contentStr = null;
+        Object contentObj = row.get("content");
+        if (contentObj instanceof PGobject) {
+          contentStr = ((PGobject) contentObj).getValue();
+        } else if (contentObj instanceof String) {
+          // If the driver already gave you a string, just cast it
+          contentStr = (String) contentObj;
+        } else if (contentObj != null) {
+          // Fallback: you can do contentObj.toString(), or throw an error
+          logger.warn("Unexpected type for content column: {}", contentObj.getClass());
+          contentStr = contentObj.toString();
+        } else {
+          // Handle null
+          logger.warn("Null content column for item in collection {}", collectionId);
+          continue;
+        }
 
-      for (JsonNode feature : features) {
-        String itemId = feature.get("id").asText();
-        String collId = feature.get("collection").asText();  // Prefer the per-feature collection
+        // Now parse that as JSON
+        JsonNode contentNode = objectMapper.readTree(contentStr);
+        JsonNode assetsNode = contentNode.get("assets");
 
-        JsonNode assets = feature.get("assets");
-        if (assets == null || assets.isEmpty()) {
+        if (assetsNode == null || assetsNode.isEmpty()) {
           logger.info("No assets found for item {}", itemId);
           continue;
         }
 
-        for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
-          String assetKey = it.next();
-          JsonNode asset = assets.get(assetKey);
+        Iterator<String> fieldNames = assetsNode.fieldNames();
+        while (fieldNames.hasNext()) {
+          String assetKey = fieldNames.next();
+          JsonNode asset = assetsNode.get(assetKey);
           String href = asset.get("href").asText();
+
           JsonNode valueRange = asset.get("value_range");
+          if (valueRange == null || !valueRange.isArray() || valueRange.size() < 2) {
+            logger.warn("Invalid or missing value_range for asset {} of item {}", assetKey, itemId);
+            continue;
+          }
+
           int min = valueRange.get(0).asInt();
           int max = valueRange.get(1).asInt();
 
@@ -743,19 +750,19 @@ public class DataService {
         }
 
         count++;
-        fetchProgress.put(collectionProgressKey, new AtomicInteger((int) Math.floor(((double) count / totalItems) * 100)));
+        int progress = (int) (((double) count / totalItems) * 100);
+        fetchProgress.get(collectionProgressKey).set(progress);
         logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
       }
 
       logger.info("Finished registering all assets in collection {}", collectionId);
-      // Optionally remove progress key or set to -1 or totalItems to indicate completion
-      fetchProgress.put(collectionProgressKey, new AtomicInteger(100));
-
+      fetchProgress.get(collectionProgressKey).set(100);
     } catch (Exception e) {
       logger.error("Exception while processing assets for collection {}: {}", collectionId, e.getMessage(), e);
-      fetchProgress.put(collectionProgressKey, new AtomicInteger(-1)); // Set error state
+      fetchProgress.put(collectionProgressKey, new AtomicInteger(-1));
     }
   }
+
 
   /**
    * Overloaded method to reset item assets with full reset as default.
