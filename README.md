@@ -171,6 +171,8 @@ Run frontend tests:
 ### Frontend End-to-End (E2E) Testing
 - **Location of Tests:** `apps/frontend-e2e/src/e2e`
 - **Example Test File:** `apps/frontend-e2e/src/e2e/app.cy.ts`
+- Developers need to create a cypress.env.json file with the following:
+  ```"COLLECTIONS_URL": "*URL_TO_COLLECTIONS_ENDPOINT*" ```
 
 Run frontend E2E tests:
   ```bash
