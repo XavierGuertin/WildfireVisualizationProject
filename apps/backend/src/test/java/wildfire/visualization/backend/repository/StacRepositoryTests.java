@@ -1,9 +1,6 @@
 package wildfire.visualization.backend.repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -955,10 +952,10 @@ class StacRepositoryTests {
     );
     List<Map<String, Object>> mockResults = List.of(item);
 
-    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
+    when(jdbcTemplate.queryForList(anyString(), eq(collectionId))).thenReturn(mockResults);
 
     // Act
-    List<Map<String, Object>> result = stacRepository.getAllItems(collectionId);
+    List<Map<String, Object>> result = stacRepository.getAllItemsFromCollection(collectionId);
 
     // Assert
     assertThat(result).hasSize(1);
@@ -969,13 +966,14 @@ class StacRepositoryTests {
   @Test
   void getAllItems_throwsRepositoryException_onJdbcError() {
     // Arrange
-    when(jdbcTemplate.queryForList(anyString()))
+    when(jdbcTemplate.queryForList(anyString(), Optional.ofNullable(any())))
       .thenThrow(new DataAccessException("Simulated DB error") {});
 
     // Act & Assert
-    assertThatThrownBy(() -> stacRepository.getAllItems("any_collection"))
+    assertThatThrownBy(() -> stacRepository.getAllItemsFromCollection("any_collection"))
       .isInstanceOf(RepositoryException.class)
       .hasMessageContaining("Error fetching items");
   }
+
 
 }
