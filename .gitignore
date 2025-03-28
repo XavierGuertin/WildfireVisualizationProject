@@ -5,7 +5,8 @@ dist
 tmp
 /out-tsc
 
-
+*.mbtiles
+pnpm-lock.yaml
 
 # dependencies
 node_modules
