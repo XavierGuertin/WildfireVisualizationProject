@@ -19,6 +19,8 @@ import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
 import { getConfig, saveConfig } from '../services/configApi';
 import AssetsDropdown from './AssetsDropdown';
+import { StorageServer } from '../model/storage';
+import { ConfigService } from '../model/config';
 
 interface MapMetaDataProps {
   id?: string;
@@ -155,7 +157,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         setTargetLoading(t('collection_items'));
         setLoading(true); // Show loading overlay
         setIsProcessLoading(true);
-        localStorage.setItem('sliderValue', '0');
+        // localStorage.setItem('sliderValue', '0');
+        StorageServer.setSliderValue(0);
         setSliderValue(0);
         setProgress(0);
         await resetItems();
@@ -197,9 +200,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
             // Set the config attribute for loadedDataset and refreshDatasets list to update state
             try {
-              const config = await getConfig();
-              config.loadedDataset = { id: "", title: "" };
-              await saveConfig(config);
+              // const config = await getConfig();
+              // config.loadedDataset = { id: "", title: "" };
+              // await saveConfig(config);
+              await ConfigService.setLoadedDataset({ id: "", title: "" }, t);
               refreshDatasets?.();
             } catch (err) {
               console.error(
@@ -274,9 +278,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
                   // Set the config attribute for loadedDataset and refreshDatasets list to update state
                   try {
-                    const config = await getConfig();
-                    config.loadedDataset = { id: id, title: name };
-                    await saveConfig(config);
+                    // const config = await getConfig();
+                    // config.loadedDataset = { id: id, title: name };
+                    // await saveConfig(config);
+                    await ConfigService.setLoadedDataset({ id: id, title: name }, t);
                     refreshDatasets?.();
                     setIsProcessLoading(false);
                   } catch (err) {

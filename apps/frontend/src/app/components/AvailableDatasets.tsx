@@ -131,15 +131,17 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         return;
       }
 
-      const config = await getConfig();
-      if (config?.loadedDataset) {
-        setLoadedDataset({
-          id: config.loadedDataset.id || '', 
-          title: config.loadedDataset.title || ''
-        });
-      } else {
-        setLoadedDataset({id: '', title: ''});
-      }
+      // const config = await getConfig();
+      const configLoadedDataset = await ConfigService.getLoadedDataset(t);
+      {configLoadedDataset ? setLoadedDataset(configLoadedDataset) : setLoadedDataset({id: '', title: ''});}
+      // if (configLoadedDataset) {
+      //   setLoadedDataset({
+      //     id: config.loadedDataset.id || '', 
+      //     title: config.loadedDataset.title || ''
+      //   });
+      // } else {
+      //   setLoadedDataset({id: '', title: ''});
+      // }
       setDatasets(response);
       setFetchError(null);
     } catch (error) {
@@ -155,7 +157,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * Fetches datasets when the refresh key or filter changes.
    */
   useEffect(() => {
-    const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    // const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    const selectedDatasetId = StorageServer.getSelectedDatasetId();
     if (selectedDatasetId !== null) {
       setSelectedDataset(selectedDatasetId);
     }
@@ -241,14 +244,17 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * @param id - The dataset ID.
    */
   const handleLocalStorageOnDatasetClick = async (id: string) => {
-    const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    // const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    const selectedDatasetId = StorageServer.getSelectedDatasetId();
     if (selectedDatasetId === null || selectedDatasetId !== id) {
       await insertDatalayerView(id);
-      localStorage.setItem('selectedDatasetId', id);
+      // localStorage.setItem('selectedDatasetId', id);
+      StorageServer.setSelectedDatasetId(id);
       setSelectedDataset(id);
     } else {
       await resetDatalayerView();
-      localStorage.setItem('selectedDatasetId', '');
+      // localStorage.setItem('selectedDatasetId', '');
+      StorageServer.setSelectedDatasetId('');
       setSelectedDataset(null);
     }
   };

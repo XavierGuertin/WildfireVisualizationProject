@@ -30,6 +30,8 @@ import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer, updateLayerStyle } from './MapView';
 import { Map } from 'ol';
 import { LuPalette } from 'react-icons/lu';
+import { StorageServer } from '../model/storage';
+import { ConfigService } from '../model/config';
 
 const MySwal = withReactContent(Swal);
 
@@ -68,60 +70,42 @@ const SettingsPanel: React.FC<{
       window.localStorage &&
       !languageInitialized
     ) {
-      const savedLanguage = localStorage.getItem('language');
-      if (savedLanguage) {
-        // If a language is saved in localStorage, use it
-        if (savedLanguage !== i18n.language) {
-          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
-        }
-      } else {
-        // If no language is saved, use the default language
-        localStorage.setItem('language', 'en');
-        toast.info(t('default_language_retrieved')); // Show default language message
+      // const savedLanguage = localStorage.getItem('language');
+      const savedLanguage = StorageServer.getLanguage();
+      if (savedLanguage !== i18n.language) {
+        i18n.changeLanguage(savedLanguage); // Change language only if different from current one
       }
       setLanguageInitialized(true); // Mark language initialization as done
     }
   }, [i18n, t, languageInitialized]);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
-      }
-      if (config.language && config.language !== i18n.language) {
-        i18n.changeLanguage(config.language);
-      }
-      setLanguageInitialized(true);
-
-      if (config.onlineMode != undefined) {
-        setIsOnline(config.onlineMode);
-      }
-
-      // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
-      if (
-        config.endpoint === 'No endpoint saved' ||
-        config.endpoint === undefined
-      ) {
+    const loadSettings = async () => {
+      const { endpoint, onlineMode } = await ConfigService.getEndpointAndOnlineMode(t);
+      setNewApiEndpoint(endpoint);
+      setIsOnline(onlineMode);
+  
+      if (endpoint === 'No endpoint saved') {
         await promptForEndpoint(
           refreshDatasets,
           t,
           MySwal,
           handleSaveAndFetchEndpoint,
-          getConfig,
-          saveConfig,
         );
       }
     };
-    fetchConfig();
-  }, [i18n]);
+  
+    loadSettings();
+  }, []);
+  
 
   // Toggles dropdown state
   const toggleDropdown = async (buttonName: string) => {
     if (buttonName === 'settings') {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
+      // const config = await getConfig();
+      const endpoint = await ConfigService.getEndpoint(t);
+      if (endpoint) {
+        setNewApiEndpoint(endpoint);
       }
     }
     setDropdownState((prevState) => ({
@@ -154,17 +138,20 @@ const SettingsPanel: React.FC<{
           toast.success(t('collections_fetched_saved'));
         }
 
-        // Save the new endpoint to config file
-        const config = await getConfig();
-        // If an error occurred during fetching config, show error and do not save changes
-        if (config.error) {
-          toast.error(t('error_fetching_config_file'));
-          return false;
-        }
+        // // Save the new endpoint to config file
+        // const config = await getConfig();
+        // // If an error occurred during fetching config, show error and do not save changes
+        // if (config.error) {
+        //   toast.error(t('error_fetching_config_file'));
+        //   return false;
+        // }
 
-        config.endpoint = endpointUrl;
-        config.loadedDataset = { id: '', title: '' };
-        await saveConfig(config);
+        // config.endpoint = endpointUrl;
+        // config.loadedDataset = { id: '', title: '' };
+        // await saveConfig(config);
+
+        await ConfigService.setEndpointAndLoadedDataset(endpointUrl, t);
+
 
         refreshDatasets(); // Trigger the refresh
 
@@ -182,7 +169,8 @@ const SettingsPanel: React.FC<{
 
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
+    // localStorage.setItem('language', language);
+    StorageServer.setLanguage(language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -201,9 +189,10 @@ const SettingsPanel: React.FC<{
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
         // reset localStorage properties to default properties
-        localStorage.setItem('language', 'en');
-        localStorage.setItem('playbackSpeed', '1');
-        localStorage.setItem('sliderValue', '0');
+        // localStorage.setItem('language', 'en');
+        // localStorage.setItem('playbackSpeed', '1');
+        // localStorage.setItem('sliderValue', '0');
+        StorageServer.resetDefaults();
         setIsPlaying(false);
         setSliderValue(0);
         setSpeed(1);
@@ -246,8 +235,6 @@ const SettingsPanel: React.FC<{
             t,
             MySwal,
             handleSaveAndFetchEndpoint,
-            getConfig,
-            saveConfig,
           );
           setMetadataVisible(false); // Hide metadata container
         } catch (error: any) {
@@ -262,23 +249,26 @@ const SettingsPanel: React.FC<{
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
     setIsOnline(onlineMode);
 
-    const config = await getConfig();
-    // If an error occurred during fetching config, show error and do not save changes
-    if (config.error) {
-      toast.error(t('error_fetching_config_file'));
-      return false;
-    }
-    config.onlineMode = onlineMode;
-    await saveConfig(config);
+    // const config = await getConfig();
+    // // If an error occurred during fetching config, show error and do not save changes
+    // if (config.error) {
+    //   toast.error(t('error_fetching_config_file'));
+    //   return false;
+    // }
+    // config.onlineMode = onlineMode;
+    // await saveConfig(config);
+    await ConfigService.setOnlineMode(onlineMode, t)
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
   const resetConfig = async () => {
     try {
-      localStorage.setItem('language', 'en');
-      localStorage.setItem('playbackSpeed', '1');
-      localStorage.setItem('selectedDatasetId', '');
-      localStorage.setItem('sliderValue', '0');
+      // localStorage.setItem('language', 'en');
+      // localStorage.setItem('playbackSpeed', '1');
+      // localStorage.setItem('selectedDatasetId', '');
+      // localStorage.setItem('sliderValue', '0');
+      StorageServer.factoryResetDefaults();
+      await ConfigService.setEndpointAndLoadedDataset("No endpoint saved", t);
       setIsPlaying(false);
       setSliderValue(0);
       setLayer('default');
@@ -306,8 +296,6 @@ const SettingsPanel: React.FC<{
     t: any,
     MySwal: any,
     handleSaveAndFetchEndpoint: any,
-    getConfig: any,
-    saveConfig: any,
   ) => {
     let success = false;
     while (!success) {
@@ -324,21 +312,25 @@ const SettingsPanel: React.FC<{
 
       if (inputResult.isConfirmed) {
         success = await handleSaveAndFetchEndpoint(inputResult.value);
-      } else {
-        const config = await getConfig();
-        // If an error occurred during fetching config, show error and do not save changes
-        if (config.error) {
-          toast.error(t('error_fetching_config_file'));
-          break;
-        }
-
-        config.endpoint = 'No endpoint saved';
-        config.loadedDataset = { id: '', title: '' };
-        await saveConfig(config);
-
+      } else{
         refreshDatasets(); // Trigger the refresh
         break; // Exit the loop if the user cancels the input dialog
       }
+      // else {
+      //   const config = await getConfig();
+      //   // If an error occurred during fetching config, show error and do not save changes
+      //   if (config.error) {
+      //     toast.error(t('error_fetching_config_file'));
+      //     break;
+      //   }
+
+      //   config.endpoint = 'No endpoint saved';
+      //   config.loadedDataset = { id: '', title: '' };
+      //   await saveConfig(config);
+
+      //   refreshDatasets(); // Trigger the refresh
+      //   break; // Exit the loop if the user cancels the input dialog
+      // }
     }
   };
 
@@ -371,10 +363,12 @@ const SettingsPanel: React.FC<{
 
   useEffect(() => {
     const fetchConfig = async () => {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
-      }
+      // const config = await getConfig();
+      const endpoint = await ConfigService.getEndpoint(t);
+      setNewApiEndpoint(endpoint);
+      // if (endpoint) {
+      //   setNewApiEndpoint(endpoint);
+      // }
     };
     fetchConfig();
   }, [dropdownState.activeButton === 'settings']);

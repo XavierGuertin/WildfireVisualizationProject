@@ -14,6 +14,7 @@ import './layout.css';
 import { MapProvider } from './context/MapContext';
 import { fetchMetaData } from './services/api';
 import { ToastContainer } from 'react-toastify';
+import { StorageServer } from './model/storage';
 
 const ClientLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -29,7 +30,8 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({
 
   // Handle dataset selection (no loading bar here)
   const handleDatasetClick = (dataset: DatasetMetadata) => {
-    const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    // const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+    const selectedDatasetId = StorageServer.getSelectedDatasetId();
     if (selectedDatasetId !== dataset.id) {
       setSelectedDataset(dataset); // Just update the selected dataset
       setMetadataVisible(true); // Show metadata container
@@ -41,7 +43,8 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({
   // Handles loading the metadata if dataset is already selected on load
   useEffect(() => {
     const onLoadDataset = async () => {
-      const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+      // const selectedDatasetId = localStorage.getItem('selectedDatasetId');
+      const selectedDatasetId = StorageServer.getSelectedDatasetId();
       if (selectedDatasetId !== null && selectedDatasetId !== '') {
         const dataset = await fetchMetaData(selectedDatasetId);
         setSelectedDataset(dataset);

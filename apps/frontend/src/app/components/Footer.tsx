@@ -13,6 +13,7 @@ import {
   fetchItemIds,
 } from '../services/api';
 import { changeLayer, toggleAssetLayer } from './MapView';
+import { StorageServer } from '../model/storage';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -76,9 +77,10 @@ const Footer = () => {
     if (typeof window !== 'undefined') {
       try {
         // Load speed from localStorage if available
-        const savedSpeed = localStorage.getItem('playbackSpeed');
+        // const savedSpeed = localStorage.getItem('playbackSpeed');
+        const savedSpeed = StorageServer.getPlaybackSpeed();
         if (savedSpeed) {
-          setSpeed(parseFloat(savedSpeed));
+          setSpeed(savedSpeed);
         } else {
           toast.info(t('default_speed_retrieved'), {
             toastId: 'speed-default',
@@ -96,7 +98,8 @@ const Footer = () => {
     if (speedInitialized && typeof window !== 'undefined') {
       try {
         // Save speed to localStorage whenever it changes
-        localStorage.setItem('playbackSpeed', speed.toString());
+        // localStorage.setItem('playbackSpeed', speed.toString());
+        StorageServer.setPlaybackSpeed(speed);
       } catch (error) {
         console.error('Error saving playback speed to localStorage:', error);
       }
@@ -136,7 +139,8 @@ const Footer = () => {
     const map = mapRef.current as Map;
     if (timeStamps.length > 0) {
       changeLayer(map, false, timeStamps[finalValue]);
-      localStorage.setItem('sliderValue', finalValue.toString());
+      // localStorage.setItem('sliderValue', finalValue.toString());
+      StorageServer.setSliderValue(finalValue);
     }
   };
 
@@ -148,7 +152,8 @@ const Footer = () => {
         setSliderValue((prev) => {
           const newValue = prev < timeStamps.length - 1 ? prev + 1 : 0;
           changeLayer(map, false, timeStamps[newValue]);
-          localStorage.setItem('sliderValue', newValue.toString());
+          // localStorage.setItem('sliderValue', newValue.toString());
+          StorageServer.setSliderValue(newValue);
           return newValue;
         });
       }, 4500 / speed);
@@ -181,7 +186,8 @@ const Footer = () => {
     const map = mapRef.current as Map;
     setIsPlaying(false);
     setSliderValue(0);
-    localStorage.setItem('sliderValue', '0');
+    // localStorage.setItem('sliderValue', '0');
+    StorageServer.setSliderValue(0);
     changeLayer(map, false, timeStamps[0]);
   };
 
@@ -226,10 +232,11 @@ const Footer = () => {
    */
   const initializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
-    const stringCurrentSliderValue = localStorage.getItem('sliderValue');
+    // const stringCurrentSliderValue = localStorage.getItem('sliderValue');
+    const stringCurrentSliderValue = StorageServer.getSliderValue();
     // Check if there's a saved slider value in localStorage, otherwise default to 0
     const currentSliderValue = stringCurrentSliderValue
-      ? parseInt(stringCurrentSliderValue)
+      ? stringCurrentSliderValue
       : 0;
     if (timestampsResponse) {
       await setTimeStamps(timestampsResponse);
