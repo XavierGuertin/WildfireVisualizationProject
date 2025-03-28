@@ -290,6 +290,7 @@ public class DataService {
         .map(collection -> Map.of(
           "key", collection.get("key"),
           "id", collection.get("id"),
+          "title", collection.get("title") == null ? "" : collection.get("title"),
           "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
         ))
         .collect(Collectors.toList());
@@ -328,6 +329,7 @@ public class DataService {
         .map(collection -> Map.of(
           "key", collection.get("key"),
           "id", collection.get("id"),
+          "title", collection.get("title") == null ? "" : collection.get("title"),
           "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
         ))
         .collect(Collectors.toList());
