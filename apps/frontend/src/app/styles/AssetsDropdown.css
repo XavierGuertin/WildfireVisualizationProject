@@ -1,0 +1,161 @@
+/* Weather Dropdown */
+.weather-dropdown {
+  display: block;
+  max-width: 100%;
+  background-color: white;
+  color: #00447e;
+  border: none;
+  border-radius: 4px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 12px;
+  box-shadow: none;
+  transition:
+    background-color 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+}
+
+/* Menu Header (Dropdown Button) */
+.menuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: white;
+  color: #00447e;
+  border: 2px solid #00447e;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: 
+    background-color 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box; /* Added to include padding in width calculation */
+}
+
+/* Dropdown Icon */
+.menuHeader .dropdown-icon {
+  font-size: 1.2em;
+  color: #00447e;
+  margin-left: auto;
+}
+
+/* Dropdown Content */
+.weather-dropdown-menu {
+  width: 100%;
+  background: white;
+  border-radius: 6px;
+  box-shadow: none;
+  z-index: 10;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+/* Assets List Container (Scrollable) */
+.assets-list-container {
+  position: relative;
+  height: 120px;
+  overflow-y: auto;
+  padding: 6px 0;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+}
+
+
+/* Custom Scrollbar */
+.assets-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assets-list-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.assets-list-container::-webkit-scrollbar-thumb {
+  background: #00447e;
+  border-radius: 10px;
+}
+
+/* Individual Asset Buttons */
+.layerButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 95%;
+  background-color: white;
+  color: #00447e;
+  border: 2px solid #00447e;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 4px;
+  transition:
+    background-color 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+  gap: 10px;
+}
+
+/* Asset Button Hover Effect */
+.layerButton:hover {
+  background-color: #e6f2ff;
+  transform: scale(1.02);
+}
+
+/* Selected Layer (Active State) */
+.layerButton:active {
+  background-color: #00447e;
+  color: white;
+}
+
+/* Disabled Asset */
+.layerButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background-color: white;
+}
+
+/* Asset Button Icons */
+.layerButtonIcon {
+  font-size: 1.2em;
+  color: inherit;
+}
+
+/* Dataset Id span */
+.loadedAssetDataset {
+  background-color: #4caf50;
+  color: white;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin: 0 10px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.no-layers-message {
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
+}

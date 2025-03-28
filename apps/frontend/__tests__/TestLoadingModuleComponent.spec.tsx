@@ -8,7 +8,7 @@ describe('Test LoadingModule component', () => {
   it('should render with initial progress', () => {
     render(<LoadingModule progress={10} isVisible={true} datasetBeingLoaded={"dataset 1"}/>);
     expect(screen.getByText(/10%/)).toBeInTheDocument();
-    expect(screen.getByText(/Loading dataset/)).toBeInTheDocument();
+    expect(screen.getByText(/loading dataset/i)).toBeInTheDocument();
     expect(screen.getByText(/dataset 1/)).toBeInTheDocument();
   });
 

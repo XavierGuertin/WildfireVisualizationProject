@@ -1,28 +1,57 @@
+//Avoid failing the test when config saving doesn't work on E2E pipeline
+Cypress.on('uncaught:exception', (err, runnable) => {
+  console.error('Uncaught Exception:', err);
+  return false;
+});
+
 describe('metadata', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000');
+    cy.viewport(1920, 1080);
 
-    // const dataset = cy
-    //   .get('[data-testid=dataset-button-1]', { timeout: 5000 })
-    //   .first();
-    // dataset.click();
-    // cy.get('.metadata-container', { timeout: 10000 });
+    //Factory Reset before the test to avoid issue with popup not appearing after initial load
+    cy.get("[data-testid=reset-dropdown-button]").click({force: true})
+    cy.contains('button', "Factory Reset").click({force: true})
+    cy.wait(5000);
+    cy.get('button.swal2-confirm').should('exist').click()
+    cy.wait(2000);  //Wait for the endpoint url to pop up
+
+    //Retrieve input the collections url into the input field and click on save
+    cy.get("#swal2-input").as("url_input");
+    cy.get('@url_input').clear().type(Cypress.env("COLLECTIONS_URL"));
+    cy.get('button.swal2-confirm').should('exist').click()
+
+    //Make sure notfication of success appears
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.wait(2000)
   });
+
   it('loads', () => {
-    // cy.get('.metadata-container').should('have.length', 1);
-    // cy.get('.metadata-container').first().should('be.visible');
+
+    //Select a dataset
+    cy.get('.dataset-button').first().click({force:true})
+
+    //Check to make sure all metadata exists
+    cy.get('[data-testid=dataset-description]').invoke('text').should('not.be.empty');
+    cy.get('[data-testid=dataset-format]').invoke('text').should('not.be.empty');
+    cy.get('[data-testid=dataset-processes]').invoke('text').should('not.be.empty');
+    cy.get('[data-testid=dataset-datasource]').invoke('text').should('not.be.empty');
+
   });
   it('collapses', () => {
-    // cy.get('.metadata-container').first().should('be.visible');
-    //
-    // //Click on the expanded box
-    // cy.get('[data-testid=name-div]').click();
-    //
-    // cy.get('[data-testid=collapsedMetaData]').should('be.visible');
-    //
-    // //Click on collapsed box
-    // cy.get('[data-testid=collapsedMetaData]').click();
-    //
-    // cy.get('.metadata-container').first().should('be.visible');
+
+    //Select a dataset
+    cy.get('.dataset-button').first().click({force:true})
+
+    //Check if metadata container is not collapsed and click it
+    cy.get('.metadata-container').should('exist')
+    cy.get('[data-testid=name-div]').click({force:true})
+
+    //Check if metadata container is collapsed and click it
+    cy.get('[data-testid=collapsedMetaData]').should('exist')
+    cy.get('[data-testid=collapsedMetaData]').click({force:true})
+
+    //Check if metadata container is not collapsed
+    cy.get('.metadata-container').should('exist')
   });
 });

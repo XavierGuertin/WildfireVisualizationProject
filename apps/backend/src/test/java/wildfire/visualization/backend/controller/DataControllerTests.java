@@ -728,36 +728,37 @@ class DataControllerTests {
     String itemId = "testItem";
 
     // We can't verify execution due to async, but ensure the method is called
-    doNothing().when(dataService).processItemAssets(anyString(), anyString());
+    doNothing().when(dataService).processItemAssets(anyString());
 
     // Act & Assert
-    mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
-      .andExpect(status().isOk())
-      .andExpect(content().string("Processing started in the background. Check logs for completion."));
+    mockMvc.perform(get("/api/load-assets/{collectionId}", collectionId, itemId))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
     // Give async execution a brief moment (useful for debugging)
     Thread.sleep(100);
 
-    verify(dataService, times(1)).processItemAssets(collectionId, itemId);
+    verify(dataService, times(1)).processItemAssets(collectionId);
   }
 
   @Test
   void loadAssets_Failure_ShouldStillReturnSuccess() throws Exception {
     // Arrange
     String collectionId = "testCollection";
-    String itemId = "testItem";
 
-    doThrow(new RuntimeException("Processing error")).when(dataService).processItemAssets(anyString(), anyString());
+    // Simulate an exception during async processing
+    doThrow(new RuntimeException("Processing error")).when(dataService).processItemAssets(anyString());
 
-    // Since the exception is caught in `CompletableFuture.runAsync()`, the API should still return success.
-    mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
-      .andExpect(status().isOk()) // Still returns success because the exception is async
-      .andExpect(content().string("Processing started in the background. Check logs for completion."));
+    // Act & Assert
+    mockMvc.perform(get("/api/load-assets/{collectionId}", collectionId))
+        .andExpect(status().isOk()) // Still returns 200 OK since exception is async
+        .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
-    // Give async execution a brief moment
+    // Optional: Give async execution a brief moment
     Thread.sleep(100);
 
-    verify(dataService, times(1)).processItemAssets(collectionId, itemId);
+    // Verify method was still called
+    verify(dataService, times(1)).processItemAssets(collectionId);
   }
 
   @Test
@@ -769,31 +770,29 @@ class DataControllerTests {
     // Mock CompletableFuture to simulate an exception in async execution
     try (MockedStatic<CompletableFuture> mockedCompletableFuture = mockStatic(CompletableFuture.class)) {
       mockedCompletableFuture.when(() -> CompletableFuture.runAsync(any(Runnable.class)))
-        .thenThrow(new RuntimeException("Async processing error"));
+          .thenThrow(new RuntimeException("Async processing error"));
 
       // Act & Assert
-      mockMvc.perform(get("/api/load-assets/{collectionId}/{itemId}", collectionId, itemId))
-        .andExpect(status().isInternalServerError())
-        .andExpect(content().string("Failed to start processing."));
+      mockMvc.perform(get("/api/load-assets/{collectionId}", collectionId, itemId))
+          .andExpect(status().isInternalServerError())
+          .andExpect(content().string("Failed to start processing."));
     }
   }
-
 
   @Test
   void getLoadedLayers_Success() throws Exception {
     // Arrange
     List<Map<String, Object>> mockLayers = List.of(
-      Map.of("layer", "layer1"),
-      Map.of("layer", "layer2")
-    );
+        Map.of("layer", "layer1"),
+        Map.of("layer", "layer2"));
 
     when(dataService.getLoadedLayers()).thenReturn(mockLayers);
 
     // Act & Assert
     mockMvc.perform(get("/api/get-loaded-layers"))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(content().json(objectMapper.writeValueAsString(mockLayers)));
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockLayers)));
 
     verify(dataService, times(1)).getLoadedLayers();
   }
@@ -805,10 +804,10 @@ class DataControllerTests {
 
     // Act & Assert
     mockMvc.perform(get("/api/get-loaded-layers"))
-      .andExpect(status().isBadRequest())
-      .andExpect(jsonPath("$.status").value(400))
-      .andExpect(jsonPath("$.error").value("Data Error"))
-      .andExpect(jsonPath("$.message").value("Failed to fetch loaded layers"));
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Failed to fetch loaded layers"));
 
     verify(dataService, times(1)).getLoadedLayers();
   }
@@ -820,8 +819,8 @@ class DataControllerTests {
 
     // Act & Assert
     mockMvc.perform(post("/api/reset-item-assets"))
-      .andExpect(status().isOk())
-      .andExpect(content().string("Item asset layers reset successfully."));
+        .andExpect(status().isOk())
+        .andExpect(content().string("Item asset layers reset successfully."));
 
     // Verify interaction
     verify(dataService, times(1)).itemAssetsReset();
@@ -834,12 +833,70 @@ class DataControllerTests {
 
     // Act & Assert
     mockMvc.perform(post("/api/reset-item-assets"))
-      .andExpect(status().isInternalServerError())
-      .andExpect(content().string("Failed to reset item asset layers."));
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("Failed to reset item asset layers."));
 
     // Verify interaction
     verify(dataService, times(1)).itemAssetsReset();
   }
 
-}
+  @Test
+  void loadAssetLayers_shouldReturnOk_whenProcessingStarts() throws Exception {
+    // Given
+    String itemId = "wildfire_item_001";
 
+    // When
+    mockMvc.perform(get("/api/load-asset-layers/{itemId}", itemId)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Processing started in the background. Check logs for completion."));
+
+    // Then
+    verify(dataService).processItemAssetsRefresh(itemId);
+  }
+
+  @Test
+  void loadAssetLayers_shouldReturnServerError_whenExceptionThrown() throws Exception {
+    // Given
+    String itemId = "wildfire_item_001";
+    doThrow(new RuntimeException("Simulated failure")).when(dataService).processItemAssetsRefresh(itemId);
+
+    // When
+    mockMvc.perform(get("/api/load-asset-layers/{itemId}", itemId)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("Failed to start processing."));
+  }
+
+  @Test
+  void fetchItemIdsOrderedByTimestamp_Success() throws Exception {
+    // Arrange
+    List<String> mockIds = List.of("item-001", "item-002", "item-003");
+    when(dataService.getItemsIdsOrderedByTimestamp()).thenReturn(mockIds);
+
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-item-ids"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(objectMapper.writeValueAsString(mockIds)));
+
+    verify(dataService, times(1)).getItemsIdsOrderedByTimestamp();
+  }
+
+  @Test
+  void fetchItemIdsOrderedByTimestamp_Failure() throws Exception {
+    // Arrange
+    when(dataService.getItemsIdsOrderedByTimestamp())
+        .thenThrow(new DataException("Error retrieving item IDs"));
+
+    // Act & Assert
+    mockMvc.perform(get("/api/fetch-item-ids"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Data Error"))
+        .andExpect(jsonPath("$.message").value("Error retrieving item IDs"));
+
+    verify(dataService, times(1)).getItemsIdsOrderedByTimestamp();
+  }
+
+}

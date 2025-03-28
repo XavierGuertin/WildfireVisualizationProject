@@ -33,19 +33,32 @@ public class DataController {
     this.dataService = dataService;
   }
 
-  @GetMapping("/api/load-assets/{collectionId}/{itemId}")
+  @GetMapping("/api/load-assets/{collectionId}")
   public ResponseEntity<String> loadAssets(
-    @PathVariable String collectionId,
-    @PathVariable String itemId
+    @PathVariable String collectionId
   ) {
-    logger.info("Received request to load assets asynchronously for collection: {}, item: {}", collectionId, itemId);
+    logger.info("Received request to load assets asynchronously for collection: {}", collectionId);
     try {
       // Run the processing task asynchronously
-      CompletableFuture.runAsync(() -> dataService.processItemAssets(collectionId, itemId));
+      CompletableFuture.runAsync(() -> dataService.processItemAssets(collectionId));
       // Return immediate response to frontend
       return ResponseEntity.ok("Processing started in the background. Check logs for completion.");
     } catch (Exception e) {
-      logger.error("Error processing assets for item: {} in collection: {}", itemId, collectionId, e);
+      logger.error("Error processing assets for item: {} in collection: {}", collectionId, e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start processing.");
+    }
+  }
+
+  @GetMapping("/api/load-asset-layers/{itemId}")
+  public ResponseEntity<String> loadAssetLayers(@PathVariable String itemId) {
+    logger.info("Received request to load asset layers asynchronously for item: {}", itemId);
+    try {
+      // Run the processing task asynchronously
+      dataService.processItemAssetsRefresh(itemId);
+      // Return immediate response to frontend
+      return ResponseEntity.ok("Processing started in the background. Check logs for completion.");
+    } catch (Exception e) {
+      logger.error("Error processing asset layers for item: {}", itemId, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to start processing.");
     }
   }
@@ -195,6 +208,20 @@ public class DataController {
     logger.info("Received request to fetch items' timestamps");
     List<String> timestamps = dataService.fetchItemsTimestamps();
     logger.debug("Successfully fetched items's timestamps");
+    return ResponseEntity.ok(timestamps);
+  }
+
+  /**
+   * Endpoint responsible for fetching timestamps of items.
+   *
+   * @return ResponseEntity containing a list of item timestamps or an error
+   *         message.
+   */
+  @GetMapping("/api/fetch-item-ids")
+  public ResponseEntity<List<String>> getItemsIdsOrderedByTimestamp() {
+    logger.info("Received request to fetch items' ids");
+    List<String> timestamps = dataService.getItemsIdsOrderedByTimestamp();
+    logger.debug("Successfully fetched items's ids");
     return ResponseEntity.ok(timestamps);
   }
 

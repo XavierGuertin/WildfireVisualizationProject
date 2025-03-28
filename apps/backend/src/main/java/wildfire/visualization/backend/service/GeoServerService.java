@@ -1,15 +1,15 @@
 package wildfire.visualization.backend.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 
 @Service
 public class GeoServerService {
@@ -33,6 +33,8 @@ public class GeoServerService {
   private String geoserverDownloadDir;
 
   private final RestTemplate restTemplate = new RestTemplate();
+
+  private static final Logger logger = LoggerFactory.getLogger(GeoServerService.class);
 
   /**
    * Creates and returns HTTP headers with basic authentication for GeoServer interaction.
@@ -109,11 +111,13 @@ public class GeoServerService {
   public boolean unregisterLayer(String layerName) {
     String url = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
 
-    boolean apiSuccess = sendDeleteRequest(url);
-    if (apiSuccess) {
-      deleteTifFile(layerName);
+    try{
+      boolean apiSuccess = sendDeleteRequest(url);
+      return apiSuccess;
+    } catch (Exception e) {
+      logger.error("Error unregistering layer: " + layerName + ". " + e.getMessage());
+      return false;
     }
-    return apiSuccess;
   }
 
   /**
@@ -135,17 +139,17 @@ public class GeoServerService {
    *
    * @param layerName the name of the file to be deleted (without extension)
    */
-  private void deleteTifFile(String layerName) {
+  public void deleteTifFile(String layerName) {
     try {
       Path filePath = Paths.get(geoserverDownloadDir, layerName + ".tif");
       if (Files.exists(filePath)) {
         Files.delete(filePath);
-        System.out.println("Deleted: " + filePath.toAbsolutePath());
+        logger.info("Deleted: " + filePath.toAbsolutePath());
       } else {
-        System.out.println("File not found: " + filePath.toAbsolutePath());
+        logger.error("File not found: " + filePath.toAbsolutePath());
       }
     } catch (Exception e) {
-      System.err.println("Error deleting file: " + layerName + ".tif. " + e.getMessage());
+      logger.error("Error deleting file: " + layerName + ".tif. " + e.getMessage());
     }
   }
 }

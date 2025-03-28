@@ -35,6 +35,7 @@ module.exports = {
     "^ol/proj.js$": "<rootDir>/__mocks__/ol/proj.js",
     "^ol/layer/Tile$": "<rootDir>/__mocks__/ol/layer/Tile.js",
     "^ol/layer/Vector$": "<rootDir>/__mocks__/ol/layer/Vector.js",
+    "^ol/layer/Image$": "<rootDir>/__mocks__/ol/layer/Image.js",
     "^ol/style/Style$": "<rootDir>/__mocks__/ol/style/Style.js",
     "^ol/style/Stroke$": "<rootDir>/__mocks__/ol/style/Stroke.js",
     "^ol/style/Fill$": "<rootDir>/__mocks__/ol/style/Fill.js",

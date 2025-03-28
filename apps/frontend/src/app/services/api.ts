@@ -1,3 +1,4 @@
+import i18n from '../resources/i18n';
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL as string;
 
 /**
@@ -12,6 +13,7 @@ export const returnListOfCollectionsFromEndpoint = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }
@@ -24,13 +26,13 @@ export const returnListOfCollectionsFromEndpoint = async (
 
     const response = await fetch(url.toString());
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
     return await response.json();
   } catch (error: any) {
-    console.error('Failed to fetch collections:', error.message);
-    return { error: 'Failed to fetch data' };
+    console.error(i18n.t('error_fetching_collections'), error.message);
+    return { error: i18n.t('error_failed_fetch_data') };
   }
 };
 
@@ -47,8 +49,8 @@ export const fetchCollectionsFromEndpoint = async (
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Error fetching collections:', error);
-    throw new Error(`Failed to fetch data: ${error.message}`);
+    console.error(i18n.t('error_fetching_collections'), error);
+    throw new Error(`${i18n.t('error_failed_fetch_data')}: ${error.message}`);
   }
 };
 
@@ -65,8 +67,8 @@ export const verifyIfEndpointHasCollections = async (
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Error checking collections:', error);
-    throw new Error(`Failed to check collections: ${error.message}`);
+    console.error(i18n.t('error_checking_collections'), error);
+    throw new Error(`${i18n.t('error_checking_collections')}: ${error.message}`);
   }
 };
 
@@ -74,13 +76,13 @@ export const resetCollections = async (): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/reset-collections`);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Error resetting collections:', error);
-    throw new Error(`Error resetting collections: ${error.message}`);
+    console.error(i18n.t('error_resetting_collections'), error);
+    throw new Error(`${i18n.t('error_resetting_collections')}: ${error.message}`);
   }
 };
 
@@ -88,13 +90,13 @@ export const resetItems = async (): Promise<string> => {
   try {
     const response = await fetch(`${BASE_URL}/api/reset-items`);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Error resetting items:', error);
-    throw new Error(`Error resetting items: ${error.message}`);
+    console.error(i18n.t('error_resetting_items'), error);
+    throw new Error(`${i18n.t('error_resetting_items')}: ${error.message}`);
   }
 };
 
@@ -140,8 +142,8 @@ export const fetchMetaData = async (collectionId: string): Promise<any> => {
     };
     return metadata;
   } catch (error: any) {
-    console.error('Error fetching MetaData:', error);
-    return { error: 'Failed to fetch MetaData' };
+    console.error(i18n.t('error_fetching_metadata'), error);
+    return { error: i18n.t('error_fetching_metadata') };
   }
 };
 
@@ -154,14 +156,13 @@ export const returnCollectionsFromEndpoint = async (): Promise<
 > => {
   try {
     const response = await fetch(`${BASE_URL}/api/get-collections`);
-    console.log('Fetching from: ', `${BASE_URL}/api/get-collections`);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching collections:', error);
-    return { error: 'Failed to fetch data' };
+    console.error(i18n.t('error_fetching_collections'), error);
+    return { error: i18n.t('error_failed_fetch_data') };
   }
 };
 
@@ -179,6 +180,7 @@ export const fetchCollectionsFromEndpointByName = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }
@@ -192,13 +194,13 @@ export const fetchCollectionsFromEndpointByName = async (
 
     const response = await fetch(url.toString());
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
     return await response.json();
   } catch (error: any) {
-    console.error('Failed to fetch collections sorted by name:', error.message);
-    return { error: 'Failed to fetch data by name' };
+    console.error(i18n.t('error_fetching_data_by_name'), error.message);
+    return { error: i18n.t('error_fetching_data_by_name') };
   }
 };
 
@@ -216,6 +218,7 @@ export const fetchCollectionsFromEndpointByDate = async (
   | {
   id: string;
   key: number;
+  title: string;
   bbox: number[][];
 }[]
   | { error: string }
@@ -229,13 +232,13 @@ export const fetchCollectionsFromEndpointByDate = async (
 
     const response = await fetch(url.toString());
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
     return await response.json();
   } catch (error: any) {
-    console.error('Failed to fetch collections sorted by date:', error.message);
-    return { error: 'Failed to fetch data by date' };
+    console.error(i18n.t('error_fetching_data_by_date'), error.message);
+    return { error: i18n.t('error_fetching_data_by_date') };
   }
 };
 
@@ -248,8 +251,8 @@ export const fetchItems = async (collectionId: string): Promise<any> => {
     }
     return await response.text();
   } catch (error: any) {
-    console.error('Error fetching Items:', error);
-    return { error: 'Failed to fetch Items' };
+    console.error(i18n.t('error_fetching_items'), error);
+    return { error: i18n.t('error_fetching_items') };
   }
 };
 
@@ -277,8 +280,8 @@ export const fetchProgress = async (
 
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching progress:', error.message);
-    return { error: 'Failed to fetch progress' };
+    console.error(i18n.t('error_fetching_progress'), error.message);
+    return { error: i18n.t('error_fetching_progress') };
   }
 };
 
@@ -291,8 +294,22 @@ export const fetchTimestamps = async (): Promise<string[]> => {
     }
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching timestamps:', error.message);
-    throw new Error(`Failed to fetch timestamps: ${error.message}`);
+    console.error(i18n.t('error_fetching_timestamps'), error.message);
+    throw new Error(`${i18n.t('error_fetching_timestamps')}: ${error.message}`);
+  }
+};
+
+export const fetchItemIds = async (): Promise<string[]> => {
+  try {
+    const url = `${BASE_URL}/api/fetch-item-ids`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error(i18n.t('error_fetching_ids'), error.message);
+    throw new Error(`${i18n.t('error_fetching_ids')}: ${error.message}`);
   }
 };
 
@@ -310,8 +327,8 @@ export const fetchItem = async (
 
     return data;
   } catch (error: any) {
-    console.error('Error fetching MetaData:', error);
-    return { error: 'Failed to fetch MetaData' };
+    console.error(i18n.t('error_fetching_metadata'), error);
+    return { error: i18n.t('error_fetching_metadata') };
   }
 };
 
@@ -326,8 +343,8 @@ export const insertDatalayerView = async (
       throw new Error(`Error: ${response.statusText}`);
     }
   } catch (error: any) {
-    console.error('Error inserting View:', error);
-    return { error: 'Failed to insert View' };
+    console.error(i18n.t('error_inserting_view'), error);
+    return { error: i18n.t('error_inserting_view') };
   }
 };
 
@@ -341,8 +358,8 @@ export const resetDatalayerView = async (): Promise<any> => {
       throw new Error(`Error: ${response.statusText}`);
     }
   } catch (error: any) {
-    console.error('Error resetting Datalayer View:', error);
-    return { error: 'Failed to reset Datalayer View' };
+    console.error(i18n.t('error_resetting_datalayer_view'), error);
+    return { error: i18n.t('error_resetting_datalayer_view') };
   }
 };
 
@@ -359,22 +376,22 @@ export const verifyInternetConnection = async (
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Failed to verify connection: ', error);
-    throw new Error(`Failed to verify connection: ${error.message}`);
+    console.error(i18n.t('error_verifying_connection'), error);
+    throw new Error(`${i18n.t('error_verifying_connection')}: ${error.message}`);
   }
 };
 
-export const loadAssets = async (collectionId: string, itemId: string) : Promise<any> => {
+export const loadAssets = async (collectionId: string) : Promise<any> => {
   try {
-    const url = `${BASE_URL}/api/load-assets/${collectionId}/${itemId}`;
+    const url = `${BASE_URL}/api/load-assets/${collectionId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error: ${response.statusText}`);
     }
     return await response.text();
   } catch (error: any) {
-    console.error('Error fetching assets:', error);
-    return { error: 'Failed to fetch assets' };
+    console.error(i18n.t('error_fetching_assets'), error);
+    return { error: i18n.t('error_fetching_assets') };
   }
 };
 
@@ -387,8 +404,8 @@ export const getLoadedLayers = async (): Promise<any> => {
     }
     return await response.json();
   } catch (error: any) {
-    console.error('Error fetching loaded layers:', error);
-    return { error: 'Failed to fetch loaded layers' };
+    console.error(i18n.t('error_fetching_loaded_layers'), error);
+    return { error: i18n.t('error_fetching_loaded_layers') };
   }
 };
 
@@ -399,13 +416,27 @@ export const resetItemAssets = async (): Promise<string | { error: string }> => 
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
     const message = await response.text();
     return message;
   } catch (error: any) {
-    console.error('Error resetting item assets:', error);
-    return { error: `Error resetting item assets: ${error.message}` };
+    console.error(i18n.t('error_resetting_item_assets'), error);
+    return { error: i18n.t('error_resetting_item_assets') + ': ' + error.message };
+  }
+};
+
+export const loadAssetLayers = async (itemId: string) : Promise<any> => {
+  try {
+    const url = `${BASE_URL}/api/load-asset-layers/${itemId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+    return await response.text();
+  } catch (error: any) {
+    console.error(i18n.t('error_fetching_assets'), error);
+    return { error: i18n.t('error_fetching_assets') };
   }
 };

@@ -1,28 +1,29 @@
 package wildfire.visualization.backend.repository;
 
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import wildfire.visualization.backend.exception.RepositoryException;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StacRepositoryTests {
@@ -302,15 +303,15 @@ class StacRepositoryTests {
   @Test
   void getAllCollectionsByName_Success_NoBbox() {
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString());
   }
 
@@ -318,8 +319,8 @@ class StacRepositoryTests {
   void getAllCollectionsByName_Success_WithBbox() {
     double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
@@ -327,7 +328,7 @@ class StacRepositoryTests {
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
 
@@ -831,103 +832,148 @@ class StacRepositoryTests {
   }
 
   @Test
-  void saveLayer_Success() {
-    // Arrange
-    String itemId = "test-item";
-    String collectionId = "test-collection";
-    String assetName = "test-asset";
-    String layerUrl = "http://test-layer.com";
+  void testSaveLayer_insertsCollectionItemAndAsset() {
+    stacRepository.saveLayer("item1", "col1", "asset1", "url1", 0, 100);
 
-    // Act
-    stacRepository.saveLayer(itemId, collectionId, assetName, layerUrl);
-
-    // Assert
-    verify(jdbcTemplate, times(1)).update(
-      argThat(query -> query.replaceAll("\\s+", " ").trim().equals(
-        "INSERT INTO ItemAssets (item_id, collection_id, asset_name, layer_url) VALUES (?, ?, ?, ?) ON CONFLICT (item_id, collection_id, asset_name) DO NOTHING;"
-      )),
-      eq(itemId), eq(collectionId), eq(assetName), eq(layerUrl)
-    );
-  }
-
-
-
-  @Test
-  void getLoadedLayers_Success() {
-    // Arrange
-    List<Map<String, Object>> expectedLayers = List.of(
-      Map.of("item_id", "item1", "collection_id", "collection1", "asset_name", "asset1", "layer_url", "http://layer1.com"),
-      Map.of("item_id", "item2", "collection_id", "collection2", "asset_name", "asset2", "layer_url", "http://layer2.com")
-    );
-
-    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets")).thenReturn(expectedLayers);
-
-    // Act
-    List<Map<String, Object>> actualLayers = stacRepository.getLoadedLayers();
-
-    // Assert
-    assertThat(actualLayers).isEqualTo(expectedLayers);
-    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
+    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Collections"), eq("col1"));
+    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Items"), eq("item1"), eq("col1"));
+    verify(jdbcTemplate).update(contains("INSERT INTO TIFF_Assets"), eq("item1"), eq("asset1"), eq("url1"), eq(0), eq(100));
   }
 
   @Test
-  void getLoadedLayers_EmptyResult() {
-    // Arrange
-    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets")).thenReturn(List.of());
+  void testGetLoadedLayers_returnsList() {
+    List<Map<String, Object>> mockResult = List.of(Map.of("asset_name", "asset1"));
+    when(jdbcTemplate.queryForList(anyString(), eq("item1"))).thenReturn(mockResult);
 
-    // Act
-    List<Map<String, Object>> actualLayers = stacRepository.getLoadedLayers();
+    List<Map<String, Object>> result = stacRepository.getLoadedLayers("item1");
 
-    // Assert
-    assertThat(actualLayers).isEmpty();
-    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).get("asset_name")).isEqualTo("asset1");
   }
 
   @Test
-  void getLoadedLayers_ThrowsException_WhenDatabaseError() {
-    // Arrange
-    when(jdbcTemplate.queryForList("SELECT * FROM ItemAssets"))
-      .thenThrow(new DataAccessException("Database error") {});
-
-    // Act & Assert
-    assertThatThrownBy(() -> stacRepository.getLoadedLayers())
-      .isInstanceOf(DataAccessException.class)
-      .hasMessageContaining("Database error");
-
-    verify(jdbcTemplate, times(1)).queryForList("SELECT * FROM ItemAssets");
-  }
-
-  @Test
-  void clearLayers_Success() {
-    // Act
+  void testClearLayers_deletesAllTables() {
     stacRepository.clearLayers();
 
-    // Assert
-    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets");
+    verify(jdbcTemplate).update("DELETE FROM TIFF_Assets");
+    verify(jdbcTemplate).update("DELETE FROM TIFF_Items");
+    verify(jdbcTemplate).update("DELETE FROM TIFF_Collections");
   }
 
   @Test
-  void clearLayers_ThrowsException_WhenDatabaseError() {
+  void testGetItemsWithAssets_returnsList() {
+    List<Map<String, Object>> mockResult = List.of(Map.of("item_id", "item1"));
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResult);
+
+    List<Map<String, Object>> result = stacRepository.getItemsWithAssets();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).get("item_id")).isEqualTo("item1");
+  }
+
+  @Test
+  void testDeleteItemAssetLayer_executesDelete() {
+    stacRepository.deleteItemAssetLayer("asset1", "item1");
+
+    verify(jdbcTemplate).update("DELETE FROM TIFF_Assets WHERE asset_name = ? AND item_id = ?", "asset1", "item1");
+  }
+
+  @Test
+  void testMarkAssetAsRegistered_executesUpdate() {
+    stacRepository.markAssetAsRegistered("item1", "asset1");
+
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = TRUE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
+  }
+
+  @Test
+  void testMarkAssetAsUnregistered_executesUpdate() {
+    stacRepository.markAssetAsUnregistered("item1", "asset1");
+
+    verify(jdbcTemplate).update("UPDATE TIFF_Assets SET is_registered = FALSE WHERE item_id = ? AND asset_name = ?",
+        "item1", "asset1");
+  }
+
+  @Test
+  void testDeleteItem_executesDelete() {
+    stacRepository.deleteItem("item1");
+
+    verify(jdbcTemplate).update("DELETE FROM TIFF_Items WHERE item_id = ?", "item1");
+  }
+
+  @Test
+  void testGetLoadedLayersRegistered_returnsList() {
+    List<Map<String, Object>> mockResult = List.of(Map.of("is_registered", true));
+    when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResult);
+
+    List<Map<String, Object>> result = stacRepository.getLoadedLayers();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).get("is_registered")).isEqualTo(true);
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_Success() {
     // Arrange
-    doThrow(new DataAccessException("Database error") {}).when(jdbcTemplate).update("DELETE FROM ItemAssets");
-
-    // Act & Assert
-    assertThatThrownBy(() -> stacRepository.clearLayers())
-      .isInstanceOf(DataAccessException.class)
-      .hasMessageContaining("Database error");
-
-    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets");
-  }
-
-  @Test
-  void deleteItemAssetLayer_Success() {
-    String layerName = "test-layer";
+    List<String> expectedIds = List.of("item1", "item2", "item3");
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class))).thenReturn(expectedIds);
 
     // Act
-    stacRepository.deleteItemAssetLayer(layerName);
+    List<String> result = stacRepository.getItemsIdsOrderedByTimestamp();
 
     // Assert
-    verify(jdbcTemplate, times(1)).update("DELETE FROM ItemAssets WHERE asset_name = ?", layerName);
+    assertThat(result).isEqualTo(expectedIds);
+    verify(jdbcTemplate).queryForList("SELECT id FROM pgstac.items ORDER BY datetime AT TIME ZONE 'UTC' ASC",
+        String.class);
   }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_ThrowsRepositoryException_OnDatabaseError() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), eq(String.class)))
+        .thenThrow(new DataAccessException("Simulated DB error") {
+        });
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getItemsIdsOrderedByTimestamp())
+        .isInstanceOf(RepositoryException.class)
+        .hasMessageContaining("Error fetching item IDs");
+
+    verify(jdbcTemplate).queryForList(anyString(), eq(String.class));
+  }
+
+  @Test
+  void getAllItems_returnsItemsForCollection() {
+    // Arrange
+    String collectionId = "montreal_2023";
+    Map<String, Object> item = Map.of(
+      "id", "wildfire_timestamp_2023_08_30_12_00_00",
+      "collection", collectionId
+    );
+    List<Map<String, Object>> mockResults = List.of(item);
+
+    when(jdbcTemplate.queryForList(anyString(), eq(collectionId))).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> result = stacRepository.getAllItemsFromCollection(collectionId);
+
+    // Assert
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).get("id")).isEqualTo("wildfire_timestamp_2023_08_30_12_00_00");
+    assertThat(result.get(0).get("collection")).isEqualTo(collectionId);
+  }
+
+  @Test
+  void getAllItems_throwsRepositoryException_onJdbcError() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), Optional.ofNullable(any())))
+      .thenThrow(new DataAccessException("Simulated DB error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllItemsFromCollection("any_collection"))
+      .isInstanceOf(RepositoryException.class)
+      .hasMessageContaining("Error fetching items");
+  }
+
 
 }

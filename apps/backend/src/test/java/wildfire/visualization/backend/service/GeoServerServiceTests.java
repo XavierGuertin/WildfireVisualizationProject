@@ -3,6 +3,7 @@ package wildfire.visualization.backend.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -10,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +28,9 @@ class GeoServerServiceTests {
 
   @InjectMocks
   private GeoServerService geoServerService;
+
+  @TempDir
+  Path tempDir;
 
   private final String geoserverUrl = "http://localhost:8090/geoserver";
   private final String workspace = "Default";
@@ -145,6 +151,58 @@ class GeoServerServiceTests {
     assertThat(result).isFalse();
   }
 
+  @Test
+  void testUnregisterLayer_Failure_Exception() {
+    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+
+    // Simulate RestTemplate throwing an exception
+    when(restTemplate.exchange(
+      eq(expectedUrl),
+      eq(HttpMethod.DELETE),
+      any(HttpEntity.class),
+      eq(String.class))
+    ).thenThrow(new RuntimeException("Test exception"));
+
+    // Execute
+    boolean result = geoServerService.unregisterLayer(layerName);
+
+    // Verify
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+    assertThat(result).isFalse();
+  }
+
+
+  @Test
+  void deleteTifFile_shouldDeleteFile_ifExists() throws Exception {
+    // Arrange
+    setField(geoServerService, "geoserverDownloadDir", tempDir.toString());
+
+    String testLayer = "delete_test";
+    Path filePath = tempDir.resolve(testLayer + ".tif");
+    Files.write(filePath, "test".getBytes());
+
+    assertThat(Files.exists(filePath)).isTrue();
+
+    // Act
+    geoServerService.deleteTifFile(testLayer);
+
+    // Assert
+    assertThat(Files.exists(filePath)).isFalse();
+  }
+
+  @Test
+  void deleteTifFile_shouldNotFail_ifFileDoesNotExist() {
+    // Arrange
+    setField(geoServerService, "geoserverDownloadDir", tempDir.toString());
+
+    String testLayer = "nonexistent";
+
+    // Act & Assert (no exception should be thrown)
+    assertThatCode(() -> geoServerService.deleteTifFile(testLayer)).doesNotThrowAnyException();
+
+    Path expectedPath = tempDir.resolve(testLayer + ".tif");
+    assertThat(Files.exists(expectedPath)).isFalse();
+  }
 
   // ✅ Utility method to set private fields via reflection
   private void setField(Object target, String fieldName, Object value) {
@@ -156,4 +214,6 @@ class GeoServerServiceTests {
       throw new RuntimeException("Failed to set field: " + fieldName, e);
     }
   }
+
+
 }
