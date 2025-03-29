@@ -1,5 +1,6 @@
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
+import path = require('path');
 const coverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
@@ -7,7 +8,7 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'apps/frontend-e2e/src',
     }),
-    fixturesFolder: "src/fixtures",
+    fixturesFolder: path.resolve(__dirname, 'src/fixtures'),
     screenshotOnRunFailure: true,
     screenshotsFolder: 'cypress/screenshots',
     trashAssetsBeforeRuns: true,

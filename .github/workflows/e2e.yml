@@ -100,6 +100,10 @@ jobs:
           "COLLECTIONS_URL":"${{secrets.COLLECTIONS_URL}}"
           }' > cypress.env.json
 
+      #Ensure fixture files exist
+      - name: Ensure fixture files exist
+        run: ls -l apps/frontend-e2e/src/fixtures
+
       # Run Cypress for E2E Testing
       - name: Run Cypress E2E Tests
         run: npx nx e2e-pipeline frontend-e2e
