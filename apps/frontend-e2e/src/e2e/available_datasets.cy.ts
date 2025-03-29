@@ -1,3 +1,5 @@
+import exp = require("constants");
+
 //Avoid failing the test when config saving doesn't work on E2E pipeline
 Cypress.on('uncaught:exception', (err, runnable) => {
   console.error('Uncaught Exception:', err);
@@ -53,18 +55,52 @@ describe('dataset', () => {
   });
 
   it('filters by name ascending', () => {
+    cy.get("#swal2-input").as("url_input");
+    cy.get('@url_input').clear().type(Cypress.env("COLLECTIONS_URL"));
+    cy.get('button.swal2-confirm').should('exist').click()
 
+    //Make sure notfication of success appears
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.wait(2000)
+
+    cy.get('[data-testid=filter-button-Name]').click()
+
+    cy.get('div.buttons-container:has(button)').should('exist').then(($element) => {
+      const titles = $element.map((i, el) => Cypress.$(el).text().trim()).get();
+
+      const expected = [...titles].sort((a, b) => a.localeCompare(b));
+
+      for(let i = 0; i < titles.length; i++){
+        expect(titles[i]).to.equal(expected[i])
+      }
+
+    })
   })
 
   it('filters by name descending', () => {
-    
-  })
+    cy.get("#swal2-input").as("url_input");
+    cy.get('@url_input').clear().type(Cypress.env("COLLECTIONS_URL"));
+    cy.get('button.swal2-confirm').should('exist').click()
 
-  it('filters by date ascending', () => {
+    //Make sure notfication of success appears
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.wait(2000)
 
-  })
-  
-  it('filters by date descending', () => {
-    
+    //Make it sort descending
+    cy.get('[data-testid=filter-button-Name]').click()
+    cy.get('[data-testid=filter-button-Name]').click()
+
+    cy.wait(2000)
+
+    cy.get('div.buttons-container:has(button)').should('exist').then(($element) => {
+      const titles = $element.map((i, el) => Cypress.$(el).text().trim()).get();
+
+      const expected = [...titles].sort((a, b) => a.localeCompare(b));
+
+      for(let i = 0; i < titles.length; i++){
+        expect(titles[i]).to.equal(expected[i])
+      }
+      
+    })
   })
 });
