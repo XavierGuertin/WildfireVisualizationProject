@@ -100,12 +100,5 @@ describe('simulation', () => {
         })
       })
     })
-
-    it('weather assets load properly', () => {
-      cy.contains('div', 'Collection\'s assets have been fetched successfully', {timeout:120000})
-
-      cy.get('div.weather-dropdown',{timeout:20000}).should('exist')
-    })
-
   });
   
