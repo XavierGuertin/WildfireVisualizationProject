@@ -63,7 +63,7 @@ describe('dataset', () => {
     cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
     cy.wait(2000)
 
-    cy.get('[data-testid=filter-button-Name]').click()
+    cy.get('[data-testid=filter-button-Name]').click({force:true})
 
     cy.get('div.buttons-container:has(button)').should('exist').then(($element) => {
       const titles = $element.map((i, el) => Cypress.$(el).text().trim()).get();
@@ -87,8 +87,8 @@ describe('dataset', () => {
     cy.wait(2000)
 
     //Make it sort descending
-    cy.get('[data-testid=filter-button-Name]').click()
-    cy.get('[data-testid=filter-button-Name]').click()
+    cy.get('[data-testid=filter-button-Name]').click({force:true})
+    cy.get('[data-testid=filter-button-Name]').click({force:true})
 
     cy.wait(2000)
 

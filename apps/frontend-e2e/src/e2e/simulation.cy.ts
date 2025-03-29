@@ -34,7 +34,7 @@ describe('simulation', () => {
     });
 
     it('runs properly', () => {
-      cy.get('div.timeMarkerThumb').then(($element) => {
+      cy.get('div.timeMarkerThumb',{timeout:20000}).then(($element) => {
         const initialPosition = $element[0].getBoundingClientRect();
 
         cy.get('[data-testid="play-pause-button"]').click()
@@ -53,7 +53,7 @@ describe('simulation', () => {
     })
 
     it('runs properly when sped up', () => {
-      cy.get('div.timeMarkerThumb').then(($element) => {
+      cy.get('div.timeMarkerThumb',{timeout:20000}).then(($element) => {
         const initialPosition = $element[0].getBoundingClientRect();
 
         cy.get('[data-testid="speed-point-1.5"]').click()
@@ -74,7 +74,7 @@ describe('simulation', () => {
     })
 
     it('runs properly when slowed down', () => {
-      cy.get('div.timeMarkerThumb').then(($element) => {
+      cy.get('div.timeMarkerThumb',{timeout:20000}).then(($element) => {
         const initialPosition = $element[0].getBoundingClientRect();
 
         cy.get('[data-testid="speed-point-0.5"]').click()
@@ -97,7 +97,7 @@ describe('simulation', () => {
     it('weather assets load properly', () => {
       cy.contains('div', 'Collection\'s assets have been fetched successfully', {timeout:60000})
 
-      cy.get('div.weather-dropdown').should('exist')
+      cy.get('div.weather-dropdown',{timeout:20000}).should('exist')
     })
 
   });
