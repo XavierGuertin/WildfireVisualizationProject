@@ -29,8 +29,12 @@ describe('simulation', () => {
       cy.get('[data-testid=dataset-button-newyork_2024]').should('exist').click({force: true})
       cy.get('[data-testid=load-dataset-button]').should('exist').click({force: true})
       cy.get('button').contains('Yes').should('exist').click({force: true})
+
+      cy.contains("div", 'Timestamps have been fetched successfully', {timeout: 7000}).should("be.visible")
       
       cy.contains('div', 'Collection\'s items have been fetched successfully', {timeout:20000}).should('be.visible')
+
+      cy.wait(2000)
     });
 
     it('runs properly', () => {
