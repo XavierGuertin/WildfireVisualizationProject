@@ -50,10 +50,11 @@ const SettingsPanel: React.FC<{
     setIsOnline,
     setSliderValue,
     mapRef,
+    timeStamps,
     setTimeStamps,
     setCollectionId,
     setIsPlaying,
-    setSelectedAssetLayers
+    setSelectedAssetLayers,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -206,6 +207,7 @@ const SettingsPanel: React.FC<{
         setIsPlaying(false);
         setSliderValue(0);
         setSpeed(1);
+        handleResetLayerStyle(true);
 
         toast.success(t('reset_completed'));
       }
@@ -292,6 +294,7 @@ const SettingsPanel: React.FC<{
       changeLayer(map, true);
       changeLayer(map, false, "reset");
       setSpeed(1);
+      handleResetLayerStyle(true);
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
@@ -441,10 +444,10 @@ const SettingsPanel: React.FC<{
   };
 
   // Reset polygon and dataLayer style
-  const handleResetLayerStyle = () => {
+  const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
 
-    if (selectedStyleTab === 'polygon') {
+    if (resetBoth || selectedStyleTab === 'polygon') {
       // Reset polygon state
       setPolygonFillColor(DEFAULT_FILL_COLOR);
       setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
@@ -459,7 +462,9 @@ const SettingsPanel: React.FC<{
         hexToRgb(DEFAULT_STROKE_COLOR),
         DEFAULT_STROKE_WIDTH
       );
-    } else {
+    }
+
+    if (resetBoth || selectedStyleTab === 'dataLayer') {
       // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
@@ -577,7 +582,8 @@ const SettingsPanel: React.FC<{
       </div>
 
       {/* Customize Polygon and DataLayer colors */}
-      <div className="dropdown-button">
+      {timeStamps && timeStamps.length > 0 && (
+        <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
           onClick={() => toggleDropdown('style')}
@@ -714,7 +720,10 @@ const SettingsPanel: React.FC<{
                 </button>
                 <button
                   className="reset-style-btn"
-                  onClick={handleResetLayerStyle}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleResetLayerStyle();
+                  }}
                 >
                   {t('reset_style')}
                 </button>
@@ -724,6 +733,7 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
+      )}
 
       <div className="dropdown-button">
         <button

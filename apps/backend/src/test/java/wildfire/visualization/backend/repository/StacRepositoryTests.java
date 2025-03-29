@@ -1,9 +1,6 @@
 package wildfire.visualization.backend.repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -306,15 +303,15 @@ class StacRepositoryTests {
   @Test
   void getAllCollectionsByName_Success_NoBbox() {
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString())).thenReturn(mockResults);
 
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(null, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString());
   }
 
@@ -322,8 +319,8 @@ class StacRepositoryTests {
   void getAllCollectionsByName_Success_WithBbox() {
     double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockResults = List.of(
-        Map.of("id", "collection1"),
-        Map.of("id", "collection2"));
+        Map.of("title", "collection1"),
+        Map.of("title", "collection2"));
 
     when(jdbcTemplate.queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3])))
         .thenReturn(mockResults);
@@ -331,7 +328,7 @@ class StacRepositoryTests {
     List<Map<String, Object>> results = stacRepository.getAllCollectionsByName(bbox, "asc");
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0)).containsEntry("id", "collection1");
+    assertThat(results.get(0)).containsEntry("title", "collection1");
     verify(jdbcTemplate).queryForList(anyString(), eq(bbox[0]), eq(bbox[1]), eq(bbox[2]), eq(bbox[3]));
   }
 
@@ -944,5 +941,39 @@ class StacRepositoryTests {
 
     verify(jdbcTemplate).queryForList(anyString(), eq(String.class));
   }
+
+  @Test
+  void getAllItems_returnsItemsForCollection() {
+    // Arrange
+    String collectionId = "montreal_2023";
+    Map<String, Object> item = Map.of(
+      "id", "wildfire_timestamp_2023_08_30_12_00_00",
+      "collection", collectionId
+    );
+    List<Map<String, Object>> mockResults = List.of(item);
+
+    when(jdbcTemplate.queryForList(anyString(), eq(collectionId))).thenReturn(mockResults);
+
+    // Act
+    List<Map<String, Object>> result = stacRepository.getAllItemsFromCollection(collectionId);
+
+    // Assert
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).get("id")).isEqualTo("wildfire_timestamp_2023_08_30_12_00_00");
+    assertThat(result.get(0).get("collection")).isEqualTo(collectionId);
+  }
+
+  @Test
+  void getAllItems_throwsRepositoryException_onJdbcError() {
+    // Arrange
+    when(jdbcTemplate.queryForList(anyString(), Optional.ofNullable(any())))
+      .thenThrow(new DataAccessException("Simulated DB error") {});
+
+    // Act & Assert
+    assertThatThrownBy(() -> stacRepository.getAllItemsFromCollection("any_collection"))
+      .isInstanceOf(RepositoryException.class)
+      .hasMessageContaining("Error fetching items");
+  }
+
 
 }
