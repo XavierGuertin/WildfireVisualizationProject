@@ -7,6 +7,7 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'apps/frontend-e2e/src',
     }),
+    fixturesFolder: "src/fixtures",
     screenshotOnRunFailure: true,
     screenshotsFolder: 'cypress/screenshots',
     trashAssetsBeforeRuns: true,
