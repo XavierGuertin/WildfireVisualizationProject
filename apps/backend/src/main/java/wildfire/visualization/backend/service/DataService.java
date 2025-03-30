@@ -94,7 +94,7 @@ public class DataService {
     Map<String, Object> responseBody = response.getBody();
 
     if (responseBody != null && responseBody.containsKey(KEY_PROGRESS)) {
-      int progress = ((Number) responseBody.get(KEY_PROGRESS)).intValue();
+      ((Number) responseBody.get(KEY_PROGRESS)).intValue(); // Extract progress value from response body (not used)
     } else {
       logger.error("Progress not found in response body for collection: {}", collectionId);
       fetchProgress.get(collectionId).set(-1); // Set error state
