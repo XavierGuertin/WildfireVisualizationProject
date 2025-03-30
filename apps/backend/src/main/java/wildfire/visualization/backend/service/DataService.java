@@ -389,6 +389,144 @@ public class DataService {
   }
 
   /**
+   * Retrieves the configuration settings by invoking the config controller.
+   * If the configuration settings cannot be retrieved or are null, this method
+   * throws a {@link DataException}.
+   *
+   * @return a map containing the configuration settings.
+   * @throws DataException if the configuration settings cannot be retrieved.
+   */
+  private Map<String, Object> getConfigOrThrow() {
+    ResponseEntity<Map<String, Object>> responseEntity = configController.getConfig();
+    Map<String, Object> config = responseEntity.getBody();
+    if (config == null) {
+      throw new DataException("Failed to retrieve configuration settings");
+    }
+    return config;
+  }
+
+  /**
+   * Retrieves metadata for the specified collection ID from the STAC repository.
+   * If no metadata is found, a {@link DataException} is thrown.
+   *
+   * @param collectionId the ID of the collection for which metadata is to be
+   *                     retrieved
+   * @return a list of metadata maps, where each map contains key-value pairs
+   *         representing metadata attributes
+   * @throws DataException if no metadata is found for the specified collection ID
+   */
+  private List<Map<String, Object>> getMetadataOrThrow(String collectionId) {
+    List<Map<String, Object>> metadata = stacRepository.queryCollectionMetaData(collectionId);
+    if (metadata.isEmpty()) {
+      throw new DataException("No metadata found for collection: " + collectionId);
+    }
+    return metadata;
+  }
+
+  /**
+   * Validates the provided start and end dates for a given collection.
+   * Ensures that neither the start nor the end date is null.
+   *
+   * @param start        The start date to validate. Must not be null.
+   * @param end          The end date to validate. Must not be null.
+   * @param collectionId The identifier of the collection being validated.
+   * @throws DataException If either the start or end date is null.
+   */
+  private void validateDates(LocalDateTime start, LocalDateTime end, String collectionId) {
+    if (start == null || end == null) {
+      throw new DataException("Failed to extract temporal extent for " + collectionId);
+    }
+  }
+
+  /**
+   * Processes a list of items by associating them with a collection ID, checking
+   * if they exist
+   * in the repository, and inserting them if they do not already exist.
+   *
+   * @param collectionId       The ID of the collection to associate with the
+   *                           items.
+   * @param items              A list of items represented as maps of key-value
+   *                           pairs.
+   * @param insertedItems      A list to store the IDs of items that were
+   *                           successfully inserted.
+   * @param insertedTimestamps A list to store the extracted ISO timestamps of
+   *                           inserted items.
+   * @return The number of items successfully inserted into the repository.
+   * @throws JsonProcessingException If an error occurs while converting an item
+   *                                 to JSON format.
+   */
+  private int processItems(String collectionId, List<Map<String, Object>> items, List<String> insertedItems,
+      List<String> insertedTimestamps) throws JsonProcessingException {
+    int count = 0;
+    for (Map<String, Object> item : items) {
+      item.put("collection_id", collectionId);
+      String id = (String) item.get("id");
+
+      if (!stacRepository.checkCollectionExists(id)) {
+        String itemJson = objectMapper.writeValueAsString(item);
+        stacRepository.insertItem(itemJson);
+        insertedItems.add(id);
+        insertedTimestamps.add(UtilHelper.extractTimestampISO(id));
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Computes the progress percentage based on the provided parameters.
+   *
+   * @param itemCount    The total number of items to be processed. If null or
+   *                     less than or equal to zero,
+   *                     the progress will be computed using the provided items,
+   *                     end, and start parameters.
+   * @param totalFetched The number of items that have been fetched or processed
+   *                     so far.
+   * @param items        A list of maps representing the items being processed.
+   *                     Used to compute progress
+   *                     if itemCount is null or invalid.
+   * @param end          The end time of the processing period. Used in
+   *                     conjunction with the start time
+   *                     to compute progress when itemCount is not provided.
+   * @param start        The start time of the processing period. Used in
+   *                     conjunction with the end time
+   *                     to compute progress when itemCount is not provided.
+   * @return The progress percentage as an integer value between 0 and 100.
+   */
+  private int computeProgress(Integer itemCount, int totalFetched, List<Map<String, Object>> items,
+      LocalDateTime end, LocalDateTime start) {
+    if (itemCount != null && itemCount > 0) {
+      return (int) Math.floor(((double) totalFetched / itemCount) * 100);
+    } else {
+      return (int) Math.floor(UtilHelper.computeProgressFromItems(items, end, start));
+    }
+  }
+
+  /**
+   * Builds a response body by populating the provided map with the specified
+   * data.
+   *
+   * @param body         The map to populate with response data.
+   * @param collectionId The identifier of the collection being processed.
+   * @param totalFetched The total number of items fetched so far.
+   * @param progress     The progress percentage of the current operation.
+   * @param items        The list of items that were inserted.
+   * @param timestamps   The list of timestamps corresponding to the inserted
+   *                     items.
+   * @param nextPage     The token or identifier for the next page of results, if
+   *                     applicable.
+   */
+  private void buildResponseBody(Map<String, Object> body, String collectionId, int totalFetched, int progress,
+      List<String> items, List<String> timestamps, String nextPage) {
+    body.put("collectionId", collectionId);
+    body.put("totalFetched", totalFetched);
+    body.put(KEY_PROGRESS, progress);
+    body.put("insertedItems", items);
+    body.put("insertedTimestamps", timestamps);
+    body.put("nextPage", nextPage);
+  }
+
+  /**
    * Method responsible for fetching and saving items from a given collection
    *
    * @param collectionId String object representing the id of the collection
@@ -401,19 +539,10 @@ public class DataService {
     int progress = 0;
 
     try {
-      ResponseEntity<Map<String, Object>> responseEntity = configController.getConfig();
-      Map<String, Object> config = responseEntity.getBody();
-      if (config == null) {
-        throw new DataException("Failed to retrieve configuration settings");
-      }
-
-      assert config != null;
+      Map<String, Object> config = getConfigOrThrow();
 
       // Fetch collection metadata from the database
-      List<Map<String, Object>> collectionMetadata = stacRepository.queryCollectionMetaData(collectionId);
-      if (collectionMetadata.isEmpty()) {
-        throw new DataException("No metadata found for collection: " + collectionId);
-      }
+      List<Map<String, Object>> collectionMetadata = getMetadataOrThrow(collectionId);
 
       // Extract item count from metadata (if available)
       Integer itemCount = (Integer) collectionMetadata.get(0).get("item_count"); // May be missing
@@ -421,9 +550,8 @@ public class DataService {
       // Extract start & end dates (for time-based progress if needed)
       LocalDateTime startDate = UtilHelper.extractTemporalStartFromDB(collectionMetadata);
       LocalDateTime endDate = UtilHelper.extractTemporalEndFromDB(collectionMetadata);
-      if (startDate == null || endDate == null) {
-        throw new DataException("Failed to extract temporal extent for " + collectionId);
-      }
+
+      validateDates(startDate, endDate, collectionId);
 
       // Base items endpoint
       String endpointUrl = config.get("endpoint").toString() + "/" + collectionId + "/items";
@@ -442,27 +570,10 @@ public class DataService {
         if (items == null || items.isEmpty())
           break;
 
-        for (Map<String, Object> item : items) {
-          item.put("collection_id", collectionId);
-          String id = (String) item.get("id");
-
-          if (!stacRepository.checkCollectionExists(id)) {
-            String itemJson = objectMapper.writeValueAsString(item);
-            stacRepository.insertItem(itemJson);
-            insertedItems.add(id);
-            insertedTimestamps.add(UtilHelper.extractTimestampISO(id)); // Convert ID to timestamp
-            totalFetched++;
-          }
-        }
+        totalFetched += processItems(collectionId, items, insertedItems, insertedTimestamps);
 
         // Determine progress calculation method
-        if (itemCount != null && itemCount > 0) {
-          // Use `item_count` if available
-          progress = (int) Math.floor(((double) totalFetched / itemCount) * 100);
-        } else {
-          // Use timestamp-based progress if `item_count` is missing
-          progress = (int) Math.floor(UtilHelper.computeProgressFromItems(items, endDate, startDate));
-        }
+        progress = computeProgress(itemCount, totalFetched, items, endDate, startDate);
 
         // Update progress in the database
         fetchProgress.put(collectionId, new AtomicInteger(progress));
@@ -474,12 +585,8 @@ public class DataService {
       fetchProgress.put(collectionId, new AtomicInteger(100));
 
       // Construct API response body
-      responseBody.put("collectionId", collectionId);
-      responseBody.put("totalFetched", totalFetched);
-      responseBody.put(KEY_PROGRESS, progress);
-      responseBody.put("insertedItems", insertedItems);
-      responseBody.put("insertedTimestamps", insertedTimestamps);
-      responseBody.put("nextPage", nextUrl);
+      buildResponseBody(responseBody, collectionId, totalFetched, progress, insertedItems,
+          insertedTimestamps, nextUrl);
 
       return ResponseEntity.ok(responseBody);
 
