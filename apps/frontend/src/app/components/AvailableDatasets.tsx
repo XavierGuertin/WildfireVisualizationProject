@@ -128,7 +128,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, []);
 
-  // Handle filter changes
+  /**
+   * Handles changes to the dataset sorting filter.
+   * @param filter - The selected sorting filter.
+   */
   const handleFilterChange = (filter: string) => {
     if (activeFilter === filter) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -138,18 +141,31 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   };
 
+  /**
+   * Resets the dataset filters.
+   */
   const resetFilters = () => {
     setActiveFilter('');
     setSortDirection('asc');
   };
 
+  /**
+   * Toggles dataset sidebar collapse state.
+   */
   const toggleCollapse = () => setIsCollapsed(prev => !prev);
 
+  /**
+   * Toggles dataset filtering based on the visible map region.
+   */
   const handleToggle = () => {
     setIsToggled(prev => !prev);
     if (!isToggled) onResetBbox();
   };
 
+  /**
+   * Handles dataset selection and fetches metadata.
+   * @param id - The dataset ID.
+   */
   const handleDatasetClick = async (id: string) => {
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);
@@ -158,6 +174,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     changeLayer(map, true);
   };
 
+  /**
+   * Handles local storage when user selects a dataset
+   * @param id - The dataset ID.
+   */
   const handleLocalStorageOnDatasetClick = async (id: string) => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId');
     if (selectedDatasetId === null || selectedDatasetId !== id) {
@@ -171,6 +191,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   };
 
+  /**
+   * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
+   * This ensures that user-facing error messages are displayed in the selected language
+   * while allowing the service layer (api.ts) to remain free of localization logic.
+   *
+   * @param rawError - The raw error string returned from the API service
+   * @returns A translated error message string based on the active language
+   */
   const getTranslatedErrorMessageKey = (rawError: string): string => {
     switch (rawError) {
       case 'Failed to fetch data by name':
@@ -187,6 +215,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   };
 
+  /**
+   * Renders dataset content based on loading state and available datasets
+   */
   const renderDatasetContent = () => {
     if (isLoading) {
       return <p className="loading-message" data-testid="loading-message">{t('loading_datasets')}</p>;
@@ -226,6 +257,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     );
   };
 
+  /**
+   * Gets the appropriate toggle status text based on current state
+   * @returns The translation key for the toggle status
+   */
   const getToggleStatusText = () => {
     if (!currentBbox || currentBbox.length === 0) {
       return t('map_required');

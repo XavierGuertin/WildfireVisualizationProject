@@ -33,6 +33,10 @@ interface MapMetaDataProps {
   refreshDatasets: () => void;
 }
 
+/**
+ * Renders metadata for a map dataset with collapsible and resizable UI.
+ * @param props - Properties including dataset details and control functions.
+ */
 const MapMetaData: React.FC<MapMetaDataProps> = ({
                                                    id = '',
                                                    name = '',
@@ -76,17 +80,29 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   } = useMapLayerContext();
 
   // Queries
+  /**
+   * Fetches and caches the application configuration.
+   * @returns Cached config data.
+   */
   const { data: configData } = useQuery(['config'], () => getConfig(), {
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
 
+  /**
+   * Fetches and caches timestamps for the dataset.
+   * @returns Cached timestamps data.
+   */
   const { data: timestampsData } = useQuery(['timestamps'], () => fetchTimestamps(), {
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
     onSuccess: (data) => setTimeStamps(data),
   });
 
+  /**
+   * Fetches and caches item IDs for the dataset.
+   * @returns Cached item IDs data.
+   */
   const { data: itemIdsData } = useQuery(['itemIds'], () => fetchItemIds(), {
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
@@ -94,26 +110,53 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   });
 
   // Mutations
+  /**
+   * Resets items in the dataset and invalidates related cache.
+   * @returns Promise resolving when items are reset.
+   */
   const resetItemsMutation = useMutation(() => resetItems(), {
     onSuccess: () => queryClient.invalidateQueries(['items']),
   });
 
+  /**
+   * Resets item assets and invalidates related cache.
+   * @returns Promise resolving when assets are reset.
+   */
   const resetItemAssetsMutation = useMutation(() => resetItemAssets(), {
     onSuccess: () => queryClient.invalidateQueries(['itemAssets']),
   });
 
+  /**
+   * Fetches items for a given dataset ID and invalidates related cache.
+   * @param id - The dataset ID to fetch items for.
+   * @returns Promise resolving with fetch response.
+   */
   const fetchItemsMutation = useMutation((id: string) => fetchItems(id), {
     onSuccess: () => queryClient.invalidateQueries(['items']),
   });
 
+  /**
+   * Loads assets for a given dataset ID and invalidates related cache.
+   * @param id - The dataset ID to load assets for.
+   * @returns Promise resolving when assets are loaded.
+   */
   const loadAssetsMutation = useMutation((id: string) => loadAssets(id), {
     onSuccess: () => queryClient.invalidateQueries(['itemAssets']),
   });
 
+  /**
+   * Saves the application configuration and updates the cache.
+   * @param config - The configuration object to save.
+   * @returns Promise resolving with saved config data.
+   */
   const saveConfigMutation = useMutation((config: any) => saveConfig(config), {
     onSuccess: (data) => queryClient.setQueryData(['config'], data),
   });
 
+  /**
+   * Initiates resizing of the metadata container on mouse down.
+   * @param e - The mouse event triggering the resize.
+   */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
     setIsResizing(true);
@@ -123,19 +166,32 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     e.preventDefault();
   }, []);
 
+  /**
+   * Updates the width of the metadata container during resize.
+   * @param e - The mouse event with current position.
+   */
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isResizing || !containerRef.current) return;
       const dx = e.clientX - startXRef.current;
       let newWidth = startWidthRef.current + dx;
+
+      // Apply constraints
       newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+
+      // DIRECT DOM UPDATE (no React state lag)
       containerRef.current.style.width = `${newWidth}px`;
     },
     [isResizing, maxWidth, minWidth]
   );
 
+  /**
+   * Finalizes resizing of the metadata container on mouse up.
+   */
   const handleMouseUp = useCallback(() => {
     if (!isResizing || !containerRef.current) return;
+
+    // Only update React state AFTER dragging finishes
     setWidth(containerRef.current.offsetWidth);
     containerRef.current.style.willChange = 'auto';
     setIsResizing(false);
@@ -158,6 +214,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
+  /**
+   * Loads the dataset, resetting previous data and polling progress.
+   */
   const onLoadDataset = async () => {
     if (!isOnline) {
       toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
@@ -196,6 +255,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
       if (mapRef.current) {
         const map = mapRef.current;
+
+        // Remove all layers except those with ID 'baseLayer' or 'dataLayer'
         const layersToRemove = map
           .getLayers()
           .getArray()
@@ -212,7 +273,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       }
       toast.success(t('timestamps_fetch_success'), { toastId: 'timestamps-success' });
 
-      // Poll progress for items
+      /**
+       * Polls the progress of fetching items until complete or stable.
+       */
       const pollProgress = async () => {
         let lastProgress = -1;
         let stableCount = 0;
@@ -264,7 +327,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
       await loadAssetsMutation.mutateAsync(id);
 
-      // Poll progress for assets
+      /**
+       * Polls the progress of loading assets until complete.
+       */
       const pollAssetProgress = async () => {
         while (true) {
           const progressResponse = await queryClient.fetchQuery(
