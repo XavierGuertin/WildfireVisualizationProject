@@ -37,10 +37,13 @@ const Footer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const [pendingSliderValue, setPendingSliderValue] = useState(sliderValue);
+  const pendingSliderRef = useRef(sliderValue);
 
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
   const processLoadedLayers = async (itemId: string) => {
+    setLoadedLayers([]);
     if (!isProcessLoading) {
       if (itemId) {
         await loadAssetLayers(itemId);
@@ -55,8 +58,8 @@ const Footer = () => {
                 const layerData = response.find(
                   (obj: { asset_name: string, item_id: string }) => obj.asset_name === layer && obj.item_id === itemId,
                 );
-                toggleAssetLayer(map, layer, '', false);
-                toggleAssetLayer(map, layer, layerData.layer_url, true); // You need to define this function
+                toggleAssetLayer(map, layer, '', false, layerData.min, layerData.max);
+                toggleAssetLayer(map, layer, layerData.layer_url, true, layerData.min, layerData.max);
               }
             });
           }
@@ -121,10 +124,20 @@ const Footer = () => {
     }
   };
 
+  // Set global slider value when mouse up from sliding timeline
   const handleMouseUp = () => {
     isDraggingRef.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
+  
+    const finalValue = pendingSliderRef.current;
+  
+    setSliderValue(finalValue);
+    const map = mapRef.current as Map;
+    if (timeStamps.length > 0) {
+      changeLayer(map, false, timeStamps[finalValue]);
+      localStorage.setItem('sliderValue', finalValue.toString());
+    }
   };
 
   useEffect(() => {
@@ -146,6 +159,7 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
 
+  // Change temp slider value to lessen load on backend calls
   const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
     if (sliderRef.current && timeStamps.length > 0) {
       const rect = sliderRef.current.getBoundingClientRect();
@@ -157,11 +171,9 @@ const Footer = () => {
           timeStamps.length - 1,
         ),
       );
-
-      setSliderValue(newValue);
-      const map = mapRef.current as Map;
-      changeLayer(map, false, timeStamps[newValue]);
-      localStorage.setItem('sliderValue', newValue.toString());
+  
+      setPendingSliderValue(newValue);
+      pendingSliderRef.current = newValue;
     }
   };
 
@@ -249,6 +261,10 @@ const Footer = () => {
     }
   }, [sliderValue, timeStamps]);
 
+  const currentValue = isDraggingRef.current
+  ? pendingSliderValue
+  : sliderValue;
+
   return (
     <div className="footerContainer" data-testid="footer-container">
       {/* Speed controls */}
@@ -317,7 +333,7 @@ const Footer = () => {
                             96,
                             Math.max(
                               4,
-                              (sliderValue / (timeStamps.length - 1)) * 92 + 4,
+                              (currentValue / (timeStamps.length - 1)) * 92 + 4,
                             ),
                           )
                         : 4
@@ -325,8 +341,8 @@ const Footer = () => {
                   }}
                 >
                   <span className="timeMarkerText">
-                    {timeStamps[sliderValue]
-                      ? formatTimestamp(timeStamps[sliderValue])
+                    {timeStamps[currentValue]
+                      ? formatTimestamp(timeStamps[currentValue])
                       : ''}
                   </span>
                 </div>

@@ -1,5 +1,6 @@
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
+import path = require('path');
 const coverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
@@ -7,6 +8,10 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'apps/frontend-e2e/src',
     }),
+    fixturesFolder: path.resolve(__dirname, 'src/fixtures'),
+    screenshotOnRunFailure: true,
+    screenshotsFolder: 'cypress/screenshots',
+    trashAssetsBeforeRuns: true,
     baseUrl: 'http://127.0.0.1:3000', // Set only if NX doesn’t set it automatically
     setupNodeEvents(on, config) {
       coverageTask(on, config); // Enable code coverage tasks

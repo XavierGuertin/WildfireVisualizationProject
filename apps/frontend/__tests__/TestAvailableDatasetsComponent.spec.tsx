@@ -21,10 +21,12 @@ const mockDatasets: DatasetEntry[] = [
   {
     key: 1,
     id: 'dataset-1',
+    title: 'Dataset One',
   },
   {
     key: 2,
     id: 'dataset-2',
+    title: 'Dataset Two',
   },
 ];
 
@@ -53,6 +55,12 @@ jest.mock('ol/Map', () => {
   }));
 });
 
+jest.mock('../src/app/services/configApi', () => ({
+  getConfig: jest.fn().mockResolvedValue({
+    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },
+  })
+}));
+
 jest.mock('../src/app/components/MapView', () => ({
   changeLayer: jest.fn().mockResolvedValue(true), // Mocks a successful layer change
 }));
@@ -60,7 +68,8 @@ jest.mock('../src/app/components/MapView', () => ({
 jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
-    setLoadedDatasetId: jest.fn(),
+    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },  
+    setLoadedDataset: jest.fn(),
   })),
 }));
 
@@ -74,7 +83,7 @@ describe('Test AvailableDatasets component', () => {
     jest.clearAllMocks();
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
     mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {/*intentional*/});
   });
 
   afterEach(() => {
@@ -91,7 +100,7 @@ describe('Test AvailableDatasets component', () => {
   });
 
   it('should show loading message while fetching datasets', async () => {
-    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {})); // Keeps promise pending
+    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {/*intentional*/})); // Keeps promise pending
 
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,

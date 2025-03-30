@@ -33,12 +33,12 @@ describe('AssetsDropdown component', () => {
   const mockContext = {
     mapRef: { current: mockMap },
     loadedLayers: [
-      { asset_name: 'humidity', layer_url: 'humidity-url' },
-      { asset_name: 'wind_force', layer_url: 'wind-url' },
+      { asset_name: 'humidity', layer_url: 'humidity-url', min: 0, max: 100 },
+      { asset_name: 'wind_force', layer_url: 'wind-url', min: 0, max: 100 },
     ],
     selectedAssetLayers: [],
     setSelectedAssetLayers: jest.fn(),
-    loadedDatasetId: 'dataset-2025',
+    loadedDataset: { id: 'dataset-2025', title: 'Dataset 2025' },
     itemIds: [],
     sliderValue: 0,
     t: (str: string) => str,
@@ -52,7 +52,7 @@ describe('AssetsDropdown component', () => {
   it('renders dropdown header and dataset ID', () => {
     render(<AssetsDropdown />);
     expect(screen.getByText('weather_assets_label')).toBeInTheDocument();
-    expect(screen.getByText('dataset-2025')).toBeInTheDocument();
+    expect(screen.getByText('Dataset 2025')).toBeInTheDocument();
   });
 
   it('toggles asset menu on header click', () => {
@@ -86,6 +86,8 @@ describe('AssetsDropdown component', () => {
       'humidity',
       'humidity-url',
       true,
+      0,
+      100
     );
     expect(setSelectedAssetLayers).toHaveBeenCalledWith(
       expect.any(Function),
@@ -111,6 +113,8 @@ describe('AssetsDropdown component', () => {
       'humidity',
       'humidity-url',
       false,
+      0,
+      100
     );
     expect(setSelectedAssetLayers).toHaveBeenCalledWith(expect.any(Function));
   });

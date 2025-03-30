@@ -17,7 +17,7 @@ import java.util.Map;
 public class ConfigService {
   private static final Logger logger = LoggerFactory.getLogger(ConfigService.class);
   private static final String CONFIG_FILE_PATH = System.getenv().getOrDefault("CONFIG_FILE_PATH",
-      "config/app-config.json");
+      "./../../config/app-config.json");
   private final ObjectMapper objectMapper;
 
   public ConfigService(ObjectMapper objectMapper) {

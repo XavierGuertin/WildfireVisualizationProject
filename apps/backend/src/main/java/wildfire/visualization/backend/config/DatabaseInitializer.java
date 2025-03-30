@@ -3,6 +3,7 @@ package wildfire.visualization.backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+
 import jakarta.annotation.PostConstruct;
 
 @Component
@@ -41,8 +42,15 @@ public class DatabaseInitializer {
           );
       """;
 
+    String alterAssets = """
+          ALTER TABLE TIFF_Assets
+          ADD COLUMN IF NOT EXISTS min INT NOT NULL,
+          ADD COLUMN IF NOT EXISTS max INT NOT NULL;
+      """;
+
     jdbcTemplate.execute(createCollections);
     jdbcTemplate.execute(createItems);      // Must be before Assets
     jdbcTemplate.execute(createAssets);     // Must be after Items
+    jdbcTemplate.execute(alterAssets);      // Alter exisiting table since it is already present in the db
   }
 }

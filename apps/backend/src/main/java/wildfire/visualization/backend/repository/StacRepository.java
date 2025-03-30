@@ -1,17 +1,18 @@
 package wildfire.visualization.backend.repository;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import wildfire.visualization.backend.exception.RepositoryException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import wildfire.visualization.backend.exception.RepositoryException;
 
 /**
  * Repository responsible for directly communicating with the pgSTAC database
@@ -167,11 +168,11 @@ public class StacRepository {
     try {
       // Base SQL query for fetching collections
       String sql = "WITH bbox_data AS ( " +
-          "  SELECT key, id, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
-          "  FROM pgstac.collections " +
-          ") " +
-          "SELECT key, id, bbox_array AS bbox " +
-          "FROM bbox_data ";
+        "  SELECT key, id, content->>'title' AS title, content->'extent'->'spatial'->'bbox' AS bbox_array, datetime " +
+        "  FROM pgstac.collections " +
+        ") " +
+        "SELECT key, id, title, bbox_array AS bbox " +
+        "FROM bbox_data ";
 
       // Apply bounding box filtering if provided
       if (bbox != null) {
@@ -187,7 +188,7 @@ public class StacRepository {
 
       // Validate and apply ordering if provided
       if (!orderBy.isEmpty()) {
-        if (!Arrays.asList("id", "datetime").contains(orderBy)) {
+        if (!Arrays.asList("id", "datetime", "title").contains(orderBy)) {
           throw new RepositoryException("Invalid orderBy column: " + orderBy);
         }
         sql += " ORDER BY " + orderBy + " " + direction;
@@ -256,9 +257,9 @@ public class StacRepository {
   }
 
   /**
-   * 
+   *
    * Retrieves item IDs from the database, ordered by datetime ascending (UTC).*
-   * 
+   *
    * @return List of item IDs
    * @throws RepositoryException if a database error occurs
    */
@@ -305,7 +306,7 @@ public class StacRepository {
    * @throws RepositoryException if a database error occurs
    */
   public List<Map<String, Object>> getAllCollectionsByName(double[] bbox, String sortDirection) {
-    return fetchCollections(bbox, "id", sortDirection);
+    return fetchCollections(bbox, "title", sortDirection);
   }
 
   /**
@@ -384,6 +385,26 @@ public class StacRepository {
       throw new RepositoryException("Error fetching items for collection: " + collectionId, e);
     }
   }
+
+  /**
+   * Retrieves all items from the database
+   *
+   * @return List of maps containing item data
+   * @throws RepositoryException if a database error occurs
+   */
+  public List<Map<String, Object>> getAllItemsFromCollection(String collectionId) {
+    logger.debug("Fetching items for collection: {}", collectionId);
+    try {
+      String sql = "SELECT * FROM pgstac.items WHERE collection = ?";
+      List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
+      logger.debug("Query returned {} results", results.size());
+      return results;
+    } catch (DataAccessException e) {
+      logger.error("Error fetching items: {}", e.getMessage(), e);
+      throw new RepositoryException("Error fetching items for collection: " + collectionId, e);
+    }
+  }
+
 
   /**
    * Method responsible for retrieving an item from the database
@@ -586,7 +607,7 @@ public class StacRepository {
    * @param assetName    Name of the asset
    * @param layerUrl     URL of the layer
    */
-  public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl) {
+  public void saveLayer(String itemId, String collectionId, String assetName, String layerUrl, int min, int max) {
     // Ensure the collection exists
     String insertCollection = """
             INSERT INTO TIFF_Collections (collection_id)
@@ -605,11 +626,11 @@ public class StacRepository {
 
     // Insert asset with default is_registered = FALSE
     String insertAsset = """
-            INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered)
-            VALUES (?, ?, ?, FALSE)
+            INSERT INTO TIFF_Assets (item_id, asset_name, layer_url, is_registered, min, max)
+            VALUES (?, ?, ?, FALSE, ?, ?)
             ON CONFLICT (item_id, asset_name) DO NOTHING;
         """;
-    jdbcTemplate.update(insertAsset, itemId, assetName, layerUrl);
+    jdbcTemplate.update(insertAsset, itemId, assetName, layerUrl, min, max);
   }
 
   /**
@@ -620,7 +641,7 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers(String itemId) {
     String sql = """
-            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered, a.min, a.max,
                    i.item_id, i.collection_id
             FROM TIFF_Assets a
             JOIN TIFF_Items i ON a.item_id = i.item_id
@@ -702,7 +723,7 @@ public class StacRepository {
    */
   public List<Map<String, Object>> getLoadedLayers() {
     String sql = """
-            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered,
+            SELECT a.id AS asset_id, a.asset_name, a.layer_url, a.is_registered, a.min, a.max,
                    i.item_id, i.collection_id
             FROM TIFF_Assets a
             JOIN TIFF_Items i ON a.item_id = i.item_id

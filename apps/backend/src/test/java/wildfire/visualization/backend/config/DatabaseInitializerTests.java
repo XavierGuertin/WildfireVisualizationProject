@@ -3,12 +3,14 @@ package wildfire.visualization.backend.config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class) // Enables Mockito
 class DatabaseInitializerTests {
@@ -29,6 +31,6 @@ class DatabaseInitializerTests {
     databaseInitializer.initializeDatabase();
 
     // Verify that SQL was executed
-    verify(jdbcTemplate, times(3)).execute(anyString());
+    verify(jdbcTemplate, times(4)).execute(anyString());
   }
 }

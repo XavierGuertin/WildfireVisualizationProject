@@ -1,22 +1,5 @@
 package wildfire.visualization.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.postgresql.util.PGobject;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import wildfire.visualization.backend.controller.ConfigController;
-import wildfire.visualization.backend.exception.DataException;
-import wildfire.visualization.backend.exception.RepositoryException;
-import wildfire.visualization.backend.repository.StacRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +8,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.postgresql.util.PGobject;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import wildfire.visualization.backend.controller.ConfigController;
+import wildfire.visualization.backend.exception.DataException;
+import wildfire.visualization.backend.exception.RepositoryException;
+import wildfire.visualization.backend.repository.StacRepository;
 
 @ExtendWith(MockitoExtension.class)
 class DataServiceTests {
@@ -1027,117 +1040,6 @@ class DataServiceTests {
   }
 
   @Test
-  void processItemAssets_shouldHandleEmptyResults() {
-    when(stacRepository.getAllItems("empty-collection")).thenReturn(List.of());
-
-    dataService.processItemAssets("empty-collection");
-
-    assertThat(dataService.getProgress("empty-collection_assets")).isEqualTo(-1); // completed without items
-  }
-
-  @Test
-  void processItemAssets_shouldHandleUnexpectedSearchType() {
-    Map<String, Object> mockRow = Map.of("search", 123); // Not PGobject or String
-    when(stacRepository.getAllItems("bad-search")).thenReturn(List.of(mockRow));
-
-    dataService.processItemAssets("bad-search");
-
-    assertThat(dataService.getProgress("bad-search_assets")).isEqualTo(-1); // No crash, handled gracefully
-  }
-
-  @Test
-  void processItemAssets_shouldHandleJsonParsingError() throws Exception {
-    PGobject pgObject = new PGobject();
-    pgObject.setValue("{ invalid json");
-
-    Map<String, Object> mockRow = Map.of("search", pgObject);
-    when(stacRepository.getAllItems("error-case")).thenReturn(List.of(mockRow));
-    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
-
-    dataService.processItemAssets("error-case");
-
-    assertThat(dataService.getProgress("error-case_assets")).isEqualTo(-1); // Error state
-  }
-
-  @Test
-  void processItemAssets_shouldSkipFeaturesWithNoAssets() throws Exception {
-    PGobject pgObject = new PGobject();
-    pgObject.setValue("""
-          {
-            "features": [{
-              "id": "item-no-assets",
-              "collection": "collectionX",
-              "assets": {}
-            }]
-          }
-        """);
-
-    Map<String, Object> mockRow = Map.of("search", pgObject);
-    when(stacRepository.getAllItems("no-assets")).thenReturn(List.of(mockRow));
-
-    dataService.processItemAssets("no-assets");
-
-    assertThat(dataService.getProgress("no-assets_assets")).isEqualTo(-1);
-    verifyNoInteractions(geoTIFFService);
-  }
-
-  @Test
-  void processItemAssets_ShouldProcessAssetsForEachFeature() throws Exception {
-    // Arrange
-    String collectionId = "test-collection";
-    String itemId = "item1";
-    String assetKey = "B01";
-    String href = "https://somehost.com/asset1.tif";
-
-    // Build the JSON string to simulate the "search" PGobject
-    String json = String.format("""
-        {
-          "type": "FeatureCollection",
-          "features": [
-            {
-              "id": "%s",
-              "collection": "%s",
-              "assets": {
-                "%s": {
-                  "href": "%s"
-                }
-              }
-            }
-          ]
-        }
-        """, itemId, collectionId, assetKey, href);
-
-    PGobject pgObject = new PGobject();
-    pgObject.setType("json");
-    pgObject.setValue(json);
-
-    Map<String, Object> row = Map.of("search", pgObject);
-    when(stacRepository.getAllItems(eq(collectionId))).thenReturn(List.of(row));
-
-    // Mock ObjectMapper to parse the JSON string
-    ObjectMapper realMapper = new ObjectMapper(); // Use real one to parse actual JSON
-    JsonNode rootNode = realMapper.readTree(json);
-    when(objectMapper.readTree(anyString())).thenReturn(rootNode);
-
-    // Ensure GeoTIFFService is mocked properly
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href))).thenReturn(true);
-
-    // Act
-    dataService.processItemAssets(collectionId);
-
-    // Allow async execution to complete (adjust if needed)
-    Thread.sleep(150);
-
-    // Assert
-    verify(stacRepository).getAllItems(eq(collectionId));
-    verify(objectMapper).readTree(anyString());
-    verify(geoTIFFService).processGeoTIFF(eq(itemId), eq(collectionId), eq(assetKey), eq(href));
-
-    // Check progress is 100%
-    assertThat(dataService.getProgress(collectionId + "_assets")).isEqualTo(100);
-  }
-
-  @Test
   void getItemsIdsOrderedByTimestamp_Success() {
     // Arrange
     List<String> expectedIds = List.of("item1", "item2", "item3");
@@ -1163,6 +1065,96 @@ class DataServiceTests {
         .hasMessageContaining("Failed to fetch item timestamps");
 
     verify(stacRepository, times(1)).getItemsIdsOrderedByTimestamp();
+  }
+
+  @Test
+  void processItemAssets_shouldHandleEmptyResults() {
+    when(stacRepository.getAllItemsFromCollection("empty-collection")).thenReturn(List.of());
+
+    dataService.processItemAssets("empty-collection");
+
+    assertThat(dataService.getProgress("empty-collection_assets")).isEqualTo(100);
+  }
+
+  @Test
+  void processItemAssets_shouldHandleUnexpectedContentType() {
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", 123); // Not PGobject or String
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isNotEqualTo(100);
+    verifyNoInteractions(geoTIFFService);
+  }
+
+
+  @Test
+  void processItemAssets_shouldHandleJsonParsingError() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("invalid json");
+
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isEqualTo(-1);
+  }
+
+  @Test
+  void processItemAssets_shouldSkipItemsWithNoAssets() throws Exception {
+    String json = """
+        {
+          "assets": {}
+        }
+        """;
+
+    PGobject pgObject = new PGobject();
+    pgObject.setValue(json);
+
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isEqualTo(100);
+    verifyNoInteractions(geoTIFFService);
+  }
+
+  @Test
+  void processItemAssets_shouldProcessValidAssets() throws Exception {
+    String itemId = "item1";
+    String collId = "coll1";
+    String assetKey = "wind_force";
+    String href = "http://some.url/asset.tif";
+    int min = 0, max = 100;
+
+    String json = String.format("""
+        {
+          "assets": {
+            "%s": {
+              "href": "%s",
+              "value_range": [%d, %d]
+            }
+          }
+        }
+        """, assetKey, href, min, max);
+
+    PGobject pgObject = new PGobject();
+    pgObject.setValue(json);
+
+    Map<String, Object> row = Map.of("id", itemId, "collection", collId, "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection(collId)).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenReturn(new ObjectMapper().readTree(json));
+    when(geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max)).thenReturn(true);
+
+    dataService.processItemAssets(collId);
+    Thread.sleep(200); // Let the async method finish
+
+    assertThat(dataService.getProgress(collId + "_assets")).isEqualTo(100);
+    verify(geoTIFFService).processGeoTIFF(itemId, collId, assetKey, href, min, max);
   }
 
 }

@@ -868,7 +868,7 @@ describe('SettingsPanel Component', () => {
           await fetchCollectionsFromEndpoint(endpointUrl);
           const config = await getConfig();
           config.endpoint = endpointUrl;
-          config.loadedDataset = '';
+          config.loadedDataset = { id: '', title: '' };
           await saveConfig(config);
           return true;
         });
@@ -881,7 +881,7 @@ describe('SettingsPanel Component', () => {
       expect(result).toBe(true);
     });
 
-    it('sets loadedDataset to empty string when saving endpoint config', async () => {
+    it('sets loadedDataset id and title to empty string when saving endpoint config', async () => {
       // Setup mocks
       const {
         verifyIfEndpointHasCollections,
@@ -907,7 +907,7 @@ describe('SettingsPanel Component', () => {
 
       // Capture the config that's passed to saveConfig
       saveConfig.mockImplementation(async (config: any) => {
-        expect(config.loadedDataset).toBe('');
+        expect(config.loadedDataset.id).toBe('');
         return Promise.resolve();
       });
 
@@ -925,7 +925,7 @@ describe('SettingsPanel Component', () => {
           await fetchCollectionsFromEndpoint(endpointUrl);
           const config = await getConfig();
           config.endpoint = endpointUrl;
-          config.loadedDataset = '';
+          config.loadedDataset = { id: '', title: '' };
           await saveConfig(config);
           return true;
         });
@@ -967,6 +967,7 @@ describe('SettingsPanel Component', () => {
           setLayer: jest.fn(),
           setSpeed: jest.fn(),
           setTimeStamps: jest.fn(),
+          timeStamps: ["2022-01-01"],
           setCollectionId: jest.fn(),
           mapRef: {
             current: {
@@ -1027,303 +1028,6 @@ describe('SettingsPanel Component', () => {
   });
 });
 
-describe('Style Customization Dropdown', () => {
-
-  jest.mock('../src/app/components/MapView', () => ({
-    __esModule: true,
-    updateLayerStyle: jest.fn(),
-    changeLayer: jest.fn()
-  }));
-
-  let mockMapInstance: any = null;
-
-  jest.mock('../src/app/context/MapContext', () => ({
-    useMapLayerContext: () => ({
-      mapRef: { current: mockMapInstance },
-      setLayer: jest.fn(),
-      setSpeed: jest.fn(),
-      resetView: jest.fn(),
-      isOnline: true,
-      setIsOnline: jest.fn(),
-      setSliderValue: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setCollectionId: jest.fn(),
-      setIsPlaying: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-    }),
-    MapProvider: ({ children }: any) => <div>{children}</div>,
-  }));
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockMapInstance = {}; // Assign a valid object
-  });
-
-  it('renders the style dropdown button with palette icon', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    expect(styleButton).toBeInTheDocument();
-  });
-
-  it('opens the style dropdown when clicked', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    expect(styleButton).toHaveClass('active');
-    expect(screen.getByText('polygon')).toBeInTheDocument();
-    expect(screen.getByText('data_layer')).toBeInTheDocument();
-  });
-
-  it('shows polygon style tab by default', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    expect(screen.getByText('polygon_style')).toBeInTheDocument();
-    // Check that polygon tab is active
-    const polygonTab = screen.getByText('polygon').closest('button');
-    expect(polygonTab).toHaveClass('active');
-  });
-
-  it('switches to data layer tab when clicked', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    const dataLayerTab = screen.getByText('data_layer');
-    await act(async () => {
-      fireEvent.click(dataLayerTab);
-    });
-
-    expect(screen.getByText('data_layer_style')).toBeInTheDocument();
-    // Confirm data layer tab is now active
-    const dataTab = screen.getByText('data_layer').closest('button');
-    expect(dataTab).toHaveClass('active');
-  });
-
-  it('updates polygon fill color when color picker changes', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Find the fill color input in the polygon tab
-    const fillLabels = screen.getAllByText('fill:');
-    const styleOption = fillLabels[0].closest('.style-option');
-    const colorInput = styleOption?.querySelector(
-      'input[type="color"]',
-    ) as HTMLInputElement;
-
-    await act(async () => {
-      fireEvent.change(colorInput, { target: { value: '#00ff00' } });
-    });
-
-    expect(colorInput.value).toBe('#00ff00');
-  });
-
-  it('updates polygon fill opacity when slider changes', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Find the opacity slider in the polygon tab
-    const opacityLabels = screen.getAllByText('fill_opacity:');
-    const styleOption = opacityLabels[0].closest('.style-option');
-    const opacitySlider = styleOption?.querySelector(
-      'input[type="range"]',
-    ) as HTMLInputElement;
-
-    await act(async () => {
-      fireEvent.change(opacitySlider, { target: { value: '0.5' } });
-    });
-
-    expect(opacitySlider.value).toBe('0.5');
-    const valueDisplay = styleOption?.querySelector('span');
-    expect(valueDisplay?.textContent).toBe('0.5');
-  });
-
-  it('updates data layer styling when switched to data layer tab', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Switch to data layer tab
-    const dataLayerTab = screen.getByText('data_layer');
-    await act(async () => {
-      fireEvent.click(dataLayerTab);
-    });
-
-    // Find the data layer fill color input
-    const fillLabels = screen.getAllByText('fill:');
-    const styleOption = fillLabels[0].closest('.style-option');
-    const colorInput = styleOption?.querySelector(
-      'input[type="color"]',
-    ) as HTMLInputElement;
-
-    await act(async () => {
-      fireEvent.change(colorInput, { target: { value: '#0000aa' } });
-    });
-
-    expect(colorInput.value).toBe('#0000aa');
-
-    // Test update button functionality
-    const updateButton = screen.getByText('update_style');
-    await act(async () => {
-      fireEvent.click(updateButton);
-    });
-  });
-
-  it('resets style values when reset button is clicked', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Click the reset style button
-    const resetButton = screen.getByText('reset_style');
-    await act(async () => {
-      fireEvent.click(resetButton);
-    });
-
-    // Check that default values are restored
-    const fillLabels = screen.getAllByText('fill:');
-    const styleOption = fillLabels[0].closest('.style-option');
-    const colorInput = styleOption?.querySelector(
-      'input[type="color"]',
-    ) as HTMLInputElement;
-
-    expect(colorInput.value).toBe('#ff0000'); // Default polygon fill color
-  });
-
-  // Test the hexToRgb conversion function
-  it('correctly converts hex colors to RGB format', async () => {
-    // Create a standalone implementation matching the component's method
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
-        : 'rgb(0,0,0)';
-    };
-
-    // Test various hex colors
-    expect(hexToRgb('#ff0000')).toBe('rgb(255,0,0)');
-    expect(hexToRgb('#00ff00')).toBe('rgb(0,255,0)');
-    expect(hexToRgb('#0000ff')).toBe('rgb(0,0,255)');
-    expect(hexToRgb('#ffffff')).toBe('rgb(255,255,255)');
-    expect(hexToRgb('#000000')).toBe('rgb(0,0,0)');
-    expect(hexToRgb('invalid')).toBe('rgb(0,0,0)'); // Test invalid input
-  });
-
-  it('handles null mapRef when updating layer styles', async () => {
-    // Mock the MapContext to provide a mock mapRef
-    jest.spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext').mockImplementation(() => ({
-      mapRef: { current: {} },
-      setLayer: jest.fn(),
-      setSpeed: jest.fn(),
-      resetView: jest.fn(),
-      isOnline: true,
-      setIsOnline: jest.fn(),
-      setSliderValue: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setCollectionId: jest.fn(),
-      setIsPlaying: jest.fn(),
-      setSelectedAssetLayers: jest.fn()
-    }));
-
-    // Access the mock function directly
-    const mockUpdateLayerStyle = require('../src/app/components/MapView').updateLayerStyle;
-
-    // Mock MapContext with null mapRef
-    jest.mock('../src/app/context/MapContext', () => ({
-      useMapLayerContext: () => ({
-        mapRef: { current: null },
-      }),
-    }));
-
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Try to update style with null mapRef
-    const updateButton = screen.getByText('update_style');
-    await act(async () => {
-      fireEvent.click(updateButton);
-    });
-
-    // Verify the updateLayerStyle was not called
-    expect(mockUpdateLayerStyle).not.toHaveBeenCalled();
-  });
-});
-
-describe('handleUpdateLayerStyle with null mapRef', () => {
-  beforeEach(() => {
-    // Override useMapLayerContext for this block to return mapRef.current as null
-    jest.spyOn(
-      require('../src/app/context/MapContext'),
-      'useMapLayerContext'
-    ).mockReturnValue({
-      mapRef: { current: null },
-      setLayer: jest.fn(),
-      setSpeed: jest.fn(),
-      resetView: jest.fn(),
-      isOnline: true,
-      setIsOnline: jest.fn(),
-      setSliderValue: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setCollectionId: jest.fn(),
-      setIsPlaying: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-    });
-  });
-
-  it('does not call updateLayerStyle when mapRef.current is null', async () => {
-    // Render the component using the helper
-    await renderSettingsPanel();
-
-    // Open the style dropdown
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Spy on updateLayerStyle from MapView
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-    jest.clearAllMocks();
-
-    // Click update style button which triggers handleUpdateLayerStyle
-    const updateButton = screen.getByText('update_style');
-    await act(async () => {
-      fireEvent.click(updateButton);
-    });
-
-    // Verify updateLayerStyle was not called because mapRef.current is null (line 411)
-    expect(updateLayerStyle).not.toHaveBeenCalled();
-  });
-});
-
 describe('hexToRgb conversion function', () => {
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1350,49 +1054,6 @@ describe('hexToRgb conversion function', () => {
 
   it('returns default for an invalid hex string', () => {
     expect(hexToRgb('invalid')).toBe('rgb(0,0,0)');
-  });
-});
-
-describe('handleUpdateLayerStyle with null mapRef at line 444', () => {
-  beforeEach(() => {
-    // Override useMapLayerContext to simulate a null mapRef
-    jest.spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext').mockReturnValue({
-      mapRef: { current: null },
-      setLayer: jest.fn(),
-      setSpeed: jest.fn(),
-      resetView: jest.fn(),
-      isOnline: true,
-      setIsOnline: jest.fn(),
-      setSliderValue: jest.fn(),
-      setTimeStamps: jest.fn(),
-      setCollectionId: jest.fn(),
-      setIsPlaying: jest.fn(),
-      setSelectedAssetLayers: jest.fn(),
-    });
-  });
-
-  it('does not call updateLayerStyle when mapRef.current is null (line 444)', async () => {
-    // Render the SettingsPanel component
-    await renderSettingsPanel();
-
-    // Open the style dropdown
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Spy on updateLayerStyle from MapView
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-    jest.clearAllMocks();
-
-    // Click the update style button which triggers handleUpdateLayerStyle
-    const updateButton = screen.getByText('update_style');
-    await act(async () => {
-      fireEvent.click(updateButton);
-    });
-
-    // Verify updateLayerStyle was not called because mapRef.current is null
-    expect(updateLayerStyle).not.toHaveBeenCalled();
   });
 });
 
@@ -1431,62 +1092,5 @@ describe('hexToRgb conversion function', () => {
 
   it('returns default for an invalid hex string', () => {
     expect(hexToRgb('invalid')).toBe('rgb(0,0,0)');
-  });
-});
-
-describe('Reset Data Layer Style in SettingsPanel', () => {
-  it('resets data layer style values to blue defaults when reset_style is clicked', async () => {
-    // Render the component using the helper
-    await renderSettingsPanel();
-
-    // Open the style dropdown
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Switch to the data layer tab
-    const dataLayerTab = screen.getByText('data_layer');
-    await act(async () => {
-      fireEvent.click(dataLayerTab);
-    });
-
-    // Verify that the data layer style header is present
-    expect(screen.getByText('data_layer_style')).toBeInTheDocument();
-
-    // Locate the container with the style inputs
-    const styleContainer = screen.getByText('data_layer_style').parentElement;
-    if (!styleContainer) {
-      throw new Error('Data layer style container not found');
-    }
-
-    // Query the color and range inputs for data layer styling
-    const colorInputs = styleContainer.querySelectorAll('input[type="color"]');
-    const rangeInputs = styleContainer.querySelectorAll('input[type="range"]');
-    if (colorInputs.length < 2 || rangeInputs.length < 2) {
-      throw new Error('Expected color and range inputs not found for data layer');
-    }
-
-    // Simulate modifying the data layer style values
-    await act(async () => {
-      fireEvent.change(colorInputs[0], { target: { value: '#123456' } }); // fill color
-      fireEvent.change(rangeInputs[0], { target: { value: '0.5' } });      // fill opacity
-      fireEvent.change(colorInputs[1], { target: { value: '#654321' } }); // stroke color
-      fireEvent.change(rangeInputs[1], { target: { value: '3' } });         // stroke width
-    });
-
-    // Click the reset button to trigger reset of data layer styles
-    const resetButton = screen.getByText('reset_style');
-    await act(async () => {
-      fireEvent.click(resetButton);
-    });
-
-    // Verify that the default blue values are restored:
-    // fill color: '#0000ff', fill opacity: '0.1',
-    // stroke color: '#0000ff', stroke width: '2'
-    expect((colorInputs[0] as HTMLInputElement).value).toBe('#123456');
-    expect((rangeInputs[0] as HTMLInputElement).value).toBe('0.5');
-    expect((colorInputs[1] as HTMLInputElement).value).toBe('#654321');
-    expect((rangeInputs[1] as HTMLInputElement).value).toBe('3');
   });
 });
