@@ -32,11 +32,12 @@ public class GeoServerService {
   @Value("${geoserver.downloadDir}")
   private String geoserverDownloadDir;
 
+  @Value("${geoserver.workspacesPath}")
+  private String geoserverWorkspacesPath;
+
   private final RestTemplate restTemplate = new RestTemplate();
 
   private static final Logger logger = LoggerFactory.getLogger(GeoServerService.class);
-
-  private static final String GEOSERVER_WORKSPACES_PATH = "/rest/workspaces/";
 
   /**
    * Creates and returns HTTP headers with basic authentication for GeoServer
@@ -60,7 +61,7 @@ public class GeoServerService {
    * @return true if the registration was successful, false otherwise
    */
   public boolean registerCoverageStore(String layerName) {
-    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores";
+    String url = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores";
 
     String body = """
             {
@@ -88,7 +89,7 @@ public class GeoServerService {
    * @return true if the registration was successful, false otherwise
    */
   public boolean registerCoverageLayer(String layerName) {
-    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores/" + layerName + "/coverages";
+    String url = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName + "/coverages";
 
     String body = """
             {
@@ -115,7 +116,7 @@ public class GeoServerService {
    * @return true if the layer was successfully unregistered, false otherwise
    */
   public boolean unregisterLayer(String layerName) {
-    String url = geoserverUrl + GEOSERVER_WORKSPACES_PATH + workspace + "/coveragestores/" + layerName
+    String url = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
         + "?purge=all&recurse=true";
 
     try {
