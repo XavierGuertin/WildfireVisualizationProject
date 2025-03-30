@@ -1,0 +1,4 @@
+joblib
+fastapi
+pydantic
+uvicorn
