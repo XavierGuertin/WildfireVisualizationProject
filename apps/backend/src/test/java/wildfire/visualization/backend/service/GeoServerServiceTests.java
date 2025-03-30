@@ -38,6 +38,7 @@ class GeoServerServiceTests {
   private final String password = "geoserver";
   private final String geoserverDataDir = "/var/geoserver/data_dir/tiffs";
   private final String layerName = "humidity";
+  private final String geoserverWorkspacesPath = "/rest/workspaces/";
 
   @BeforeEach
   void setUp() {
@@ -47,130 +48,141 @@ class GeoServerServiceTests {
     setField(geoServerService, "geoserverPassword", password);
     setField(geoServerService, "geoserverDataDir", geoserverDataDir);
     setField(geoServerService, "restTemplate", restTemplate);
+    setField(geoServerService, "geoserverWorkspacesPath", geoserverWorkspacesPath);
   }
 
   @Test
   void testRegisterCoverageStore_Success() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores";
 
     // Mock response
     ResponseEntity<String> successResponse = new ResponseEntity<>("Created", HttpStatus.CREATED);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(successResponse);
+        .thenReturn(successResponse);
 
     // Execute
     boolean result = geoServerService.registerCoverageStore(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isTrue();
   }
 
   @Test
   void testRegisterCoverageStore_Failure() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores";
 
     // Mock response
     ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(failureResponse);
+        .thenReturn(failureResponse);
 
     // Execute
     boolean result = geoServerService.registerCoverageStore(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isFalse();
   }
 
   @Test
   void testRegisterCoverageLayer_Success() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "/coverages";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
+        + "/coverages";
 
     // Mock response
     ResponseEntity<String> successResponse = new ResponseEntity<>("Created", HttpStatus.CREATED);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(successResponse);
+        .thenReturn(successResponse);
 
     // Execute
     boolean result = geoServerService.registerCoverageLayer(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isTrue();
   }
 
   @Test
   void testRegisterCoverageLayer_Failure() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "/coverages";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
+        + "/coverages";
 
     // Mock response
     ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(failureResponse);
+        .thenReturn(failureResponse);
 
     // Execute
     boolean result = geoServerService.registerCoverageLayer(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isFalse();
   }
 
   @Test
   void testUnregisterLayer_Success() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
+        + "?purge=all&recurse=true";
 
     // Mock response
     ResponseEntity<String> successResponse = new ResponseEntity<>(HttpStatus.NO_CONTENT);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(successResponse);
+        .thenReturn(successResponse);
 
     // Execute
     boolean result = geoServerService.unregisterLayer(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isTrue();
   }
 
   @Test
   void testUnregisterLayer_Failure() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
+        + "?purge=all&recurse=true";
 
     // Mock response
     ResponseEntity<String> failureResponse = new ResponseEntity<>("Error", HttpStatus.INTERNAL_SERVER_ERROR);
     when(restTemplate.exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(failureResponse);
+        .thenReturn(failureResponse);
 
     // Execute
     boolean result = geoServerService.unregisterLayer(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isFalse();
   }
 
   @Test
   void testUnregisterLayer_Failure_Exception() {
-    String expectedUrl = geoserverUrl + "/rest/workspaces/" + workspace + "/coveragestores/" + layerName + "?purge=all&recurse=true";
+    String expectedUrl = geoserverUrl + geoserverWorkspacesPath + workspace + "/coveragestores/" + layerName
+        + "?purge=all&recurse=true";
 
     // Simulate RestTemplate throwing an exception
     when(restTemplate.exchange(
-      eq(expectedUrl),
-      eq(HttpMethod.DELETE),
-      any(HttpEntity.class),
-      eq(String.class))
-    ).thenThrow(new RuntimeException("Test exception"));
+        eq(expectedUrl),
+        eq(HttpMethod.DELETE),
+        any(HttpEntity.class),
+        eq(String.class))).thenThrow(new RuntimeException("Test exception"));
 
     // Execute
     boolean result = geoServerService.unregisterLayer(layerName);
 
     // Verify
-    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1)).exchange(eq(expectedUrl), eq(HttpMethod.DELETE), any(HttpEntity.class),
+        eq(String.class));
     assertThat(result).isFalse();
   }
-
 
   @Test
   void deleteTifFile_shouldDeleteFile_ifExists() throws Exception {
@@ -214,6 +226,5 @@ class GeoServerServiceTests {
       throw new RuntimeException("Failed to set field: " + fieldName, e);
     }
   }
-
 
 }
