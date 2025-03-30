@@ -19,6 +19,7 @@ import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
 import { getConfig, saveConfig } from '../services/configApi';
 import AssetsDropdown from './AssetsDropdown';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 interface MapMetaDataProps {
   id?: string;
@@ -33,16 +34,17 @@ interface MapMetaDataProps {
 }
 
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  id = '',
-  name = '',
-  description = '',
-  format = '',
-  processes = '',
-  datasetSource = '',
-  visible,
-  refreshDatasets,
-}) => {
+                                                   id = '',
+                                                   name = '',
+                                                   description = '',
+                                                   format = '',
+                                                   processes = '',
+                                                   datasetSource = '',
+                                                   visible,
+                                                   refreshDatasets,
+                                                 }) => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [width, setWidth] = useState(350);
   const [isResizing, setIsResizing] = useState(false);
@@ -50,7 +52,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
-  const animationRef = useRef<number | null>(null); // Initialize as null
+  const animationRef = useRef<number | null>(null);
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -70,41 +72,70 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setIsProcessLoading,
     setSelectedAssetLayers,
     mapRef,
-    setIsPlaying
+    setIsPlaying,
   } = useMapLayerContext();
+
+  // Queries
+  const { data: configData } = useQuery(['config'], () => getConfig(), {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+  });
+
+  const { data: timestampsData } = useQuery(['timestamps'], () => fetchTimestamps(), {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    onSuccess: (data) => setTimeStamps(data),
+  });
+
+  const { data: itemIdsData } = useQuery(['itemIds'], () => fetchItemIds(), {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    onSuccess: (data) => setItemIds(data),
+  });
+
+  // Mutations
+  const resetItemsMutation = useMutation(() => resetItems(), {
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
+
+  const resetItemAssetsMutation = useMutation(() => resetItemAssets(), {
+    onSuccess: () => queryClient.invalidateQueries(['itemAssets']),
+  });
+
+  const fetchItemsMutation = useMutation((id: string) => fetchItems(id), {
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
+
+  const loadAssetsMutation = useMutation((id: string) => loadAssets(id), {
+    onSuccess: () => queryClient.invalidateQueries(['itemAssets']),
+  });
+
+  const saveConfigMutation = useMutation((config: any) => saveConfig(config), {
+    onSuccess: (data) => queryClient.setQueryData(['config'], data),
+  });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
-    
     setIsResizing(true);
     startXRef.current = e.clientX;
     startWidthRef.current = containerRef.current.offsetWidth;
-    
-    // Hint browser about upcoming changes for better performance
-    if (containerRef.current) {
-      containerRef.current.style.willChange = 'width';
-    }
-    
+    containerRef.current.style.willChange = 'width';
     e.preventDefault();
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing || !containerRef.current) return;
-    
-    const dx = e.clientX - startXRef.current;
-    let newWidth = startWidthRef.current + dx;
-    
-    // Apply constraints
-    newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-    
-    // DIRECT DOM UPDATE (no React state lag)
-    containerRef.current.style.width = `${newWidth}px`;
-  }, [isResizing, maxWidth, minWidth]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing || !containerRef.current) return;
+      const dx = e.clientX - startXRef.current;
+      let newWidth = startWidthRef.current + dx;
+      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+      containerRef.current.style.width = `${newWidth}px`;
+    },
+    [isResizing, maxWidth, minWidth]
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isResizing || !containerRef.current) return;
-    
-    // Only update React state AFTER dragging finishes
     setWidth(containerRef.current.offsetWidth);
     containerRef.current.style.willChange = 'auto';
     setIsResizing(false);
@@ -118,13 +149,12 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     }
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-    }
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
@@ -136,179 +166,143 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       return;
     }
 
+    const result = await MySwal.fire({
+      title: t('load_dataset'),
+      text: t('confirm_deletion_items_from_previous_collection'),
+      icon: 'warning',
+      showCancelButton: true,
+      cancelButtonText: t('no'),
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t('yes'),
+      customClass: { popup: 'custom-swal-popup' },
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      const result = await MySwal.fire({
-        title: t('load_dataset'),
-        text: t('confirm_deletion_items_from_previous_collection'),
-        icon: 'warning',
-        showCancelButton: true,
-        cancelButtonText: t('no'),
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: t('yes'),
-        customClass: {
-          popup: 'custom-swal-popup',
-        },
-      });
+      setTargetLoading(t('collection_items'));
+      setLoading(true);
+      setIsProcessLoading(true);
+      localStorage.setItem('sliderValue', '0');
+      setSliderValue(0);
+      setProgress(0);
 
-      if (result.isConfirmed) {
-        setTargetLoading(t('collection_items'));
-        setLoading(true); // Show loading overlay
-        setIsProcessLoading(true);
-        localStorage.setItem('sliderValue', '0');
-        setSliderValue(0);
-        setProgress(0);
-        await resetItems();
-        await resetItemAssets();
-        setLoadedLayers([]);
-        setSelectedAssetLayers([]);
-        setIsPlaying(false);
-        if (mapRef.current) {
-          const map = mapRef.current;
+      await resetItemsMutation.mutateAsync();
+      await resetItemAssetsMutation.mutateAsync();
+      setLoadedLayers([]);
+      setSelectedAssetLayers([]);
+      setIsPlaying(false);
 
-          // Remove all layers except those with ID 'baseLayer' or 'dataLayer'
-          const layersToRemove = map.getLayers().getArray().filter((layer) => {
+      if (mapRef.current) {
+        const map = mapRef.current;
+        const layersToRemove = map
+          .getLayers()
+          .getArray()
+          .filter((layer) => {
             const id = layer.get('id');
             return id !== 'baseLayer' && id !== 'dataLayer';
           });
-
-          layersToRemove.forEach((layer) => {
-            map.removeLayer(layer);
-          });
-        }
-
-        try {
-          // Start fetching items asynchronously
-          const response = await fetchItems(id);
-          if (
-            response !=
-            'Fetching started in the background. Check progress separately.'
-          ) {
-            throw new Error(t('timestamps_fetch_error'));
-          }
-          toast.success(t('timestamps_fetch_success'), {
-            toastId: 'timestamps-success',
-          });
-
-          const pollProgress = async () => {
-            let lastProgress = -1;
-            let stableCount = 0;
-            const maxStableCount = 10; // e.g., 10 seconds with 1s interval
-
-            // Set the config attribute for loadedDataset and refreshDatasets list to update state
-            try {
-              const config = await getConfig();
-              config.loadedDataset = { id: "", title: "" };
-              await saveConfig(config);
-              refreshDatasets?.();
-            } catch (err) {
-              console.error(
-                'Error updating loadedDataset in config:',
-                err,
-              );
-            }
-
-            while (true) {
-              const progressResponse = await fetchProgress(id);
-
-              if ('progress' in progressResponse) {
-                const currentProgress = progressResponse.progress;
-                setProgress(currentProgress);
-
-                const timestamps = await fetchTimestamps();
-                setTimeStamps(timestamps);
-                const itemIds = await fetchItemIds();
-                setItemIds(itemIds);
-                setCollectionId(id);
-
-                if (currentProgress === lastProgress) {
-                  stableCount++;
-                } else {
-                  stableCount = 0;
-                  lastProgress = currentProgress;
-                }
-
-                // Consider done if stable for too long or if progress reaches 100
-                if (currentProgress >= 100 || stableCount >= maxStableCount) {
-                  // Optional: Set progress to 100 if stuck
-                  if (currentProgress < 100) {
-                    setProgress(100);
-                  }
-
-                  await new Promise((resolve) => setTimeout(resolve, 1000));
-                  setLoading(false);
-                  toast.success(t('items_fetch_success'), {
-                    toastId: 'items-success',
-                  });
-
-                  return;
-                }
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-          };
-
-          await pollProgress();
-          setTargetLoading(t('collection_item_assets'));
-          setLoading(true);
-          setProgress(0);
-
-          await loadAssets(id); // triggers backend async processing
-
-          // Now start polling for progress on the asset load
-          const pollAssetProgress = async () => {
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-              const progressResponse = await fetchProgress(id + '_assets');
-
-              if ('progress' in progressResponse) {
-                setProgress(progressResponse.progress);
-
-                if (progressResponse.progress >= 100) {
-                  await new Promise((resolve) => setTimeout(resolve, 1000));
-                  setLoading(false);
-                  toast.success(t('assets_fetch_success'), {
-                    toastId: 'assets-success',
-                  });
-
-                  // Set the config attribute for loadedDataset and refreshDatasets list to update state
-                  try {
-                    const config = await getConfig();
-                    config.loadedDataset = { id: id, title: name };
-                    await saveConfig(config);
-                    refreshDatasets?.();
-                    setIsProcessLoading(false);
-                  } catch (err) {
-                    console.error(
-                      'Error updating loadedDataset in config:',
-                      err,
-                    );
-                  }
-
-                  return;
-                }
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-          };
-
-          pollAssetProgress();
-        } catch (error) {
-          toast.error(`Error loading dataset: ${error}`, {
-            toastId: 'loading-dataset-error'
-          });
-          setLoading(false);
-        }
+        layersToRemove.forEach((layer) => map.removeLayer(layer));
       }
+
+      const response = await fetchItemsMutation.mutateAsync(id);
+      if (response !== 'Fetching started in the background. Check progress separately.') {
+        throw new Error(t('timestamps_fetch_error'));
+      }
+      toast.success(t('timestamps_fetch_success'), { toastId: 'timestamps-success' });
+
+      // Poll progress for items
+      const pollProgress = async () => {
+        let lastProgress = -1;
+        let stableCount = 0;
+        const maxStableCount = 10;
+
+        const config = configData || (await queryClient.fetchQuery(['config'], () => getConfig()));
+        config.loadedDataset = { id: '', title: '' };
+        await saveConfigMutation.mutateAsync(config);
+        refreshDatasets?.();
+
+        while (true) {
+          const progressResponse = await queryClient.fetchQuery(
+            ['progress', id],
+            () => fetchProgress(id),
+            { staleTime: 1000 } // Short stale time for polling
+          );
+
+          if ('progress' in progressResponse) {
+            const currentProgress = progressResponse.progress;
+            setProgress(currentProgress);
+
+            if (timestampsData) setTimeStamps(timestampsData);
+            if (itemIdsData) setItemIds(itemIdsData);
+            setCollectionId(id);
+
+            if (currentProgress === lastProgress) {
+              stableCount++;
+            } else {
+              stableCount = 0;
+              lastProgress = currentProgress;
+            }
+
+            if (currentProgress >= 100 || stableCount >= maxStableCount) {
+              if (currentProgress < 100) setProgress(100);
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              setLoading(false);
+              toast.success(t('items_fetch_success'), { toastId: 'items-success' });
+              break;
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      };
+
+      await pollProgress();
+      setTargetLoading(t('collection_item_assets'));
+      setLoading(true);
+      setProgress(0);
+
+      await loadAssetsMutation.mutateAsync(id);
+
+      // Poll progress for assets
+      const pollAssetProgress = async () => {
+        while (true) {
+          const progressResponse = await queryClient.fetchQuery(
+            ['progress', id + '_assets'],
+            () => fetchProgress(id + '_assets'),
+            { staleTime: 1000 }
+          );
+
+          if ('progress' in progressResponse) {
+            setProgress(progressResponse.progress);
+            if (progressResponse.progress >= 100) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              setLoading(false);
+              toast.success(t('assets_fetch_success'), { toastId: 'assets-success' });
+
+              const config = configData || (await queryClient.fetchQuery(['config'], () => getConfig()));
+              config.loadedDataset = { id, title: name };
+              await saveConfigMutation.mutateAsync(config);
+              refreshDatasets?.();
+              setIsProcessLoading(false);
+              break;
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      };
+
+      await pollAssetProgress();
     } catch (error) {
-      console.error('Error loading dataset:', error);
+      toast.error(`Error loading dataset: ${error.message}`, {
+        toastId: 'loading-dataset-error',
+      });
       setLoading(false);
+      setIsProcessLoading(false);
     }
   };
 
-  if (!visible) return null; // Return null if not visible
+  if (!visible) return null;
 
   const CollapsedMetaData = (
     <div
@@ -322,7 +316,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   );
 
   const NonCollapsedMetaData = (
-    <div 
+    <div
       className="metadata-container"
       ref={containerRef}
       style={{ width: `${width}px` }}
@@ -336,22 +330,10 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       </div>
       <div className="content">
         {[
-          {
-            label: t('description'),
-            value: description,
-            testId: 'dataset-description',
-          },
+          { label: t('description'), value: description, testId: 'dataset-description' },
           { label: t('format'), value: format, testId: 'dataset-format' },
-          {
-            label: t('processes'),
-            value: processes,
-            testId: 'dataset-processes',
-          },
-          {
-            label: t('dataset_source'),
-            value: datasetSource,
-            testId: 'dataset-datasource',
-          },
+          { label: t('processes'), value: processes, testId: 'dataset-processes' },
+          { label: t('dataset_source'), value: datasetSource, testId: 'dataset-datasource' },
         ].map(({ label, value, testId }) => (
           <div className="data-row" key={label}>
             <div className="label">{label}:</div>
@@ -378,13 +360,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         />
         <AssetsDropdown />
       </div>
-      {/* Resize handle */}
-      <div 
-        className="resize-handle"
-        ref={resizeRef}
-        onMouseDown={handleMouseDown}
-        title="Drag to resize"
-      />
+      <div className="resize-handle" ref={resizeRef} onMouseDown={handleMouseDown} title="Drag to resize" />
     </div>
   );
 

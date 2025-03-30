@@ -14,6 +14,19 @@ import './layout.css';
 import { MapProvider } from './context/MapContext';
 import { fetchMetaData } from './services/api';
 import { ToastContainer } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+// Create a single QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Default options for queries
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false, // Disable refetch on window focus by default
+    },
+  },
+});
 
 const ClientLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -57,52 +70,55 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <I18nextProvider i18n={i18n}>
-      <MapProvider>
-        <html lang="en">
-          <body>
-            <ToastContainer />
-            <SettingsPanel
-              refreshDatasets={refreshDatasets}
-              setMetadataVisible={setMetadataVisible}
-            />
-            <div className="layout-container relative">
-              <main className="app-main">{children}</main>
-              <AvailableDatasets
-                onDatasetClick={handleDatasetClick}
-                refreshKey={refreshKey}
-                currentBbox={currentBbox ?? undefined}
-                onResetBbox={() => setCurrentBbox(WORLD_BBOX)}
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <MapProvider>
+          <html lang="en">
+            <body>
+              <ToastContainer />
+              <SettingsPanel
+                refreshDatasets={refreshDatasets}
+                setMetadataVisible={setMetadataVisible}
               />
-              <MapView
-                onBboxChange={(bbox) => {
-                  if (bbox && bbox.length === 4) {
-                    setCurrentBbox(bbox as [number, number, number, number]);
-                  }
-                }}
-              />
-              <Sidebar />
-              {selectedDataset && (
-                <MapMetaData
-                  id={selectedDataset.id}
-                  name={selectedDataset.name}
-                  description={selectedDataset.description}
-                  format={selectedDataset.format}
-                  processes={selectedDataset.processes}
-                  datasetSource={selectedDataset.datasetSource}
-                  onClose={() => setMetadataVisible(false)}
-                  visible={isMetadataVisible} // Pass visibility state
-                  refreshDatasets={refreshDatasets}
+              <div className="layout-container relative">
+                <main className="app-main">{children}</main>
+                <AvailableDatasets
+                  onDatasetClick={handleDatasetClick}
+                  refreshKey={refreshKey}
+                  currentBbox={currentBbox ?? undefined}
+                  onResetBbox={() => setCurrentBbox(WORLD_BBOX)}
                 />
-              )}
+                <MapView
+                  onBboxChange={(bbox) => {
+                    if (bbox && bbox.length === 4) {
+                      setCurrentBbox(bbox as [number, number, number, number]);
+                    }
+                  }}
+                />
+                <Sidebar />
+                {selectedDataset && (
+                  <MapMetaData
+                    id={selectedDataset.id}
+                    name={selectedDataset.name}
+                    description={selectedDataset.description}
+                    format={selectedDataset.format}
+                    processes={selectedDataset.processes}
+                    datasetSource={selectedDataset.datasetSource}
+                    onClose={() => setMetadataVisible(false)}
+                    visible={isMetadataVisible} // Pass visibility state
+                    refreshDatasets={refreshDatasets}
+                  />
+                )}
 
-              <footer className="app-footer"></footer>
-            </div>
-          </body>
-        </html>
-      </MapProvider>
-    </I18nextProvider>
+                <footer className="app-footer"></footer>
+              </div>
+            </body>
+          </html>
+        </MapProvider>
+      </I18nextProvider>
+    </QueryClientProvider>
   );
 };
 
 export default ClientLayout;
+export { queryClient };
