@@ -29,8 +29,8 @@ class ConfigServiceTests {
   private ConfigService configService;
 
   private static final String CONFIG_FILE_PATH = System.getenv().getOrDefault("CONFIG_FILE_PATH",
-      "config/app-config.json");
-  private static final Path CONFIG_DIR_PATH = Path.of("apps/backend/config");
+      "./../../config/app-config.json");
+  private static final Path CONFIG_DIR_PATH = Path.of("apps/config");
 
   @BeforeEach
   void setUp() throws IOException {

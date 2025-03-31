@@ -4,18 +4,25 @@
   "sourceRoot": "apps/frontend-e2e/src",
   "projectType": "application",
   "targets": {
-    "e2e": {
+    "e2e-pipeline": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "./",
-        "command": "concurrently -k -s first \"npx nx serve frontend --configuration=coverage\" \"npx wait-on http://localhost:3000 && npx cypress run --config-file apps/frontend-e2e/cypress.config.ts\""
+        "command": "concurrently -k -s first \"npx nx dev frontend --configuration=coverage\" \"npx wait-on http://localhost:3000 && npx cypress run --headed --config-file apps/frontend-e2e/cypress.config.ts\""
+      }
+    },
+    "e2e-local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/frontend-e2e",
+        "command": "concurrently -k -s first \"npx nx dev frontend --configuration=coverage\" \"npx nx dev backend\" \"npx wait-on http://localhost:3000 && npx cypress run --headed\""
       }
     },
     "e2e-open": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/frontend-e2e",
-        "command": "concurrently -k -s first \"npx nx serve frontend\" \"npx wait-on http://localhost:3000 && npx cypress open\""
+        "command": "concurrently -k -s first \"npx nx dev frontend\" \"npx nx dev backend\" \"npx wait-on http://localhost:3000 && npx cypress open\""
       }
     }
   },

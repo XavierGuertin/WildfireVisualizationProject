@@ -1,23 +1,5 @@
 package wildfire.visualization.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.postgresql.util.PGobject;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import wildfire.visualization.backend.controller.ConfigController;
-import wildfire.visualization.backend.exception.DataException;
-import wildfire.visualization.backend.exception.RepositoryException;
-import wildfire.visualization.backend.repository.StacRepository;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +8,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.postgresql.util.PGobject;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import wildfire.visualization.backend.controller.ConfigController;
+import wildfire.visualization.backend.exception.DataException;
+import wildfire.visualization.backend.exception.RepositoryException;
+import wildfire.visualization.backend.repository.StacRepository;
 
 @ExtendWith(MockitoExtension.class)
 class DataServiceTests {
@@ -85,12 +97,12 @@ class DataServiceTests {
   void fetchAndSaveCollections_ShouldLogError_WhenExceptionThrown() {
     // Arrange
     when(restTemplate.getForObject(anyString(), eq(Map.class)))
-      .thenThrow(new DataException("Test exception"));
+        .thenThrow(new DataException("Test exception"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.fetchAndSaveCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Test exception");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Test exception");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
     verify(stacRepository, times(0)).insertCollection(anyString());
@@ -150,8 +162,8 @@ class DataServiceTests {
   void getCollections_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollections(null)).thenReturn(mockCollections);
 
     // Act
@@ -160,11 +172,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollections(null);
   }
@@ -172,10 +184,10 @@ class DataServiceTests {
   @Test
   void getCollections_Success_WithBbox() {
     // Arrange
-    double[] bbox = {10.0, 20.0, 30.0, 40.0};
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollections(eq(bbox))).thenReturn(mockCollections);
 
     // Act
@@ -184,11 +196,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollections(eq(bbox));
   }
@@ -197,12 +209,12 @@ class DataServiceTests {
   void getCollections_Failure() {
     // Arrange
     when(stacRepository.getAllCollections(any()))
-      .thenThrow(new RepositoryException("Test error"));
+        .thenThrow(new RepositoryException("Test error"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.getCollections(null))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch collections");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch collections");
 
     verify(stacRepository, times(1)).getAllCollections(null);
   }
@@ -211,8 +223,8 @@ class DataServiceTests {
   void getCollectionsByName_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollectionsByName(null, "asc")).thenReturn(mockCollections);
 
     // Act
@@ -221,11 +233,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollectionsByName(null, "asc");
   }
@@ -233,10 +245,10 @@ class DataServiceTests {
   @Test
   void getCollectionsByName_Success_WithBbox() {
     // Arrange
-    double[] bbox = {10.0, 20.0, 30.0, 40.0};
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollectionsByName(eq(bbox), eq("asc"))).thenReturn(mockCollections);
 
     // Act
@@ -245,11 +257,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollectionsByName(eq(bbox), eq("asc"));
   }
@@ -258,12 +270,12 @@ class DataServiceTests {
   void getCollectionsByName_Failure() {
     // Arrange
     when(stacRepository.getAllCollectionsByName(any(), eq("asc")))
-      .thenThrow(new RepositoryException("Test error"));
+        .thenThrow(new RepositoryException("Test error"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.getCollectionsByName(null, "asc"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch collections by name");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch collections by name");
 
     verify(stacRepository, times(1)).getAllCollectionsByName(null, "asc");
   }
@@ -272,8 +284,8 @@ class DataServiceTests {
   void getCollectionsByDate_Success_NoBbox() {
     // Arrange
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollectionsByDate(null, "asc")).thenReturn(mockCollections);
 
     // Act
@@ -282,11 +294,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollectionsByDate(null, "asc");
   }
@@ -294,10 +306,10 @@ class DataServiceTests {
   @Test
   void getCollectionsByDate_Success_WithBbox() {
     // Arrange
-    double[] bbox = {10.0, 20.0, 30.0, 40.0};
+    double[] bbox = { 10.0, 20.0, 30.0, 40.0 };
     List<Map<String, Object>> mockCollections = List.of(
-      Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
-      Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
+        Map.of("key", "value1", "id", "id1", "bbox", "[10,20,30,40]"),
+        Map.of("key", "value2", "id", "id2", "bbox", "[50,60,70,80]"));
     when(stacRepository.getAllCollectionsByDate(eq(bbox), eq("asc"))).thenReturn(mockCollections);
 
     // Act
@@ -306,11 +318,11 @@ class DataServiceTests {
     // Assert
     assertThat(collections).isNotNull().hasSize(2);
     assertThat(collections.get(0)).containsEntry("key", "value1").containsEntry("id", "id1").containsEntry(
-      "bbox",
-      "[10,20,30,40]");
+        "bbox",
+        "[10,20,30,40]");
     assertThat(collections.get(1)).containsEntry("key", "value2").containsEntry("id", "id2").containsEntry(
-      "bbox",
-      "[50,60,70,80]");
+        "bbox",
+        "[50,60,70,80]");
 
     verify(stacRepository, times(1)).getAllCollectionsByDate(eq(bbox), eq("asc"));
   }
@@ -319,12 +331,12 @@ class DataServiceTests {
   void getCollectionsByDate_Failure() {
     // Arrange
     when(stacRepository.getAllCollectionsByDate(any(), eq("asc")))
-      .thenThrow(new RepositoryException("Test error"));
+        .thenThrow(new RepositoryException("Test error"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.getCollectionsByDate(null, "asc"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch collections by date");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch collections by date");
 
     verify(stacRepository, times(1)).getAllCollectionsByDate(null, "asc");
   }
@@ -342,12 +354,12 @@ class DataServiceTests {
   void deleteAllCollections_ShouldLogError_WhenExceptionThrown() {
     // Arrange
     doThrow(new RepositoryException("Test exception"))
-      .when(stacRepository).deleteAllCollections();
+        .when(stacRepository).deleteAllCollections();
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.deleteAllCollections())
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to delete all collections");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to delete all collections");
 
     verify(stacRepository, times(1)).deleteAllCollections();
   }
@@ -374,8 +386,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.insertView("ID", 0))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("View could not be created for collectionId: ID");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("View could not be created for collectionId: ID");
   }
 
   @Test
@@ -389,7 +401,7 @@ class DataServiceTests {
       Thread.currentThread().interrupt(); // Simulate interruption
       dataService.insertView("ID", 0);
     }).isInstanceOf(DataException.class)
-      .hasMessageContaining("Thread interrupted while creating view for collection: ID");
+        .hasMessageContaining("Thread interrupted while creating view for collection: ID");
 
     verify(stacRepository, atLeastOnce()).setDatalayerView("ID");
     verify(stacRepository, atLeastOnce()).checkDatalayerView();
@@ -404,8 +416,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("No collections found at the provided URL");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("No collections found at the provided URL");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }
@@ -414,12 +426,12 @@ class DataServiceTests {
   void verifyCollections_ShouldThrowException_WhenCollectionsAreEmpty() {
     // Arrange
     when(restTemplate.getForObject(anyString(), eq(Map.class)))
-      .thenReturn(Map.of("collections", List.of()));
+        .thenReturn(Map.of("collections", List.of()));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("No collections found at the provided URL");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("No collections found at the provided URL");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }
@@ -428,12 +440,12 @@ class DataServiceTests {
   void verifyCollections_ShouldLogError_WhenExceptionThrown() {
     // Arrange
     when(restTemplate.getForObject(anyString(), eq(Map.class)))
-      .thenThrow(new RuntimeException("Test exception"));
+        .thenThrow(new RuntimeException("Test exception"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.verifyCollections(DEFAULT_ENDPOINT_URL))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Error checking collections");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Error checking collections");
 
     verify(restTemplate, times(1)).getForObject(anyString(), eq(Map.class));
   }
@@ -450,19 +462,19 @@ class DataServiceTests {
   void insertItem_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error inserting item"))
-      .when(stacRepository).insertItem(anyString());
+        .when(stacRepository).insertItem(anyString());
 
     // Assert
     assertThatThrownBy(() -> dataService.insertItem("test"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to insert item");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to insert item");
   }
 
   @Test
   void getItem_WithId_Success() {
     // Arrange
     List<Map<String, Object>> mockResults = List.of(
-      Map.of("id", "test1"));
+        Map.of("id", "test1"));
     when(stacRepository.getItem(anyString())).thenReturn(mockResults);
     // Act
     List<Map<String, Object>> result = dataService.getItem("Test");
@@ -475,19 +487,19 @@ class DataServiceTests {
   void getItem_WithId_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error fetching item"))
-      .when(stacRepository).getItem(anyString());
+        .when(stacRepository).getItem(anyString());
 
     // Assert
     assertThatThrownBy(() -> dataService.getItem("test"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch item");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch item");
   }
 
   @Test
   void getItem_WithIdAndCollectionId_Success() {
     // Arrange
     List<Map<String, Object>> mockResults = List.of(
-      Map.of("id", "test1"));
+        Map.of("id", "test1"));
     when(stacRepository.getItem(anyString(), anyString())).thenReturn(mockResults);
     // Act
     List<Map<String, Object>> result = dataService.getItem("Test", "Test");
@@ -500,48 +512,48 @@ class DataServiceTests {
   void getItem_WithIdAndCollectionId_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error fetching item"))
-      .when(stacRepository).getItem(anyString(), anyString());
+        .when(stacRepository).getItem(anyString(), anyString());
 
     // Assert
     assertThatThrownBy(() -> dataService.getItem("test", "test"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch item");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch item");
   }
 
   @Test
   void removeAllItems_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error removing all items"))
-      .when(stacRepository).removeAllItems();
+        .when(stacRepository).removeAllItems();
 
     // Assert
     assertThatThrownBy(() -> dataService.removeAllItems())
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to remove all items");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to remove all items");
   }
 
   @Test
   void removeItemsFromCollection_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error removing items from collection"))
-      .when(stacRepository).removeItemsFromCollection(anyString());
+        .when(stacRepository).removeItemsFromCollection(anyString());
 
     // Assert
     assertThatThrownBy(() -> dataService.removeItemsFromCollection("test"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to remove items from collection");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to remove items from collection");
   }
 
   @Test
   void removeItem_Failure() {
     // Arrange
     doThrow(new RepositoryException("Error removing item"))
-      .when(stacRepository).removeItem(anyString(), anyString());
+        .when(stacRepository).removeItem(anyString(), anyString());
 
     // Assert
     assertThatThrownBy(() -> dataService.removeItem("test", "test"))
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to remove item");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to remove item");
   }
 
   @Test
@@ -561,8 +573,8 @@ class DataServiceTests {
     // Assert
     assertThat(collections).hasSize(1);
     assertThat(collections.get(0)).containsEntry("key", "")
-      .containsEntry("id", "")
-      .containsEntry("bbox", "[]");
+        .containsEntry("id", "")
+        .containsEntry("bbox", "[]");
   }
 
   @Test
@@ -592,12 +604,12 @@ class DataServiceTests {
   void deleteAllItems_ThrowsException() {
     // Arrange
     doThrow(new RepositoryException("Test error"))
-      .when(stacRepository).deleteAllItems();
+        .when(stacRepository).deleteAllItems();
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.deleteAllItems())
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to delete all items");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to delete all items");
   }
 
   @Test
@@ -610,9 +622,9 @@ class DataServiceTests {
 
     // Mock Collection Metadata (from DB)
     List<Map<String, Object>> collectionMetadata = List.of(Map.of(
-      "datetime", "2023-08-01T12:00:00Z",
-      "end_datetime", "2023-08-31T12:00:00Z",
-      "item_count", 2));
+        "datetime", "2023-08-01T12:00:00Z",
+        "end_datetime", "2023-08-31T12:00:00Z",
+        "item_count", 2));
     when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
 
     // Mock STAC API Responses for Pagination (First call has next, second does not)
@@ -623,24 +635,24 @@ class DataServiceTests {
 
     // First response includes "next" link
     Map<String, Object> firstResponse = Map.of(
-      "features", List.of(item1),
-      "links", List.of(Map.of("rel", "next", "href", "https://next-page.com")));
+        "features", List.of(item1),
+        "links", List.of(Map.of("rel", "next", "href", "https://next-page.com")));
 
     // Second response has no "next" link (pagination stops)
     Map<String, Object> secondResponse = Map.of(
-      "features", List.of(item2), // Last item
-      "links", List.of() // No next link, should stop looping
+        "features", List.of(item2), // Last item
+        "links", List.of() // No next link, should stop looping
     );
 
     when(restTemplate.getForObject(anyString(), eq(Map.class)))
-      .thenReturn(firstResponse) // First call
-      .thenReturn(secondResponse); // Second call (stops pagination)
+        .thenReturn(firstResponse) // First call
+        .thenReturn(secondResponse); // Second call (stops pagination)
 
     // Mock DB Calls for Inserting Items
     when(stacRepository.checkCollectionExists("wildfire_timestamp_2023_08_10_12_00_00")).thenReturn(false);
     when(stacRepository.checkCollectionExists("wildfire_timestamp_2023_08_11_12_00_00")).thenReturn(false);
     when(objectMapper.writeValueAsString(any()))
-      .thenReturn("{\"id\":\"wildfire_timestamp_2023_08_10_12_00_00\"}");
+        .thenReturn("{\"id\":\"wildfire_timestamp_2023_08_10_12_00_00\"}");
 
     // Act
     dataService.fetchAndSaveItems(collectionId);
@@ -749,12 +761,12 @@ class DataServiceTests {
   void fetchItemsTimestamps_ThrowsException() {
     // Arrange
     when(stacRepository.getItemsTimestamps())
-      .thenThrow(new RepositoryException("Database error"));
+        .thenThrow(new RepositoryException("Database error"));
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.fetchItemsTimestamps())
-      .isInstanceOf(DataException.class)
-      .hasMessageContaining("Failed to fetch item timestamps");
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch item timestamps");
   }
 
   @Test
@@ -767,9 +779,9 @@ class DataServiceTests {
 
     // Mock Collection Metadata (from DB)
     List<Map<String, Object>> collectionMetadata = List.of(Map.of(
-      "datetime", "2023-08-01T12:00:00Z",
-      "end_datetime", "2023-08-31T12:00:00Z",
-      "item_count", 1));
+        "datetime", "2023-08-01T12:00:00Z",
+        "end_datetime", "2023-08-31T12:00:00Z",
+        "item_count", 1));
     when(stacRepository.queryCollectionMetaData(collectionId)).thenReturn(collectionMetadata);
 
     // Mock STAC API Response (with existing item)
@@ -777,8 +789,8 @@ class DataServiceTests {
     item.put("id", "existingItem");
 
     Map<String, Object> itemsResponse = Map.of(
-      "features", List.of(item),
-      "links", List.of() // No "next" link to ensure no infinite loop
+        "features", List.of(item),
+        "links", List.of() // No "next" link to ensure no infinite loop
     );
 
     when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(itemsResponse);
@@ -805,7 +817,7 @@ class DataServiceTests {
     // Arrange
     String collectionId = "testCollection";
     when(configController.getConfig())
-      .thenThrow(new RuntimeException("Config error"));
+        .thenThrow(new RuntimeException("Config error"));
 
     // Ensure the failure message contains the expected error text
     try {
@@ -837,7 +849,7 @@ class DataServiceTests {
 
     // Mock the repository to throw an exception
     when(stacRepository.queryCollectionMetaData(collectionId))
-      .thenThrow(new RuntimeException("Database error"));
+        .thenThrow(new RuntimeException("Database error"));
 
     // Act & Assert
     DataException exception = assertThrows(DataException.class, () -> {
@@ -846,11 +858,11 @@ class DataServiceTests {
 
     // Verify the exception message and cause
     assertThat(exception.getMessage())
-      .isEqualTo("Failed to retrieve metadata for collection: nonexistent-collection");
+        .isEqualTo("Failed to retrieve metadata for collection: nonexistent-collection");
     assertThat(exception.getCause())
-      .isInstanceOf(RuntimeException.class);
+        .isInstanceOf(RuntimeException.class);
     assertThat(exception.getCause().getMessage())
-      .isEqualTo("Database error");
+        .isEqualTo("Database error");
 
     // Verify that the repository method was called
     verify(stacRepository).queryCollectionMetaData(collectionId);
@@ -864,7 +876,7 @@ class DataServiceTests {
     // Mock the repository to throw an unexpected exception that isn't a
     // DataException
     doThrow(new RuntimeException("Unexpected database error"))
-      .when(stacRepository).setDatalayerView(collectionId);
+        .when(stacRepository).setDatalayerView(collectionId);
 
     // Act & Assert
     DataException exception = assertThrows(DataException.class, () -> {
@@ -873,13 +885,13 @@ class DataServiceTests {
 
     // Verify the exception was properly wrapped with the correct message
     assertThat(exception.getMessage())
-      .isEqualTo("Failed to insert view for collection: test-collection");
+        .isEqualTo("Failed to insert view for collection: test-collection");
 
     // Verify the original exception is preserved as the cause
     assertThat(exception.getCause())
-      .isInstanceOf(RuntimeException.class);
+        .isInstanceOf(RuntimeException.class);
     assertThat(exception.getCause().getMessage())
-      .isEqualTo("Unexpected database error");
+        .isEqualTo("Unexpected database error");
 
     // Verify the repository method was called
     verify(stacRepository).setDatalayerView(collectionId);
@@ -904,8 +916,8 @@ class DataServiceTests {
 
     // Act & Assert
     assertThatThrownBy(() -> dataService.resetView())
-      .isInstanceOf(IllegalStateException.class)
-      .hasMessageContaining("Failed to reset Datalayer view: Test exception");
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Failed to reset Datalayer view: Test exception");
 
     verify(stacRepository, times(1)).resetDatalayerView();
   }
@@ -925,91 +937,224 @@ class DataServiceTests {
   }
 
   @Test
-  void testProcessItemAssets_Success() throws Exception {
-    // Arrange
-    String collectionId = "testCollection";
-    String itemId = "testItem";
+  void processItemAssetsRefresh_shouldReturnFalse_whenItemNotFound() {
+    when(stacRepository.getItem("item123")).thenReturn(List.of());
 
-    // Mock database query result
-    PGobject pgObject = new PGobject();
-    pgObject.setType("jsonb");
-    pgObject.setValue("""
-        {
-            "assets": {
-                "asset1": {"href": "http://example.com/test1.tif"},
-                "asset2": {"href": "http://example.com/test2.tif"}
-            }
-        }
-    """);
-    List<Map<String, Object>> queryResults = List.of(Map.of("get_item", pgObject));
-    when(stacRepository.getItem(itemId)).thenReturn(queryResults);
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Mock parsing JSON
-    JsonNode mockJsonNode = new ObjectMapper().readTree(pgObject.getValue());
-    when(objectMapper.readTree(anyString())).thenReturn(mockJsonNode);
-
-    // Mock layers
-    List<Map<String, Object>> existingLayers = List.of(Map.of("asset_name", "oldLayer"));
-    when(stacRepository.getLoadedLayers()).thenReturn(existingLayers);
-
-    // Mock services
-    when(geoServerService.unregisterLayer(anyString())).thenReturn(true);
-    doNothing().when(stacRepository).clearLayers();
-    when(geoTIFFService.processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString())).thenReturn(true);
-
-    // Act
-    dataService.processItemAssets(collectionId, itemId);
-
-    // Allow some time for async execution (optional)
-    Thread.sleep(200);
-
-    // Assert
-    verify(stacRepository, times(1)).getItem(itemId);
-    verify(objectMapper, times(1)).readTree(anyString());
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("oldLayer");
-    verify(stacRepository, times(1)).clearLayers();
-    verify(geoTIFFService, times(2)).processGeoTIFF(eq(itemId), eq(collectionId), anyString(), anyString());
+    assertThat(result).isFalse();
   }
 
   @Test
-  void itemAssetsReset_Success() {
-    // Arrange: Mock database layers
-    List<Map<String, Object>> mockLayers = List.of(
-      Map.of("asset_name", "layer1"),
-      Map.of("asset_name", "layer2")
-    );
-    when(stacRepository.getLoadedLayers()).thenReturn(mockLayers);
+  void processItemAssetsRefresh_shouldReturnFalse_whenUnexpectedDataType() {
+    Map<String, Object> item = Map.of("get_item", 12345); // Not PGobject
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
-    // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, times(1)).unregisterLayer("layer1");
-    verify(geoServerService, times(1)).unregisterLayer("layer2");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer1");
-    verify(stacRepository, times(1)).deleteItemAssetLayer("layer2");
-    verify(stacRepository, times(1)).clearLayers();
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldReturnFalse_onJsonParsingException() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{invalid json}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void processItemAssetsRefresh_shouldRegisterAssetsSuccessfully() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("{\"assets\": {\"a1\": {}, \"a2\": {}}}");
+    Map<String, Object> item = Map.of("get_item", pgObject);
+    when(stacRepository.getItem("item123")).thenReturn(List.of(item));
+
+    JsonNode mockRoot = mock(JsonNode.class);
+    JsonNode mockAssets = mock(JsonNode.class);
+
+    when(objectMapper.readTree(anyString())).thenReturn(mockRoot);
+    when(mockRoot.get("assets")).thenReturn(mockAssets);
+    when(mockAssets.fieldNames()).thenReturn(List.of("a1", "a2").iterator());
+    when(geoTIFFService.registerGeoTIFF("item123", "a1")).thenReturn(true);
+    when(geoTIFFService.registerGeoTIFF("item123", "a2")).thenReturn(true);
+
+    boolean result = dataService.processItemAssetsRefresh("item123");
 
     assertThat(result).isTrue();
   }
 
   @Test
-  void itemAssetsReset_TotalFailure_ReturnsFalse() {
-    // Arrange: Simulate an exception when getting loaded layers
-    when(stacRepository.getLoadedLayers()).thenThrow(new RuntimeException("Database error"));
+  void itemAssetsReset_shouldUnregisterAndClear_whenSuccessful() {
+    Map<String, Object> asset = Map.of("item_id", "item1", "asset_name", "a1", "is_registered", true);
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
 
-    // Act
-    boolean result = dataService.itemAssetsReset();
+    boolean result = dataService.itemAssetsReset(true);
+
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void itemAssetsReset_shouldSucceedOnFirstAttempt() {
+    Map<String, Object> asset = Map.of(
+        "item_id", "item1",
+        "asset_name", "a1",
+        "is_registered", true);
+
+    when(stacRepository.getItemsWithAssets()).thenReturn(List.of(asset));
+    when(geoServerService.unregisterLayer("item1_a1")).thenReturn(true);
+
+    boolean result = dataService.itemAssetsReset(true);
+
+    assertThat(result).isTrue();
+    verify(geoServerService).unregisterLayer("item1_a1");
+    verify(stacRepository).markAssetAsUnregistered("item1", "a1");
+    verify(geoServerService).deleteTifFile("item1_a1");
+    verify(stacRepository).clearLayers();
+  }
+
+  @Test
+  void itemAssetsReset_shouldRetryAndFailAfterMaxAttempts() {
+    // Spy on dataService
+    DataService spyService = spy(dataService);
+
+    // Force the internal retry method to fail 3 times
+    doReturn(false).when(spyService).tryItemAssetsResetOnce(true);
+
+    // Execute
+    boolean result = spyService.itemAssetsReset(true);
 
     // Assert
-    verify(stacRepository, times(1)).getLoadedLayers();
-    verify(geoServerService, never()).unregisterLayer(anyString());
-    verify(stacRepository, never()).deleteItemAssetLayer(anyString());
-    verify(stacRepository, never()).clearLayers();
-
     assertThat(result).isFalse();
+    verify(spyService, times(3)).tryItemAssetsResetOnce(true); // Retries 3 times
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_Success() {
+    // Arrange
+    List<String> expectedIds = List.of("item1", "item2", "item3");
+    when(stacRepository.getItemsIdsOrderedByTimestamp()).thenReturn(expectedIds);
+
+    // Act
+    List<String> result = dataService.getItemsIdsOrderedByTimestamp();
+
+    // Assert
+    assertThat(result).isEqualTo(expectedIds);
+    verify(stacRepository, times(1)).getItemsIdsOrderedByTimestamp();
+  }
+
+  @Test
+  void getItemsIdsOrderedByTimestamp_ThrowsDataException() {
+    // Arrange
+    when(stacRepository.getItemsIdsOrderedByTimestamp())
+        .thenThrow(new RepositoryException("DB error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> dataService.getItemsIdsOrderedByTimestamp())
+        .isInstanceOf(DataException.class)
+        .hasMessageContaining("Failed to fetch item timestamps");
+
+    verify(stacRepository, times(1)).getItemsIdsOrderedByTimestamp();
+  }
+
+  @Test
+  void processItemAssets_shouldHandleEmptyResults() {
+    when(stacRepository.getAllItemsFromCollection("empty-collection")).thenReturn(List.of());
+
+    dataService.processItemAssets("empty-collection");
+
+    assertThat(dataService.getProgress("empty-collection_assets")).isEqualTo(100);
+  }
+
+  @Test
+  void processItemAssets_shouldHandleUnexpectedContentType() {
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", 123); // Not PGobject or String
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isNotEqualTo(100);
+    verifyNoInteractions(geoTIFFService);
+  }
+
+
+  @Test
+  void processItemAssets_shouldHandleJsonParsingError() throws Exception {
+    PGobject pgObject = new PGobject();
+    pgObject.setValue("invalid json");
+
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenThrow(JsonProcessingException.class);
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isEqualTo(-1);
+  }
+
+  @Test
+  void processItemAssets_shouldSkipItemsWithNoAssets() throws Exception {
+    String json = """
+        {
+          "assets": {}
+        }
+        """;
+
+    PGobject pgObject = new PGobject();
+    pgObject.setValue(json);
+
+    Map<String, Object> row = Map.of("id", "item1", "collection", "coll1", "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection("coll1")).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+    dataService.processItemAssets("coll1");
+
+    assertThat(dataService.getProgress("coll1_assets")).isEqualTo(100);
+    verifyNoInteractions(geoTIFFService);
+  }
+
+  @Test
+  void processItemAssets_shouldProcessValidAssets() throws Exception {
+    String itemId = "item1";
+    String collId = "coll1";
+    String assetKey = "wind_force";
+    String href = "http://some.url/asset.tif";
+    int min = 0, max = 100;
+
+    String json = String.format("""
+        {
+          "assets": {
+            "%s": {
+              "href": "%s",
+              "value_range": [%d, %d]
+            }
+          }
+        }
+        """, assetKey, href, min, max);
+
+    PGobject pgObject = new PGobject();
+    pgObject.setValue(json);
+
+    Map<String, Object> row = Map.of("id", itemId, "collection", collId, "content", pgObject);
+    when(stacRepository.getAllItemsFromCollection(collId)).thenReturn(List.of(row));
+    when(objectMapper.readTree(anyString())).thenReturn(new ObjectMapper().readTree(json));
+    when(geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max)).thenReturn(true);
+
+    dataService.processItemAssets(collId);
+    Thread.sleep(200); // Let the async method finish
+
+    assertThat(dataService.getProgress(collId + "_assets")).isEqualTo(100);
+    verify(geoTIFFService).processGeoTIFF(itemId, collId, assetKey, href, min, max);
   }
 
 }
