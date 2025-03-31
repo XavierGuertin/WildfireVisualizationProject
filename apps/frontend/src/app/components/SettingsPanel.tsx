@@ -105,12 +105,11 @@ const SettingsPanel: React.FC<{
     (config: Config) => saveConfig(config),
     {
       onSuccess: () => {
-        // Update the cache with the latest configData if available
-        if (configData) {
-          queryClient.setQueryData(['config'], configData);
-        }
+        queryClient.invalidateQueries(['config']);
       },
-      onError: (error: unknown) => toast.error(t('error_saving_config')),
+      onError: (error: unknown, _variables: Config, _context: unknown) => {
+        toast.error(t('error_saving_config'));
+      },
     }
   );
 
