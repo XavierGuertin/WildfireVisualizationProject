@@ -55,6 +55,8 @@ const resources = {
       invalid_number: "Please enter a valid number",
       value_out_of_range: "Value out of range. Must be between",
       view_spatial_coordinates_map: "View Spatial Coordinates Map",
+      prediction_results: "Prediction Results:",
+      predicted_burned_area: "Predicted Burnt Area",
       //Datasets
       available_datasets: 'Available Datasets',
       no_datasets_available: 'No datasets available.',

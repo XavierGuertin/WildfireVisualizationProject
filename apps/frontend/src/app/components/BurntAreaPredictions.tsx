@@ -21,6 +21,9 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const [showMap, setShowMap] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('jan');
   const [selectedDay, setSelectedDay] = useState<string>('sun');
+  const [prediction, setPrediction] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Define the valid ranges for each field
   const ranges = {
@@ -60,8 +63,37 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // API call to predict burnt area
+  const predictBurntArea = async (data: any) => {
+    try {
+      setIsLoading(true);
+      setApiError(null);
+
+      const response = await fetch('http://127.0.0.1:8000/predict_area', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.predicted_burned_area;
+    } catch (error) {
+      console.error('Error predicting burnt area:', error);
+      setApiError(error instanceof Error ? error.message : 'Unknown error occurred');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Form submission handler
-  const handleFormSubmit = (event: React.FormEvent) => {
+  const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     // Check for any errors before submitting
@@ -81,12 +113,23 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted!", {
+      // Prepare data for API call
+      const apiData = {
+        X: parseInt(formData.get('x') as string),
+        Y: parseInt(formData.get('y') as string),
         month: formData.get('month'),
         day: formData.get('day'),
-        // Include other form data as needed
-      });
-      // Proceed with form submission logic here
+        temp: parseFloat(formData.get('temperature') as string),
+        RH: parseFloat(formData.get('relative_humidity') as string),
+        wind: parseFloat(formData.get('wind') as string),
+        rain: parseFloat(formData.get('rain') as string),
+      };
+
+      // Call API
+      const result = await predictBurntArea(apiData);
+      if (result !== null) {
+        setPrediction(result);
+      }
     }
   };
 
@@ -99,6 +142,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     setErrors({});
     setSelectedMonth('jan');
     setSelectedDay('sun');
+    setPrediction(null);
+    setApiError(null);
     console.log("Form cleared!");
   };
 
@@ -267,12 +312,31 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
               </div>
 
               <div className="form-buttons">
-                <button type="submit">{t('load_simulation')}</button>
-                <button type="button" onClick={handleClearForm}>
+                <button type="submit" disabled={isLoading}>
+                  {isLoading ? t('loading') : t('load_simulation')}
+                </button>
+                <button type="button" onClick={handleClearForm} disabled={isLoading}>
                   {t('clear_simulation')}
                 </button>
               </div>
             </form>
+
+            {/* Prediction Results */}
+            {prediction !== null && (
+              <div className="prediction-results">
+                <h4>{t('prediction_results')}</h4>
+                <p>
+                  {t('predicted_burned_area')}: <strong>{prediction.toFixed(6)}</strong> ha
+                </p>
+              </div>
+            )}
+
+            {/* API Error */}
+            {apiError && (
+              <div className="api-error">
+                <p>{t('api_error')}: {apiError}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
