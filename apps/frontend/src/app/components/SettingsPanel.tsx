@@ -34,6 +34,15 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const MySwal = withReactContent(Swal);
 
+interface Config {
+  endpoint?: string;
+  language?: string;
+  onlineMode?: boolean;
+  loadedDataset?: { id: string; title: string };
+  error?: string;
+  [key: string]: any;
+}
+
 const SettingsPanel: React.FC<{
   refreshDatasets: () => void;
   setMetadataVisible: (visible: boolean) => void;
@@ -90,12 +99,20 @@ const SettingsPanel: React.FC<{
   /**
    * Saves the application configuration and updates the cache.
    * @param config - The configuration object to save.
-   * @returns Promise resolving with saved config data.
+   * @returns Promise resolving with void (no return data assumed).
    */
-  const saveConfigMutation = useMutation((config: any) => saveConfig(config), {
-    onSuccess: (data) => queryClient.setQueryData(['config'], data), // Update cache directly
-    onError: () => toast.error(t('error_saving_config')),
-  });
+  const saveConfigMutation = useMutation<void, unknown, Config>(
+    (config: Config) => saveConfig(config),
+    {
+      onSuccess: () => {
+        // Update the cache with the latest configData if available
+        if (configData) {
+          queryClient.setQueryData(['config'], configData);
+        }
+      },
+      onError: (error: unknown) => toast.error(t('error_saving_config')),
+    }
+  );
 
   /**
    * Initializes language from local storage and syncs with config.
