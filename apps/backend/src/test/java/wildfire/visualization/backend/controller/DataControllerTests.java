@@ -25,6 +25,7 @@ import wildfire.visualization.backend.service.DataService;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -32,6 +33,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.awaitility.Awaitility.await;
 
 @ExtendWith(MockitoExtension.class)
 class DataControllerTests {
@@ -735,8 +737,7 @@ class DataControllerTests {
         .andExpect(status().isOk())
         .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
-    // Give async execution a brief moment (useful for debugging)
-    Thread.sleep(100);
+    await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> verify(dataService).processItemAssets(collectionId));
 
     verify(dataService, times(1)).processItemAssets(collectionId);
   }
@@ -755,7 +756,7 @@ class DataControllerTests {
         .andExpect(content().string("Processing started in the background. Check logs for completion."));
 
     // Optional: Give async execution a brief moment
-    Thread.sleep(100);
+    await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> verify(dataService).processItemAssets(collectionId));
 
     // Verify method was still called
     verify(dataService, times(1)).processItemAssets(collectionId);
