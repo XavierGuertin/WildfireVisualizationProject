@@ -13,7 +13,6 @@ import {
   fetchItemIds,
 } from '../services/api';
 import { changeLayer, toggleAssetLayer } from './MapView';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -43,83 +42,55 @@ const Footer = () => {
 
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
-  const queryClient = useQueryClient();
-
-  // Queries
-  const { data: timestampsData } = useQuery(['timestamps'], () => fetchTimestamps(), {
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    onSuccess: (data) => setTimeStamps(data),
-  });
-
-  const { data: itemIdsData } = useQuery(['itemIds'], () => fetchItemIds(), {
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    onSuccess: (data) => setItemIds(data),
-  });
-
-  const { data: loadedLayersData } = useQuery(
-    ['loadedLayers', itemIds[sliderValue]],
-    () => getLoadedLayers(),
-    {
-      enabled: !!itemIds[sliderValue] && !isProcessLoading,
-      staleTime: 5 * 60 * 1000,
-      cacheTime: 10 * 60 * 1000,
-      onSuccess: (response) => {
-        if (response && response.error !== 'Failed to fetch loaded layers') {
-          setLoadedLayers(response);
-        }
-      },
-    }
-  );
-
-  // Mutation
-  const loadAssetLayersMutation = useMutation((itemId: string) => loadAssetLayers(itemId), {
-    onSuccess: () => queryClient.invalidateQueries(['loadedLayers']),
-  });
-
   const processLoadedLayers = async (itemId: string) => {
-    if (!itemId || isProcessLoading) return;
-
     setLoadedLayers([]);
-    await loadAssetLayersMutation.mutateAsync(itemId);
-    const response = loadedLayersData || (await queryClient.fetchQuery(['loadedLayers', itemId], () => getLoadedLayers()));
-    if (response && response.error !== 'Failed to fetch loaded layers') {
-      setLoadedLayers(response);
+    if (!isProcessLoading) {
+      if (itemId) {
+        await loadAssetLayers(itemId);
+        const response = await getLoadedLayers();
+        if (response.error !== 'Failed to fetch loaded layers') {
+          setLoadedLayers(response);
 
-      const map = mapRef.current as Map;
-      if (selectedAssetLayers.length > 0) {
-        selectedAssetLayers.forEach((layer) => {
-          if (response.length > 0) {
-            const layerData = response.find(
-              (obj: { asset_name: string; item_id: string }) => obj.asset_name === layer && obj.item_id === itemId
-            );
-            toggleAssetLayer(map, layer, '', false, layerData?.min, layerData?.max);
-            toggleAssetLayer(map, layer, layerData?.layer_url, true, layerData?.min, layerData?.max);
+          const map = mapRef.current as Map;
+          if (selectedAssetLayers.length > 0) {
+            selectedAssetLayers.forEach((layer) => {
+              if (response.length > 0) {
+                const layerData = response.find(
+                  (obj: { asset_name: string, item_id: string }) => obj.asset_name === layer && obj.item_id === itemId,
+                );
+                toggleAssetLayer(map, layer, '', false, layerData.min, layerData.max);
+                toggleAssetLayer(map, layer, layerData.layer_url, true, layerData.min, layerData.max);
+              }
+            });
           }
-        });
+        }
       }
     }
   };
 
   useEffect(() => {
+    if (!isProcessLoading) processLoadedLayers(itemIds[sliderValue]);
+  }, [isProcessLoading]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
+        // Load speed from localStorage if available
         const savedSpeed = localStorage.getItem('playbackSpeed');
         if (savedSpeed) {
           setSpeed(parseFloat(savedSpeed));
         } else {
-          toast.info(t('default_speed_retrieved'), { toastId: 'speed-default' });
+          toast.info(t('default_speed_retrieved'), {
+            toastId: 'speed-default',
+          });
         }
         setSpeedInitialized(true);
-        if (timestampsData && itemIdsData) {
-          initializeTimestampIfItemsPresent();
-        }
+        initializeTimestampIfItemsPresent();
       } catch (error) {
         console.error('Error reading playback speed from localStorage:', error);
       }
     }
-  }, [timestampsData, itemIdsData]);
+  }, []);
 
   useEffect(() => {
     if (speedInitialized && typeof window !== 'undefined') {
@@ -254,13 +225,24 @@ const Footer = () => {
    * This fetches and loads the stac items if they exist in the items table
    */
   const initializeTimestampIfItemsPresent = async () => {
+    const timestampsResponse = await fetchTimestamps();
     const stringCurrentSliderValue = localStorage.getItem('sliderValue');
-    const currentSliderValue = stringCurrentSliderValue ? parseInt(stringCurrentSliderValue) : 0;
+    // Check if there's a saved slider value in localStorage, otherwise default to 0
+    const currentSliderValue = stringCurrentSliderValue
+      ? parseInt(stringCurrentSliderValue)
+      : 0;
+    if (timestampsResponse) {
+      await setTimeStamps(timestampsResponse);
 
-    if (timestampsData && itemIdsData) {
-      setSliderValue(currentSliderValue);
-      if (itemIdsData.length > 0) {
-        await processLoadedLayers(itemIdsData[currentSliderValue]);
+      setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
+    }
+    const itemIdsResponse = await fetchItemIds();
+
+    if (Array.isArray(itemIdsResponse)) {
+      await setItemIds(itemIdsResponse);
+
+      if (itemIdsResponse.length > 0) {
+        await processLoadedLayers(itemIdsResponse[currentSliderValue]);
       }
     }
   };
