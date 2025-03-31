@@ -28,6 +28,7 @@ public class DataController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
   private static final String LOG_RECEIVED_REMOVE_ALL_ITEMS = "Received request to remove all items";
+  private static final String LOG_SUCCESSFULLY_REMOVED_ALL_ITEMS = "successfully removed all items";
 
   private final DataService dataService;
 
@@ -252,7 +253,7 @@ public class DataController {
   public ResponseEntity<String> removeAllItems() {
     logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeAllItems();
-    logger.debug("Successfully removed all items");
+    logger.debug(LOG_SUCCESSFULLY_REMOVED_ALL_ITEMS);
     return ResponseEntity.ok(result);
   }
 
@@ -268,7 +269,7 @@ public class DataController {
   public ResponseEntity<String> removeItemsFromCollection(@PathVariable("collectionId") String collectionId) {
     logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeItemsFromCollection(collectionId);
-    logger.debug("Successfully removed all items");
+    logger.debug(LOG_SUCCESSFULLY_REMOVED_ALL_ITEMS);
     return ResponseEntity.ok(result);
   }
 
@@ -286,7 +287,7 @@ public class DataController {
       @PathVariable("collection") String collectionId) {
     logger.info(LOG_RECEIVED_REMOVE_ALL_ITEMS);
     String result = dataService.removeItem(itemId, collectionId);
-    logger.debug("Successfully removed all items");
+    logger.debug(LOG_SUCCESSFULLY_REMOVED_ALL_ITEMS);
     return ResponseEntity.ok(result);
   }
 
