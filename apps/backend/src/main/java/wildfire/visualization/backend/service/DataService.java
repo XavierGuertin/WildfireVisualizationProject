@@ -1,5 +1,6 @@
 package wildfire.visualization.backend.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -793,6 +794,117 @@ public class DataService {
   }
 
   /**
+   * Extracts the content as a string from the given content object. The method
+   * handles
+   * different types of objects and converts them to a string representation.
+   *
+   * @param contentObj   The content object to extract the string from. It can be
+   *                     of type
+   *                     {@code PGobject}, {@code String}, or any other object.
+   * @param itemId       The ID of the item associated with the content. Used for
+   *                     logging purposes.
+   * @param collectionId The ID of the collection associated with the content.
+   *                     Used for logging purposes.
+   * @return The string representation of the content object if it is not null. If
+   *         the content
+   *         object is null, returns {@code null}. Logs warnings for unexpected
+   *         types or null values.
+   */
+  private String extractContentAsString(Object contentObj, String itemId, String collectionId) {
+    if (contentObj instanceof PGobject) {
+      return ((PGobject) contentObj).getValue();
+    } else if (contentObj instanceof String) {
+      return (String) contentObj;
+    } else if (contentObj != null) {
+      logger.warn("Unexpected type for content column: {}", contentObj.getClass());
+      return contentObj.toString();
+    } else {
+      logger.warn("Null content column for item {} in collection {}", itemId, collectionId);
+      return null;
+    }
+  }
+
+  /**
+   * Processes the assets associated with a specific item and collection.
+   * Iterates through the assets provided in the JSON node, validates their value
+   * ranges,
+   * and attempts to process each asset using the GeoTIFF service.
+   *
+   * @param itemId     The ID of the item to which the assets belong.
+   * @param collId     The ID of the collection to which the item belongs.
+   * @param assetsNode A JSON node containing the assets to be processed. Each
+   *                   asset is expected
+   *                   to have an "href" field for the resource location and a
+   *                   "value_range" field
+   *                   specifying the minimum and maximum values as an array.
+   *
+   *                   Logs warnings for invalid or missing value ranges, as well
+   *                   as for failed asset processing attempts.
+   */
+  private void processAssetsForItem(String itemId, String collId, JsonNode assetsNode) {
+    Iterator<String> fieldNames = assetsNode.fieldNames();
+    while (fieldNames.hasNext()) {
+      String assetKey = fieldNames.next();
+      JsonNode asset = assetsNode.get(assetKey);
+      String href = asset.get("href").asText();
+
+      JsonNode valueRange = asset.get("value_range");
+      if (valueRange == null || !valueRange.isArray() || valueRange.size() < 2) {
+        logger.warn("Invalid or missing value_range for asset {} of item {}", assetKey, itemId);
+        continue;
+      }
+
+      int min = valueRange.get(0).asInt();
+      int max = valueRange.get(1).asInt();
+
+      boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max);
+      if (!success) {
+        logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
+      }
+    }
+  }
+
+  /**
+   * Processes each item in the provided list of results, extracting content,
+   * processing assets, and updating progress.
+   *
+   * @param results      A list of maps where each map represents an item with its
+   *                     properties.
+   * @param collectionId The ID of the collection to which the items belong.
+   * @param progressKey  A key used to track and update the progress of the
+   *                     processing.
+   * @throws IOException If an error occurs during content extraction or JSON
+   *                     parsing.
+   */
+  private void processEachItem(List<Map<String, Object>> results, String collectionId, String progressKey)
+      throws IOException {
+    int totalItems = results.size();
+    int count = 0;
+
+    for (Map<String, Object> row : results) {
+      String itemId = (String) row.get("id");
+      String collId = (String) row.get("collection");
+
+      String contentStr = extractContentAsString(row.get("content"), itemId, collectionId);
+      if (contentStr == null)
+        continue;
+
+      JsonNode assetsNode = objectMapper.readTree(contentStr).get("assets");
+      if (assetsNode == null || assetsNode.isEmpty()) {
+        logger.info("No assets found for item {}", itemId);
+        continue;
+      }
+
+      processAssetsForItem(itemId, collId, assetsNode);
+
+      count++;
+      int progress = (int) (((double) count / totalItems) * 100);
+      fetchProgress.get(progressKey).set(progress);
+      logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
+    }
+  }
+
+  /**
    * Method responsible for processing all assets for all items in a given
    * collection.
    * <p>
@@ -814,65 +926,7 @@ public class DataService {
         logger.warn("No items returned from getAllItems for collection {}", collectionId);
       }
 
-      int totalItems = results.size();
-      logger.info("Processing {} items in collection: {}", totalItems, collectionId);
-
-      int count = 0;
-      for (Map<String, Object> row : results) {
-        String itemId = (String) row.get("id");
-        String collId = (String) row.get("collection");
-        String contentStr = null;
-        Object contentObj = row.get("content");
-        if (contentObj instanceof PGobject) {
-          contentStr = ((PGobject) contentObj).getValue();
-        } else if (contentObj instanceof String) {
-          // If the driver already gave you a string, just cast it
-          contentStr = (String) contentObj;
-        } else if (contentObj != null) {
-          // Fallback: you can do contentObj.toString(), or throw an error
-          logger.warn("Unexpected type for content column: {}", contentObj.getClass());
-          contentStr = contentObj.toString();
-        } else {
-          // Handle null
-          logger.warn("Null content column for item in collection {}", collectionId);
-          continue;
-        }
-
-        // Now parse that as JSON
-        JsonNode contentNode = objectMapper.readTree(contentStr);
-        JsonNode assetsNode = contentNode.get("assets");
-
-        if (assetsNode == null || assetsNode.isEmpty()) {
-          logger.info("No assets found for item {}", itemId);
-          continue;
-        }
-
-        Iterator<String> fieldNames = assetsNode.fieldNames();
-        while (fieldNames.hasNext()) {
-          String assetKey = fieldNames.next();
-          JsonNode asset = assetsNode.get(assetKey);
-          String href = asset.get("href").asText();
-
-          JsonNode valueRange = asset.get("value_range");
-          if (valueRange == null || !valueRange.isArray() || valueRange.size() < 2) {
-            logger.warn("Invalid or missing value_range for asset {} of item {}", assetKey, itemId);
-            continue;
-          }
-
-          int min = valueRange.get(0).asInt();
-          int max = valueRange.get(1).asInt();
-
-          boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max);
-          if (!success) {
-            logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
-          }
-        }
-
-        count++;
-        int progress = (int) (((double) count / totalItems) * 100);
-        fetchProgress.get(collectionProgressKey).set(progress);
-        logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
-      }
+      processEachItem(results, collectionId, collectionProgressKey);
 
       logger.info("Finished registering all assets in collection {}", collectionId);
       fetchProgress.get(collectionProgressKey).set(100);
