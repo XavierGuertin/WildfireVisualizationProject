@@ -391,7 +391,7 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Default style values for Polygon
+  // Default style values for item_layer
   const DEFAULT_FILL_COLOR = '#ff0000'; // Red
   const DEFAULT_FILL_OPACITY = '0.1';
   const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
@@ -471,7 +471,7 @@ const SettingsPanel: React.FC<{
       );
     }
 
-    if (resetBoth || selectedStyleTab === 'dataLayer') {
+    if (resetBoth || selectedStyleTab === 'data_layer') {
       // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
@@ -588,8 +588,8 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      {/* Customize Polygon and DataLayer colors */}
-      {timeStamps && timeStamps.length > 0 && (
+      {/* Customize itemLayer and DataLayer colors */}
+      {((timeStamps && timeStamps.length > 0) || (isCollectionsLoaded)) && (
         <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
@@ -604,20 +604,23 @@ const SettingsPanel: React.FC<{
           <div className="dropdown-content show">
             <div className="style-options">
               <div className="style-tabs">
-                <button
-                  className={`style-tab ${selectedStyleTab === 'polygon' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('polygon')}
-                >
-                  {t('polygon')}
-                </button>
-                <button
-                  className={`style-tab ${selectedStyleTab === 'dataLayer' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('dataLayer')}
-                >
-                  {t('data_layer')}
-                </button>
+                {(timeStamps && timeStamps.length > 0) && (
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('item_layer')}
+                  >
+                    {t('item_layer')}
+                  </button>
+                )}
+                {isCollectionsLoaded && (
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('data_layer')}
+                  >
+                    {t('data_layer')}
+                  </button>
+                )}
               </div>
-
               <h2>
                 {selectedStyleTab === 'item_layer' ? t('item_layer_style') : t('data_layer_style')}
               </h2>
