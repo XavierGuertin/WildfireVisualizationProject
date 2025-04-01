@@ -3,7 +3,13 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Footer from '../src/app/components/Footer';
 import { MapProvider, useMapLayerContext } from '../src/app/context/MapContext';
-import { fetchTimestamps } from '../src/app/services/api';
+import {
+  fetchTimestamps,
+  getLoadedLayers,
+  loadAssetLayers,
+  loadAssets,
+  resetItemAssets,
+} from '../src/app/services/api';
 import { changeLayer } from '../src/app/components/MapView';
 
 jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));

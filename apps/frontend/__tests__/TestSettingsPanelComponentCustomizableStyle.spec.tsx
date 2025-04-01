@@ -144,8 +144,6 @@ describe('hexToRgb function in SettingsPanel component', () => {
       setCollectionId: jest.fn(),
       setIsPlaying: jest.fn(),
       setSelectedAssetLayers: jest.fn(),
-      isCollectionsLoaded: true,
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     // Mock the updateLayerStyle function to check its parameters
@@ -156,7 +154,7 @@ describe('hexToRgb function in SettingsPanel component', () => {
     jest.restoreAllMocks();
   });
 
-  it('calls hexToRgb when updating item styles', async () => {
+  it('calls hexToRgb when updating polygon styles', async () => {
     await renderSettingsPanel();
 
     // Open the style dropdown
@@ -165,10 +163,10 @@ describe('hexToRgb function in SettingsPanel component', () => {
       fireEvent.click(styleButton);
     });
 
-    // Make sure we're on the item tab (default)
-    const itemLayerTab = screen.getByText('item_layer');
+    // Make sure we're on the polygon tab (default)
+    const polygonTab = screen.getByText('polygon');
     await act(async () => {
-      fireEvent.click(itemLayerTab);
+      fireEvent.click(polygonTab);
     });
 
     // Change the fill color to trigger hexToRgb conversion
@@ -348,8 +346,6 @@ describe('handleResetLayerStyle function', () => {
       setCollectionId: jest.fn(),
       setIsPlaying: jest.fn(),
       setSelectedAssetLayers: jest.fn(),
-      isCollectionsLoaded: true,
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     // Mock the updateLayerStyle function to check its parameters
@@ -360,7 +356,7 @@ describe('handleResetLayerStyle function', () => {
     jest.restoreAllMocks();
   });
 
-  it('resets item layer styles when item_layer tab is selected', async () => {
+  it('resets polygon styles when polygon tab is selected', async () => {
     await renderSettingsPanel();
 
     // Open the style dropdown
@@ -369,10 +365,10 @@ describe('handleResetLayerStyle function', () => {
       fireEvent.click(styleButton);
     });
 
-    // Make sure we're on the item_layer tab (default)
-    const itemLayerTab = screen.getByText('item_layer');
+    // Make sure we're on the polygon tab (default)
+    const polygonTab = screen.getByText('polygon');
     await act(async () => {
-      fireEvent.click(itemLayerTab);
+      fireEvent.click(polygonTab);
     });
 
     // Click reset button to trigger handleResetLayerStyle
@@ -454,8 +450,6 @@ describe('Reset functionality for layer styles', () => {
       setCollectionId: jest.fn(),
       setIsPlaying: jest.fn(),
       setSelectedAssetLayers: jest.fn(),
-      isCollectionsLoaded: true,
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     // Mock the updateLayerStyle function to check its parameters
@@ -470,7 +464,7 @@ describe('Reset functionality for layer styles', () => {
     jest.restoreAllMocks();
   });
 
-  it('resets both item_layer and data layer styles when Reset button is clicked', async () => {
+  it('resets both polygon and data layer styles when Reset button is clicked', async () => {
     await renderSettingsPanel();
 
     // Open the reset dropdown
@@ -493,7 +487,7 @@ describe('Reset functionality for layer styles', () => {
       expect(updateLayerStyle).toHaveBeenCalledWith(
         mockMap,
         'itemLayer',
-        'rgb(255,0,0)', // Default red for item_layer
+        'rgb(255,0,0)', // Default red for polygon
         '0.1',
         'rgb(255,0,0)',
         '2'

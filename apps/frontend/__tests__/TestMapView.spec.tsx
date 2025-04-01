@@ -587,7 +587,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    toggleAssetLayer(mockMap as any, 'testLayer', 'http://test.com/wms', true, 0, 100);
+    toggleAssetLayer(mockMap as any, 'testLayer', 'http://test.com/wms', true);
 
     expect(mockMap.addLayer).toHaveBeenCalled();
     expect(mockMap.renderSync).toHaveBeenCalled();
@@ -801,7 +801,7 @@ describe('Asset Layer Removal Tests', () => {
 
   test('toggleAssetLayer removes an existing asset layer when add is false', () => {
     // Call toggleAssetLayer to remove the existing asset layer
-    toggleAssetLayer(mockMap, 'testLayer', 'http://example.com/wms', false, 0, 100);
+    toggleAssetLayer(mockMap, 'testLayer', 'http://example.com/wms', false);
 
     // Check that removeLayer was called with the dummy asset layer
     expect(mockMap.removeLayer).toHaveBeenCalledWith(mockLayer);
@@ -865,10 +865,10 @@ describe('Layer Style Tests', () => {
     };
   });
 
-  it('updates item layer style correctly', () => {
+  it('updates polygon layer style correctly', () => {
     const { updateLayerStyle } = require('../src/app/components/MapView');
 
-    // Call updateLayerStyle with item layer parameters
+    // Call updateLayerStyle with polygon layer parameters
     updateLayerStyle(
       mockMap,
       'itemLayer',
