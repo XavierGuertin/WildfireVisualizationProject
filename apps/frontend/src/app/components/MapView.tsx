@@ -38,10 +38,10 @@ const SATELLITE_LAYER_URL =
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const TOPOGRAPHIC_LAYER_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
-// Default style values for polygon (itemLayer)
-let currentPolygonFillColor = 'rgba(255, 0, 0, 0.1)';
-let currentPolygonStrokeColor = 'rgba(255, 0, 0, 0.5)';
-let currentPolygonStrokeWidth = 2;
+// Default style values for itemLayer
+let currentItemLayerFillColor = 'rgba(255, 0, 0, 0.1)';
+let currentItemLayerStrokeColor = 'rgba(255, 0, 0, 0.5)';
+let currentItemLayerStrokeWidth = 2;
 
 // Default style values for dataLayer
 let currentDataLayerFillColor = 'rgba(0, 0, 255, 0.1)';
@@ -140,8 +140,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
   const newLayer = new VectorLayer({
     source: vectorSource,
     style: new Style({
-      fill: new Fill({ color: currentPolygonFillColor }),
-      stroke: new Stroke({ color: currentPolygonStrokeColor, width: currentPolygonStrokeWidth }),
+      fill: new Fill({ color: currentItemLayerFillColor }),
+      stroke: new Stroke({ color: currentItemLayerStrokeColor, width: currentItemLayerStrokeWidth }),
     }),
   });
 
@@ -390,9 +390,9 @@ export const updateLayerStyle = (
 
   // Store current style values based on which layer is being updated
   if (layerName === 'itemLayer') {
-    currentPolygonFillColor = fillRgba;
-    currentPolygonStrokeColor = strokeRgba;
-    currentPolygonStrokeWidth = widthValue;
+    currentItemLayerFillColor = fillRgba;
+    currentItemLayerStrokeColor = strokeRgba;
+    currentItemLayerStrokeWidth = widthValue;
   } else if (layerName === 'dataLayer') {
     currentDataLayerFillColor = fillRgba;
     currentDataLayerStrokeColor = strokeRgba;
