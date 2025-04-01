@@ -399,7 +399,7 @@ const SettingsPanel: React.FC<{
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<'polygon' | 'dataLayer'>('polygon');
+  const [selectedStyleTab, setSelectedStyleTab] = useState<'item_layer' | 'data_layer'>('data_layer');
 
   // ItemLayer style state
   const [itemLayerFillColor, setItemLayerFillColor] = useState(DEFAULT_FILL_COLOR);
