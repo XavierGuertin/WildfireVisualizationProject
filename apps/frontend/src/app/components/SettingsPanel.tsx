@@ -30,7 +30,7 @@ import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer, updateLayerStyle } from './MapView';
 import { Map } from 'ol';
 import { LuPalette } from 'react-icons/lu';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const MySwal = withReactContent(Swal);
 
@@ -39,7 +39,7 @@ const SettingsPanel: React.FC<{
   setMetadataVisible: (visible: boolean) => void;
 }> = ({ refreshDatasets, setMetadataVisible }) => {
   const { t, i18n } = useTranslation();
-  const queryClient = useQueryClient(); // Access the QueryClient from ClientLayout
+  const queryClient = useQueryClient();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
     isOpen: boolean;
@@ -58,7 +58,7 @@ const SettingsPanel: React.FC<{
     setIsPlaying,
     setSelectedAssetLayers,
     isCollectionsLoaded,
-    setIsCollectionsLoaded
+    setIsCollectionsLoaded,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -84,6 +84,35 @@ const SettingsPanel: React.FC<{
         }
         if (config.onlineMode != undefined) setIsOnline(config.onlineMode);
         setLanguageInitialized(true);
+      },
+    }
+  );
+
+  // UseMutation for updating language
+  const updateLanguageMutation = useMutation(
+    (newConfig: any) => saveConfig(newConfig),
+    {
+      onMutate: async (newConfig) => {
+        // Cancel any outgoing refetches (to avoid overwriting optimistic update)
+        await queryClient.cancelQueries(['config']);
+
+        // Snapshot the previous value
+        const previousConfig = queryClient.getQueryData(['config']);
+
+        // Optimistically update the cache
+        queryClient.setQueryData(['config'], newConfig);
+
+        // Return context with the previous config for rollback on error
+        return { previousConfig };
+      },
+      onError: (err, newConfig, context) => {
+        // Rollback to previous config on error
+        queryClient.setQueryData(['config'], context?.previousConfig);
+        toast.error(t('error_saving_language'));
+      },
+      onSuccess: () => {
+        // Invalidate to ensure the server state is eventually synced (optional)
+        queryClient.invalidateQueries(['config'], { refetchActive: false });
       },
     }
   );
@@ -146,7 +175,6 @@ const SettingsPanel: React.FC<{
     }
 
     try {
-      // Use fetchQuery to cache verifyIfEndpointHasCollections
       const verificationMessage = await queryClient.fetchQuery(
         ['verifyEndpoint', endpointUrl],
         () => verifyIfEndpointHasCollections(endpointUrl),
@@ -157,13 +185,11 @@ const SettingsPanel: React.FC<{
         return false;
       }
 
-      // Reset collections before fetching new ones
       await resetCollections();
       await resetItems();
       await resetItemAssets();
       setSelectedAssetLayers([]);
 
-      // Use fetchQuery to cache fetchCollectionsFromEndpoint
       const message = await queryClient.fetchQuery(
         ['fetchCollections', endpointUrl],
         () => fetchCollectionsFromEndpoint(endpointUrl),
@@ -173,7 +199,6 @@ const SettingsPanel: React.FC<{
         toast.success(t('collections_fetched_saved'));
       }
 
-      // Update config
       const config = configData || (await getConfig());
       if (config.error) {
         toast.error(t('error_fetching_config_file'));
@@ -182,7 +207,7 @@ const SettingsPanel: React.FC<{
       config.endpoint = endpointUrl;
       config.loadedDataset = { id: '', title: '' };
       await saveConfig(config);
-      queryClient.setQueryData(['config'], config); // Update cache manually
+      queryClient.setQueryData(['config'], config);
 
       refreshDatasets();
       setDropdownState({ activeButton: null, isOpen: false });
@@ -194,13 +219,17 @@ const SettingsPanel: React.FC<{
     }
   };
 
-  const handleLanguageSelect = async (language: string) => {
+  const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
     localStorage.setItem('language', language);
-    const config = configData || (await getConfig());
-    config.language = language;
-    await saveConfig(config);
-    queryClient.setQueryData(['config'], config);
+
+    // Optimistically update the config in the cache
+    const updatedConfig = {
+      ...configData,
+      language,
+    };
+    updateLanguageMutation.mutate(updatedConfig);
+
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -301,9 +330,9 @@ const SettingsPanel: React.FC<{
       handleResetLayerStyle(true);
       setIsCollectionsLoaded(false);
       setSelectedStyleTab('item_layer');
-      queryClient.invalidateQueries(['config']); // Invalidate config cache
+      queryClient.invalidateQueries(['config']);
       return 'Reset was successful';
-    } catch (error) {
+    } catch (error: Error) {
       throw new Error(`Error resetting config: ${error.message}`);
     }
   };
@@ -387,24 +416,44 @@ const SettingsPanel: React.FC<{
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<'item_layer' | 'data_layer'>('data_layer');
+  const [selectedStyleTab, setSelectedStyleTab] = useState<
+    'item_layer' | 'data_layer'
+  >('data_layer');
 
   // ItemLayer style state
-  const [itemLayerFillColor, setItemLayerFillColor] = useState(DEFAULT_FILL_COLOR);
-  const [itemLayerFillOpacity, setItemLayerFillOpacity] = useState(DEFAULT_FILL_OPACITY);
-  const [itemLayerStrokeColor, setItemLayerStrokeColor] = useState(DEFAULT_STROKE_COLOR);
-  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+  const [itemLayerFillColor, setItemLayerFillColor] =
+    useState(DEFAULT_FILL_COLOR);
+  const [itemLayerFillOpacity, setItemLayerFillOpacity] = useState(
+    DEFAULT_FILL_OPACITY,
+  );
+  const [itemLayerStrokeColor, setItemLayerStrokeColor] = useState(
+    DEFAULT_STROKE_COLOR,
+  );
+  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] = useState(
+    DEFAULT_STROKE_WIDTH,
+  );
 
   // DataLayer style state
-  const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
-  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(DEFAULT_DATA_FILL_OPACITY);
-  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
-  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
+  const [dataLayerFillColor, setDataLayerFillColor] = useState(
+    DEFAULT_DATA_FILL_COLOR,
+  );
+  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(
+    DEFAULT_DATA_FILL_OPACITY,
+  );
+  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(
+    DEFAULT_DATA_STROKE_COLOR,
+  );
+  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(
+    DEFAULT_DATA_STROKE_WIDTH,
+  );
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
-      ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
+      ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(
+        result[3],
+        16,
+      )})`
       : 'rgb(0,0,0)';
   };
 
@@ -419,7 +468,7 @@ const SettingsPanel: React.FC<{
         hexToRgb(itemLayerFillColor),
         itemLayerFillOpacity,
         hexToRgb(itemLayerStrokeColor),
-        itemLayerStrokeWidth
+        itemLayerStrokeWidth,
       );
     } else {
       updateLayerStyle(
@@ -438,7 +487,6 @@ const SettingsPanel: React.FC<{
     if (!mapRef.current) return;
 
     if (resetBoth || selectedStyleTab === 'item_layer') {
-      // Reset itemLayer state
       setItemLayerFillColor(DEFAULT_FILL_COLOR);
       setItemLayerFillOpacity(DEFAULT_FILL_OPACITY);
       setItemLayerStrokeColor(DEFAULT_STROKE_COLOR);
@@ -455,7 +503,6 @@ const SettingsPanel: React.FC<{
     }
 
     if (resetBoth || selectedStyleTab === 'data_layer') {
-      // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
       setDataLayerStrokeColor('#0000ff');
@@ -476,7 +523,9 @@ const SettingsPanel: React.FC<{
     <div className="button-container" ref={dropdownRef}>
       <div className="dropdown-button">
         <button
-          className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
+          className={`button ${
+            dropdownState.activeButton === 'settings' ? 'active' : ''
+          }`}
           onClick={() => toggleDropdown('settings')}
           aria-expanded={dropdownState.activeButton === 'settings'}
           aria-label="settings"
@@ -506,7 +555,9 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-          className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
+          className={`button ${
+            dropdownState.activeButton === 'language' ? 'active' : ''
+          }`}
           onClick={() => toggleDropdown('language')}
           aria-expanded={dropdownState.activeButton === 'language'}
           aria-label="language"
@@ -537,7 +588,9 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-          className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
+          className={`button ${
+            dropdownState.activeButton === 'internet' ? 'active' : ''
+          }`}
           onClick={() => toggleDropdown('internet')}
           aria-expanded={dropdownState.activeButton === 'internet'}
           aria-label="internet"
@@ -571,165 +624,184 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      {/* Customize itemLayer and DataLayer colors */}
-      {((timeStamps && timeStamps.length > 0) || (isCollectionsLoaded)) && (
+      {((timeStamps && timeStamps.length > 0) || isCollectionsLoaded) && (
         <div className="dropdown-button">
-        <button
-          className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
-          onClick={() => toggleDropdown('style')}
-          aria-expanded={dropdownState.activeButton === 'style'}
-          aria-label="style"
-          data-testid="style-dropdown-button"
-        >
-          <LuPalette size={32} />
-        </button>
-        {dropdownState.activeButton === 'style' && (
-          <div className="dropdown-content show">
-            <div className="style-options">
-              <div className="style-tabs">
-                {(timeStamps && timeStamps.length > 0) && (
-                  <button
-                    className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
-                    onClick={() => setSelectedStyleTab('item_layer')}
-                  >
-                    {t('item_layer')}
-                  </button>
+          <button
+            className={`button ${
+              dropdownState.activeButton === 'style' ? 'active' : ''
+            }`}
+            onClick={() => toggleDropdown('style')}
+            aria-expanded={dropdownState.activeButton === 'style'}
+            aria-label="style"
+            data-testid="style-dropdown-button"
+          >
+            <LuPalette size={32} />
+          </button>
+          {dropdownState.activeButton === 'style' && (
+            <div className="dropdown-content show">
+              <div className="style-options">
+                <div className="style-tabs">
+                  {timeStamps && timeStamps.length > 0 && (
+                    <button
+                      className={`style-tab ${
+                        selectedStyleTab === 'item_layer' ? 'active' : ''
+                      }`}
+                      onClick={() => setSelectedStyleTab('item_layer')}
+                    >
+                      {t('item_layer')}
+                    </button>
+                  )}
+                  {isCollectionsLoaded && (
+                    <button
+                      className={`style-tab ${
+                        selectedStyleTab === 'data_layer' ? 'active' : ''
+                      }`}
+                      onClick={() => setSelectedStyleTab('data_layer')}
+                    >
+                      {t('data_layer')}
+                    </button>
+                  )}
+                </div>
+                <h2>
+                  {selectedStyleTab === 'item_layer'
+                    ? t('item_layer_style')
+                    : t('data_layer_style')}
+                </h2>
+
+                {selectedStyleTab === 'item_layer' ? (
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerFillColor}
+                        onChange={(e) => setItemLayerFillColor(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={itemLayerFillOpacity}
+                        onChange={(e) =>
+                          setItemLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerFillOpacity}</span>
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerStrokeColor}
+                        onChange={(e) =>
+                          setItemLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={itemLayerStrokeWidth}
+                        onChange={(e) =>
+                          setItemLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerStrokeWidth}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerFillColor}
+                        onChange={(e) => setDataLayerFillColor(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={dataLayerFillOpacity}
+                        onChange={(e) =>
+                          setDataLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerFillOpacity}</span>
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerStrokeColor}
+                        onChange={(e) =>
+                          setDataLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={dataLayerStrokeWidth}
+                        onChange={(e) =>
+                          setDataLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerStrokeWidth}</span>
+                    </div>
+                  </>
                 )}
-                {isCollectionsLoaded && (
+
+                <div className="style-buttons">
                   <button
-                    className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
-                    onClick={() => setSelectedStyleTab('data_layer')}
+                    className="update-style-btn"
+                    onClick={handleUpdateLayerStyle}
                   >
-                    {t('data_layer')}
+                    {t('update_style')}
                   </button>
-                )}
-              </div>
-              <h2>
-                {selectedStyleTab === 'item_layer' ? t('item_layer_style') : t('data_layer_style')}
-              </h2>
-
-              {selectedStyleTab === 'item_layer' ? (
-                // itemLayer style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={itemLayerFillColor}
-                      onChange={(e) => setItemLayerFillColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={itemLayerFillOpacity}
-                      onChange={(e) => setItemLayerFillOpacity(e.target.value)}
-                    />
-                    <span>{itemLayerFillOpacity}</span>
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={itemLayerStrokeColor}
-                      onChange={(e) => setItemLayerStrokeColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={itemLayerStrokeWidth}
-                      onChange={(e) => setItemLayerStrokeWidth(e.target.value)}
-                    />
-                    <span>{itemLayerStrokeWidth}</span>
-                  </div>
-                </>
-              ) : (
-                // Data layer style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerFillColor}
-                      onChange={(e) => setDataLayerFillColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={dataLayerFillOpacity}
-                      onChange={(e) => setDataLayerFillOpacity(e.target.value)}
-                    />
-                    <span>{dataLayerFillOpacity}</span>
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerStrokeColor}
-                      onChange={(e) => setDataLayerStrokeColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={dataLayerStrokeWidth}
-                      onChange={(e) => setDataLayerStrokeWidth(e.target.value)}
-                    />
-                    <span>{dataLayerStrokeWidth}</span>
-                  </div>
-                </>
-              )}
-
-              <div className="style-buttons">
-                <button
-                  className="update-style-btn"
-                  onClick={handleUpdateLayerStyle}
-                >
-                  {t('update_style')}
-                </button>
-                <button
-                  className="reset-style-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleResetLayerStyle();
-                  }}
-                >
-                  {t('reset_style')}
-                </button>
+                  <button
+                    className="reset-style-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleResetLayerStyle();
+                    }}
+                  >
+                    {t('reset_style')}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       )}
 
       <div className="dropdown-button">
         <button
-          className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
+          className={`button ${
+            dropdownState.activeButton === 'reset' ? 'active' : ''
+          }`}
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
           aria-label="reset"
