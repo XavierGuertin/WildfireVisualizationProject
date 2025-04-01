@@ -34,6 +34,15 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const MySwal = withReactContent(Swal);
 
+interface Config {
+  endpoint?: string;
+  language?: string;
+  onlineMode?: boolean;
+  loadedDataset?: { id: string; title: string };
+  error?: string;
+  [key: string]: any;
+}
+
 const SettingsPanel: React.FC<{
   refreshDatasets: () => void;
   setMetadataVisible: (visible: boolean) => void;
@@ -57,8 +66,6 @@ const SettingsPanel: React.FC<{
     setCollectionId,
     setIsPlaying,
     setSelectedAssetLayers,
-    isCollectionsLoaded,
-    setIsCollectionsLoaded,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -66,65 +73,56 @@ const SettingsPanel: React.FC<{
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
 
-  // UseQuery for fetching config
-  const {
-    data: configData,
-    isLoading: configLoading,
-    error: configError,
-  } = useQuery(
+  /**
+   * Fetches and caches the application configuration once on mount.
+   * @returns Cached config data or undefined if fetch fails.
+   */
+  const { data: configData, isLoading: configLoading } = useQuery(
     ['config'],
     () => getConfig(),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
+      onError: () => toast.error(t('error_fetching_config_file')),
       onSuccess: (config) => {
-        if (config.endpoint) setNewApiEndpoint(config.endpoint);
-        if (config.language && config.language !== i18n.language) {
-          i18n.changeLanguage(config.language);
+        if (config && typeof config === 'object') {
+          setNewApiEndpoint(config.endpoint || 'https://default-api-endpoint.com');
+          if (config.language && config.language !== i18n.language) {
+            i18n.changeLanguage(config.language);
+          }
+          if (config.onlineMode != undefined) setIsOnline(config.onlineMode);
         }
-        if (config.onlineMode != undefined) setIsOnline(config.onlineMode);
-        setLanguageInitialized(true);
       },
     }
   );
 
-  // UseMutation for updating language
-  const updateLanguageMutation = useMutation(
-    (newConfig: any) => saveConfig(newConfig),
+  /**
+   * Saves the application configuration and updates the cache.
+   * @param config - The configuration object to save.
+   * @returns Promise resolving with void (no return data assumed).
+   */
+  const saveConfigMutation = useMutation<void, unknown, Config>(
+    (config: Config) => saveConfig(config),
     {
-      onMutate: async (newConfig) => {
-        // Cancel any outgoing refetches (to avoid overwriting optimistic update)
-        await queryClient.cancelQueries(['config']);
-
-        // Snapshot the previous value
-        const previousConfig = queryClient.getQueryData(['config']);
-
-        // Optimistically update the cache
-        queryClient.setQueryData(['config'], newConfig);
-
-        // Return context with the previous config for rollback on error
-        return { previousConfig };
-      },
-      onError: (err, newConfig, context) => {
-        // Rollback to previous config on error
-        queryClient.setQueryData(['config'], context?.previousConfig);
-        toast.error(t('error_saving_language'));
-      },
       onSuccess: () => {
-        // Invalidate to ensure the server state is eventually synced (optional)
-        queryClient.invalidateQueries(['config'], { refetchActive: false });
+        queryClient.invalidateQueries(['config']);
+      },
+      onError: (error: unknown, _variables: Config, _context: unknown) => {
+        toast.error(t('error_saving_config'));
       },
     }
   );
 
-  // Initialize language from local storage
+  /**
+   * Initializes language from local storage and syncs with config.
+   */
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
       window.localStorage &&
       !languageInitialized &&
       !configLoading &&
-      !configError
+      configData
     ) {
       const savedLanguage = localStorage.getItem('language');
       if (savedLanguage && savedLanguage !== i18n.language) {
@@ -132,33 +130,40 @@ const SettingsPanel: React.FC<{
       } else if (!savedLanguage) {
         localStorage.setItem('language', 'en');
         toast.info(t('default_language_retrieved'));
+        if (configData && typeof configData === 'object') {
+          const newConfig = { ...configData, language: 'en' };
+          saveConfigMutation.mutate(newConfig);
+        }
       }
       setLanguageInitialized(true);
     }
-  }, [i18n, t, languageInitialized, configLoading, configError]);
+  }, [i18n, t, languageInitialized, configLoading, configData]);
 
-  // Prompt for endpoint if none is saved
+  /**
+   * Prompts for an endpoint if none is saved in the cached config.
+   */
   useEffect(() => {
-    if (
-      !configLoading &&
-      !configError &&
-      (configData?.endpoint === 'No endpoint saved' || !configData?.endpoint)
-    ) {
-      promptForEndpoint(
-        refreshDatasets,
-        t,
-        MySwal,
-        handleSaveAndFetchEndpoint,
-        getConfig,
-        saveConfig,
-      );
+    if (!configLoading && configData && typeof configData === 'object') {
+      if (!configData.endpoint || configData.endpoint === 'No endpoint saved') {
+        promptForEndpoint(
+          refreshDatasets,
+          t,
+          MySwal,
+          handleSaveAndFetchEndpoint,
+          getConfig,
+          saveConfig,
+        );
+      }
     }
-  }, [configLoading, configError, configData]);
+  }, [configLoading, configData, refreshDatasets, t]);
 
-  // Toggle dropdown state
-  const toggleDropdown = async (buttonName: string) => {
+  /**
+   * Toggles dropdown state using cached config data for settings.
+   * @param buttonName - The name of the button triggering the dropdown.
+   */
+  const toggleDropdown = (buttonName: string) => {
     if (buttonName === 'settings' && configData?.endpoint) {
-      setNewApiEndpoint(configData.endpoint);
+      setNewApiEndpoint(configData.endpoint); // Use cached data instead of fetching
     }
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
@@ -166,71 +171,61 @@ const SettingsPanel: React.FC<{
     }));
   };
 
-  const handleSaveAndFetchEndpoint = async (
-    endpointUrl: string,
-  ): Promise<boolean> => {
-    if (!isValidUrl(endpointUrl)) {
-      toast.error(t('invalid_url'));
-      return false;
-    }
-
-    try {
-      const verificationMessage = await queryClient.fetchQuery(
-        ['verifyEndpoint', endpointUrl],
-        () => verifyIfEndpointHasCollections(endpointUrl),
-        { staleTime: 5 * 60 * 1000 }
-      );
-      if (verificationMessage !== 'Collections found') {
-        toast.error(t('no_collections_found'));
-        return false;
-      }
-
-      await resetCollections();
-      await resetItems();
-      await resetItemAssets();
-      setSelectedAssetLayers([]);
-
-      const message = await queryClient.fetchQuery(
-        ['fetchCollections', endpointUrl],
-        () => fetchCollectionsFromEndpoint(endpointUrl),
-        { staleTime: 5 * 60 * 1000 }
-      );
-      if (message === 'Collections fetched and saved successfully') {
-        toast.success(t('collections_fetched_saved'));
-      }
-
-      const config = configData || (await getConfig());
-      if (config.error) {
-        toast.error(t('error_fetching_config_file'));
-        return false;
-      }
-      config.endpoint = endpointUrl;
-      config.loadedDataset = { id: '', title: '' };
-      await saveConfig(config);
-      queryClient.setQueryData(['config'], config);
-
-      refreshDatasets();
-      setDropdownState({ activeButton: null, isOpen: false });
-      setIsCollectionsLoaded(true);
-      return true;
-    } catch (error) {
-      toast.error(t('error_fetching_collections'));
-      return false;
-    }
-  };
-
+  /**
+   * Handles language selection and updates config via mutation.
+   * @param language - The selected language code (e.g., 'en', 'fr').
+   */
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
     localStorage.setItem('language', language);
-
-    // Optimistically update the config in the cache
-    const updatedConfig = {
-      ...configData,
-      language,
-    };
-    updateLanguageMutation.mutate(updatedConfig);
-
+    if (configData && typeof configData === 'object') {
+      const newConfig = { ...configData, language };
+      saveConfigMutation.mutate(newConfig);
+    }
     setDropdownState({ activeButton: null, isOpen: false });
+  };
+
+  const handleSaveAndFetchEndpoint = async (
+    endpointUrl: string,
+  ): Promise<boolean> => {
+    if (isValidUrl(endpointUrl)) {
+      try {
+        const verificationMessage = await verifyIfEndpointHasCollections(endpointUrl);
+        if (verificationMessage !== 'Collections found') {
+          toast.error(t('no_collections_found'));
+          return false;
+        }
+
+        await resetCollections();
+        await resetItems();
+        await resetItemAssets();
+        setSelectedAssetLayers([]);
+
+        const message = await fetchCollectionsFromEndpoint(endpointUrl);
+        if (message === 'Collections fetched and saved successfully') {
+          toast.success(t('collections_fetched_saved'));
+        }
+
+        const config = configData || (await getConfig());
+        if (config.error) {
+          toast.error(t('error_fetching_config_file'));
+          return false;
+        }
+
+        const newConfig = { ...config, endpoint: endpointUrl, loadedDataset: { id: '', title: '' } };
+        saveConfigMutation.mutate(newConfig);
+
+        refreshDatasets();
+        setDropdownState({ activeButton: null, isOpen: false });
+        return true;
+      } catch (error: any) {
+        toast.error(t('error_fetching_collections'));
+        return false;
+      }
+    } else {
+      toast.error(t('invalid_url'));
+      return false;
+    }
   };
 
   const handleReset = async () => {
@@ -243,7 +238,7 @@ const SettingsPanel: React.FC<{
       cancelButtonColor: '#d33',
       confirmButtonText: t('yes'),
       customClass: { popup: 'custom-swal-popup' },
-    }).then(async (result) => {
+    }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
@@ -252,9 +247,14 @@ const SettingsPanel: React.FC<{
         setSliderValue(0);
         setSpeed(1);
         handleResetLayerStyle(true);
+        if (configData && typeof configData === 'object') {
+          const newConfig = { ...configData, language: 'en' };
+          saveConfigMutation.mutate(newConfig);
+        }
         toast.success(t('reset_completed'));
       }
     });
+
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -275,22 +275,27 @@ const SettingsPanel: React.FC<{
       cancelButtonColor: '#d33',
       confirmButtonText: t('yes'),
       customClass: { popup: 'custom-swal-popup' },
-    }).then(async (result) => {
+    }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
         resetView();
         setSelectedAssetLayers([]);
-        await resetConfig();
-        await promptForEndpoint(
-          refreshDatasets,
-          t,
-          MySwal,
-          handleSaveAndFetchEndpoint,
-          getConfig,
-          saveConfig,
-        );
-        setMetadataVisible(false);
+        try {
+          await resetConfig();
+          await promptForEndpoint(
+            refreshDatasets,
+            t,
+            MySwal,
+            handleSaveAndFetchEndpoint,
+            getConfig,
+            saveConfig,
+          );
+          setMetadataVisible(false);
+        } catch (error: any) {
+          toast.error(error.message);
+        }
       }
     });
+
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -299,11 +304,10 @@ const SettingsPanel: React.FC<{
     const config = configData || (await getConfig());
     if (config.error) {
       toast.error(t('error_fetching_config_file'));
-      return;
+      return false;
     }
-    config.onlineMode = onlineMode;
-    await saveConfig(config);
-    queryClient.setQueryData(['config'], config);
+    const newConfig = { ...config, onlineMode };
+    saveConfigMutation.mutate(newConfig);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -319,20 +323,18 @@ const SettingsPanel: React.FC<{
       setTimeStamps([]);
       setCollectionId('');
       setSpeed(1);
+
       await resetCollections();
       await resetItems();
       await resetDatalayerView();
       await resetItemAssets();
       const map = mapRef.current as Map;
       changeLayer(map, true);
-      changeLayer(map, false, 'reset');
+      changeLayer(map, false, "reset");
       setSpeed(1);
       handleResetLayerStyle(true);
-      setIsCollectionsLoaded(false);
-      setSelectedStyleTab('item_layer');
-      queryClient.invalidateQueries(['config']);
       return 'Reset was successful';
-    } catch (error: Error) {
+    } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
     }
   };
@@ -366,10 +368,8 @@ const SettingsPanel: React.FC<{
           toast.error(t('error_fetching_config_file'));
           break;
         }
-        config.endpoint = 'No endpoint saved';
-        config.loadedDataset = { id: '', title: '' };
-        await saveConfig(config);
-        queryClient.setQueryData(['config'], config);
+        const newConfig = { ...config, endpoint: 'No endpoint saved', loadedDataset: { id: '', title: '' } };
+        saveConfigMutation.mutate(newConfig);
         refreshDatasets();
         break;
       }
@@ -394,10 +394,13 @@ const SettingsPanel: React.FC<{
         setDropdownState({ activeButton: null, isOpen: false });
       }
     };
+
     if (dropdownState.isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [dropdownState.isOpen]);
 
   const copyToClipboard = () => {
@@ -405,70 +408,45 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Default style values for item_layer
-  const DEFAULT_FILL_COLOR = '#ff0000'; // Red
+  // Default style values for Polygon
+  const DEFAULT_FILL_COLOR = '#ff0000';
   const DEFAULT_FILL_OPACITY = '0.1';
   const DEFAULT_STROKE_COLOR = '#ff0000';
   const DEFAULT_STROKE_WIDTH = '2';
+
+  // Default style values for DataLayer
   const DEFAULT_DATA_FILL_COLOR = '#0000ff';
   const DEFAULT_DATA_FILL_OPACITY = '0.1';
   const DEFAULT_DATA_STROKE_COLOR = '#0000ff';
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
-  // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<
-    'item_layer' | 'data_layer'
-  >('data_layer');
-
-  // ItemLayer style state
-  const [itemLayerFillColor, setItemLayerFillColor] =
-    useState(DEFAULT_FILL_COLOR);
-  const [itemLayerFillOpacity, setItemLayerFillOpacity] = useState(
-    DEFAULT_FILL_OPACITY,
-  );
-  const [itemLayerStrokeColor, setItemLayerStrokeColor] = useState(
-    DEFAULT_STROKE_COLOR,
-  );
-  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] = useState(
-    DEFAULT_STROKE_WIDTH,
-  );
-
-  // DataLayer style state
-  const [dataLayerFillColor, setDataLayerFillColor] = useState(
-    DEFAULT_DATA_FILL_COLOR,
-  );
-  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(
-    DEFAULT_DATA_FILL_OPACITY,
-  );
-  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(
-    DEFAULT_DATA_STROKE_COLOR,
-  );
-  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(
-    DEFAULT_DATA_STROKE_WIDTH,
-  );
+  const [selectedStyleTab, setSelectedStyleTab] = useState<'polygon' | 'dataLayer'>('polygon');
+  const [polygonFillColor, setPolygonFillColor] = useState(DEFAULT_FILL_COLOR);
+  const [polygonFillOpacity, setPolygonFillOpacity] = useState(DEFAULT_FILL_OPACITY);
+  const [polygonStrokeColor, setPolygonStrokeColor] = useState(DEFAULT_STROKE_COLOR);
+  const [polygonStrokeWidth, setPolygonStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+  const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
+  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(DEFAULT_DATA_FILL_OPACITY);
+  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
+  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
-      ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(
-        result[3],
-        16,
-      )})`
+      ? `rgb(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)})`
       : 'rgb(0,0,0)';
   };
 
-  // Update itemLayer and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
-
-    if (selectedStyleTab === 'item_layer') {
+    if (selectedStyleTab === 'polygon') {
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
-        hexToRgb(itemLayerFillColor),
-        itemLayerFillOpacity,
-        hexToRgb(itemLayerStrokeColor),
-        itemLayerStrokeWidth,
+        hexToRgb(polygonFillColor),
+        polygonFillOpacity,
+        hexToRgb(polygonStrokeColor),
+        polygonStrokeWidth
       );
     } else {
       updateLayerStyle(
@@ -477,44 +455,39 @@ const SettingsPanel: React.FC<{
         hexToRgb(dataLayerFillColor),
         dataLayerFillOpacity,
         hexToRgb(dataLayerStrokeColor),
-        dataLayerStrokeWidth,
+        dataLayerStrokeWidth
       );
     }
   };
 
-  // Reset itemLayer and dataLayer style
   const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
-
-    if (resetBoth || selectedStyleTab === 'item_layer') {
-      setItemLayerFillColor(DEFAULT_FILL_COLOR);
-      setItemLayerFillOpacity(DEFAULT_FILL_OPACITY);
-      setItemLayerStrokeColor(DEFAULT_STROKE_COLOR);
-      setItemLayerStrokeWidth(DEFAULT_STROKE_WIDTH);
-
+    if (resetBoth || selectedStyleTab === 'polygon') {
+      setPolygonFillColor(DEFAULT_FILL_COLOR);
+      setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
+      setPolygonStrokeColor(DEFAULT_STROKE_COLOR);
+      setPolygonStrokeWidth(DEFAULT_STROKE_WIDTH);
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
         hexToRgb(DEFAULT_FILL_COLOR),
         DEFAULT_FILL_OPACITY,
         hexToRgb(DEFAULT_STROKE_COLOR),
-        DEFAULT_STROKE_WIDTH,
+        DEFAULT_STROKE_WIDTH
       );
     }
-
-    if (resetBoth || selectedStyleTab === 'data_layer') {
+    if (resetBoth || selectedStyleTab === 'dataLayer') {
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
       setDataLayerStrokeColor('#0000ff');
       setDataLayerStrokeWidth('2');
-
       updateLayerStyle(
         mapRef.current,
         'dataLayer',
-        hexToRgb(DEFAULT_DATA_FILL_COLOR),
-        DEFAULT_DATA_FILL_OPACITY,
-        hexToRgb(DEFAULT_DATA_STROKE_COLOR),
-        DEFAULT_DATA_STROKE_WIDTH,
+        hexToRgb('#0000ff'),
+        '0.1',
+        hexToRgb('#0000ff'),
+        '2'
       );
     }
   };
@@ -523,9 +496,7 @@ const SettingsPanel: React.FC<{
     <div className="button-container" ref={dropdownRef}>
       <div className="dropdown-button">
         <button
-          className={`button ${
-            dropdownState.activeButton === 'settings' ? 'active' : ''
-          }`}
+          className={`button ${dropdownState.activeButton === 'settings' ? 'active' : ''}`}
           onClick={() => toggleDropdown('settings')}
           aria-expanded={dropdownState.activeButton === 'settings'}
           aria-label="settings"
@@ -555,9 +526,7 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-          className={`button ${
-            dropdownState.activeButton === 'language' ? 'active' : ''
-          }`}
+          className={`button ${dropdownState.activeButton === 'language' ? 'active' : ''}`}
           onClick={() => toggleDropdown('language')}
           aria-expanded={dropdownState.activeButton === 'language'}
           aria-label="language"
@@ -588,9 +557,7 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-          className={`button ${
-            dropdownState.activeButton === 'internet' ? 'active' : ''
-          }`}
+          className={`button ${dropdownState.activeButton === 'internet' ? 'active' : ''}`}
           onClick={() => toggleDropdown('internet')}
           aria-expanded={dropdownState.activeButton === 'internet'}
           aria-label="internet"
@@ -624,12 +591,10 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      {((timeStamps && timeStamps.length > 0) || isCollectionsLoaded) && (
+      {timeStamps && timeStamps.length > 0 && (
         <div className="dropdown-button">
           <button
-            className={`button ${
-              dropdownState.activeButton === 'style' ? 'active' : ''
-            }`}
+            className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
             onClick={() => toggleDropdown('style')}
             aria-expanded={dropdownState.activeButton === 'style'}
             aria-label="style"
@@ -641,44 +606,32 @@ const SettingsPanel: React.FC<{
             <div className="dropdown-content show">
               <div className="style-options">
                 <div className="style-tabs">
-                  {timeStamps && timeStamps.length > 0 && (
-                    <button
-                      className={`style-tab ${
-                        selectedStyleTab === 'item_layer' ? 'active' : ''
-                      }`}
-                      onClick={() => setSelectedStyleTab('item_layer')}
-                    >
-                      {t('item_layer')}
-                    </button>
-                  )}
-                  {isCollectionsLoaded && (
-                    <button
-                      className={`style-tab ${
-                        selectedStyleTab === 'data_layer' ? 'active' : ''
-                      }`}
-                      onClick={() => setSelectedStyleTab('data_layer')}
-                    >
-                      {t('data_layer')}
-                    </button>
-                  )}
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'polygon' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('polygon')}
+                  >
+                    {t('polygon')}
+                  </button>
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'dataLayer' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('dataLayer')}
+                  >
+                    {t('data_layer')}
+                  </button>
                 </div>
                 <h2>
-                  {selectedStyleTab === 'item_layer'
-                    ? t('item_layer_style')
-                    : t('data_layer_style')}
+                  {selectedStyleTab === 'polygon' ? t('polygon_style') : t('data_layer_style')}
                 </h2>
-
-                {selectedStyleTab === 'item_layer' ? (
+                {selectedStyleTab === 'polygon' ? (
                   <>
                     <div className="style-option">
                       <label>{t('fill')}:</label>
                       <input
                         type="color"
-                        value={itemLayerFillColor}
-                        onChange={(e) => setItemLayerFillColor(e.target.value)}
+                        value={polygonFillColor}
+                        onChange={(e) => setPolygonFillColor(e.target.value)}
                       />
                     </div>
-
                     <div className="style-option">
                       <label>{t('fill_opacity')}:</label>
                       <input
@@ -686,25 +639,19 @@ const SettingsPanel: React.FC<{
                         min="0"
                         max="1"
                         step="0.1"
-                        value={itemLayerFillOpacity}
-                        onChange={(e) =>
-                          setItemLayerFillOpacity(e.target.value)
-                        }
+                        value={polygonFillOpacity}
+                        onChange={(e) => setPolygonFillOpacity(e.target.value)}
                       />
-                      <span>{itemLayerFillOpacity}</span>
+                      <span>{polygonFillOpacity}</span>
                     </div>
-
                     <div className="style-option">
                       <label>{t('stroke')}:</label>
                       <input
                         type="color"
-                        value={itemLayerStrokeColor}
-                        onChange={(e) =>
-                          setItemLayerStrokeColor(e.target.value)
-                        }
+                        value={polygonStrokeColor}
+                        onChange={(e) => setPolygonStrokeColor(e.target.value)}
                       />
                     </div>
-
                     <div className="style-option">
                       <label>{t('stroke_width')}:</label>
                       <input
@@ -712,12 +659,10 @@ const SettingsPanel: React.FC<{
                         min="0"
                         max="5"
                         step="0.5"
-                        value={itemLayerStrokeWidth}
-                        onChange={(e) =>
-                          setItemLayerStrokeWidth(e.target.value)
-                        }
+                        value={polygonStrokeWidth}
+                        onChange={(e) => setPolygonStrokeWidth(e.target.value)}
                       />
-                      <span>{itemLayerStrokeWidth}</span>
+                      <span>{polygonStrokeWidth}</span>
                     </div>
                   </>
                 ) : (
@@ -730,7 +675,6 @@ const SettingsPanel: React.FC<{
                         onChange={(e) => setDataLayerFillColor(e.target.value)}
                       />
                     </div>
-
                     <div className="style-option">
                       <label>{t('fill_opacity')}:</label>
                       <input
@@ -739,24 +683,18 @@ const SettingsPanel: React.FC<{
                         max="1"
                         step="0.1"
                         value={dataLayerFillOpacity}
-                        onChange={(e) =>
-                          setDataLayerFillOpacity(e.target.value)
-                        }
+                        onChange={(e) => setDataLayerFillOpacity(e.target.value)}
                       />
                       <span>{dataLayerFillOpacity}</span>
                     </div>
-
                     <div className="style-option">
                       <label>{t('stroke')}:</label>
                       <input
                         type="color"
                         value={dataLayerStrokeColor}
-                        onChange={(e) =>
-                          setDataLayerStrokeColor(e.target.value)
-                        }
+                        onChange={(e) => setDataLayerStrokeColor(e.target.value)}
                       />
                     </div>
-
                     <div className="style-option">
                       <label>{t('stroke_width')}:</label>
                       <input
@@ -765,20 +703,14 @@ const SettingsPanel: React.FC<{
                         max="5"
                         step="0.5"
                         value={dataLayerStrokeWidth}
-                        onChange={(e) =>
-                          setDataLayerStrokeWidth(e.target.value)
-                        }
+                        onChange={(e) => setDataLayerStrokeWidth(e.target.value)}
                       />
                       <span>{dataLayerStrokeWidth}</span>
                     </div>
                   </>
                 )}
-
                 <div className="style-buttons">
-                  <button
-                    className="update-style-btn"
-                    onClick={handleUpdateLayerStyle}
-                  >
+                  <button className="update-style-btn" onClick={handleUpdateLayerStyle}>
                     {t('update_style')}
                   </button>
                   <button
@@ -799,9 +731,7 @@ const SettingsPanel: React.FC<{
 
       <div className="dropdown-button">
         <button
-          className={`button ${
-            dropdownState.activeButton === 'reset' ? 'active' : ''
-          }`}
+          className={`button ${dropdownState.activeButton === 'reset' ? 'active' : ''}`}
           onClick={() => toggleDropdown('reset')}
           aria-expanded={dropdownState.activeButton === 'reset'}
           aria-label="reset"
