@@ -55,6 +55,8 @@ const SettingsPanel: React.FC<{
     setCollectionId,
     setIsPlaying,
     setSelectedAssetLayers,
+    isCollectionsLoaded,
+    setIsCollectionsLoaded
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
