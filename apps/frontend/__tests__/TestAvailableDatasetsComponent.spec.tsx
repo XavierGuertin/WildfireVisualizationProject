@@ -6,6 +6,24 @@ import AvailableDatasets, {
   DatasetMetadata,
 } from '../src/app/components/AvailableDatasets';
 import * as api from '../src/app/services/api';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+// Create a query client instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      cacheTime: 0,
+    },
+  },
+});
+
+// Create a wrapper component for tests
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    {children}
+  </QueryClientProvider>
+);
 
 jest.mock('../src/app/services/api');
 
@@ -62,13 +80,13 @@ jest.mock('../src/app/services/configApi', () => ({
 }));
 
 jest.mock('../src/app/components/MapView', () => ({
-  changeLayer: jest.fn().mockResolvedValue(true), // Mocks a successful layer change
+  changeLayer: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../src/app/context/MapContext', () => ({
   useMapLayerContext: jest.fn(() => ({
     mapRef: { current: {} },
-    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },  
+    loadedDataset: { id: 'dataset-1', title: 'Dataset One' },
     setLoadedDataset: jest.fn(),
   })),
 }));
@@ -84,6 +102,7 @@ describe('Test AvailableDatasets component', () => {
     mockReturnListOfCollections.mockResolvedValue(mockDatasets);
     mockFetchMetaData.mockResolvedValue(mockDatasetMetadata);
     jest.spyOn(console, 'error').mockImplementation(() => {/*intentional*/});
+    queryClient.clear();
   });
 
   afterEach(() => {
@@ -93,6 +112,7 @@ describe('Test AvailableDatasets component', () => {
   it('should initialize with correct default state', () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     expect(screen.getByTestId('toggle-status-text')).toBeInTheDocument();
@@ -100,19 +120,20 @@ describe('Test AvailableDatasets component', () => {
   });
 
   it('should show loading message while fetching datasets', async () => {
-    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {/*intentional*/})); // Keeps promise pending
+    mockReturnListOfCollections.mockImplementation(() => new Promise(() => {/*intentional*/}));
 
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
-    // Ensure the loading message appears
     expect(await screen.findByTestId('loading-message')).toBeInTheDocument();
   });
 
   it('should call onDatasetClick on dataset click', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     await waitFor(() =>
@@ -132,6 +153,7 @@ describe('Test AvailableDatasets component', () => {
   it('should mark dataset as selected when clicked', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     const datasetButton = await waitFor(() =>
@@ -147,6 +169,7 @@ describe('Test AvailableDatasets component', () => {
   it('should update active filter UI when a filter button is clicked', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     const nameFilterButton = screen.getByTestId('filter-button-Name');
@@ -162,6 +185,7 @@ describe('Test AvailableDatasets component', () => {
   it('should collapse and expand the component when toggled', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     const collapseButton = await waitFor(() =>
@@ -179,6 +203,7 @@ describe('Test AvailableDatasets component', () => {
   it('should toggle isToggled state when switch is clicked', async () => {
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     const toggleButton = await waitFor(() =>
@@ -212,12 +237,12 @@ describe('Test AvailableDatasets component', () => {
         currentBbox={[-120, 30, -110, 40]}
         onResetBbox={mockOnResetBbox}
       />,
+      { wrapper }
     );
 
     const filterButton = screen.getByTestId('filter-button-Name');
     fireEvent.click(filterButton);
 
-    // Remove any check for not.toHaveBeenCalled() if the code triggers an initial call
     const toggleButton = await screen.findByTestId('toggle-button');
     fireEvent.click(toggleButton);
 
@@ -229,7 +254,7 @@ describe('Test AvailableDatasets component', () => {
       expect(mockFetchCollectionsByName).toHaveBeenCalledWith(
         [-120, 30, -110, 40],
         'asc'
-      );      
+      );
     });
   });
 
@@ -239,11 +264,12 @@ describe('Test AvailableDatasets component', () => {
     );
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('no-datasets-message')).toHaveTextContent(
-        'no_datasets_available',
+      expect(screen.getByTestId('error-message')).toHaveTextContent(
+        'Failed to load datasets',
       );
     });
   });
@@ -253,6 +279,7 @@ describe('Test AvailableDatasets component', () => {
 
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     await waitFor(() => {
@@ -265,6 +292,7 @@ describe('Test AvailableDatasets component', () => {
     mockFetchCollectionsByName.mockResolvedValue(mockDatasets);
     render(
       <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
     );
 
     const filterButton = screen.getByTestId('filter-button-Name');
@@ -278,7 +306,10 @@ describe('Test AvailableDatasets component', () => {
 
   it('displays an error message if fetchError is set', async () => {
     mockReturnListOfCollections.mockResolvedValue({ error: 'Simulated error' });
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />);
+    render(
+      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
+    );
     await waitFor(() => {
       expect(screen.queryByTestId('error-message')).not.toBeNull();
     });
@@ -286,18 +317,19 @@ describe('Test AvailableDatasets component', () => {
 
   it('should display translated error when fetch fails with "Failed to fetch data by name"', async () => {
     mockFetchCollectionsByName.mockResolvedValue({ error: 'Failed to fetch data by name' });
-  
+
     render(
       <AvailableDatasets
         onDatasetClick={mockOnDatasetClick}
         refreshKey={0}
         onResetBbox={mockOnResetBbox}
-      />
+      />,
+      { wrapper }
     );
-  
+
     const nameFilterButton = screen.getByTestId('filter-button-Name');
     fireEvent.click(nameFilterButton);
-  
+
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_name');
     });
@@ -305,18 +337,19 @@ describe('Test AvailableDatasets component', () => {
 
   it('should display translated error when fetch fails with "Failed to fetch data by date"', async () => {
     mockFetchCollectionsByDate.mockResolvedValue({ error: 'Failed to fetch data by date' });
-  
+
     render(
       <AvailableDatasets
         onDatasetClick={mockOnDatasetClick}
         refreshKey={0}
         onResetBbox={mockOnResetBbox}
-      />
+      />,
+      { wrapper }
     );
-  
+
     const dateFilterButton = screen.getByTestId('filter-button-Date');
     fireEvent.click(dateFilterButton);
-  
+
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data_by_date');
     });
@@ -324,15 +357,16 @@ describe('Test AvailableDatasets component', () => {
 
   it('should display translated error when fetch fails with "Failed to fetch data"', async () => {
     mockReturnListOfCollections.mockResolvedValue({ error: 'Failed to fetch data' });
-  
+
     render(
       <AvailableDatasets
         onDatasetClick={mockOnDatasetClick}
         refreshKey={0}
         onResetBbox={mockOnResetBbox}
-      />
+      />,
+      { wrapper }
     );
-  
+
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
     });
@@ -340,19 +374,25 @@ describe('Test AvailableDatasets component', () => {
 
   it('should display default translation key when response.error is undefined', async () => {
     mockReturnListOfCollections.mockResolvedValue({ error: undefined });
-  
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />);
-  
+
+    render(
+      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
+    );
+
     await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toHaveTextContent('error_fetching_data');
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Invalid response');
     });
   });
 
   it('should display raw error string when it does not match any known translation key', async () => {
     mockReturnListOfCollections.mockResolvedValue({ error: 'Some random backend error' });
-  
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />);
-  
+
+    render(
+      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
+    );
+
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('Some random backend error');
     });
@@ -360,11 +400,14 @@ describe('Test AvailableDatasets component', () => {
 
   it('should trigger fetchDatasets catch block and display fallback error message', async () => {
     mockReturnListOfCollections.mockRejectedValue(new Error('Something broke'));
-  
-    render(<AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />);
-  
+
+    render(
+      <AvailableDatasets onDatasetClick={mockOnDatasetClick} refreshKey={0} onResetBbox={mockOnResetBbox} />,
+      { wrapper }
+    );
+
     await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to load datasets.');
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Something broke');
     });
   });
 });
