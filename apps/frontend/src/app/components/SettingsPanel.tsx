@@ -63,6 +63,7 @@ const SettingsPanel: React.FC<{
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
@@ -171,6 +172,8 @@ const SettingsPanel: React.FC<{
         refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
+        setIsCollectionsLoaded(true);
+
         return true;
       } catch (error: any) {
         toast.error(t('error_fetching_collections'));
@@ -297,6 +300,8 @@ const SettingsPanel: React.FC<{
       changeLayer(map, false, "reset");
       setSpeed(1);
       handleResetLayerStyle(true);
+      setIsCollectionsLoaded(false);
+      setSelectedStyleTab('data_layer');
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
