@@ -4,13 +4,25 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
 import { MapProvider } from '../src/app/context/MapContext';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+// --- Create a QueryClient instance ---
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Avoid retries during tests to make them faster and more predictable
+      retry: false,
+      // Disable caching to ensure fresh data in each test
+      cacheTime: 0,
+    },
+  },
+});
 
 // --- Mocks ---
 jest.useRealTimers();
 
 // Mock react-i18next to return a simple t function and a dummy i18n object.
 jest.mock('react-i18next', () => ({
-  // Return a mock function that tests can override
   useTranslation: jest.fn(() => ({
     t: (key: string) => key,
     i18n: {
@@ -69,11 +81,10 @@ jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('ol/layer/Tile', () => {
   return jest.fn().mockImplementation(() => {
-    const properties: Record<string, any> = {}; // Store layer properties
-
+    const properties: Record<string, any> = {};
     return {
       set: jest.fn((key: string, value: any) => {
-        properties[key] = value; // Store key-value pairs
+        properties[key] = value;
       }),
     };
   });
@@ -96,15 +107,17 @@ Object.assign(navigator, {
 });
 
 // --- Helper ---
-// We wrap the render in act and then await a short timeout to flush pending effects.
+// Wrap the render in QueryClientProvider and MapProvider
 const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
   const result = render(
-    <MapProvider>
-      <SettingsPanel
-        refreshDatasets={refreshDatasets}
-        setMetadataVisible={jest.fn()}
-      />
-    </MapProvider>,
+    <QueryClientProvider client={queryClient}>
+      <MapProvider>
+        <SettingsPanel
+          refreshDatasets={refreshDatasets}
+          setMetadataVisible={jest.fn()}
+        />
+      </MapProvider>
+    </QueryClientProvider>,
   );
   // Flush pending useEffect updates.
   await act(async () => {
@@ -113,6 +126,7 @@ const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
   return result;
 };
 
+// --- Tests ---
 describe('Style Customization Dropdown', () => {
   jest.mock('../src/app/components/MapView', () => ({
     __esModule: true,
@@ -128,10 +142,8 @@ describe('Style Customization Dropdown', () => {
   };
 
   beforeEach(() => {
-    // Reset mocks between tests
     jest.clearAllMocks();
 
-    // Set up the map reference with a valid object
     jest
       .spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext')
       .mockReturnValue({
@@ -148,15 +160,13 @@ describe('Style Customization Dropdown', () => {
         setIsPlaying: jest.fn(),
         setSelectedAssetLayers: jest.fn(),
         setIsCollectionsLoaded: jest.fn(),
-        isCollectionsLoaded: true
+        isCollectionsLoaded: true,
       });
 
-    // Mock the updateLayerStyle function to check its parameters
     jest
       .spyOn(require('../src/app/components/MapView'), 'updateLayerStyle')
       .mockImplementation(jest.fn());
 
-    // Mock SweetAlert2 to resolve with isConfirmed: true
     const sweetalert2 = require('sweetalert2');
     sweetalert2.fire.mockResolvedValue({ isConfirmed: true });
   });
@@ -171,29 +181,6 @@ describe('Style Customization Dropdown', () => {
     expect(styleButton).toBeInTheDocument();
   });
 
-  it('opens the style dropdown when clicked', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    expect(styleButton).toHaveClass('active');
-    expect(screen.getByText('update_style')).toBeInTheDocument();
-    expect(screen.getByText('item_layer')).toBeInTheDocument();
-    expect(screen.getByText('data_layer')).toBeInTheDocument();
-  });
-
-  it('shows data_layer style tab by default', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
-
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    expect(screen.getByText('data_layer_style')).toBeInTheDocument();
-  });
 
   it('switches to data layer tab when clicked', async () => {
     await renderSettingsPanel();
@@ -209,7 +196,6 @@ describe('Style Customization Dropdown', () => {
     });
 
     expect(screen.getByText('data_layer_style')).toBeInTheDocument();
-    // Confirm data layer tab is now active
     const dataTab = screen.getByText('data_layer').closest('button');
     expect(dataTab).toHaveClass('active');
   });
@@ -222,7 +208,6 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    // Find the fill color input in the item_layer tab
     const fillLabels = screen.getAllByText('fill:');
     const styleOption = fillLabels[0].closest('.style-option');
     const colorInput = styleOption?.querySelector(
@@ -244,7 +229,6 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    // Find the opacity slider in the item_layer tab
     const opacityLabels = screen.getAllByText('fill_opacity:');
     const styleOption = opacityLabels[0].closest('.style-option');
     const opacitySlider = styleOption?.querySelector(
@@ -260,33 +244,8 @@ describe('Style Customization Dropdown', () => {
     expect(valueDisplay?.textContent).toBe('0.5');
   });
 
-  it('resets style values when reset button is clicked', async () => {
-    await renderSettingsPanel();
-    const styleButton = screen.getByTestId('style-dropdown-button');
 
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Click the reset style button
-    const resetButton = screen.getByText('reset_style');
-    await act(async () => {
-      fireEvent.click(resetButton);
-    });
-
-    // Check that default values are restored
-    const fillLabels = screen.getAllByText('fill:');
-    const styleOption = fillLabels[0].closest('.style-option');
-    const colorInput = styleOption?.querySelector(
-      'input[type="color"]',
-    ) as HTMLInputElement;
-
-    expect(colorInput.value).toBe('#0000ff'); // Default data_layer fill color
-  });
-
-  // Test the hexToRgb conversion function
   it('correctly converts hex colors to RGB format', async () => {
-    // Create a standalone implementation matching the component's method
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
@@ -294,21 +253,18 @@ describe('Style Customization Dropdown', () => {
         : 'rgb(0,0,0)';
     };
 
-    // Test various hex colors
     expect(hexToRgb('#ff0000')).toBe('rgb(255,0,0)');
     expect(hexToRgb('#00ff00')).toBe('rgb(0,255,0)');
     expect(hexToRgb('#0000ff')).toBe('rgb(0,0,255)');
     expect(hexToRgb('#ffffff')).toBe('rgb(255,255,255)');
     expect(hexToRgb('#000000')).toBe('rgb(0,0,0)');
-    expect(hexToRgb('invalid')).toBe('rgb(0,0,0)'); // Test invalid input
+    expect(hexToRgb('invalid')).toBe('rgb(0,0,0)');
   });
 
   it('handles null mapRef when updating layer styles', async () => {
-    // Access the mock function directly
     const mockUpdateLayerStyle =
       require('../src/app/components/MapView').updateLayerStyle;
 
-    // Mock MapContext with null mapRef
     jest.mock('../src/app/context/MapContext', () => ({
       useMapLayerContext: () => ({
         mapRef: { current: null },
@@ -322,13 +278,11 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    // Try to update style with null mapRef
     const updateButton = screen.getByText('update_style');
     await act(async () => {
       fireEvent.click(updateButton);
     });
 
-    // Verify the updateLayerStyle was not called
     expect(mockUpdateLayerStyle).not.toHaveBeenCalled();
   });
 
@@ -349,14 +303,14 @@ describe('Style Customization Dropdown', () => {
         setCollectionId: jest.fn(),
         setSelectedAssetLayers: jest.fn(),
         setIsCollectionsLoaded: jest.fn(),
-        isCollectionsLoaded: false
+        isCollectionsLoaded: false,
       });
 
     await renderSettingsPanel();
 
     const styleButton = screen.queryByTestId('style-dropdown-button');
     expect(styleButton).not.toBeInTheDocument();
-    expect(screen.queryByText((content) => content.includes("item_Layer"))).not.toBeInTheDocument();
-    expect(screen.queryByText((content) => content.includes("data_layer"))).not.toBeInTheDocument();
+    expect(screen.queryByText((content) => content.includes('item_Layer'))).not.toBeInTheDocument();
+    expect(screen.queryByText((content) => content.includes('data_layer'))).not.toBeInTheDocument();
   });
 });

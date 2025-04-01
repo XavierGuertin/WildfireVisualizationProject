@@ -1,3 +1,4 @@
+// SettingsPanel.test.tsx
 import React from 'react';
 import {
   act,
