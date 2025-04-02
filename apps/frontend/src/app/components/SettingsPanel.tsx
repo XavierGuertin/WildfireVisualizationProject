@@ -27,7 +27,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
-import { changeLayer, updateLayerStyle } from './MapView';
+import { updateLayerStyle } from './MapView';
 import { LuPalette } from 'react-icons/lu';
 
 const MySwal = withReactContent(Swal);
@@ -294,9 +294,6 @@ const SettingsPanel: React.FC<{
       await resetItems();
       await resetDatalayerView();
       await resetItemAssets();
-      const map = mapRef.current as Map;
-      changeLayer(map, true);
-      changeLayer(map, false, "reset");
       setSpeed(1);
       handleResetLayerStyle(true);
       setIsCollectionsLoaded(false);
