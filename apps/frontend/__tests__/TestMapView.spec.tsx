@@ -909,37 +909,6 @@ describe('Layer Style Tests', () => {
     expect(mockLayer.setStyle).toHaveBeenCalled();
   });
 
-  it('handles layer not found gracefully', () => {
-    // Mock console.error to verify it's called
-    const originalError = console.error;
-    console.error = jest.fn();
-
-    // Empty layers array to simulate layer not found
-    mockMap.getLayers.mockReturnValue({
-      getArray: jest.fn(() => []),
-    });
-
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-
-    // Call updateLayerStyle with a non-existent layer
-    updateLayerStyle(
-      mockMap,
-      'nonExistentLayer',
-      'rgb(255, 0, 0)',
-      '0.5',
-      'rgb(0, 0, 0)',
-      '1'
-    );
-
-    // Verify error was logged
-    expect(console.error).toHaveBeenCalledWith(
-      'Layer "nonExistentLayer" not found'
-    );
-
-    // Restore console.error
-    console.error = originalError;
-  });
-
   it('finds layer by name if id is not matching', () => {
     const { updateLayerStyle } = require('../src/app/components/MapView');
 

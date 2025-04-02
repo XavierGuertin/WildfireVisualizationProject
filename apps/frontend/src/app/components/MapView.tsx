@@ -99,7 +99,10 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: currentDataLayerFillColor }),
-      stroke: new Stroke({ color: currentDataLayerStrokeColor, width: currentDataLayerStrokeWidth }),
+      stroke: new Stroke({
+        color: currentDataLayerStrokeColor,
+        width: currentDataLayerStrokeWidth,
+      }),
     }),
   });
 
@@ -114,7 +117,7 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
         const zoom = view.getZoomForResolution(resolution);
         view.animate({
           center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
-          zoom: zoom ? zoom - 1 : 1,
+          zoom: zoom ? zoom - 2 : 1,
           duration: 1000,
         });
       }
@@ -141,7 +144,10 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: currentItemLayerFillColor }),
-      stroke: new Stroke({ color: currentItemLayerStrokeColor, width: currentItemLayerStrokeWidth }),
+      stroke: new Stroke({
+        color: currentItemLayerStrokeColor,
+        width: currentItemLayerStrokeWidth,
+      }),
     }),
   });
 
@@ -154,6 +160,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
  * both the collection layer and items layer
  *
  * @param {Map} map - The OpenLayers map instance.
+ * @param collection
+ * @param timestamp
  */
 export const refreshLayer = (
   map: Map,
@@ -194,7 +202,8 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, isOnline } = useMapLayerContext();
+  const { layer, mapRef, isOnline } =
+    useMapLayerContext();
 
   /**
    * Determines which base layer to use based on network connectivity.
@@ -274,6 +283,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     };
   }, [onBboxChange]);
 
+
   return (
     <div id="map-container" ref={mapElement} data-testid="map-container">
       <Footer />
@@ -285,6 +295,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  * Utility function to trigger a refresh of the data layer.
  *
  * @param {Map} map - The OpenLayers map instance.
+ * @param collection
+ * @param timestamp
  */
 export const changeLayer = (
   map: Map,
@@ -292,10 +304,10 @@ export const changeLayer = (
   timestamp?: string,
 ) => {
   if (collection) {
-    refreshLayer(map, (collection = true));
+    refreshLayer(map, true);
   }
   if (timestamp) {
-    refreshLayer(map, (collection = false), timestamp);
+    refreshLayer(map, false, timestamp);
   }
 };
 
@@ -313,24 +325,26 @@ export const toggleAssetLayer = (
   layerUrl: string,
   add: boolean,
   min: number,
-  max: number
+  max: number,
 ): void => {
   // First check if layer already exists
   const layers = map.getLayers().getArray();
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
 
   const result = /layers=(.*)/.exec(layerUrl);
-    let geoServerLayerName = ''
-    if(result){
-      geoServerLayerName = result[1];
-    }
+  let geoServerLayerName = '';
+  if (result) {
+    geoServerLayerName = result[1];
+  }
 
   if (add && !existingLayer) {
     // Add the layer
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
-        params: { SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max) },
+        params: {
+          SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max),
+        },
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
@@ -379,7 +393,6 @@ export const updateLayerStyle = (
   ) as VectorLayer<VectorSource<any>>;
 
   if (!layer) {
-    console.error(`Layer "${layerName}" not found`);
     return;
   }
 
