@@ -112,9 +112,9 @@ const resources = {
       weather_assets_label: 'Weather Assets',
       load_assets_button: 'Load Assets',
       loading_label: 'Loading...',
-      // Polygon Style
-      polygon_style: 'Polygon Style',
-      polygon: 'Polygon',
+      // Customize Style
+      item_layer_style: 'Item Layer Style',
+      item_layer: 'Item Layer',
       data_layer: 'Data Layer',
       data_layer_style: 'Data Layer Style',
       fill: 'Fill',
@@ -213,7 +213,7 @@ const resources = {
       error_fetching_data_by_date: 'Échec de la récupération des données par date',
       error_fetching_config_file:
         "Impossible de récupérer le fichier de configuration. Veuillez valider app-config.json.",
-      
+
       error_http_status: "Erreur HTTP ! Statut",
       error_Fetching_collections: "Impossible de récupérer les collections",
       error_failed_fetch_data: "Échec de la récupération des données",
@@ -237,9 +237,9 @@ const resources = {
       weather_assets_label: 'Données Météo',
       load_assets_button: 'Charger les Données',
       loading_label: 'Chargement...',
-      // Polygon Style
-      polygon_style: 'Style du Polygone',
-      polygon: 'Polygone',
+      // Customize Style
+      item_layer_style: 'Style des items',
+      item_layer: 'Items',
       data_layer: 'Couche de données',
       data_layer_style: 'Style de la couche de données',
       fill: 'Remplissage',

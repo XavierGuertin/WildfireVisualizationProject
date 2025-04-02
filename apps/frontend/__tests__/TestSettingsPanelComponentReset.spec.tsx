@@ -147,6 +147,8 @@ describe('Style Customization Dropdown', () => {
         setCollectionId: jest.fn(),
         setIsPlaying: jest.fn(),
         setSelectedAssetLayers: jest.fn(),
+        setIsCollectionsLoaded: jest.fn(),
+        isCollectionsLoaded: true
       });
 
     // Mock the updateLayerStyle function to check its parameters
@@ -172,17 +174,17 @@ describe('Style Customization Dropdown', () => {
   it('opens the style dropdown when clicked', async () => {
     await renderSettingsPanel();
     const styleButton = screen.getByTestId('style-dropdown-button');
-
     await act(async () => {
       fireEvent.click(styleButton);
     });
 
     expect(styleButton).toHaveClass('active');
-    expect(screen.getByText('polygon')).toBeInTheDocument();
+    expect(screen.getByText('update_style')).toBeInTheDocument();
+    expect(screen.getByText('item_layer')).toBeInTheDocument();
     expect(screen.getByText('data_layer')).toBeInTheDocument();
   });
 
-  it('shows polygon style tab by default', async () => {
+  it('shows data_layer style tab by default', async () => {
     await renderSettingsPanel();
     const styleButton = screen.getByTestId('style-dropdown-button');
 
@@ -190,10 +192,7 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    expect(screen.getByText('polygon_style')).toBeInTheDocument();
-    // Check that polygon tab is active
-    const polygonTab = screen.getByText('polygon').closest('button');
-    expect(polygonTab).toHaveClass('active');
+    expect(screen.getByText('data_layer_style')).toBeInTheDocument();
   });
 
   it('switches to data layer tab when clicked', async () => {
@@ -215,7 +214,7 @@ describe('Style Customization Dropdown', () => {
     expect(dataTab).toHaveClass('active');
   });
 
-  it('updates polygon fill color when color picker changes', async () => {
+  it('updates item_layer fill color when color picker changes', async () => {
     await renderSettingsPanel();
     const styleButton = screen.getByTestId('style-dropdown-button');
 
@@ -223,7 +222,7 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    // Find the fill color input in the polygon tab
+    // Find the fill color input in the item_layer tab
     const fillLabels = screen.getAllByText('fill:');
     const styleOption = fillLabels[0].closest('.style-option');
     const colorInput = styleOption?.querySelector(
@@ -237,7 +236,7 @@ describe('Style Customization Dropdown', () => {
     expect(colorInput.value).toBe('#00ff00');
   });
 
-  it('updates polygon fill opacity when slider changes', async () => {
+  it('updates item_layer fill opacity when slider changes', async () => {
     await renderSettingsPanel();
     const styleButton = screen.getByTestId('style-dropdown-button');
 
@@ -245,7 +244,7 @@ describe('Style Customization Dropdown', () => {
       fireEvent.click(styleButton);
     });
 
-    // Find the opacity slider in the polygon tab
+    // Find the opacity slider in the item_layer tab
     const opacityLabels = screen.getAllByText('fill_opacity:');
     const styleOption = opacityLabels[0].closest('.style-option');
     const opacitySlider = styleOption?.querySelector(
@@ -282,7 +281,7 @@ describe('Style Customization Dropdown', () => {
       'input[type="color"]',
     ) as HTMLInputElement;
 
-    expect(colorInput.value).toBe('#ff0000'); // Default polygon fill color
+    expect(colorInput.value).toBe('#0000ff'); // Default data_layer fill color
   });
 
   // Test the hexToRgb conversion function
@@ -333,7 +332,7 @@ describe('Style Customization Dropdown', () => {
     expect(mockUpdateLayerStyle).not.toHaveBeenCalled();
   });
 
-  it('does not render style dropdown when timeStamps is empty', async () => {
+  it('does not render data_layer nor item_layer style dropdown when timeStamps is empty and isCollectionsLoaded false', async () => {
     jest
       .spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext')
       .mockReturnValue({
@@ -349,11 +348,15 @@ describe('Style Customization Dropdown', () => {
         setTimeStamps: jest.fn(),
         setCollectionId: jest.fn(),
         setSelectedAssetLayers: jest.fn(),
+        setIsCollectionsLoaded: jest.fn(),
+        isCollectionsLoaded: false
       });
 
     await renderSettingsPanel();
 
     const styleButton = screen.queryByTestId('style-dropdown-button');
     expect(styleButton).not.toBeInTheDocument();
+    expect(screen.queryByText((content) => content.includes("item_Layer"))).not.toBeInTheDocument();
+    expect(screen.queryByText((content) => content.includes("data_layer"))).not.toBeInTheDocument();
   });
 });

@@ -55,12 +55,15 @@ const SettingsPanel: React.FC<{
     setCollectionId,
     setIsPlaying,
     setSelectedAssetLayers,
+    isCollectionsLoaded,
+    setIsCollectionsLoaded
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
@@ -169,6 +172,8 @@ const SettingsPanel: React.FC<{
         refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
+        setIsCollectionsLoaded(true);
+
         return true;
       } catch (error: any) {
         toast.error(t('error_fetching_collections'));
@@ -295,6 +300,8 @@ const SettingsPanel: React.FC<{
       changeLayer(map, false, "reset");
       setSpeed(1);
       handleResetLayerStyle(true);
+      setIsCollectionsLoaded(false);
+      setSelectedStyleTab('data_layer');
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
@@ -384,7 +391,7 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Default style values for Polygon
+  // Default style values for item_layer
   const DEFAULT_FILL_COLOR = '#ff0000'; // Red
   const DEFAULT_FILL_OPACITY = '0.1';
   const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
@@ -397,13 +404,13 @@ const SettingsPanel: React.FC<{
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<'polygon' | 'dataLayer'>('polygon');
+  const [selectedStyleTab, setSelectedStyleTab] = useState<'item_layer' | 'data_layer'>('data_layer');
 
-  // Polygon style state
-  const [polygonFillColor, setPolygonFillColor] = useState(DEFAULT_FILL_COLOR);
-  const [polygonFillOpacity, setPolygonFillOpacity] = useState(DEFAULT_FILL_OPACITY);
-  const [polygonStrokeColor, setPolygonStrokeColor] = useState(DEFAULT_STROKE_COLOR);
-  const [polygonStrokeWidth, setPolygonStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+  // ItemLayer style state
+  const [itemLayerFillColor, setItemLayerFillColor] = useState(DEFAULT_FILL_COLOR);
+  const [itemLayerFillOpacity, setItemLayerFillOpacity] = useState(DEFAULT_FILL_OPACITY);
+  const [itemLayerStrokeColor, setItemLayerStrokeColor] = useState(DEFAULT_STROKE_COLOR);
+  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
 
   // DataLayer style state
   const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
@@ -418,18 +425,18 @@ const SettingsPanel: React.FC<{
       : 'rgb(0,0,0)';
   };
 
-  // Update polygon and dataLayer style
+  // Update itemLayer and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
 
-    if (selectedStyleTab === 'polygon') {
+    if (selectedStyleTab === 'item_layer') {
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
-        hexToRgb(polygonFillColor),
-        polygonFillOpacity,
-        hexToRgb(polygonStrokeColor),
-        polygonStrokeWidth
+        hexToRgb(itemLayerFillColor),
+        itemLayerFillOpacity,
+        hexToRgb(itemLayerStrokeColor),
+        itemLayerStrokeWidth
       );
     } else {
       updateLayerStyle(
@@ -443,16 +450,16 @@ const SettingsPanel: React.FC<{
     }
   };
 
-  // Reset polygon and dataLayer style
+  // Reset itemLayer and dataLayer style
   const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
 
-    if (resetBoth || selectedStyleTab === 'polygon') {
-      // Reset polygon state
-      setPolygonFillColor(DEFAULT_FILL_COLOR);
-      setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
-      setPolygonStrokeColor(DEFAULT_STROKE_COLOR);
-      setPolygonStrokeWidth(DEFAULT_STROKE_WIDTH);
+    if (resetBoth || selectedStyleTab === 'item_layer') {
+      // Reset itemLayer state
+      setItemLayerFillColor(DEFAULT_FILL_COLOR);
+      setItemLayerFillOpacity(DEFAULT_FILL_OPACITY);
+      setItemLayerStrokeColor(DEFAULT_STROKE_COLOR);
+      setItemLayerStrokeWidth(DEFAULT_STROKE_WIDTH);
 
       updateLayerStyle(
         mapRef.current,
@@ -464,7 +471,7 @@ const SettingsPanel: React.FC<{
       );
     }
 
-    if (resetBoth || selectedStyleTab === 'dataLayer') {
+    if (resetBoth || selectedStyleTab === 'data_layer') {
       // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
@@ -581,8 +588,8 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      {/* Customize Polygon and DataLayer colors */}
-      {timeStamps && timeStamps.length > 0 && (
+      {/* Customize itemLayer and DataLayer colors */}
+      {((timeStamps && timeStamps.length > 0) || (isCollectionsLoaded)) && (
         <div className="dropdown-button">
         <button
           className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
@@ -597,33 +604,36 @@ const SettingsPanel: React.FC<{
           <div className="dropdown-content show">
             <div className="style-options">
               <div className="style-tabs">
-                <button
-                  className={`style-tab ${selectedStyleTab === 'polygon' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('polygon')}
-                >
-                  {t('polygon')}
-                </button>
-                <button
-                  className={`style-tab ${selectedStyleTab === 'dataLayer' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('dataLayer')}
-                >
-                  {t('data_layer')}
-                </button>
+                {(timeStamps && timeStamps.length > 0) && (
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('item_layer')}
+                  >
+                    {t('item_layer')}
+                  </button>
+                )}
+                {isCollectionsLoaded && (
+                  <button
+                    className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
+                    onClick={() => setSelectedStyleTab('data_layer')}
+                  >
+                    {t('data_layer')}
+                  </button>
+                )}
               </div>
-
               <h2>
-                {selectedStyleTab === 'polygon' ? t('polygon_style') : t('data_layer_style')}
+                {selectedStyleTab === 'item_layer' ? t('item_layer_style') : t('data_layer_style')}
               </h2>
 
-              {selectedStyleTab === 'polygon' ? (
-                // Polygon style controls
+              {selectedStyleTab === 'item_layer' ? (
+                // itemLayer style controls
                 <>
                   <div className="style-option">
                     <label>{t('fill')}:</label>
                     <input
                       type="color"
-                      value={polygonFillColor}
-                      onChange={(e) => setPolygonFillColor(e.target.value)}
+                      value={itemLayerFillColor}
+                      onChange={(e) => setItemLayerFillColor(e.target.value)}
                     />
                   </div>
 
@@ -634,18 +644,18 @@ const SettingsPanel: React.FC<{
                       min="0"
                       max="1"
                       step="0.1"
-                      value={polygonFillOpacity}
-                      onChange={(e) => setPolygonFillOpacity(e.target.value)}
+                      value={itemLayerFillOpacity}
+                      onChange={(e) => setItemLayerFillOpacity(e.target.value)}
                     />
-                    <span>{polygonFillOpacity}</span>
+                    <span>{itemLayerFillOpacity}</span>
                   </div>
 
                   <div className="style-option">
                     <label>{t('stroke')}:</label>
                     <input
                       type="color"
-                      value={polygonStrokeColor}
-                      onChange={(e) => setPolygonStrokeColor(e.target.value)}
+                      value={itemLayerStrokeColor}
+                      onChange={(e) => setItemLayerStrokeColor(e.target.value)}
                     />
                   </div>
 
@@ -656,10 +666,10 @@ const SettingsPanel: React.FC<{
                       min="0"
                       max="5"
                       step="0.5"
-                      value={polygonStrokeWidth}
-                      onChange={(e) => setPolygonStrokeWidth(e.target.value)}
+                      value={itemLayerStrokeWidth}
+                      onChange={(e) => setItemLayerStrokeWidth(e.target.value)}
                     />
-                    <span>{polygonStrokeWidth}</span>
+                    <span>{itemLayerStrokeWidth}</span>
                   </div>
                 </>
               ) : (
