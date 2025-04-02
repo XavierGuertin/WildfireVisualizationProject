@@ -11,11 +11,12 @@ export const returnListOfCollectionsFromEndpoint = async (
   bbox?: number[]
 ): Promise<
   | {
-  id: string;
-  key: number;
-  title: string;
-  bbox: number[][];
-}[]
+      id: string;
+      key: number;
+      title: string;
+      bbox: number[][];
+      date: string; // Add this
+    }[]
   | { error: string }
 > => {
   try {
@@ -29,7 +30,12 @@ export const returnListOfCollectionsFromEndpoint = async (
       throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
-    return await response.json();
+    const collections = await response.json();
+    // Ensure each collection has a date field
+    return collections.map((collection: any) => ({
+      ...collection,
+      date: collection.date || collection.datetime || new Date().toISOString() // Fallback to current date if none exists
+    }));
   } catch (error: any) {
     console.error(i18n.t('error_fetching_collections'), error.message);
     return { error: i18n.t('error_failed_fetch_data') };
@@ -178,11 +184,12 @@ export const fetchCollectionsFromEndpointByName = async (
   sortDirection: 'asc' | 'desc' = 'asc'
 ): Promise<
   | {
-  id: string;
-  key: number;
-  title: string;
-  bbox: number[][];
-}[]
+      id: string;
+      key: number;
+      title: string;
+      bbox: number[][];
+      date: string; // Add this
+    }[]
   | { error: string }
 > => {
   try {
@@ -197,7 +204,11 @@ export const fetchCollectionsFromEndpointByName = async (
       throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
-    return await response.json();
+    const collections = await response.json();
+    return collections.map((collection: any) => ({
+      ...collection,
+      date: collection.date || collection.datetime || new Date().toISOString()
+    }));
   } catch (error: any) {
     console.error(i18n.t('error_fetching_data_by_name'), error.message);
     return { error: i18n.t('error_fetching_data_by_name') };
@@ -216,11 +227,12 @@ export const fetchCollectionsFromEndpointByDate = async (
   sortDirection: 'asc' | 'desc' = 'asc'
 ): Promise<
   | {
-  id: string;
-  key: number;
-  title: string;
-  bbox: number[][];
-}[]
+      id: string;
+      key: number;
+      title: string;
+      bbox: number[][];
+      date: string; // Add this
+    }[]
   | { error: string }
 > => {
   try {
@@ -235,7 +247,11 @@ export const fetchCollectionsFromEndpointByDate = async (
       throw new Error(`${i18n.t('error_http_status')}: ${response.status}`);
     }
 
-    return await response.json();
+    const collections = await response.json();
+    return collections.map((collection: any) => ({
+      ...collection,
+      date: collection.date || collection.datetime || new Date().toISOString()
+    }));
   } catch (error: any) {
     console.error(i18n.t('error_fetching_data_by_date'), error.message);
     return { error: i18n.t('error_fetching_data_by_date') };

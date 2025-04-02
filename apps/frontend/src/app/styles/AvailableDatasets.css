@@ -184,6 +184,7 @@ body {
   /* align-items: center; */
   width: 100%;
   height: auto;
+  padding: 0 10px
 }
 
 .error-message {
@@ -201,7 +202,7 @@ body {
 /* Dataset button */
 .dataset-button {
   width: calc(100% - 40px);
-  padding: 10px;
+  padding: 10px 15px;
   margin: 0 auto 10px;
   background: #ffffff;
   color: #00447E;
@@ -211,11 +212,42 @@ body {
   font-size: 1em;
   text-align: left;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+/* Dataset button content layout */
+.dataset-button-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.dataset-title {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dataset-date {
+  color: #666;
+  font-size: 0.85em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .dataset-button.selected {
   background: #00447E;
   color: #ffffff;
+}
+
+/* Adjust the selected state colors for date */
+.dataset-button.selected .dataset-date {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .dataset-button:hover {
@@ -226,13 +258,19 @@ body {
   background: #003355;
 }
 
+/* Ensure proper spacing when both date and loaded tag are present */
+.dataset-button:not(.selected) .loaded-tag {
+  margin-left: 10px;
+}
+
 .loaded-tag {
-  background-color: #4CAF50;;
+  background-color: #4CAF50;
   color: white;
   font-size: 12px;
   padding: 3px 8px;
   border-radius: 5px;
-  margin-left: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* No datasets message */
@@ -285,11 +323,13 @@ body {
   margin-top: 10px;
 }
 
+/* Adjust the toggle control group to prevent wrapping */
 .toggle-control-group {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 2px;
+  min-width: 180px; /* Prevent wrapping of toggle elements */
 }
 
 .toggle-label {
@@ -336,5 +376,16 @@ body {
     height: auto;
     max-height: 85vh;
     width: 450px;
+  }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .dataset-date {
+    display: none; /* Hide dates on small screens */
+  }
+  
+  .dataset-button {
+    padding: 10px;
   }
 }

@@ -30,6 +30,7 @@ export interface DatasetEntry {
   key: number;
   id: string;
   title: string;
+  date: string;
 }
 
 export interface DatasetMetadata {
@@ -273,18 +274,20 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             onClick={() => handleDatasetClick(dataset.id)}
             data-testid={`dataset-button-${dataset.id}`}
           >
-            {dataset.title}{' '}
-            {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
-          </button>
+            <div className="dataset-button-content">
+            <span className="dataset-title">{dataset.title}</span>
+            <span className="dataset-date">
+              {new Date(dataset.date).toLocaleDateString()}
+            </span>
+          </div>
+          {isLoaded && <span className="loaded-tag">{t('loaded')}</span>}
+        </button>
         );
       });
     }
 
     return (
-      <div
-        className="no-datasets-container"
-        data-testid="no-datasets-container"
-      >
+      <div className="no-datasets-container" data-testid="no-datasets-container">
         <p className="no-datasets-message" data-testid="no-datasets-message">
           {t('no_datasets_available')}
         </p>
