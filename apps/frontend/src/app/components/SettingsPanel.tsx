@@ -171,7 +171,6 @@ const SettingsPanel: React.FC<{
         refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
-        setIsCollectionsLoaded(true);
 
         return true;
       } catch (error: any) {
@@ -307,7 +306,6 @@ const SettingsPanel: React.FC<{
       await resetDatalayerView();
       await resetItemAssets();
       setSpeed(1);
-      setIsCollectionsLoaded(false);
       setSelectedStyleTab('data_layer');
       return 'Reset was successful';
     } catch (error: any) {

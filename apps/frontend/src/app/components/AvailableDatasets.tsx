@@ -66,7 +66,8 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mapRef, loadedDataset, setLoadedDataset } = useMapLayerContext();
+  const { mapRef, loadedDataset, setLoadedDataset, setIsCollectionsLoaded } =
+    useMapLayerContext();
   const hasInitialized = useRef(false);
 
   /**
@@ -140,6 +141,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
         setLoadedDataset({ id: '', title: '' });
       }
       setDatasets(response);
+      {
+        response.length !== 0
+          ? setIsCollectionsLoaded(true)
+          : setIsCollectionsLoaded(false);
+      }
       setFetchError(null);
     } catch (error) {
       console.error('Error fetching datasets:', error);
@@ -189,14 +195,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   useEffect(() => {
     fetchDatasets();
   }, [activeFilter, sortDirection]);
-
-  useEffect(() => {
-    if ((selectedDataset !== null && selectedDataset !== '') && !hasInitialized.current) {
-      const map = mapRef.current as Map;
-      changeLayer(map, true);
-      hasInitialized.current = true;
-    }
-  }, [selectedDataset]);
 
   /**
    * Handles changes to the dataset sorting filter.
@@ -311,6 +309,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
     return t('filtering_by_map_view');
   };
+
+  useEffect(() => {
+    if (
+      selectedDataset !== null &&
+      selectedDataset !== '' &&
+      !hasInitialized.current
+    ) {
+      const map = mapRef.current as Map;
+      changeLayer(map, true);
+      hasInitialized.current = true;
+    }
+  }, [selectedDataset]);
 
   return (
     <div

@@ -144,6 +144,7 @@ export const MapProvider: React.FC<PropsWithChildren> = ({ children }) => {
       isProcessLoading,
       loadedDataset,
       loadedDataset,
+      isCollectionsLoaded,
     ],
   );
 

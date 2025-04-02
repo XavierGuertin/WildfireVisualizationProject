@@ -117,7 +117,7 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
         const zoom = view.getZoomForResolution(resolution);
         view.animate({
           center: [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2],
-          zoom: zoom ? zoom - 1 : 1,
+          zoom: zoom ? zoom - 2 : 1,
           duration: 1000,
         });
       }
@@ -202,7 +202,7 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, isOnline, setIsCollectionsLoaded } =
+  const { layer, mapRef, isOnline } =
     useMapLayerContext();
 
   /**
@@ -230,22 +230,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     return selectedLayer;
   };
 
-  // Function to check if the data layer exists on the map
-  const dataLayerExists = (): boolean => {
-    const layers = mapRef.current?.getLayers().getArray();
-    const layer = layers?.find(
-      (layer) =>
-        layer.get('id') === 'dataLayer' || layer.get('name') === 'dataLayer',
-    ) as VectorLayer<VectorSource<any>>;
-    return !!layer;
-  };
-
-  // Function to check and update data layer state
-  const updateDataLayerState = () => {
-    const exists = dataLayerExists();
-    setIsCollectionsLoaded(exists);
-  };
-
   useEffect(() => {
     if (!mapRef.current) {
       // Initialize the map if it hasn't been created yet
@@ -255,7 +239,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
           new FullScreen(),
           new Attribution({ collapsible: false }),
         ]),
-        layers: [getLayer()],
+        layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,
@@ -299,12 +283,6 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     };
   }, [onBboxChange]);
 
-  useEffect(() => {
-    // Only run if mapRef.current exists
-    if (mapRef.current) {
-      updateDataLayerState();
-    }
-  }, []);
 
   return (
     <div id="map-container" ref={mapElement} data-testid="map-container">

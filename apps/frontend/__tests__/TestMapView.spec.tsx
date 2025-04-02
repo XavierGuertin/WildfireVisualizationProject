@@ -182,7 +182,6 @@ jest.mock('../src/app/context/MapContext', () => ({
     selectedAssetLayers: [],
     setSelectedAssetLayers: jest.fn(),
     collectionId: 'test-collection',
-    setIsCollectionsLoaded: jest.fn(),
   }),
 }));
 
@@ -426,7 +425,6 @@ describe(MapView, () => {
       setTimeStamps: jest.fn(),
       setLoadedLayers: jest.fn(),
       setSelectedAssetLayers: jest.fn(),
-      setIsCollectionsLoaded: jest.fn(),
     };
 
     useMapLayerContext.mockReturnValue(contextMock);
@@ -484,7 +482,6 @@ describe(MapView, () => {
       setTimeStamps: jest.fn(),
       setLoadedLayers: jest.fn(),
       setSelectedAssetLayers: jest.fn(),
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     render(
@@ -573,7 +570,6 @@ describe(MapView, () => {
       selectedAssetLayers: [],
       setSelectedAssetLayers: jest.fn(),
       collectionId: 'test-collection',
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     render(<MapView onBboxChange={mockOnBboxChange} />);
@@ -664,7 +660,6 @@ describe(MapView, () => {
       timeStamps: [],
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     render(<MapView onBboxChange={mockOnBboxChange} />);
@@ -711,7 +706,6 @@ describe(MapView, () => {
       timeStamps: [],
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     // Mock the Map constructor to track map initialization
@@ -756,7 +750,6 @@ describe(MapView, () => {
       timeStamps: [],
       setTimeStamps: jest.fn(),
       setSliderValue: jest.fn(),
-      setIsCollectionsLoaded: jest.fn(),
     });
 
     const { rerender } = render(<MapView onBboxChange={mockOnBboxChange} />);
