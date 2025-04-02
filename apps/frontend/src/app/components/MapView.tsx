@@ -415,7 +415,6 @@ export const updateLayerStyle = (
   ) as VectorLayer<VectorSource<any>>;
 
   if (!layer) {
-    console.error(`Layer "${layerName}" not found`);
     return;
   }
 

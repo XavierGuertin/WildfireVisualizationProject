@@ -241,8 +241,6 @@ const SettingsPanel: React.FC<{
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
-        resetView();
-        setSelectedAssetLayers([]);
         try {
           await resetConfig();
           await promptForEndpoint(
@@ -279,6 +277,10 @@ const SettingsPanel: React.FC<{
 
   const resetConfig = async () => {
     try {
+      handleResetLayerStyle(true);
+      resetView();
+      setSelectedAssetLayers([]);
+
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
       localStorage.setItem('selectedDatasetId', '');
@@ -295,7 +297,6 @@ const SettingsPanel: React.FC<{
       await resetDatalayerView();
       await resetItemAssets();
       setSpeed(1);
-      handleResetLayerStyle(true);
       setIsCollectionsLoaded(false);
       setSelectedStyleTab('data_layer');
       return 'Reset was successful';
