@@ -41,6 +41,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   datasetSource = '',
   visible,
   refreshDatasets,
+  onClose,
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -75,35 +76,35 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
-    
+
     setIsResizing(true);
     startXRef.current = e.clientX;
     startWidthRef.current = containerRef.current.offsetWidth;
-    
+
     // Hint browser about upcoming changes for better performance
     if (containerRef.current) {
       containerRef.current.style.willChange = 'width';
     }
-    
+
     e.preventDefault();
   }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !containerRef.current) return;
-    
+
     const dx = e.clientX - startXRef.current;
     let newWidth = startWidthRef.current + dx;
-    
+
     // Apply constraints
     newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-    
+
     // DIRECT DOM UPDATE (no React state lag)
     containerRef.current.style.width = `${newWidth}px`;
   }, [isResizing, maxWidth, minWidth]);
 
   const handleMouseUp = useCallback(() => {
     if (!isResizing || !containerRef.current) return;
-    
+
     // Only update React state AFTER dragging finishes
     setWidth(containerRef.current.offsetWidth);
     containerRef.current.style.willChange = 'auto';
@@ -322,24 +323,26 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   );
 
   const NonCollapsedMetaData = (
-    <div 
+    <div
       className="metadata-container"
       ref={containerRef}
       style={{ width: `${width}px` }}
       data-testid="metadata-container"
     >
-      <div className="header" onClick={toggleCollapse} data-testid="name-div">
-        {name || t('unknown_name')}
-        <span className="collapse-icon">
+      <button className="header-button" onClick={toggleCollapse} data-testid="name-div">
+        <div className="header">
+          {name || t('unknown_name')}
+          <span className="collapse-icon">
           <RiCollapseDiagonalFill size={20} />
-        </span>
-      </div>
+          </span>
+        </div>
+      </button>
       <div className="content">
         {[
           {
             label: t('description'),
             value: description,
-            testId: 'dataset-description',
+            testId: 'dataset-description'
           },
           { label: t('format'), value: format, testId: 'dataset-format' },
           {
@@ -379,7 +382,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         <AssetsDropdown />
       </div>
       {/* Resize handle */}
-      <div 
+      <div
         className="resize-handle"
         ref={resizeRef}
         onMouseDown={handleMouseDown}

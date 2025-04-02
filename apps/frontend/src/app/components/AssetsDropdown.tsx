@@ -58,7 +58,7 @@ const AssetsDropdown = () => {
     const layerData = loadedLayers.find(
       (layer) => layer.asset_name === layerName,
     );
-    if (!layerData || !layerData.layer_url) {
+    if (!layerData?.layer_url) {
       toast.error(`Layer URL not found for ${layerName}`);
       return;
     }
@@ -120,9 +120,9 @@ const AssetsDropdown = () => {
                 [...loadedLayers]
                   .sort((a, b) => a.asset_name.localeCompare(b.asset_name))
                   .filter((a) => a.item_id === itemIds[sliderValue])
-                  .map((layer, index) => (
+                  .map((layer) => (
                     <button
-                      key={index}
+                      key={layer.asset_name}
                       className={`layerButton ${selectedAssetLayers.includes(layer.asset_name) ? 'active' : ''}`}
                       data-testid={`layerButton-${layer.asset_name}`}
                       onClick={() => handleLayerClick(layer.asset_name)}
@@ -132,7 +132,6 @@ const AssetsDropdown = () => {
                     </button>
                   ))
               ) : (
-                <>
                 <div
                   style={{
                     position: 'absolute',
@@ -152,7 +151,7 @@ const AssetsDropdown = () => {
                   <div className="spinner"></div>
                   <span>{t('loading_label')}</span>
                 </div>
-                </>
+
               )}
             </div>
           )}

@@ -95,7 +95,20 @@
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }
+.header-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
 
+.header-button .header {
+  display: flex;
+  align-items: center;
+}
 .content {
   padding: 12px;
   transition: max-height 0.3s ease, opacity 0.3s ease;

@@ -129,9 +129,9 @@ const Footer = () => {
     isDraggingRef.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  
+
     const finalValue = pendingSliderRef.current;
-  
+
     setSliderValue(finalValue);
     const map = mapRef.current as Map;
     if (timeStamps.length > 0) {
@@ -171,7 +171,7 @@ const Footer = () => {
           timeStamps.length - 1,
         ),
       );
-  
+
       setPendingSliderValue(newValue);
       pendingSliderRef.current = newValue;
     }
@@ -232,14 +232,14 @@ const Footer = () => {
       ? parseInt(stringCurrentSliderValue)
       : 0;
     if (timestampsResponse) {
-      await setTimeStamps(timestampsResponse);
+      setTimeStamps(timestampsResponse);
 
       setSliderValue(currentSliderValue); // State update is async, so move changeLayer to useEffect
     }
     const itemIdsResponse = await fetchItemIds();
 
     if (Array.isArray(itemIdsResponse)) {
-      await setItemIds(itemIdsResponse);
+      setItemIds(itemIdsResponse);
 
       if (itemIdsResponse.length > 0) {
         await processLoadedLayers(itemIdsResponse[currentSliderValue]);
@@ -323,7 +323,6 @@ const Footer = () => {
         >
           <div className="sliderTrack">
             {timeStamps.length > 0 && (
-              <>
                 <div
                   className="timeMarkerThumb"
                   style={{
@@ -346,7 +345,6 @@ const Footer = () => {
                       : ''}
                   </span>
                 </div>
-              </>
             )}
           </div>
         </div>

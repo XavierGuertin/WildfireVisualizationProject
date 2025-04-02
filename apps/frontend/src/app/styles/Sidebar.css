@@ -40,7 +40,15 @@
   align-items: center;
   outline: none;
 }
-
+.sidebar-toggle-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  height: auto;
+  cursor: pointer;
+}
 .icon {
   width: 30px;
   height: 30px;
@@ -50,7 +58,13 @@
 .icon:hover {
   transform: scale(1.05);
 }
-
+.layer-image-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+}
 .layer-image {
   width: 100%;
   height: auto;

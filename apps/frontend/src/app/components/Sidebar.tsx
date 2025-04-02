@@ -45,28 +45,45 @@ const Sidebar = () => {
         </button>
       ) : (
         <>
-          <div className='sidebar-toggle' onClick={toggleCollapse}>
-            <img className='icon' src={viewsIcon} alt={t('collapse')} />
-          </div>
+          <button className="sidebar-toggle-button" onClick={toggleCollapse} aria-label={t('collapse')}>
+            <div className="sidebar-toggle">
+              <img className="icon" src={viewsIcon} alt={t('collapse')} />
+            </div>
+          </button>
 
-          <img
-            className='layer-image'
-            src={defaultImage}
-            alt={t('default_layer')}
+          <button
+            className="layer-image-button"
             onClick={() => handleLayerChange('default')}
-          />
-          <img
-            className='layer-image'
-            src={terrainImage}
-            alt={t('topographical_layer')}
+            aria-label={t('default_layer')}
+          >
+            <img
+              className='layer-image'
+              src={defaultImage}
+              alt={t('default_layer')}
+            />
+          </button>
+          <button
+            className='layer-image-button'
             onClick={() => handleLayerChange('topographical')}
-          />
-          <img
-            className='layer-image'
-            src={satelliteImage}
-            alt={t('satellite_layer')}
+            aria-label={t('topographical_layer')}
+          >
+            <img
+              className='layer-image'
+              src={terrainImage}
+              alt={t('topographical_layer')}
+            />
+          </button>
+          <button
+            className='layer-image-button'
             onClick={() => handleLayerChange('satellite')}
-          />
+            aria-label={t('satellite_layer')}
+          >
+            <img
+              className='layer-image'
+              src={satelliteImage}
+              alt={t('satellite_layer')}
+            />
+          </button>
         </>
       )}
     </div>

@@ -292,10 +292,10 @@ export const changeLayer = (
   timestamp?: string,
 ) => {
   if (collection) {
-    refreshLayer(map, (collection = true));
+    refreshLayer(map, true);
   }
   if (timestamp) {
-    refreshLayer(map, (collection = false), timestamp);
+    refreshLayer(map, false, timestamp);
   }
 };
 
