@@ -70,6 +70,7 @@ jest.mock('../src/app/context/MapContext', () => ({
     mapRef: { current: {} },
     loadedDataset: { id: 'dataset-1', title: 'Dataset One' },  
     setLoadedDataset: jest.fn(),
+    setIsCollectionsLoaded: jest.fn(),
   })),
 }));
 
