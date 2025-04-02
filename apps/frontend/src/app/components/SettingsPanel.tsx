@@ -28,7 +28,6 @@ import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 import { changeLayer, updateLayerStyle } from './MapView';
-import { Map } from 'ol';
 import { LuPalette } from 'react-icons/lu';
 
 const MySwal = withReactContent(Swal);
@@ -56,7 +55,7 @@ const SettingsPanel: React.FC<{
     setIsPlaying,
     setSelectedAssetLayers,
     isCollectionsLoaded,
-    setIsCollectionsLoaded
+    setIsCollectionsLoaded,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
@@ -397,26 +396,40 @@ const SettingsPanel: React.FC<{
   const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
   const DEFAULT_STROKE_WIDTH = '2';
 
-// Default style values for DataLayer
+  // Default style values for DataLayer
   const DEFAULT_DATA_FILL_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_FILL_OPACITY = '0.1';
   const DEFAULT_DATA_STROKE_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<'item_layer' | 'data_layer'>('data_layer');
+  const [selectedStyleTab, setSelectedStyleTab] = useState<
+    'item_layer' | 'data_layer'
+  >('data_layer');
 
   // ItemLayer style state
-  const [itemLayerFillColor, setItemLayerFillColor] = useState(DEFAULT_FILL_COLOR);
-  const [itemLayerFillOpacity, setItemLayerFillOpacity] = useState(DEFAULT_FILL_OPACITY);
-  const [itemLayerStrokeColor, setItemLayerStrokeColor] = useState(DEFAULT_STROKE_COLOR);
-  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+  const [itemLayerFillColor, setItemLayerFillColor] =
+    useState(DEFAULT_FILL_COLOR);
+  const [itemLayerFillOpacity, setItemLayerFillOpacity] =
+    useState(DEFAULT_FILL_OPACITY);
+  const [itemLayerStrokeColor, setItemLayerStrokeColor] =
+    useState(DEFAULT_STROKE_COLOR);
+  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] =
+    useState(DEFAULT_STROKE_WIDTH);
 
   // DataLayer style state
-  const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
-  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(DEFAULT_DATA_FILL_OPACITY);
-  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
-  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
+  const [dataLayerFillColor, setDataLayerFillColor] = useState(
+    DEFAULT_DATA_FILL_COLOR,
+  );
+  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(
+    DEFAULT_DATA_FILL_OPACITY,
+  );
+  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(
+    DEFAULT_DATA_STROKE_COLOR,
+  );
+  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(
+    DEFAULT_DATA_STROKE_WIDTH,
+  );
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -436,7 +449,7 @@ const SettingsPanel: React.FC<{
         hexToRgb(itemLayerFillColor),
         itemLayerFillOpacity,
         hexToRgb(itemLayerStrokeColor),
-        itemLayerStrokeWidth
+        itemLayerStrokeWidth,
       );
     } else {
       updateLayerStyle(
@@ -445,7 +458,7 @@ const SettingsPanel: React.FC<{
         hexToRgb(dataLayerFillColor),
         dataLayerFillOpacity,
         hexToRgb(dataLayerStrokeColor),
-        dataLayerStrokeWidth
+        dataLayerStrokeWidth,
       );
     }
   };
@@ -467,7 +480,7 @@ const SettingsPanel: React.FC<{
         hexToRgb(DEFAULT_FILL_COLOR),
         DEFAULT_FILL_OPACITY,
         hexToRgb(DEFAULT_STROKE_COLOR),
-        DEFAULT_STROKE_WIDTH
+        DEFAULT_STROKE_WIDTH,
       );
     }
 
@@ -484,7 +497,7 @@ const SettingsPanel: React.FC<{
         hexToRgb('#0000ff'),
         '0.1',
         hexToRgb('#0000ff'),
-        '2'
+        '2',
       );
     }
   };
@@ -589,160 +602,173 @@ const SettingsPanel: React.FC<{
       </div>
 
       {/* Customize itemLayer and DataLayer colors */}
-      {((timeStamps && timeStamps.length > 0) || (isCollectionsLoaded)) && (
+      {((timeStamps && timeStamps.length > 0) || isCollectionsLoaded) && (
         <div className="dropdown-button">
-        <button
-          className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
-          onClick={() => toggleDropdown('style')}
-          aria-expanded={dropdownState.activeButton === 'style'}
-          aria-label="style"
-          data-testid="style-dropdown-button"
-        >
-          <LuPalette size={32} />
-        </button>
-        {dropdownState.activeButton === 'style' && (
-          <div className="dropdown-content show">
-            <div className="style-options">
-              <div className="style-tabs">
-                {(timeStamps && timeStamps.length > 0) && (
-                  <button
-                    className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
-                    onClick={() => setSelectedStyleTab('item_layer')}
-                  >
-                    {t('item_layer')}
-                  </button>
+          <button
+            className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('style')}
+            aria-expanded={dropdownState.activeButton === 'style'}
+            aria-label="style"
+            data-testid="style-dropdown-button"
+          >
+            <LuPalette size={32} />
+          </button>
+          {dropdownState.activeButton === 'style' && (
+            <div className="dropdown-content show">
+              <div className="style-options">
+                <div className="style-tabs">
+                  {timeStamps && timeStamps.length > 0 && (
+                    <button
+                      className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
+                      onClick={() => setSelectedStyleTab('item_layer')}
+                    >
+                      {t('item_layer')}
+                    </button>
+                  )}
+                  {isCollectionsLoaded && (
+                    <button
+                      className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
+                      onClick={() => setSelectedStyleTab('data_layer')}
+                    >
+                      {t('data_layer')}
+                    </button>
+                  )}
+                </div>
+                <h2>
+                  {selectedStyleTab === 'item_layer'
+                    ? t('item_layer_style')
+                    : t('data_layer_style')}
+                </h2>
+
+                {selectedStyleTab === 'item_layer' ? (
+                  // itemLayer style controls
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerFillColor}
+                        onChange={(e) => setItemLayerFillColor(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={itemLayerFillOpacity}
+                        onChange={(e) =>
+                          setItemLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerFillOpacity}</span>
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerStrokeColor}
+                        onChange={(e) =>
+                          setItemLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={itemLayerStrokeWidth}
+                        onChange={(e) =>
+                          setItemLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerStrokeWidth}</span>
+                    </div>
+                  </>
+                ) : (
+                  // Data layer style controls
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerFillColor}
+                        onChange={(e) => setDataLayerFillColor(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={dataLayerFillOpacity}
+                        onChange={(e) =>
+                          setDataLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerFillOpacity}</span>
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerStrokeColor}
+                        onChange={(e) =>
+                          setDataLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={dataLayerStrokeWidth}
+                        onChange={(e) =>
+                          setDataLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerStrokeWidth}</span>
+                    </div>
+                  </>
                 )}
-                {isCollectionsLoaded && (
+
+                <div className="style-buttons">
                   <button
-                    className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
-                    onClick={() => setSelectedStyleTab('data_layer')}
+                    className="update-style-btn"
+                    onClick={handleUpdateLayerStyle}
                   >
-                    {t('data_layer')}
+                    {t('update_style')}
                   </button>
-                )}
-              </div>
-              <h2>
-                {selectedStyleTab === 'item_layer' ? t('item_layer_style') : t('data_layer_style')}
-              </h2>
-
-              {selectedStyleTab === 'item_layer' ? (
-                // itemLayer style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={itemLayerFillColor}
-                      onChange={(e) => setItemLayerFillColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={itemLayerFillOpacity}
-                      onChange={(e) => setItemLayerFillOpacity(e.target.value)}
-                    />
-                    <span>{itemLayerFillOpacity}</span>
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={itemLayerStrokeColor}
-                      onChange={(e) => setItemLayerStrokeColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={itemLayerStrokeWidth}
-                      onChange={(e) => setItemLayerStrokeWidth(e.target.value)}
-                    />
-                    <span>{itemLayerStrokeWidth}</span>
-                  </div>
-                </>
-              ) : (
-                // Data layer style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerFillColor}
-                      onChange={(e) => setDataLayerFillColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={dataLayerFillOpacity}
-                      onChange={(e) => setDataLayerFillOpacity(e.target.value)}
-                    />
-                    <span>{dataLayerFillOpacity}</span>
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerStrokeColor}
-                      onChange={(e) => setDataLayerStrokeColor(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={dataLayerStrokeWidth}
-                      onChange={(e) => setDataLayerStrokeWidth(e.target.value)}
-                    />
-                    <span>{dataLayerStrokeWidth}</span>
-                  </div>
-                </>
-              )}
-
-              <div className="style-buttons">
-                <button
-                  className="update-style-btn"
-                  onClick={handleUpdateLayerStyle}
-                >
-                  {t('update_style')}
-                </button>
-                <button
-                  className="reset-style-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleResetLayerStyle();
-                  }}
-                >
-                  {t('reset_style')}
-                </button>
+                  <button
+                    className="reset-style-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleResetLayerStyle();
+                    }}
+                  >
+                    {t('reset_style')}
+                  </button>
+                </div>
               </div>
             </div>
-
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       )}
 
       <div className="dropdown-button">
