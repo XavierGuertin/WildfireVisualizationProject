@@ -99,7 +99,10 @@ const createCollectionDataLayer = (map: Map | null): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: currentDataLayerFillColor }),
-      stroke: new Stroke({ color: currentDataLayerStrokeColor, width: currentDataLayerStrokeWidth }),
+      stroke: new Stroke({
+        color: currentDataLayerStrokeColor,
+        width: currentDataLayerStrokeWidth,
+      }),
     }),
   });
 
@@ -141,7 +144,10 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
     source: vectorSource,
     style: new Style({
       fill: new Fill({ color: currentItemLayerFillColor }),
-      stroke: new Stroke({ color: currentItemLayerStrokeColor, width: currentItemLayerStrokeWidth }),
+      stroke: new Stroke({
+        color: currentItemLayerStrokeColor,
+        width: currentItemLayerStrokeWidth,
+      }),
     }),
   });
 
@@ -154,6 +160,8 @@ export const createItemDataLayer = (timestamp: string): VectorLayer => {
  * both the collection layer and items layer
  *
  * @param {Map} map - The OpenLayers map instance.
+ * @param collection
+ * @param timestamp
  */
 export const refreshLayer = (
   map: Map,
@@ -194,7 +202,8 @@ interface MapViewProps {
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);
-  const { layer, mapRef, isOnline } = useMapLayerContext();
+  const { layer, mapRef, isOnline, setIsCollectionsLoaded } =
+    useMapLayerContext();
 
   /**
    * Determines which base layer to use based on network connectivity.
@@ -219,6 +228,22 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     }
 
     return selectedLayer;
+  };
+
+  // Function to check if the data layer exists on the map
+  const dataLayerExists = (): boolean => {
+    const layers = mapRef.current?.getLayers().getArray();
+    const layer = layers?.find(
+      (layer) =>
+        layer.get('id') === 'dataLayer' || layer.get('name') === 'dataLayer',
+    ) as VectorLayer<VectorSource<any>>;
+    return !!layer;
+  };
+
+  // Function to check and update data layer state
+  const updateDataLayerState = () => {
+    const exists = dataLayerExists();
+    setIsCollectionsLoaded(exists);
   };
 
   useEffect(() => {
@@ -274,6 +299,13 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
     };
   }, [onBboxChange]);
 
+  useEffect(() => {
+    // Only run if mapRef.current exists
+    if (mapRef.current) {
+      updateDataLayerState();
+    }
+  }, []);
+
   return (
     <div id="map-container" ref={mapElement} data-testid="map-container">
       <Footer />
@@ -285,6 +317,8 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
  * Utility function to trigger a refresh of the data layer.
  *
  * @param {Map} map - The OpenLayers map instance.
+ * @param collection
+ * @param timestamp
  */
 export const changeLayer = (
   map: Map,
@@ -292,10 +326,10 @@ export const changeLayer = (
   timestamp?: string,
 ) => {
   if (collection) {
-    refreshLayer(map, (collection = true));
+    refreshLayer(map, true);
   }
   if (timestamp) {
-    refreshLayer(map, (collection = false), timestamp);
+    refreshLayer(map, false, timestamp);
   }
 };
 
@@ -313,24 +347,26 @@ export const toggleAssetLayer = (
   layerUrl: string,
   add: boolean,
   min: number,
-  max: number
+  max: number,
 ): void => {
   // First check if layer already exists
   const layers = map.getLayers().getArray();
   const existingLayer = layers.find((layer) => layer.get('name') === layerName);
 
   const result = /layers=(.*)/.exec(layerUrl);
-    let geoServerLayerName = ''
-    if(result){
-      geoServerLayerName = result[1];
-    }
+  let geoServerLayerName = '';
+  if (result) {
+    geoServerLayerName = result[1];
+  }
 
   if (add && !existingLayer) {
     // Add the layer
     const newLayer = new ImageLayer({
       source: new ImageWMS({
         url: layerUrl,
-        params: { SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max) },
+        params: {
+          SLD_BODY: createItemAssetStyle(geoServerLayerName, min, max),
+        },
         // Add crossOrigin to handle potential CORS issues
         crossOrigin: 'anonymous',
       }),
