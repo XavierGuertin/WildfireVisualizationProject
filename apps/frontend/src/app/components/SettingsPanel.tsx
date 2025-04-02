@@ -281,6 +281,16 @@ const SettingsPanel: React.FC<{
       resetView();
       setSelectedAssetLayers([]);
 
+      const config = await getConfig();
+      // If an error occurred during fetching config, show error and do not save changes
+      if (config.error) {
+        toast.error(t('error_fetching_config_file'));
+      }
+
+      config.endpoint = 'No endpoint saved';
+      config.loadedDataset = { id: '', title: '' };
+      await saveConfig(config);
+
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
       localStorage.setItem('selectedDatasetId', '');
@@ -329,17 +339,6 @@ const SettingsPanel: React.FC<{
       if (inputResult.isConfirmed) {
         success = await handleSaveAndFetchEndpoint(inputResult.value);
       } else {
-        const config = await getConfig();
-        // If an error occurred during fetching config, show error and do not save changes
-        if (config.error) {
-          toast.error(t('error_fetching_config_file'));
-          break;
-        }
-
-        config.endpoint = 'No endpoint saved';
-        config.loadedDataset = { id: '', title: '' };
-        await saveConfig(config);
-
         refreshDatasets(); // Trigger the refresh
         break; // Exit the loop if the user cancels the input dialog
       }

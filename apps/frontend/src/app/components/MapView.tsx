@@ -255,7 +255,7 @@ const MapView = ({ onBboxChange }: MapViewProps) => {
           new FullScreen(),
           new Attribution({ collapsible: false }),
         ]),
-        layers: [getLayer(), createCollectionDataLayer(mapRef.current)],
+        layers: [getLayer()],
         view: new View({
           center: [-75.6972, 45.4215], // Ottawa
           zoom: 1,

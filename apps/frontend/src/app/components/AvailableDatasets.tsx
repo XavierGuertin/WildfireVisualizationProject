@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../styles/AvailableDatasets.css';
 import {
@@ -67,6 +67,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { mapRef, loadedDataset, setLoadedDataset } = useMapLayerContext();
+  const hasInitialized = useRef(false);
 
   /**
    * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
@@ -132,11 +133,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       const config = await getConfig();
       if (config?.loadedDataset) {
         setLoadedDataset({
-          id: config.loadedDataset.id || '', 
-          title: config.loadedDataset.title || ''
+          id: config.loadedDataset.id || '',
+          title: config.loadedDataset.title || '',
         });
       } else {
-        setLoadedDataset({id: '', title: ''});
+        setLoadedDataset({ id: '', title: '' });
       }
       setDatasets(response);
       setFetchError(null);
@@ -188,6 +189,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   useEffect(() => {
     fetchDatasets();
   }, [activeFilter, sortDirection]);
+
+  useEffect(() => {
+    if ((selectedDataset !== null && selectedDataset !== '') && !hasInitialized.current) {
+      const map = mapRef.current as Map;
+      changeLayer(map, true);
+      hasInitialized.current = true;
+    }
+  }, [selectedDataset]);
 
   /**
    * Handles changes to the dataset sorting filter.
