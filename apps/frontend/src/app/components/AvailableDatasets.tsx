@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../styles/AvailableDatasets.css';
 import {
@@ -66,7 +66,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mapRef, loadedDataset, setLoadedDataset } = useMapLayerContext();
+  const { mapRef, loadedDataset, setLoadedDataset, setIsCollectionsLoaded } =
+    useMapLayerContext();
+  const hasInitialized = useRef(false);
 
   /**
    * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
@@ -132,13 +134,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       const config = await getConfig();
       if (config?.loadedDataset) {
         setLoadedDataset({
-          id: config.loadedDataset.id || '', 
-          title: config.loadedDataset.title || ''
+          id: config.loadedDataset.id || '',
+          title: config.loadedDataset.title || '',
         });
       } else {
-        setLoadedDataset({id: '', title: ''});
+        setLoadedDataset({ id: '', title: '' });
       }
       setDatasets(response);
+      {
+        response.length !== 0
+          ? setIsCollectionsLoaded(true)
+          : setIsCollectionsLoaded(false);
+      }
       setFetchError(null);
     } catch (error) {
       console.error('Error fetching datasets:', error);
@@ -302,6 +309,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
     return t('filtering_by_map_view');
   };
+
+  useEffect(() => {
+    if (
+      selectedDataset !== null &&
+      selectedDataset !== '' &&
+      !hasInitialized.current
+    ) {
+      const map = mapRef.current as Map;
+      changeLayer(map, true);
+      hasInitialized.current = true;
+    }
+  }, [selectedDataset]);
 
   return (
     <div
