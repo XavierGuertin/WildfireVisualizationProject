@@ -27,8 +27,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
-import { changeLayer, updateLayerStyle } from './MapView';
-import { Map } from 'ol';
+import { updateLayerStyle } from './MapView';
 import { LuPalette } from 'react-icons/lu';
 
 const MySwal = withReactContent(Swal);
@@ -55,12 +54,15 @@ const SettingsPanel: React.FC<{
     setCollectionId,
     setIsPlaying,
     setSelectedAssetLayers,
+    isCollectionsLoaded,
+    setIsCollectionsLoaded,
   } = useMapLayerContext();
   const [newApiEndpoint, setNewApiEndpoint] = useState<string>(
     'https://default-api-endpoint.com',
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
@@ -169,6 +171,7 @@ const SettingsPanel: React.FC<{
         refreshDatasets(); // Trigger the refresh
 
         setDropdownState({ activeButton: null, isOpen: false });
+
         return true;
       } catch (error: any) {
         toast.error(t('error_fetching_collections'));
@@ -237,8 +240,6 @@ const SettingsPanel: React.FC<{
       },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
-        resetView();
-        setSelectedAssetLayers([]);
         try {
           await resetConfig();
           await promptForEndpoint(
@@ -275,6 +276,20 @@ const SettingsPanel: React.FC<{
 
   const resetConfig = async () => {
     try {
+      handleResetLayerStyle(true);
+      resetView();
+      setSelectedAssetLayers([]);
+
+      const config = await getConfig();
+      // If an error occurred during fetching config, show error and do not save changes
+      if (config.error) {
+        toast.error(t('error_fetching_config_file'));
+      }
+
+      config.endpoint = 'No endpoint saved';
+      config.loadedDataset = { id: '', title: '' };
+      await saveConfig(config);
+
       localStorage.setItem('language', 'en');
       localStorage.setItem('playbackSpeed', '1');
       localStorage.setItem('selectedDatasetId', '');
@@ -290,11 +305,8 @@ const SettingsPanel: React.FC<{
       await resetItems();
       await resetDatalayerView();
       await resetItemAssets();
-      const map = mapRef.current as Map;
-      changeLayer(map, true);
-      changeLayer(map, false, "reset");
       setSpeed(1);
-      handleResetLayerStyle(true);
+      setSelectedStyleTab('data_layer');
       return 'Reset was successful';
     } catch (error: any) {
       throw new Error(`Error resetting config: ${error.message}`);
@@ -325,17 +337,6 @@ const SettingsPanel: React.FC<{
       if (inputResult.isConfirmed) {
         success = await handleSaveAndFetchEndpoint(inputResult.value);
       } else {
-        const config = await getConfig();
-        // If an error occurred during fetching config, show error and do not save changes
-        if (config.error) {
-          toast.error(t('error_fetching_config_file'));
-          break;
-        }
-
-        config.endpoint = 'No endpoint saved';
-        config.loadedDataset = { id: '', title: '' };
-        await saveConfig(config);
-
         refreshDatasets(); // Trigger the refresh
         break; // Exit the loop if the user cancels the input dialog
       }
@@ -384,32 +385,46 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Default style values for Polygon
+  // Default style values for item_layer
   const DEFAULT_FILL_COLOR = '#ff0000'; // Red
   const DEFAULT_FILL_OPACITY = '0.1';
   const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
   const DEFAULT_STROKE_WIDTH = '2';
 
-// Default style values for DataLayer
+  // Default style values for DataLayer
   const DEFAULT_DATA_FILL_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_FILL_OPACITY = '0.1';
   const DEFAULT_DATA_STROKE_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
-  const [selectedStyleTab, setSelectedStyleTab] = useState<'polygon' | 'dataLayer'>('polygon');
+  const [selectedStyleTab, setSelectedStyleTab] = useState<
+    'item_layer' | 'data_layer'
+  >('data_layer');
 
-  // Polygon style state
-  const [polygonFillColor, setPolygonFillColor] = useState(DEFAULT_FILL_COLOR);
-  const [polygonFillOpacity, setPolygonFillOpacity] = useState(DEFAULT_FILL_OPACITY);
-  const [polygonStrokeColor, setPolygonStrokeColor] = useState(DEFAULT_STROKE_COLOR);
-  const [polygonStrokeWidth, setPolygonStrokeWidth] = useState(DEFAULT_STROKE_WIDTH);
+  // ItemLayer style state
+  const [itemLayerFillColor, setItemLayerFillColor] =
+    useState(DEFAULT_FILL_COLOR);
+  const [itemLayerFillOpacity, setItemLayerFillOpacity] =
+    useState(DEFAULT_FILL_OPACITY);
+  const [itemLayerStrokeColor, setItemLayerStrokeColor] =
+    useState(DEFAULT_STROKE_COLOR);
+  const [itemLayerStrokeWidth, setItemLayerStrokeWidth] =
+    useState(DEFAULT_STROKE_WIDTH);
 
   // DataLayer style state
-  const [dataLayerFillColor, setDataLayerFillColor] = useState(DEFAULT_DATA_FILL_COLOR);
-  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(DEFAULT_DATA_FILL_OPACITY);
-  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(DEFAULT_DATA_STROKE_COLOR);
-  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(DEFAULT_DATA_STROKE_WIDTH);
+  const [dataLayerFillColor, setDataLayerFillColor] = useState(
+    DEFAULT_DATA_FILL_COLOR,
+  );
+  const [dataLayerFillOpacity, setDataLayerFillOpacity] = useState(
+    DEFAULT_DATA_FILL_OPACITY,
+  );
+  const [dataLayerStrokeColor, setDataLayerStrokeColor] = useState(
+    DEFAULT_DATA_STROKE_COLOR,
+  );
+  const [dataLayerStrokeWidth, setDataLayerStrokeWidth] = useState(
+    DEFAULT_DATA_STROKE_WIDTH,
+  );
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -418,18 +433,18 @@ const SettingsPanel: React.FC<{
       : 'rgb(0,0,0)';
   };
 
-  // Update polygon and dataLayer style
+  // Update itemLayer and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
 
-    if (selectedStyleTab === 'polygon') {
+    if (selectedStyleTab === 'item_layer') {
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
-        hexToRgb(polygonFillColor),
-        polygonFillOpacity,
-        hexToRgb(polygonStrokeColor),
-        polygonStrokeWidth
+        hexToRgb(itemLayerFillColor),
+        itemLayerFillOpacity,
+        hexToRgb(itemLayerStrokeColor),
+        itemLayerStrokeWidth,
       );
     } else {
       updateLayerStyle(
@@ -438,21 +453,21 @@ const SettingsPanel: React.FC<{
         hexToRgb(dataLayerFillColor),
         dataLayerFillOpacity,
         hexToRgb(dataLayerStrokeColor),
-        dataLayerStrokeWidth
+        dataLayerStrokeWidth,
       );
     }
   };
 
-  // Reset polygon and dataLayer style
+  // Reset itemLayer and dataLayer style
   const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
 
-    if (resetBoth || selectedStyleTab === 'polygon') {
-      // Reset polygon state
-      setPolygonFillColor(DEFAULT_FILL_COLOR);
-      setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
-      setPolygonStrokeColor(DEFAULT_STROKE_COLOR);
-      setPolygonStrokeWidth(DEFAULT_STROKE_WIDTH);
+    if (resetBoth || selectedStyleTab === 'item_layer') {
+      // Reset itemLayer state
+      setItemLayerFillColor(DEFAULT_FILL_COLOR);
+      setItemLayerFillOpacity(DEFAULT_FILL_OPACITY);
+      setItemLayerStrokeColor(DEFAULT_STROKE_COLOR);
+      setItemLayerStrokeWidth(DEFAULT_STROKE_WIDTH);
 
       updateLayerStyle(
         mapRef.current,
@@ -460,11 +475,11 @@ const SettingsPanel: React.FC<{
         hexToRgb(DEFAULT_FILL_COLOR),
         DEFAULT_FILL_OPACITY,
         hexToRgb(DEFAULT_STROKE_COLOR),
-        DEFAULT_STROKE_WIDTH
+        DEFAULT_STROKE_WIDTH,
       );
     }
 
-    if (resetBoth || selectedStyleTab === 'dataLayer') {
+    if (resetBoth || selectedStyleTab === 'data_layer') {
       // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
@@ -477,7 +492,7 @@ const SettingsPanel: React.FC<{
         hexToRgb('#0000ff'),
         '0.1',
         hexToRgb('#0000ff'),
-        '2'
+        '2',
       );
     }
   };
@@ -581,158 +596,174 @@ const SettingsPanel: React.FC<{
         )}
       </div>
 
-      {/* Customize Polygon and DataLayer colors */}
-      {timeStamps && timeStamps.length > 0 && (
+      {/* Customize itemLayer and DataLayer colors */}
+      {((timeStamps && timeStamps.length > 0) || isCollectionsLoaded) && (
         <div className="dropdown-button">
-        <button
-          className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
-          onClick={() => toggleDropdown('style')}
-          aria-expanded={dropdownState.activeButton === 'style'}
-          aria-label="style"
-          data-testid="style-dropdown-button"
-        >
-          <LuPalette size={32} />
-        </button>
-        {dropdownState.activeButton === 'style' && (
-          <div className="dropdown-content show">
-            <div className="style-options">
-              <div className="style-tabs">
-                <button
-                  className={`style-tab ${selectedStyleTab === 'polygon' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('polygon')}
-                >
-                  {t('polygon')}
-                </button>
-                <button
-                  className={`style-tab ${selectedStyleTab === 'dataLayer' ? 'active' : ''}`}
-                  onClick={() => setSelectedStyleTab('dataLayer')}
-                >
-                  {t('data_layer')}
-                </button>
-              </div>
+          <button
+            className={`button ${dropdownState.activeButton === 'style' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('style')}
+            aria-expanded={dropdownState.activeButton === 'style'}
+            aria-label="style"
+            data-testid="style-dropdown-button"
+          >
+            <LuPalette size={32} />
+          </button>
+          {dropdownState.activeButton === 'style' && (
+            <div className="dropdown-content show">
+              <div className="style-options">
+                <div className="style-tabs">
+                  {timeStamps && timeStamps.length > 0 && (
+                    <button
+                      className={`style-tab ${selectedStyleTab === 'item_layer' ? 'active' : ''}`}
+                      onClick={() => setSelectedStyleTab('item_layer')}
+                    >
+                      {t('item_layer')}
+                    </button>
+                  )}
+                  {isCollectionsLoaded && (
+                    <button
+                      className={`style-tab ${selectedStyleTab === 'data_layer' ? 'active' : ''}`}
+                      onClick={() => setSelectedStyleTab('data_layer')}
+                    >
+                      {t('data_layer')}
+                    </button>
+                  )}
+                </div>
+                <h2>
+                  {selectedStyleTab === 'item_layer'
+                    ? t('item_layer_style')
+                    : t('data_layer_style')}
+                </h2>
 
-              <h2>
-                {selectedStyleTab === 'polygon' ? t('polygon_style') : t('data_layer_style')}
-              </h2>
+                {selectedStyleTab === 'item_layer' ? (
+                  // itemLayer style controls
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerFillColor}
+                        onChange={(e) => setItemLayerFillColor(e.target.value)}
+                      />
+                    </div>
 
-              {selectedStyleTab === 'polygon' ? (
-                // Polygon style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={polygonFillColor}
-                      onChange={(e) => setPolygonFillColor(e.target.value)}
-                    />
-                  </div>
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={itemLayerFillOpacity}
+                        onChange={(e) =>
+                          setItemLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerFillOpacity}</span>
+                    </div>
 
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={polygonFillOpacity}
-                      onChange={(e) => setPolygonFillOpacity(e.target.value)}
-                    />
-                    <span>{polygonFillOpacity}</span>
-                  </div>
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={itemLayerStrokeColor}
+                        onChange={(e) =>
+                          setItemLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
 
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={polygonStrokeColor}
-                      onChange={(e) => setPolygonStrokeColor(e.target.value)}
-                    />
-                  </div>
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={itemLayerStrokeWidth}
+                        onChange={(e) =>
+                          setItemLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{itemLayerStrokeWidth}</span>
+                    </div>
+                  </>
+                ) : (
+                  // Data layer style controls
+                  <>
+                    <div className="style-option">
+                      <label>{t('fill')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerFillColor}
+                        onChange={(e) => setDataLayerFillColor(e.target.value)}
+                      />
+                    </div>
 
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={polygonStrokeWidth}
-                      onChange={(e) => setPolygonStrokeWidth(e.target.value)}
-                    />
-                    <span>{polygonStrokeWidth}</span>
-                  </div>
-                </>
-              ) : (
-                // Data layer style controls
-                <>
-                  <div className="style-option">
-                    <label>{t('fill')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerFillColor}
-                      onChange={(e) => setDataLayerFillColor(e.target.value)}
-                    />
-                  </div>
+                    <div className="style-option">
+                      <label>{t('fill_opacity')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={dataLayerFillOpacity}
+                        onChange={(e) =>
+                          setDataLayerFillOpacity(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerFillOpacity}</span>
+                    </div>
 
-                  <div className="style-option">
-                    <label>{t('fill_opacity')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={dataLayerFillOpacity}
-                      onChange={(e) => setDataLayerFillOpacity(e.target.value)}
-                    />
-                    <span>{dataLayerFillOpacity}</span>
-                  </div>
+                    <div className="style-option">
+                      <label>{t('stroke')}:</label>
+                      <input
+                        type="color"
+                        value={dataLayerStrokeColor}
+                        onChange={(e) =>
+                          setDataLayerStrokeColor(e.target.value)
+                        }
+                      />
+                    </div>
 
-                  <div className="style-option">
-                    <label>{t('stroke')}:</label>
-                    <input
-                      type="color"
-                      value={dataLayerStrokeColor}
-                      onChange={(e) => setDataLayerStrokeColor(e.target.value)}
-                    />
-                  </div>
+                    <div className="style-option">
+                      <label>{t('stroke_width')}:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={dataLayerStrokeWidth}
+                        onChange={(e) =>
+                          setDataLayerStrokeWidth(e.target.value)
+                        }
+                      />
+                      <span>{dataLayerStrokeWidth}</span>
+                    </div>
+                  </>
+                )}
 
-                  <div className="style-option">
-                    <label>{t('stroke_width')}:</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={dataLayerStrokeWidth}
-                      onChange={(e) => setDataLayerStrokeWidth(e.target.value)}
-                    />
-                    <span>{dataLayerStrokeWidth}</span>
-                  </div>
-                </>
-              )}
-
-              <div className="style-buttons">
-                <button
-                  className="update-style-btn"
-                  onClick={handleUpdateLayerStyle}
-                >
-                  {t('update_style')}
-                </button>
-                <button
-                  className="reset-style-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleResetLayerStyle();
-                  }}
-                >
-                  {t('reset_style')}
-                </button>
+                <div className="style-buttons">
+                  <button
+                    className="update-style-btn"
+                    onClick={handleUpdateLayerStyle}
+                  >
+                    {t('update_style')}
+                  </button>
+                  <button
+                    className="reset-style-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleResetLayerStyle();
+                    }}
+                  >
+                    {t('reset_style')}
+                  </button>
+                </div>
               </div>
             </div>
-
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       )}
 
       <div className="dropdown-button">

@@ -327,7 +327,6 @@ describe('SettingsPanel Component', () => {
     it('prompts for a new endpoint when no valid endpoint is saved', async () => {
       const {
         getConfig,
-        saveConfig,
       } = require('../src/app/services/configApi');
       getConfig.mockResolvedValueOnce({
         endpoint: 'No endpoint saved',
@@ -336,12 +335,10 @@ describe('SettingsPanel Component', () => {
       const Swal = require('sweetalert2');
       Swal.fire.mockResolvedValueOnce({ isConfirmed: false });
       const refreshDatasets = jest.fn();
-      await act(async () => {
+     await act(async () => {
         await renderSettingsPanel(refreshDatasets);
       });
       await waitFor(() => {
-        expect(getConfig).toHaveBeenCalled();
-        expect(saveConfig).toHaveBeenCalled();
         expect(refreshDatasets).toHaveBeenCalled();
       });
     });
@@ -1013,10 +1010,23 @@ describe('SettingsPanel Component', () => {
       // Execute the function
       const result = await resetConfig();
 
+      const {
+        getConfig,
+        saveConfig,
+      } = require('../src/app/services/configApi');
+      getConfig.mockResolvedValueOnce({
+        endpoint: 'No endpoint saved',
+        language: 'en',
+      });
+
       // Verify all functions were called
       expect(resetItemAssets).toHaveBeenCalled();
       expect(changeLayer).toHaveBeenCalledWith(mockMap, true);
       expect(setSpeed).toHaveBeenCalledWith(1);
+      expect(getConfig).toHaveBeenCalled();
+      waitFor(() => {
+        expect(saveConfig).toHaveBeenCalled();
+      })
       expect(result).toBe('Reset was successful');
 
       // Verify localStorage was properly set

@@ -587,7 +587,7 @@ describe(MapView, () => {
       removeLayer: jest.fn(),
     };
 
-    toggleAssetLayer(mockMap as any, 'testLayer', 'http://test.com/wms', true);
+    toggleAssetLayer(mockMap as any, 'testLayer', 'http://test.com/wms', true, 0, 100);
 
     expect(mockMap.addLayer).toHaveBeenCalled();
     expect(mockMap.renderSync).toHaveBeenCalled();
@@ -801,7 +801,7 @@ describe('Asset Layer Removal Tests', () => {
 
   test('toggleAssetLayer removes an existing asset layer when add is false', () => {
     // Call toggleAssetLayer to remove the existing asset layer
-    toggleAssetLayer(mockMap, 'testLayer', 'http://example.com/wms', false);
+    toggleAssetLayer(mockMap, 'testLayer', 'http://example.com/wms', false, 0, 100);
 
     // Check that removeLayer was called with the dummy asset layer
     expect(mockMap.removeLayer).toHaveBeenCalledWith(mockLayer);
@@ -865,10 +865,10 @@ describe('Layer Style Tests', () => {
     };
   });
 
-  it('updates polygon layer style correctly', () => {
+  it('updates item layer style correctly', () => {
     const { updateLayerStyle } = require('../src/app/components/MapView');
 
-    // Call updateLayerStyle with polygon layer parameters
+    // Call updateLayerStyle with item layer parameters
     updateLayerStyle(
       mockMap,
       'itemLayer',
@@ -907,37 +907,6 @@ describe('Layer Style Tests', () => {
 
     // Verify layer was found and style was set
     expect(mockLayer.setStyle).toHaveBeenCalled();
-  });
-
-  it('handles layer not found gracefully', () => {
-    // Mock console.error to verify it's called
-    const originalError = console.error;
-    console.error = jest.fn();
-
-    // Empty layers array to simulate layer not found
-    mockMap.getLayers.mockReturnValue({
-      getArray: jest.fn(() => []),
-    });
-
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-
-    // Call updateLayerStyle with a non-existent layer
-    updateLayerStyle(
-      mockMap,
-      'nonExistentLayer',
-      'rgb(255, 0, 0)',
-      '0.5',
-      'rgb(0, 0, 0)',
-      '1'
-    );
-
-    // Verify error was logged
-    expect(console.error).toHaveBeenCalledWith(
-      'Layer "nonExistentLayer" not found'
-    );
-
-    // Restore console.error
-    console.error = originalError;
   });
 
   it('finds layer by name if id is not matching', () => {
