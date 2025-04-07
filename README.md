@@ -5,6 +5,23 @@
 [![E2E Pipeline](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml)
 [![Release](https://img.shields.io/github/v/release/XavierGuertin/WildfireVisualizationProject)](https://github.com/XavierGuertin/WildfireVisualizationProject/releases)
 
+## Release Demos
+
+<details>
+   <summary>Click to expand</summary>
+
+## [Release 1](https://drive.google.com/file/d/1JsXKsDaoS1fAFSvkUBiOB_QMhBAMq9s_/view?usp=sharing)
+
+## [Release 2](https://drive.google.com/file/d/1EwC_pmEvNcNeKkw6HzDpERxLRwDPYCPv/view?usp=sharing)
+
+## [Release 3](link-here)
+
+</details>
+
+## Project Summary
+
+The Wildfire Visualization Platform is an innovative tool designed to provide historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
+
 ## [Project Overview](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki)
 
 ### Project Documentation
@@ -45,19 +62,6 @@
 
 - [User Testing Documentation](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki/User-Testing)
 
-## Release Demos
-
-<details>
-   <summary>Click to expand</summary>
-
-## [Release 1](https://drive.google.com/file/d/1JsXKsDaoS1fAFSvkUBiOB_QMhBAMq9s_/view?usp=sharing)
-
-## [Release 2](https://drive.google.com/file/d/1EwC_pmEvNcNeKkw6HzDpERxLRwDPYCPv/view?usp=sharing)
-
-## [Release 3](link-here)
-
-</details>
-
 ## Most Important Files and Tests
 
 <details>
@@ -82,12 +86,6 @@
 | Event Control Test                                                                                                       |                                    |
 
 </details>
-
-## Project Summary
-
-The Wildfire Visualization Platform is an innovative tool designed to provide historical data on wildfires. The platform integrates data from multiple sources such as weather APIs, geographic data, and wildfire propagation models to offer data scientists and climate scientists a comprehensive view of wildfire events. Using open-source data visualization tools, it aims to enhance decision-making and provide predictive insights for wildfire management.
-
----
 
 ## Team Members
 
