@@ -5,7 +5,7 @@
 [![E2E Pipeline](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml/badge.svg)](https://github.com/XavierGuertin/WildfireVisualizationProject/actions/workflows/e2e.yml)
 [![Release](https://img.shields.io/github/v/release/XavierGuertin/WildfireVisualizationProject)](https://github.com/XavierGuertin/WildfireVisualizationProject/releases)
 
-## [Index](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki)
+## [Project Overview](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki)
 
 ### Project Documentation
 
@@ -216,6 +216,8 @@ nx test frontend
 
 - **Location of Tests:** `apps/frontend-e2e/src/e2e`
 - **Example Test File:** `apps/frontend-e2e/src/e2e/app.cy.ts`
+- Developers need to create a cypress.env.json file with the following:
+  `"COLLECTIONS_URL": "*URL_TO_COLLECTIONS_ENDPOINT*" `
 
 Run frontend E2E tests:
 
@@ -261,9 +263,3 @@ The project utilizes the following technologies:
 - **Containerization**: Docker for managing containers and deployments
 - **Code Quality**: SonarQube for static code analysis
 - **Version Control**: GitHub for repository management
-
----
-
-## Wiki
-
-For more details, please visit the [Wiki](https://github.com/XavierGuertin/WildfireVisualizationProject/wiki).
