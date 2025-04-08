@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../styles/AvailableDatasets.css';
 import {
@@ -63,8 +63,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const { mapRef, loadedDataset, setLoadedDataset } = useMapLayerContext();
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { mapRef, loadedDataset, setLoadedDataset, setIsCollectionsLoaded } =
+    useMapLayerContext();
+  const hasInitialized = useRef(false);
 
   // Query key factory
   const getQueryKey = () => [
@@ -82,13 +85,35 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       sortDirection,
     };
 
-    let response;
-    if (activeFilter === 'Name') {
-      response = await fetchCollectionsFromEndpointByName(params.bbox, params.sortDirection);
-    } else if (activeFilter === 'Date') {
-      response = await fetchCollectionsFromEndpointByDate(params.bbox, params.sortDirection);
-    } else {
-      response = await returnListOfCollectionsFromEndpoint(params.bbox);
+      if (!Array.isArray(response)) {
+        console.error('Invalid response:', response.error || response);
+        setFetchError(getTranslatedErrorMessageKey(response.error || ''));
+        setDatasets([]);
+        return;
+      }
+
+      const config = await getConfig();
+      if (config?.loadedDataset) {
+        setLoadedDataset({
+          id: config.loadedDataset.id || '',
+          title: config.loadedDataset.title || '',
+        });
+      } else {
+        setLoadedDataset({ id: '', title: '' });
+      }
+      setDatasets(response);
+      {
+        response.length !== 0
+          ? setIsCollectionsLoaded(true)
+          : setIsCollectionsLoaded(false);
+      }
+      setFetchError(null);
+    } catch (error) {
+      console.error('Error fetching datasets:', error);
+      setDatasets([]);
+      setFetchError('Failed to load datasets.');
+    } finally {
+      setIsLoading(false);
     }
 
     if (!Array.isArray(response)) {
@@ -267,6 +292,18 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
     return t('filtering_by_map_view');
   };
+
+  useEffect(() => {
+    if (
+      selectedDataset !== null &&
+      selectedDataset !== '' &&
+      !hasInitialized.current
+    ) {
+      const map = mapRef.current as Map;
+      changeLayer(map, true);
+      hasInitialized.current = true;
+    }
+  }, [selectedDataset]);
 
   return (
     <div className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`} data-testid="datasets-container">

@@ -331,6 +331,25 @@ describe('SettingsPanel Component', () => {
       )) as HTMLInputElement;
       expect(inputField).toHaveValue('https://default-api-endpoint.com');
     });
+
+    it('prompts for a new endpoint when no valid endpoint is saved', async () => {
+      const {
+        getConfig,
+      } = require('../src/app/services/configApi');
+      getConfig.mockResolvedValueOnce({
+        endpoint: 'No endpoint saved',
+        language: 'en',
+      });
+      const Swal = require('sweetalert2');
+      Swal.fire.mockResolvedValueOnce({ isConfirmed: false });
+      const refreshDatasets = jest.fn();
+     await act(async () => {
+        await renderSettingsPanel(refreshDatasets);
+      });
+      await waitFor(() => {
+        expect(refreshDatasets).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Offline Mode Dropdown', () => {
@@ -961,10 +980,23 @@ describe('SettingsPanel Component', () => {
       // Execute the function
       const result = await resetConfig();
 
+      const {
+        getConfig,
+        saveConfig,
+      } = require('../src/app/services/configApi');
+      getConfig.mockResolvedValueOnce({
+        endpoint: 'No endpoint saved',
+        language: 'en',
+      });
+
       // Verify all functions were called
       expect(resetItemAssets).toHaveBeenCalled();
       expect(changeLayer).toHaveBeenCalledWith(mockMap, true);
       expect(setSpeed).toHaveBeenCalledWith(1);
+      expect(getConfig).toHaveBeenCalled();
+      waitFor(() => {
+        expect(saveConfig).toHaveBeenCalled();
+      })
       expect(result).toBe('Reset was successful');
 
       // Verify localStorage was properly set
