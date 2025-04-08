@@ -26,8 +26,16 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const formRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showMap, setShowMap] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<string>('jan');
-  const [selectedDay, setSelectedDay] = useState<string>('sun');
+  const [formData, setFormData] = useState({
+    x: '',
+    y: '',
+    month: 'jan',
+    day: 'sun',
+    temperature: '',
+    relative_humidity: '',
+    wind: '',
+    rain: '',
+  });
   const [prediction, setPrediction] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -49,16 +57,21 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     const numValue = parseFloat(value);
     const range = ranges[name as keyof typeof ranges];
     if (isNaN(numValue)) return t('invalid_number');
-    if (numValue < range.min || numValue > range.max) {
+    if (range && (numValue < range.min || numValue > range.max)) {
       return `${t('value_out_of_range')} ${range.min} - ${range.max}`;
     }
     return '';
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    const error = validateInput(name, value);
-    setErrors((prev) => ({ ...prev, [name]: error }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (['temperature', 'relative_humidity', 'wind', 'rain'].includes(name)) {
+      const error = validateInput(name, value);
+      setErrors((prev) => ({ ...prev, [name]: error }));
+    }
   };
 
   const predictBurntArea = async (data: any) => {
@@ -84,29 +97,30 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
 
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const formData = new FormData(form);
     const newErrors: { [key: string]: string } = {};
 
-    for (const [name, value] of formData.entries()) {
+    // Validate all numeric fields
+    for (const [name, value] of Object.entries(formData)) {
       if (['temperature', 'relative_humidity', 'wind', 'rain'].includes(name)) {
-        const error = validateInput(name as string, value as string);
-        if (error) newErrors[name as string] = error;
+        const error = validateInput(name, value);
+        if (error) newErrors[name] = error;
       }
     }
+    if (!formData.x) newErrors.x = t('required');
+    if (!formData.y) newErrors.y = t('required');
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       const apiData = {
-        X: parseInt(formData.get('x') as string),
-        Y: parseInt(formData.get('y') as string),
-        month: formData.get('month'),
-        day: formData.get('day'),
-        temp: parseFloat(formData.get('temperature') as string),
-        RH: parseFloat(formData.get('relative_humidity') as string),
-        wind: parseFloat(formData.get('wind') as string),
-        rain: parseFloat(formData.get('rain') as string),
+        X: parseInt(formData.x),
+        Y: parseInt(formData.y),
+        month: formData.month,
+        day: formData.day,
+        temp: parseFloat(formData.temperature),
+        RH: parseFloat(formData.relative_humidity),
+        wind: parseFloat(formData.wind),
+        rain: parseFloat(formData.rain),
       };
       const result = await predictBurntArea(apiData);
       if (result !== null) setPrediction(result);
@@ -114,11 +128,17 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   };
 
   const handleClearForm = () => {
-    const form = formRef.current?.querySelector('form');
-    if (form) form.reset();
+    setFormData({
+      x: '',
+      y: '',
+      month: 'jan',
+      day: 'sun',
+      temperature: '',
+      relative_humidity: '',
+      wind: '',
+      rain: '',
+    });
     setErrors({});
-    setSelectedMonth('jan');
-    setSelectedDay('sun');
     setPrediction(null);
     setApiError(null);
     console.log("Form cleared!");
@@ -131,7 +151,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Function to remove the prediction layer
     const removePredictionLayer = () => {
       const existingLayer = mapRef.current
         .getLayers()
@@ -143,17 +162,15 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
       }
     };
 
-    // If dropdown is not active, remove the layer and exit
     if (dropdownState.activeButton !== 'burnt-area') {
       removePredictionLayer();
       return;
     }
 
-    // If no prediction or errors exist, don’t add the layer
     if (prediction === null || errors.x || errors.y) return;
 
-    const x = parseInt((formRef.current?.querySelector("input[name='x']") as HTMLInputElement)?.value || "5");
-    const y = parseInt((formRef.current?.querySelector("input[name='y']") as HTMLInputElement)?.value || "5");
+    const x = parseInt(formData.x || "5");
+    const y = parseInt(formData.y || "5");
 
     const gridToLonLat = (x: number, y: number): [number, number] => {
       const cellSize = 0.005;
@@ -169,17 +186,14 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
 
     const [lon, lat] = gridToLonLat(x, y);
 
-    // Clear existing prediction layer before adding a new one
     removePredictionLayer();
 
-    // Calculate radius in meters from prediction (hectares)
     const areaM2 = prediction * 10000;
-    const radiusM = Math.sqrt(areaM2 / Math.PI) * 10; // Scaled for visibility
+    const radiusM = Math.sqrt(areaM2 / Math.PI) * 10;
     const metersPerDegree = 111319.9;
     const latAdjustment = Math.cos((lat * Math.PI) / 180);
     const radiusDegrees = radiusM / (metersPerDegree * latAdjustment);
 
-    // Create geographic circle
     const circleGeom = new CircleGeom([lon, lat], radiusDegrees);
     const feature = new Feature({
       geometry: circleGeom,
@@ -197,7 +211,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     vectorLayer.set('id', 'burnPredictionLayer');
     mapRef.current.addLayer(vectorLayer);
 
-    // Set center and animate only if prediction is new
     mapRef.current.getView().setCenter([-6.8, 41.88]);
     mapRef.current.getView().setZoom(10);
     mapRef.current.getView().animate({
@@ -208,11 +221,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
 
     mapRef.current.renderSync();
 
-    // Cleanup function to remove layer when effect re-runs or component unmounts
     return () => {
       removePredictionLayer();
     };
-  }, [prediction, errors.x, errors.y, mapRef, dropdownState.activeButton]);
+  }, [prediction, errors.x, errors.y, mapRef, dropdownState.activeButton, formData.x, formData.y]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -241,11 +253,27 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
               <div className="form-group form-row">
                 <div className="form-item">
                   <label>{t('spatial_coordinates')} X</label>
-                  <input type="number" name="x" placeholder="X:" required />
+                  <input
+                    type="number"
+                    name="x"
+                    value={formData.x}
+                    onChange={handleInputChange}
+                    placeholder="X:"
+                    required
+                  />
+                  {errors.x && <span className="error">{errors.x}</span>}
                 </div>
                 <div className="form-item">
                   <label>{t('spatial_coordinates')} Y</label>
-                  <input type="number" name="y" placeholder="Y:" required />
+                  <input
+                    type="number"
+                    name="y"
+                    value={formData.y}
+                    onChange={handleInputChange}
+                    placeholder="Y:"
+                    required
+                  />
+                  {errors.y && <span className="error">{errors.y}</span>}
                 </div>
               </div>
               <button type="button" className="view-map-button" onClick={toggleMap}>
@@ -256,8 +284,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <label>{t('month')}</label>
                   <select
                     name="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    value={formData.month}
+                    onChange={handleInputChange}
                     required
                   >
                     {months.map((month) => (
@@ -269,8 +297,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <label>{t('day')}</label>
                   <select
                     name="day"
-                    value={selectedDay}
-                    onChange={(e) => setSelectedDay(e.target.value)}
+                    value={formData.day}
+                    onChange={handleInputChange}
                     required
                   >
                     {days.map((day) => (
@@ -285,9 +313,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <input
                     type="number"
                     name="temperature"
+                    value={formData.temperature}
+                    onChange={handleInputChange}
                     placeholder={`${t('temperature')} (${ranges.temperature.unit})`}
                     step="0.1"
-                    onChange={handleInputChange}
                     required
                   />
                   <span className="range-info">
@@ -300,9 +329,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <input
                     type="number"
                     name="relative_humidity"
+                    value={formData.relative_humidity}
+                    onChange={handleInputChange}
                     placeholder={`${t('relative_humidity')} (${ranges.relative_humidity.unit})`}
                     step="0.1"
-                    onChange={handleInputChange}
                     required
                   />
                   <span className="range-info">
@@ -317,9 +347,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <input
                     type="number"
                     name="wind"
+                    value={formData.wind}
+                    onChange={handleInputChange}
                     placeholder={`${t('wind')} (${ranges.wind.unit})`}
                     step="0.1"
-                    onChange={handleInputChange}
                     required
                   />
                   <span className="range-info">
@@ -332,9 +363,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <input
                     type="number"
                     name="rain"
+                    value={formData.rain}
+                    onChange={handleInputChange}
                     placeholder={`${t('rain')} (${ranges.rain.unit})`}
                     step="0.1"
-                    onChange={handleInputChange}
                     required
                   />
                   <span className="range-info">
