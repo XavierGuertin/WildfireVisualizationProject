@@ -48,7 +48,7 @@ export interface DatasetMetadata {
 interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
-  currentBbox?: [number, number, number, number];
+  currentBbox?: [number, number, number, number]; // [west, south, east, north]
   onResetBbox: () => void;
 }
 
@@ -60,60 +60,64 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                                                              }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
+  const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { mapRef, loadedDataset, setLoadedDataset, setIsCollectionsLoaded } =
     useMapLayerContext();
   const hasInitialized = useRef(false);
 
-  // Query key factory
-  const getQueryKey = () => [
-    'datasets',
-    activeFilter,
-    sortDirection,
-    isToggled ? currentBbox.join(',') : 'no-bbox',
-    refreshKey, // Include refreshKey to force refetch when it changes
-  ];
+  /**
+   * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
+   * This ensures that user-facing error messages are displayed in the selected language
+   * while allowing the service layer (api.ts) to remain free of localization logic.
+   *
+   * @param rawError - The raw error string returned from the API service
+   * @returns A translated error message string based on the active language
+   */
+  const getTranslatedErrorMessageKey = (rawError: string): string => {
+    switch (rawError) {
+      case 'Failed to fetch data by name':
+        return 'error_fetching_data_by_name';
+      case 'Failed to fetch data by date':
+        return 'error_fetching_data_by_date';
+      case 'Failed to fetch data':
+        return 'error_fetching_data';
+      case '':
+      case undefined:
+        return 'error_fetching_data';
+      default:
+        return rawError; // fallback if no match
+    }
+  };
 
-  // Fetch function for react-query
+  /**
+   * Fetches dataset collections based on the selected filter and bounding box.
+   */
   const fetchDatasetsQuery = async () => {
     const params = {
-      bbox: isToggled && currentBbox ? currentBbox as [number, number, number, number] : undefined,
+      bbox:
+        isToggled && currentBbox
+          ? (currentBbox as [number, number, number, number])
+          : undefined,
       sortDirection,
     };
 
-      if (!Array.isArray(response)) {
-        console.error('Invalid response:', response.error || response);
-        setFetchError(getTranslatedErrorMessageKey(response.error || ''));
-        setDatasets([]);
-        return;
-      }
-
-      const config = await getConfig();
-      if (config?.loadedDataset) {
-        setLoadedDataset({
-          id: config.loadedDataset.id || '',
-          title: config.loadedDataset.title || '',
-        });
-      } else {
-        setLoadedDataset({ id: '', title: '' });
-      }
-      setDatasets(response);
-      {
-        response.length !== 0
-          ? setIsCollectionsLoaded(true)
-          : setIsCollectionsLoaded(false);
-      }
-      setFetchError(null);
-    } catch (error) {
-      console.error('Error fetching datasets:', error);
-      setDatasets([]);
-      setFetchError('Failed to load datasets.');
-    } finally {
-      setIsLoading(false);
+    let response;
+    if (activeFilter === 'Name') {
+      response = await fetchCollectionsFromEndpointByName(
+        params.bbox,
+        params.sortDirection,
+      );
+    } else if (activeFilter === 'Date') {
+      response = await fetchCollectionsFromEndpointByDate(
+        params.bbox,
+        params.sortDirection,
+      );
+    } else {
+      response = await returnListOfCollectionsFromEndpoint(params.bbox);
     }
 
     if (!Array.isArray(response)) {
@@ -124,7 +128,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     if (config?.loadedDataset) {
       setLoadedDataset({
         id: config.loadedDataset.id || '',
-        title: config.loadedDataset.title || ''
+        title: config.loadedDataset.title || '',
       });
     } else {
       setLoadedDataset({ id: '', title: '' });
@@ -133,25 +137,55 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     return response;
   };
 
-  // Use react-query
-  const {
-    data: datasets = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: getQueryKey(),
+  /**
+   * React Query hook for fetching datasets
+   */
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['datasets', refreshKey, activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
     queryFn: fetchDatasetsQuery,
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Handle initial selected dataset
+  /**
+   * Update datasets state when query data changes
+   */
+  useEffect(() => {
+    if (data) {
+      setDatasets(data);
+      setIsCollectionsLoaded(data.length !== 0);
+      setFetchError(null);
+    }
+    if (error) {
+      console.error('Error fetching datasets:', error);
+      setDatasets([]);
+      setFetchError(getTranslatedErrorMessageKey(error.message));
+    }
+  }, [data, error]);
+
+  /**
+   * Fetches datasets when the refresh key or filter changes.
+   */
   useEffect(() => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId');
     if (selectedDatasetId !== null) {
       setSelectedDataset(selectedDatasetId);
     }
-  }, []);
+  }, [refreshKey]);
+
+  /**
+   * Reset bbox when toggling off map view filtering
+   */
+  useEffect(() => {
+    if (!isToggled) {
+      onResetBbox();
+    }
+  }, [isToggled]);
+
+  /**
+   * Add state to track sort direction
+   */
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   /**
    * Handles changes to the dataset sorting filter.
@@ -159,8 +193,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    */
   const handleFilterChange = (filter: string) => {
     if (activeFilter === filter) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      // Toggle direction if same filter is clicked
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
+      // Reset to ascending when changing filters
       setActiveFilter(filter);
       setSortDirection('asc');
     }
@@ -177,15 +213,12 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   /**
    * Toggles dataset sidebar collapse state.
    */
-  const toggleCollapse = () => setIsCollapsed(prev => !prev);
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
 
   /**
    * Toggles dataset filtering based on the visible map region.
    */
-  const handleToggle = () => {
-    setIsToggled(prev => !prev);
-    if (!isToggled) onResetBbox();
-  };
+  const handleToggle = () => setIsToggled((prev) => !prev);
 
   /**
    * Handles dataset selection and fetches metadata.
@@ -217,42 +250,14 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   };
 
   /**
-   * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
-   * This ensures that user-facing error messages are displayed in the selected language
-   * while allowing the service layer (api.ts) to remain free of localization logic.
-   *
-   * @param rawError - The raw error string returned from the API service
-   * @returns A translated error message string based on the active language
-   */
-  const getTranslatedErrorMessageKey = (rawError: string): string => {
-    switch (rawError) {
-      case 'Failed to fetch data by name':
-        return 'error_fetching_data_by_name';
-      case 'Failed to fetch data by date':
-        return 'error_fetching_data_by_date';
-      case 'Failed to fetch data':
-        return 'error_fetching_data';
-      case '':
-      case undefined:
-        return 'error_fetching_data';
-      default:
-        return rawError;
-    }
-  };
-
-  /**
    * Renders dataset content based on loading state and available datasets
    */
   const renderDatasetContent = () => {
     if (isLoading) {
-      return <p className="loading-message" data-testid="loading-message">{t('loading_datasets')}</p>;
-    }
-
-    if (error) {
       return (
-        <div className="error-message" data-testid="error-message">
-          {t(getTranslatedErrorMessageKey((error as Error).message))}
-        </div>
+        <p className="loading-message" data-testid="loading-message">
+          {t('loading_datasets')}
+        </p>
       );
     }
 
@@ -274,7 +279,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
 
     return (
-      <div className="no-datasets-container" data-testid="no-datasets-container">
+      <div
+        className="no-datasets-container"
+        data-testid="no-datasets-container"
+      >
         <p className="no-datasets-message" data-testid="no-datasets-message">
           {t('no_datasets_available')}
         </p>
@@ -306,13 +314,20 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   }, [selectedDataset]);
 
   return (
-    <div className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`} data-testid="datasets-container">
+    <div
+      className={`datasets-container ${isCollapsed ? 'collapsed' : ''}`}
+      data-testid="datasets-container"
+    >
       <button
         className={`collapse-button ${isCollapsed ? 'collapsed' : ''}`}
         onClick={toggleCollapse}
         data-testid="collapse-button"
       >
-        {isCollapsed ? <FaChevronCircleLeft size={24} /> : <FaChevronCircleRight size={24} />}
+        {isCollapsed ? (
+          <FaChevronCircleLeft size={24} />
+        ) : (
+          <FaChevronCircleRight size={24} />
+        )}
       </button>
       {isCollapsed ? (
         <FaDatabase fill="white" size={24} />
@@ -328,7 +343,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 aria-label={t('toggle_datasets')}
               >
-                <span className="toggle-status-text" data-testid="toggle-status-text">
+                <span
+                  className="toggle-status-text"
+                  data-testid="toggle-status-text"
+                >
                   {getToggleStatusText()}
                 </span>
                 <input
@@ -346,7 +364,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
                   role="switch"
                   aria-checked={isToggled}
                 >
-                  {!currentBbox && <span className="toggle-warning">{t('Load map first')}</span>}
+                  {!currentBbox && (
+                    <span className="toggle-warning">
+                      {t('Load map first')}
+                    </span>
+                  )}
                 </div>
               </label>
             </div>
@@ -362,7 +384,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             >
               {t('name')}{' '}
               {activeFilter === 'Name' &&
-                (sortDirection === 'asc' ? <FaSortAlphaDown /> : <FaSortAlphaUp />)}
+                (sortDirection === 'asc' ? (
+                  <FaSortAlphaDown />
+                ) : (
+                  <FaSortAlphaUp />
+                ))}
             </button>
             <button
               className={`filter-button ${activeFilter === 'Date' ? 'active' : ''}`}
@@ -371,7 +397,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
             >
               {t('date')}{' '}
               {activeFilter === 'Date' &&
-                (sortDirection === 'asc' ? <FaSortNumericDown /> : <FaSortNumericUp />)}
+                (sortDirection === 'asc' ? (
+                  <FaSortNumericDown />
+                ) : (
+                  <FaSortNumericUp />
+                ))}
             </button>
             <button
               className="filter-button reset-button"
@@ -381,6 +411,13 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
               <FaTimes /> {t('reset')}
             </button>
           </div>
+
+          {fetchError && (
+            <div className="error-message" data-testid="error-message">
+              {t(fetchError)}
+            </div>
+          )}
+
           <div className="buttons-container" data-testid="buttons-container">
             {renderDatasetContent()}
           </div>

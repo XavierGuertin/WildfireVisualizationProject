@@ -33,21 +33,11 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const MySwal = withReactContent(Swal);
 
-interface Config {
-  endpoint?: string;
-  language?: string;
-  onlineMode?: boolean;
-  loadedDataset?: { id: string; title: string };
-  error?: string;
-  [key: string]: any;
-}
-
 const SettingsPanel: React.FC<{
   refreshDatasets: () => void;
   setMetadataVisible: (visible: boolean) => void;
 }> = ({ refreshDatasets, setMetadataVisible }) => {
   const { t, i18n } = useTranslation();
-  const queryClient = useQueryClient();
   const [dropdownState, setDropdownState] = useState<{
     activeButton: string | null;
     isOpen: boolean;
@@ -73,79 +63,114 @@ const SettingsPanel: React.FC<{
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+  const queryClient = useQueryClient();
 
-  /**
-   * Fetches and caches the application configuration once on mount.
-   * @returns Cached config data or undefined if fetch fails.
-   */
-  const { data: configData, isLoading: configLoading } = useQuery(
-    ['config'],
-    () => getConfig(),
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      onError: () => toast.error(t('error_fetching_config_file')),
-      onSuccess: (config) => {
-        if (config && typeof config === 'object') {
-          setNewApiEndpoint(config.endpoint || 'https://default-api-endpoint.com');
-          if (config.language && config.language !== i18n.language) {
-            i18n.changeLanguage(config.language);
-          }
-          if (config.onlineMode != undefined) setIsOnline(config.onlineMode);
-        }
-      },
+  // Fetch config query function
+  const fetchConfigQuery = async () => {
+    const config = await getConfig();
+    if (config.error) {
+      throw new Error('Error fetching config');
     }
-  );
+    return config;
+  };
 
-  /**
-   * Saves the application configuration and updates the cache.
-   * @param config - The configuration object to save.
-   * @returns Promise resolving with void (no return data assumed).
-   */
-  const saveConfigMutation = useMutation<void, unknown, Config>(
-    (config: Config) => saveConfig(config),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['config']);
-      },
-      onError: (error: unknown, _variables: Config, _context: unknown) => {
-        toast.error(t('error_saving_config'));
-      },
-    }
-  );
+  // React Query hook for fetching config
+  const { data: configData } = useQuery({
+    queryKey: ['config'],
+    queryFn: fetchConfigQuery,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  /**
-   * Initializes language from local storage and syncs with config.
-   */
+  // Mutation for saving and fetching endpoint
+  const saveAndFetchEndpointMutation = useMutation({
+    mutationFn: async (endpointUrl: string) => {
+      if (!isValidUrl(endpointUrl)) {
+        throw new Error('invalid_url');
+      }
+
+      // Check if the URL retrieves collections
+      const verificationMessage = await verifyIfEndpointHasCollections(endpointUrl);
+      if (verificationMessage !== 'Collections found') {
+        throw new Error('no_collections_found');
+      }
+
+      // Reset collections before fetching new ones
+      await resetCollections();
+      await resetItems();
+      await resetItemAssets();
+      setSelectedAssetLayers([]);
+
+      const message = await fetchCollectionsFromEndpoint(endpointUrl);
+      if (message !== 'Collections fetched and saved successfully') {
+        throw new Error('error_fetching_collections');
+      }
+
+      // Save the new endpoint to config file
+      const config = await getConfig();
+      if (config.error) {
+        throw new Error('error_fetching_config_file');
+      }
+
+      config.endpoint = endpointUrl;
+      config.loadedDataset = { id: '', title: '' };
+      await saveConfig(config);
+
+      return true;
+    },
+    onSuccess: () => {
+      toast.success(t('collections_fetched_saved'));
+      refreshDatasets();
+      queryClient.invalidateQueries({ queryKey: ['config'] });
+      setDropdownState({ activeButton: null, isOpen: false });
+    },
+    onError: (error: Error) => {
+      toast.error(t(error.message));
+    },
+  });
+
+  // Initialize language from local storage and handle toast messages
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
       window.localStorage &&
-      !languageInitialized &&
-      !configLoading &&
-      configData
+      !languageInitialized
     ) {
       const savedLanguage = localStorage.getItem('language');
-      if (savedLanguage && savedLanguage !== i18n.language) {
-        i18n.changeLanguage(savedLanguage);
-      } else if (!savedLanguage) {
-        localStorage.setItem('language', 'en');
-        toast.info(t('default_language_retrieved'));
-        if (configData && typeof configData === 'object') {
-          const newConfig = { ...configData, language: 'en' };
-          saveConfigMutation.mutate(newConfig);
+      if (savedLanguage) {
+        // If a language is saved in localStorage, use it
+        if (savedLanguage !== i18n.language) {
+          i18n.changeLanguage(savedLanguage); // Change language only if different from current one
         }
+      } else {
+        // If no language is saved, use the default language
+        localStorage.setItem('language', 'en');
+        toast.info(t('default_language_retrieved')); // Show default language message
+      }
+      setLanguageInitialized(true); // Mark language initialization as done
+    }
+  }, [i18n, t, languageInitialized]);
+
+  // Handle config data updates
+  useEffect(() => {
+    if (configData) {
+      if (configData.endpoint) {
+        setNewApiEndpoint(configData.endpoint);
+      }
+      if (configData.language && configData.language !== i18n.language) {
+        i18n.changeLanguage(configData.language);
       }
       setLanguageInitialized(true);
-    }
-  }, [i18n, t, languageInitialized, configLoading, configData]);
 
-  /**
-   * Prompts for an endpoint if none is saved in the cached config.
-   */
-  useEffect(() => {
-    if (!configLoading && configData && typeof configData === 'object') {
-      if (!configData.endpoint || configData.endpoint === 'No endpoint saved') {
+      if (configData.onlineMode != undefined) {
+        setIsOnline(configData.onlineMode);
+      }
+
+      // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
+      if (
+        configData.endpoint === 'No endpoint saved' ||
+        configData.endpoint === undefined
+      ) {
         promptForEndpoint(
           refreshDatasets,
           t,
@@ -156,34 +181,14 @@ const SettingsPanel: React.FC<{
         );
       }
     }
-  }, [configLoading, configData, refreshDatasets, t]);
+  }, [configData, i18n]);
 
-  /**
-   * Toggles dropdown state using cached config data for settings.
-   * @param buttonName - The name of the button triggering the dropdown.
-   */
+  // Toggles dropdown state
   const toggleDropdown = (buttonName: string) => {
-    if (buttonName === 'settings' && configData?.endpoint) {
-      setNewApiEndpoint(configData.endpoint); // Use cached data instead of fetching
-    }
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
       isOpen: prevState.activeButton !== buttonName,
     }));
-  };
-
-  /**
-   * Handles language selection and updates config via mutation.
-   * @param language - The selected language code (e.g., 'en', 'fr').
-   */
-  const handleLanguageSelect = (language: string) => {
-    i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
-    if (configData && typeof configData === 'object') {
-      const newConfig = { ...configData, language };
-      saveConfigMutation.mutate(newConfig);
-    }
-    setDropdownState({ activeButton: null, isOpen: false });
   };
 
   const handleSaveAndFetchEndpoint = async (
@@ -191,12 +196,15 @@ const SettingsPanel: React.FC<{
   ): Promise<boolean> => {
     if (isValidUrl(endpointUrl)) {
       try {
-        const verificationMessage = await verifyIfEndpointHasCollections(endpointUrl);
+        // Check if the URL retrieves collections
+        const verificationMessage =
+          await verifyIfEndpointHasCollections(endpointUrl);
         if (verificationMessage !== 'Collections found') {
           toast.error(t('no_collections_found'));
           return false;
         }
 
+        // Reset collections before fetching new ones
         await resetCollections();
         await resetItems();
         await resetItemAssets();
@@ -207,17 +215,22 @@ const SettingsPanel: React.FC<{
           toast.success(t('collections_fetched_saved'));
         }
 
-        const config = configData || (await getConfig());
+        // Save the new endpoint to config file
+        const config = await getConfig();
+        // If an error occurred during fetching config, show error and do not save changes
         if (config.error) {
           toast.error(t('error_fetching_config_file'));
           return false;
         }
 
-        const newConfig = { ...config, endpoint: endpointUrl, loadedDataset: { id: '', title: '' } };
-        saveConfigMutation.mutate(newConfig);
+        config.endpoint = endpointUrl;
+        config.loadedDataset = { id: '', title: '' };
+        await saveConfig(config);
 
-        refreshDatasets();
+        refreshDatasets(); // Trigger the refresh
+
         setDropdownState({ activeButton: null, isOpen: false });
+
         return true;
       } catch (error: any) {
         toast.error(t('error_fetching_collections'));
@@ -229,6 +242,12 @@ const SettingsPanel: React.FC<{
     }
   };
 
+  const handleLanguageSelect = (language: string) => {
+    i18n.changeLanguage(language);
+    localStorage.setItem('language', language);
+    setDropdownState({ activeButton: null, isOpen: false });
+  };
+
   const handleReset = async () => {
     MySwal.fire({
       title: t('reset'),
@@ -238,9 +257,12 @@ const SettingsPanel: React.FC<{
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: t('yes'),
-      customClass: { popup: 'custom-swal-popup' },
+      customClass: {
+        popup: 'custom-swal-popup',
+      },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
+        // reset localStorage properties to default properties
         localStorage.setItem('language', 'en');
         localStorage.setItem('playbackSpeed', '1');
         localStorage.setItem('sliderValue', '0');
@@ -248,10 +270,7 @@ const SettingsPanel: React.FC<{
         setSliderValue(0);
         setSpeed(1);
         handleResetLayerStyle(true);
-        if (configData && typeof configData === 'object') {
-          const newConfig = { ...configData, language: 'en' };
-          saveConfigMutation.mutate(newConfig);
-        }
+
         toast.success(t('reset_completed'));
       }
     });
@@ -275,7 +294,9 @@ const SettingsPanel: React.FC<{
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: t('yes'),
-      customClass: { popup: 'custom-swal-popup' },
+      customClass: {
+        popup: 'custom-swal-popup',
+      },
     }).then(async (result: { isConfirmed: any }) => {
       if (result.isConfirmed) {
         try {
@@ -288,7 +309,8 @@ const SettingsPanel: React.FC<{
             getConfig,
             saveConfig,
           );
-          setMetadataVisible(false);
+          setMetadataVisible(false); // Hide metadata container
+          queryClient.invalidateQueries({ queryKey: ['config'] });
         } catch (error: any) {
           toast.error(error.message);
         }
@@ -300,13 +322,16 @@ const SettingsPanel: React.FC<{
 
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
     setIsOnline(onlineMode);
-    const config = configData || (await getConfig());
+
+    const config = await getConfig();
+    // If an error occurred during fetching config, show error and do not save changes
     if (config.error) {
       toast.error(t('error_fetching_config_file'));
       return false;
     }
-    const newConfig = { ...config, onlineMode };
-    saveConfigMutation.mutate(newConfig);
+    config.onlineMode = onlineMode;
+    await saveConfig(config);
+    queryClient.invalidateQueries({ queryKey: ['config'] });
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -372,18 +397,7 @@ const SettingsPanel: React.FC<{
 
       if (inputResult.isConfirmed) {
         success = await handleSaveAndFetchEndpoint(inputResult.value);
-      } else {  
-        const config = configData || (await getConfig());
-        if (config.error) {
-          toast.error(t('error_fetching_config_file'));
-          break;
-        }
-        const newConfig = {
-          ...config,
-          endpoint: 'No endpoint saved',
-          loadedDataset: { id: '', title: '' },
-        };
-        saveConfigMutation.mutate(newConfig);
+      } else {
         refreshDatasets(); // Trigger the refresh
         break; // Exit the loop if the user cancels the input dialog
       }
@@ -422,16 +436,16 @@ const SettingsPanel: React.FC<{
     toast.success(t('copied_to_clipboard'));
   };
 
-  // Default style values for Polygon
-  const DEFAULT_FILL_COLOR = '#ff0000';
+  // Default style values for item_layer
+  const DEFAULT_FILL_COLOR = '#ff0000'; // Red
   const DEFAULT_FILL_OPACITY = '0.1';
-  const DEFAULT_STROKE_COLOR = '#ff0000';
+  const DEFAULT_STROKE_COLOR = '#ff0000'; // Red
   const DEFAULT_STROKE_WIDTH = '2';
 
   // Default style values for DataLayer
   const DEFAULT_DATA_FILL_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_FILL_OPACITY = '0.1';
-  const DEFAULT_DATA_STROKE_COLOR = '#0000ff';
+  const DEFAULT_DATA_STROKE_COLOR = '#0000ff'; // Blue
   const DEFAULT_DATA_STROKE_WIDTH = '2';
 
   // Tab selection state
@@ -470,9 +484,11 @@ const SettingsPanel: React.FC<{
       : 'rgb(0,0,0)';
   };
 
+  // Update itemLayer and dataLayer style
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
-    if (selectedStyleTab === 'polygon') {
+
+    if (selectedStyleTab === 'item_layer') {
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
@@ -493,13 +509,17 @@ const SettingsPanel: React.FC<{
     }
   };
 
+  // Reset itemLayer and dataLayer style
   const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
-    if (resetBoth || selectedStyleTab === 'polygon') {
-      setPolygonFillColor(DEFAULT_FILL_COLOR);
-      setPolygonFillOpacity(DEFAULT_FILL_OPACITY);
-      setPolygonStrokeColor(DEFAULT_STROKE_COLOR);
-      setPolygonStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+    if (resetBoth || selectedStyleTab === 'item_layer') {
+      // Reset itemLayer state
+      setItemLayerFillColor(DEFAULT_FILL_COLOR);
+      setItemLayerFillOpacity(DEFAULT_FILL_OPACITY);
+      setItemLayerStrokeColor(DEFAULT_STROKE_COLOR);
+      setItemLayerStrokeWidth(DEFAULT_STROKE_WIDTH);
+
       updateLayerStyle(
         mapRef.current,
         'itemLayer',
@@ -509,11 +529,14 @@ const SettingsPanel: React.FC<{
         DEFAULT_STROKE_WIDTH,
       );
     }
-    if (resetBoth || selectedStyleTab === 'dataLayer') {
+
+    if (resetBoth || selectedStyleTab === 'data_layer') {
+      // Reset data layer state with blue defaults
       setDataLayerFillColor('#0000ff');
       setDataLayerFillOpacity('0.1');
       setDataLayerStrokeColor('#0000ff');
       setDataLayerStrokeWidth('2');
+
       updateLayerStyle(
         mapRef.current,
         'dataLayer',
@@ -546,10 +569,22 @@ const SettingsPanel: React.FC<{
                   type="text"
                   placeholder={t('enter_new_api_endpoint')}
                   value={newApiEndpoint}
-                  disabled
+                  onChange={(e) => setNewApiEndpoint(e.target.value)}
+                  disabled={saveAndFetchEndpointMutation.isPending}
                 />
                 <button onClick={copyToClipboard} aria-label="copy">
                   <IoCopyOutline size={24} />
+                </button>
+                <button
+                  onClick={() => handleSaveAndFetchEndpoint(newApiEndpoint)}
+                  disabled={saveAndFetchEndpointMutation.isPending}
+                  aria-label="save"
+                >
+                  {saveAndFetchEndpointMutation.isPending ? (
+                    <span>Loading...</span>
+                  ) : (
+                    <IoCheckmark size={24} />
+                  )}
                 </button>
               </div>
             </div>
@@ -623,7 +658,6 @@ const SettingsPanel: React.FC<{
           </div>
         )}
       </div>
-
 
       {/* Customize itemLayer and DataLayer colors */}
       {((timeStamps && timeStamps.length > 0) || isCollectionsLoaded) && (
