@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import '../styles/BurntAreaPrediction.css';
 import { useTranslation } from 'react-i18next';
-import { Style, Fill, Stroke } from 'ol/style'; // Remove CircleStyle
+import { Style, Fill, Stroke } from 'ol/style';
 import { useMapLayerContext } from '../context/MapContext';
 import { Feature } from 'ol';
-import { Circle as CircleGeom } from 'ol/geom'; // Add Circle geometry
+import { Circle as CircleGeom } from 'ol/geom';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 
@@ -129,17 +129,37 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const { mapRef } = useMapLayerContext();
 
   useEffect(() => {
-    if (!mapRef.current || prediction === null || errors.x || errors.y) return;
+    if (!mapRef.current) return;
+
+    // Function to remove the prediction layer
+    const removePredictionLayer = () => {
+      const existingLayer = mapRef.current
+        .getLayers()
+        .getArray()
+        .find((layer) => layer.get('id') === 'burnPredictionLayer');
+      if (existingLayer) {
+        mapRef.current.removeLayer(existingLayer);
+        mapRef.current.renderSync();
+      }
+    };
+
+    // If dropdown is not active, remove the layer and exit
+    if (dropdownState.activeButton !== 'burnt-area') {
+      removePredictionLayer();
+      return;
+    }
+
+    // If no prediction or errors exist, don’t add the layer
+    if (prediction === null || errors.x || errors.y) return;
 
     const x = parseInt((formRef.current?.querySelector("input[name='x']") as HTMLInputElement)?.value || "5");
     const y = parseInt((formRef.current?.querySelector("input[name='y']") as HTMLInputElement)?.value || "5");
 
     const gridToLonLat = (x: number, y: number): [number, number] => {
-      const cellSize = 0.005; // ~500m per cell
-      const centerLon = -6.8; // Montesinho Park center longitude
-      const centerLat = 41.88; // Montesinho Park center latitude
-      const gridCenter = 5; // Center of the 0-9 grid
-
+      const cellSize = 0.005;
+      const centerLon = -6.8;
+      const centerLat = 41.88;
+      const gridCenter = 5;
       const lon = centerLon + (x - gridCenter) * cellSize;
       const lat = centerLat + (gridCenter - y) * cellSize;
       const boundedLon = Math.max(-7.0, Math.min(-6.6, lon));
@@ -148,28 +168,16 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     };
 
     const [lon, lat] = gridToLonLat(x, y);
-    console.log('Prediction Coordinates:', [lon, lat]);
 
-    // Use raw geographic coordinates
-    const montesinhoCenter = [-6.8, 41.88];
-    mapRef.current.getView().setCenter(montesinhoCenter);
-    mapRef.current.getView().setZoom(10);
-
-    // Clear existing prediction layer
-    const existingLayer = mapRef.current
-      .getLayers()
-      .getArray()
-      .find((layer) => layer.get('id') === 'burnPredictionLayer');
-    if (existingLayer) mapRef.current.removeLayer(existingLayer);
+    // Clear existing prediction layer before adding a new one
+    removePredictionLayer();
 
     // Calculate radius in meters from prediction (hectares)
-    const areaM2 = prediction * 10000; // 1 ha = 10,000 m²
-    const radiusM = Math.sqrt(areaM2 / Math.PI); // Radius of circle in meters
-
-    // Convert meters to degrees (approximation, varies by latitude)
-    const metersPerDegree = 111319.9; // Approx. meters per degree latitude at equator
-    const latAdjustment = Math.cos((lat * Math.PI) / 180); // Adjust for latitude
-    const radiusDegrees = radiusM / (metersPerDegree * latAdjustment); // Radius in degrees
+    const areaM2 = prediction * 10000;
+    const radiusM = Math.sqrt(areaM2 / Math.PI) * 10; // Scaled for visibility
+    const metersPerDegree = 111319.9;
+    const latAdjustment = Math.cos((lat * Math.PI) / 180);
+    const radiusDegrees = radiusM / (metersPerDegree * latAdjustment);
 
     // Create geographic circle
     const circleGeom = new CircleGeom([lon, lat], radiusDegrees);
@@ -189,15 +197,22 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     vectorLayer.set('id', 'burnPredictionLayer');
     mapRef.current.addLayer(vectorLayer);
 
-    // Animate to prediction location
+    // Set center and animate only if prediction is new
+    mapRef.current.getView().setCenter([-6.8, 41.88]);
+    mapRef.current.getView().setZoom(10);
     mapRef.current.getView().animate({
       center: [lon, lat],
-      zoom: 12,
+      zoom: 15,
       duration: 1000,
     });
 
     mapRef.current.renderSync();
-  }, [prediction, errors.x, errors.y, mapRef]);
+
+    // Cleanup function to remove layer when effect re-runs or component unmounts
+    return () => {
+      removePredictionLayer();
+    };
+  }, [prediction, errors.x, errors.y, mapRef, dropdownState.activeButton]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
