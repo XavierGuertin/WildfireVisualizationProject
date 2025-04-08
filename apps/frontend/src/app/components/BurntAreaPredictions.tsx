@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import '../styles/BurntAreaPrediction.css';
 import { useTranslation } from 'react-i18next';
-import { Style, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
+import { Style, Fill, Stroke } from 'ol/style'; // Remove CircleStyle
 import { useMapLayerContext } from '../context/MapContext';
-import { fromLonLat } from 'ol/proj';
 import { Feature } from 'ol';
-import { Point } from 'ol/geom';
+import { Circle as CircleGeom } from 'ol/geom'; // Add Circle geometry
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 
@@ -151,11 +150,10 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     const [lon, lat] = gridToLonLat(x, y);
     console.log('Prediction Coordinates:', [lon, lat]);
 
-    // Use raw geographic coordinates (no fromLonLat)
+    // Use raw geographic coordinates
     const montesinhoCenter = [-6.8, 41.88];
     mapRef.current.getView().setCenter(montesinhoCenter);
     mapRef.current.getView().setZoom(10);
-    console.log('Map Center Set To:', mapRef.current.getView().getCenter());
 
     // Clear existing prediction layer
     const existingLayer = mapRef.current
@@ -164,18 +162,25 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
       .find((layer) => layer.get('id') === 'burnPredictionLayer');
     if (existingLayer) mapRef.current.removeLayer(existingLayer);
 
-    // Create feature with circle using geographic coordinates
+    // Calculate radius in meters from prediction (hectares)
+    const areaM2 = prediction * 10000; // 1 ha = 10,000 m²
+    const radiusM = Math.sqrt(areaM2 / Math.PI); // Radius of circle in meters
+
+    // Convert meters to degrees (approximation, varies by latitude)
+    const metersPerDegree = 111319.9; // Approx. meters per degree latitude at equator
+    const latAdjustment = Math.cos((lat * Math.PI) / 180); // Adjust for latitude
+    const radiusDegrees = radiusM / (metersPerDegree * latAdjustment); // Radius in degrees
+
+    // Create geographic circle
+    const circleGeom = new CircleGeom([lon, lat], radiusDegrees);
     const feature = new Feature({
-      geometry: new Point([lon, lat]), // Use [lon, lat] directly
+      geometry: circleGeom,
       name: 'Predicted Burn Area',
     });
     feature.setStyle(
       new Style({
-        image: new CircleStyle({
-          radius: Math.max(5, Math.min(prediction * 10, 100)),
-          fill: new Fill({ color: 'rgba(255, 69, 0, 0.5)' }),
-          stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.8)', width: 1 }),
-        }),
+        fill: new Fill({ color: 'rgba(255, 69, 0, 0.5)' }),
+        stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.8)', width: 1 }),
       })
     );
 
@@ -184,16 +189,14 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     vectorLayer.set('id', 'burnPredictionLayer');
     mapRef.current.addLayer(vectorLayer);
 
-    // Animate to prediction location using geographic coordinates
+    // Animate to prediction location
     mapRef.current.getView().animate({
-      center: [lon, lat], // Use [lon, lat] directly
+      center: [lon, lat],
       zoom: 12,
       duration: 1000,
-    }, () => {
-      console.log('Animation Complete, New Center:', mapRef.current.getView().getCenter());
     });
 
-    mapRef.current.renderSync(); // Force map render
+    mapRef.current.renderSync();
   }, [prediction, errors.x, errors.y, mapRef]);
 
   useEffect(() => {
