@@ -1,6 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
 import '../styles/BurntAreaPrediction.css';
 import { useTranslation } from 'react-i18next';
+import { Style, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
+import { useMapLayerContext } from '../context/MapContext';
+import { fromLonLat } from 'ol/proj';
+import { Feature } from 'ol';
+import { Point } from 'ol/geom';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
+
 const spatialCoordinatesMap = '/assets/spatial-coordinates-map.png';
 
 interface BurntAreaPredictionProps {
@@ -25,7 +33,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Define the valid ranges for each field
   const ranges = {
     temperature: { min: 2.2, max: 33.3, unit: '°C' },
     relative_humidity: { min: 15.0, max: 100, unit: '%' },
@@ -33,54 +40,38 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     rain: { min: 0.0, max: 6.4, unit: 'mm/m²' },
   };
 
-  // Define the options for months and days
   const months = [
     'jan', 'feb', 'mar', 'apr', 'may', 'jun',
     'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
   ];
   const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
-  // Validation function for input fields
   const validateInput = (name: string, value: string) => {
     const numValue = parseFloat(value);
     const range = ranges[name as keyof typeof ranges];
-
-    if (isNaN(numValue)) {
-      return t('invalid_number');
-    }
-
+    if (isNaN(numValue)) return t('invalid_number');
     if (numValue < range.min || numValue > range.max) {
       return `${t('value_out_of_range')} ${range.min} - ${range.max}`;
     }
-
     return '';
   };
 
-  // Handle input change and validate
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const error = validateInput(name, value);
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // API call to predict burnt area
   const predictBurntArea = async (data: any) => {
     try {
       setIsLoading(true);
       setApiError(null);
-
       const response = await fetch('http://127.0.0.1:8000/predict_area', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
       const result = await response.json();
       return result.predicted_burned_area;
     } catch (error) {
@@ -92,11 +83,8 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     }
   };
 
-  // Form submission handler
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    // Check for any errors before submitting
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     const newErrors: { [key: string]: string } = {};
@@ -104,16 +92,13 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     for (const [name, value] of formData.entries()) {
       if (['temperature', 'relative_humidity', 'wind', 'rain'].includes(name)) {
         const error = validateInput(name as string, value as string);
-        if (error) {
-          newErrors[name as string] = error;
-        }
+        if (error) newErrors[name as string] = error;
       }
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Prepare data for API call
       const apiData = {
         X: parseInt(formData.get('x') as string),
         Y: parseInt(formData.get('y') as string),
@@ -124,21 +109,14 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
         wind: parseFloat(formData.get('wind') as string),
         rain: parseFloat(formData.get('rain') as string),
       };
-
-      // Call API
       const result = await predictBurntArea(apiData);
-      if (result !== null) {
-        setPrediction(result);
-      }
+      if (result !== null) setPrediction(result);
     }
   };
 
-  // Clear form handler
   const handleClearForm = () => {
     const form = formRef.current?.querySelector('form');
-    if (form) {
-      form.reset();
-    }
+    if (form) form.reset();
     setErrors({});
     setSelectedMonth('jan');
     setSelectedDay('sun');
@@ -147,31 +125,87 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
     console.log("Form cleared!");
   };
 
-  // Toggle map visibility
-  const toggleMap = () => {
-    setShowMap((prev) => !prev);
-  };
+  const toggleMap = () => setShowMap((prev) => !prev);
 
-  // Add Escape key support for closing the modal
+  const { mapRef } = useMapLayerContext();
+
+  useEffect(() => {
+    if (!mapRef.current || prediction === null || errors.x || errors.y) return;
+
+    const x = parseInt((formRef.current?.querySelector("input[name='x']") as HTMLInputElement)?.value || "5");
+    const y = parseInt((formRef.current?.querySelector("input[name='y']") as HTMLInputElement)?.value || "5");
+
+    const gridToLonLat = (x: number, y: number): [number, number] => {
+      const cellSize = 0.005; // ~500m per cell
+      const centerLon = -6.8; // Montesinho Park center longitude
+      const centerLat = 41.88; // Montesinho Park center latitude
+      const gridCenter = 5; // Center of the 0-9 grid
+
+      const lon = centerLon + (x - gridCenter) * cellSize;
+      const lat = centerLat + (gridCenter - y) * cellSize;
+      const boundedLon = Math.max(-7.0, Math.min(-6.6, lon));
+      const boundedLat = Math.max(41.7, Math.min(42.0, lat));
+      return [boundedLon, boundedLat];
+    };
+
+    const [lon, lat] = gridToLonLat(x, y);
+    console.log('Prediction Coordinates:', [lon, lat]);
+
+    // Use raw geographic coordinates (no fromLonLat)
+    const montesinhoCenter = [-6.8, 41.88];
+    mapRef.current.getView().setCenter(montesinhoCenter);
+    mapRef.current.getView().setZoom(10);
+    console.log('Map Center Set To:', mapRef.current.getView().getCenter());
+
+    // Clear existing prediction layer
+    const existingLayer = mapRef.current
+      .getLayers()
+      .getArray()
+      .find((layer) => layer.get('id') === 'burnPredictionLayer');
+    if (existingLayer) mapRef.current.removeLayer(existingLayer);
+
+    // Create feature with circle using geographic coordinates
+    const feature = new Feature({
+      geometry: new Point([lon, lat]), // Use [lon, lat] directly
+      name: 'Predicted Burn Area',
+    });
+    feature.setStyle(
+      new Style({
+        image: new CircleStyle({
+          radius: Math.max(5, Math.min(prediction * 10, 100)),
+          fill: new Fill({ color: 'rgba(255, 69, 0, 0.5)' }),
+          stroke: new Stroke({ color: 'rgba(255, 0, 0, 0.8)', width: 1 }),
+        }),
+      })
+    );
+
+    const vectorSource = new VectorSource({ features: [feature] });
+    const vectorLayer = new VectorLayer({ source: vectorSource });
+    vectorLayer.set('id', 'burnPredictionLayer');
+    mapRef.current.addLayer(vectorLayer);
+
+    // Animate to prediction location using geographic coordinates
+    mapRef.current.getView().animate({
+      center: [lon, lat], // Use [lon, lat] directly
+      zoom: 12,
+      duration: 1000,
+    }, () => {
+      console.log('Animation Complete, New Center:', mapRef.current.getView().getCenter());
+    });
+
+    mapRef.current.renderSync(); // Force map render
+  }, [prediction, errors.x, errors.y, mapRef]);
+
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowMap(false);
-      }
+      if (event.key === 'Escape') setShowMap(false);
     };
-
-    if (showMap) {
-      window.addEventListener('keydown', handleEsc);
-    }
-
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
-    };
+    if (showMap) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
   }, [showMap]);
 
   return (
     <div className="form-button-container" ref={formRef}>
-      {/* Button for Burnt Area Predictions */}
       <div className="form-dropdown-button">
         <button
           className={`form-button ${dropdownState.activeButton === 'burnt-area' ? 'active' : ''}`}
@@ -181,16 +215,11 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
         >
           {t('burnt_area_prediction')}
         </button>
-
-        {/* Dropdown Content */}
         {dropdownState.activeButton === 'burnt-area' && (
           <div className="form-dropdown-content show">
-            {/* Form inside dropdown */}
             <form onSubmit={handleFormSubmit}>
               <h3>{t('burnt_area_prediction')}</h3>
               <p className="location-info">{t('montesinho_park_portugal')}</p>
-
-              {/* Row 1: Spatial Coordinates (X, Y) */}
               <div className="form-group form-row">
                 <div className="form-item">
                   <label>{t('spatial_coordinates')} X</label>
@@ -201,15 +230,9 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   <input type="number" name="y" placeholder="Y:" required />
                 </div>
               </div>
-              <button
-                type="button"
-                className="view-map-button"
-                onClick={toggleMap}
-              >
+              <button type="button" className="view-map-button" onClick={toggleMap}>
                 {t('view_spatial_coordinates_map')}
               </button>
-
-              {/* Row 2: Month and Day */}
               <div className="form-group form-row">
                 <div className="form-item">
                   <label>{t('month')}</label>
@@ -220,9 +243,7 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                     required
                   >
                     {months.map((month) => (
-                      <option key={month} value={month}>
-                        {month}
-                      </option>
+                      <option key={month} value={month}>{month}</option>
                     ))}
                   </select>
                 </div>
@@ -235,15 +256,11 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                     required
                   >
                     {days.map((day) => (
-                      <option key={day} value={day}>
-                        {day}
-                      </option>
+                      <option key={day} value={day}>{day}</option>
                     ))}
                   </select>
                 </div>
               </div>
-
-              {/* Row 3: Temperature and Relative Humidity */}
               <div className="form-group form-row">
                 <div className="form-item">
                   <label>{t('temperature')}</label>
@@ -276,8 +293,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   {errors.relative_humidity && <span className="error">{errors.relative_humidity}</span>}
                 </div>
               </div>
-
-              {/* Row 4: Wind and Rain */}
               <div className="form-group form-row">
                 <div className="form-item">
                   <label>{t('wind')}</label>
@@ -310,7 +325,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                   {errors.rain && <span className="error">{errors.rain}</span>}
                 </div>
               </div>
-
               <div className="form-buttons">
                 <button type="submit" disabled={isLoading}>
                   {isLoading ? t('loading') : t('load_simulation')}
@@ -320,8 +334,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                 </button>
               </div>
             </form>
-
-            {/* Prediction Results */}
             {prediction !== null && (
               <div className="prediction-results">
                 <h4>{t('prediction_results')}</h4>
@@ -330,8 +342,6 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
                 </p>
               </div>
             )}
-
-            {/* API Error */}
             {apiError && (
               <div className="api-error">
                 <p>{t('api_error')}: {apiError}</p>
@@ -340,19 +350,11 @@ const BurntAreaPrediction: React.FC<BurntAreaPredictionProps> = ({
           </div>
         )}
       </div>
-
-      {/* Map Modal */}
       {showMap && (
         <div className="map-modal">
           <div className="map-modal-content">
-            <button className="close-modal-button" onClick={toggleMap}>
-              ×
-            </button>
-            <img
-              src={spatialCoordinatesMap}
-              alt={t('spatial_coordinates_map')}
-              className="map-image"
-            />
+            <button className="close-modal-button" onClick={toggleMap}>×</button>
+            <img src={spatialCoordinatesMap} alt={t('spatial_coordinates_map')} className="map-image" />
           </div>
         </div>
       )}
