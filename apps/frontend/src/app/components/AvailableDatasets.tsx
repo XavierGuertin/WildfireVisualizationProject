@@ -20,7 +20,6 @@ import {
   insertDatalayerView,
   resetDatalayerView,
 } from '../services/api';
-import debounce from 'lodash/debounce';
 import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
@@ -49,7 +48,7 @@ export interface DatasetMetadata {
 interface AvailableDatasetsProps {
   onDatasetClick: (dataset: DatasetMetadata) => void;
   refreshKey: number;
-  currentBbox?: [number, number, number, number]; // [west, south, east, north]
+  currentBbox?: [number, number, number, number];
   onResetBbox: () => void;
 }
 
@@ -70,14 +69,9 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     useMapLayerContext();
   const hasInitialized = useRef(false);
 
-  /**
-   * Maps raw error messages returned from API calls to their corresponding i18n translation keys.
-   * This ensures that user-facing error messages are displayed in the selected language
-   * while allowing the service layer (api.ts) to remain free of localization logic.
-   *
-   * @param rawError - The raw error string returned from the API service
-   * @returns A translated error message string based on the active language
-   */
+  // Move sortDirection state declaration before useQuery
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
   const getTranslatedErrorMessageKey = (rawError: string): string => {
     switch (rawError) {
       case 'Failed to fetch data by name':
@@ -90,13 +84,10 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       case undefined:
         return 'error_fetching_data';
       default:
-        return rawError; // fallback if no match
+        return rawError;
     }
   };
 
-  /**
-   * Fetch datasets function for React Query
-   */
   const fetchDatasetsQuery = async () => {
     const params = {
       bbox:
@@ -138,20 +129,13 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     return response;
   };
 
-  /**
-   * React Query hook for fetching datasets
-   */
   const { data, error, isLoading } = useQuery({
-    queryKey: ['datasets', activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
+    queryKey: ['datasets', refreshKey, activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
     queryFn: fetchDatasetsQuery,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    enabled: !!refreshKey || activeFilter !== '' || isToggled,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
-  /**
-   * Update datasets state when query data changes
-   */
   useEffect(() => {
     if (data) {
       setDatasets(data);
@@ -165,9 +149,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, [data, error]);
 
-  /**
-   * Fetches datasets when the refresh key or filter changes.
-   */
   useEffect(() => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId');
     if (selectedDatasetId !== null) {
@@ -175,48 +156,30 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   }, [refreshKey]);
 
-  /**
-   * Add state to track sort direction
-   */
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  useEffect(() => {
+    if (!isToggled) {
+      onResetBbox();
+    }
+  }, [isToggled]);
 
-  /**
-   * Handles changes to the dataset sorting filter.
-   * @param filter - The selected sorting filter.
-   */
   const handleFilterChange = (filter: string) => {
     if (activeFilter === filter) {
-      // Toggle direction if same filter is clicked
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
-      // Reset to ascending when changing filters
       setActiveFilter(filter);
       setSortDirection('asc');
     }
   };
 
-  /**
-   * Resets the dataset filters.
-   */
   const resetFilters = () => {
     setActiveFilter('');
     setSortDirection('asc');
   };
 
-  /**
-   * Toggles dataset sidebar collapse state.
-   */
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
 
-  /**
-   * Toggles dataset filtering based on the visible map region.
-   */
   const handleToggle = () => setIsToggled((prev) => !prev);
 
-  /**
-   * Handles dataset selection and fetches metadata.
-   * @param id - The dataset ID.
-   */
   const handleDatasetClick = async (id: string) => {
     const dataset = await fetchMetaData(id);
     onDatasetClick(dataset);
@@ -225,10 +188,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     changeLayer(map, true);
   };
 
-  /**
-   * Handles local storage when user selects a dataset
-   * @param id - The dataset ID.
-   */
   const handleLocalStorageOnDatasetClick = async (id: string) => {
     const selectedDatasetId = localStorage.getItem('selectedDatasetId');
     if (selectedDatasetId === null || selectedDatasetId !== id) {
@@ -242,9 +201,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     }
   };
 
-  /**
-   * Renders dataset content based on loading state and available datasets
-   */
   const renderDatasetContent = () => {
     if (isLoading) {
       return (
@@ -283,10 +239,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     );
   };
 
-  /**
-   * Gets the appropriate toggle status text based on current state
-   * @returns The translation key for the toggle status
-   */
   const getToggleStatusText = () => {
     if (!currentBbox || currentBbox.length === 0) {
       return t('map_required');
