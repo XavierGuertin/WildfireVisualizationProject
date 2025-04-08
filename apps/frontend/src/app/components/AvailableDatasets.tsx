@@ -20,6 +20,7 @@ import {
   insertDatalayerView,
   resetDatalayerView,
 } from '../services/api';
+import debounce from 'lodash/debounce';
 import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
@@ -94,7 +95,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   };
 
   /**
-   * Fetches dataset collections based on the selected filter and bounding box.
+   * Fetch datasets function for React Query
    */
   const fetchDatasetsQuery = async () => {
     const params = {
@@ -141,10 +142,11 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
    * React Query hook for fetching datasets
    */
   const { data, error, isLoading } = useQuery({
-    queryKey: ['datasets', refreshKey, activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
+    queryKey: ['datasets', activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
     queryFn: fetchDatasetsQuery,
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!refreshKey || activeFilter !== '' || isToggled,
   });
 
   /**
@@ -172,15 +174,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
       setSelectedDataset(selectedDatasetId);
     }
   }, [refreshKey]);
-
-  /**
-   * Reset bbox when toggling off map view filtering
-   */
-  useEffect(() => {
-    if (!isToggled) {
-      onResetBbox();
-    }
-  }, [isToggled]);
 
   /**
    * Add state to track sort direction
