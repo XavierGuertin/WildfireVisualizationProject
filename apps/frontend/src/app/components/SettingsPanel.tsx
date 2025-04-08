@@ -570,17 +570,17 @@ const SettingsPanel: React.FC<{
                   placeholder={t('enter_new_api_endpoint')}
                   value={newApiEndpoint}
                   onChange={(e) => setNewApiEndpoint(e.target.value)}
-                  disabled={saveAndFetchEndpointMutation.isPending}
+                  disabled={saveAndFetchEndpointMutation.isLoading}
                 />
                 <button onClick={copyToClipboard} aria-label="copy">
                   <IoCopyOutline size={24} />
                 </button>
                 <button
                   onClick={() => handleSaveAndFetchEndpoint(newApiEndpoint)}
-                  disabled={saveAndFetchEndpointMutation.isPending}
+                  disabled={saveAndFetchEndpointMutation.isLoading}
                   aria-label="save"
                 >
-                  {saveAndFetchEndpointMutation.isPending ? (
+                  {saveAndFetchEndpointMutation.isLoading ? (
                     <span>Loading...</span>
                   ) : (
                     <IoCheckmark size={24} />
