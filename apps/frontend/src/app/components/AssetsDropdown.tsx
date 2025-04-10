@@ -9,6 +9,13 @@ import { toggleAssetLayer } from './MapView';
 import { Map } from 'ol';
 import '../styles/AssetsDropdown.css';
 
+/**
+ * A dropdown menu for displaying and toggling weather-related asset layers
+ * like humidity, wind force, and wind direction on the map.
+ *
+ * This component is conditionally rendered when a dataset is loaded
+ * and no processing is ongoing.
+ */
 const AssetsDropdown = () => {
   const [assetsMenuOpen, setAssetsMenuOpen] = useState(false);
   const { t } = useTranslation();
@@ -24,7 +31,12 @@ const AssetsDropdown = () => {
     isProcessLoading,
   } = useMapLayerContext();
 
-  // Function to get the appropriate icon for a layer
+  /**
+   * Returns an appropriate icon based on the layer name.
+   *
+   * @param layerName - The name of the asset layer
+   * @returns A React icon component for the layer
+   */
   const getLayerIcon = (layerName: string) => {
     switch (layerName) {
       case 'humidity':
@@ -38,7 +50,13 @@ const AssetsDropdown = () => {
     }
   };
 
-  // Function to format layer name
+  /**
+   * Formats asset layer names by replacing underscores with spaces
+   * and capitalizing the first letter of each word.
+   *
+   * @param name - The raw layer name string
+   * @returns A formatted layer name
+   */
   const formatLayerName = (name: string): string => {
     return name
       .split('_')
@@ -46,7 +64,12 @@ const AssetsDropdown = () => {
       .join(' ');
   };
 
-  // Handles clicking on an asset layer button
+  /**
+   * Handles the user clicking an asset layer button.
+   * Toggles the visibility of the layer on the map.
+   *
+   * @param layerName - The name of the asset layer to toggle
+   */
   const handleLayerClick = (layerName: string) => {
     const map = mapRef.current as Map;
     if (!map) {
