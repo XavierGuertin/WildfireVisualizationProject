@@ -108,6 +108,10 @@ The Wildfire Visualization Platform is an innovative tool designed to provide hi
 
 </details>
 
+## Equity and Diversity Statement
+
+The Wildfire Visualization Platform Team is committed to fostering equity, diversity, and inclusion in all aspects of its development and deployment. We recognize that wildfires impact diverse communities differently and strive to ensure our tools are accessible, informative, and responsive to the needs of all users—especially those from historically underserved or vulnerable populations. By prioritizing inclusive data representation and engaging with a broad range of stakeholders, we aim to support equitable decision-making and promote environmental justice through transparent and collaborative technology.
+
 ---
 
 ## Running the Application
