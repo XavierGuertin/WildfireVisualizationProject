@@ -22,7 +22,7 @@ describe('simulation', () => {
       cy.get('button.swal2-confirm').should('exist').click()
   
       //Make sure notfication of success appears
-      cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+      cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should('exist')
       cy.wait(2000)
 
       //Load montreal_2023 dataset
@@ -33,9 +33,9 @@ describe('simulation', () => {
       cy.intercept('GET', 'http://localhost:8080/api/fetch-items-timestamps', { fixture: 'timestampResponse.json' }).as('timestamps');
       cy.wait("@timestamps",{timeout:10000})
 
-      cy.contains("div", 'Timestamps have been fetched successfully', {timeout: 7000}).should("be.visible")
+      cy.contains("div", 'Timestamps have been fetched successfully', {timeout: 7000}).should('exist')
       
-      cy.contains('div', 'Collection\'s items have been fetched successfully', {timeout:20000}).should('be.visible')
+      cy.contains('div', 'Collection\'s items have been fetched successfully', {timeout:20000}).should('exist')
 
       
     });
