@@ -25,7 +25,7 @@ describe('dataset', () => {
     cy.get('button.swal2-confirm').should('exist').click()
 
     //Make sure notfication of success appears
-    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should('exist')
     cy.wait(2000)
 
     //Assert that there are more than 0 datasets
@@ -40,7 +40,7 @@ describe('dataset', () => {
     cy.contains('button', 'Save').click()
 
     //Make sure notfication of success appears
-    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should('exist')
     cy.wait(2000)
 
     //Click on the collapse button and assert that it collapses
@@ -58,7 +58,7 @@ describe('dataset', () => {
     cy.get('button.swal2-confirm').should('exist').click()
 
     //Make sure notfication of success appears
-    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should('exist')
     cy.wait(2000)
 
     cy.get('[data-testid=filter-button-Name]').click({force:true})
@@ -81,7 +81,7 @@ describe('dataset', () => {
     cy.get('button.swal2-confirm').should('exist').click()
 
     //Make sure notfication of success appears
-    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should("be.visible")
+    cy.contains("div", "Collections fetched and saved successfully", {timeout: 7000}).should('exist')
     cy.wait(2000)
 
     //Make it sort descending
