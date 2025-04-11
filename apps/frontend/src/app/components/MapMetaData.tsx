@@ -20,6 +20,9 @@ import Swal from 'sweetalert2';
 import { getConfig, saveConfig } from '../services/configApi';
 import AssetsDropdown from './AssetsDropdown';
 
+/**
+ * Props for the MapMetaData component.
+ */
 interface MapMetaDataProps {
   id?: string;
   name?: string;
@@ -32,6 +35,13 @@ interface MapMetaDataProps {
   refreshDatasets: () => void;
 }
 
+/**
+ * Component for displaying and interacting with metadata and control
+ * actions related to a selected dataset.
+ *
+ * Includes support for dataset loading, progress tracking, asset loading,
+ * collapsible/resizable UI, and integration with global map context.
+ */
 const MapMetaData: React.FC<MapMetaDataProps> = ({
   id = '',
   name = '',
@@ -51,6 +61,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
   const animationRef = useRef<number | null>(null); // Initialize as null
+  /**
+   * Toggles metadata panel collapsed state.
+   */
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -73,43 +86,55 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     setIsPlaying
   } = useMapLayerContext();
 
+  /**
+   * Mouse down event handler for initiating panel resize.
+   */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
-    
+
     setIsResizing(true);
     startXRef.current = e.clientX;
     startWidthRef.current = containerRef.current.offsetWidth;
-    
+
     // Hint browser about upcoming changes for better performance
     if (containerRef.current) {
       containerRef.current.style.willChange = 'width';
     }
-    
+
     e.preventDefault();
   }, []);
 
+  /**
+   * Mouse move event handler for dynamically resizing the panel.
+   */
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !containerRef.current) return;
-    
+
     const dx = e.clientX - startXRef.current;
     let newWidth = startWidthRef.current + dx;
-    
+
     // Apply constraints
     newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-    
+
     // DIRECT DOM UPDATE (no React state lag)
     containerRef.current.style.width = `${newWidth}px`;
   }, [isResizing, maxWidth, minWidth]);
 
+  /**
+   * Mouse up event handler to finalize resize and store final width.
+   */
   const handleMouseUp = useCallback(() => {
     if (!isResizing || !containerRef.current) return;
-    
+
     // Only update React state AFTER dragging finishes
     setWidth(containerRef.current.offsetWidth);
     containerRef.current.style.willChange = 'auto';
     setIsResizing(false);
   }, [isResizing]);
 
+  /**
+   * Attach/remove mouse event listeners during resizing.
+   */
   useEffect(() => {
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -128,6 +153,11 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
+  /**
+   * Loads the selected dataset, clears previous data,
+   * polls progress endpoints for both items and assets,
+   * and updates local + server config state.
+   */
   const onLoadDataset = async () => {
     if (!isOnline) {
       toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
@@ -190,6 +220,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
             toastId: 'timestamps-success',
           });
 
+          /**
+           * Polls the item fetch progress endpoint until it completes or stalls.
+           */
           const pollProgress = async () => {
             let lastProgress = -1;
             let stableCount = 0;
@@ -256,7 +289,9 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
 
           await loadAssets(id); // triggers backend async processing
 
-          // Now start polling for progress on the asset load
+          /**
+           * Polls the asset fetch progress endpoint until completion.
+           */
           const pollAssetProgress = async () => {
             // eslint-disable-next-line no-constant-condition
             while (true) {
@@ -322,7 +357,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   );
 
   const NonCollapsedMetaData = (
-    <div 
+    <div
       className="metadata-container"
       ref={containerRef}
       style={{ width: `${width}px` }}
@@ -379,7 +414,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
         <AssetsDropdown />
       </div>
       {/* Resize handle */}
-      <div 
+      <div
         className="resize-handle"
         ref={resizeRef}
         onMouseDown={handleMouseDown}
