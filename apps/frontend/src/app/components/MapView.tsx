@@ -199,6 +199,13 @@ interface MapViewProps {
  * @param {MapViewProps} props - Component props including bbox change handler.
  * @returns {JSX.Element} The rendered map component.
  */
+
+/**
+ * Main map visualization component using OpenLayers.
+ * Handles base map initialization, dynamic layer updates (STAC collections/items),
+ * custom asset overlays, style updates, and bounding box reporting.
+ */
+
 const MapView = ({ onBboxChange }: MapViewProps) => {
   useGeographic();
   const mapElement = useRef(null);

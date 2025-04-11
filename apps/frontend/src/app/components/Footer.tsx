@@ -14,6 +14,10 @@ import {
 } from '../services/api';
 import { changeLayer, toggleAssetLayer } from './MapView';
 
+/**
+ * Footer component responsible for playback controls, slider timeline,
+ * and playback speed adjustments for temporal dataset visualization.
+ */
 const Footer = () => {
   const { t } = useTranslation();
   const {
@@ -42,6 +46,12 @@ const Footer = () => {
 
   const speedValues = [0.25, 0.5, 1, 1.5, 2];
 
+  /**
+   * Loads asset layers for the selected timestamp item ID,
+   * and toggles selected layers on the map accordingly.
+   *
+   * @param itemId - The STAC item ID used to load related asset layers.
+   */
   const processLoadedLayers = async (itemId: string) => {
     setLoadedLayers([]);
     if (!isProcessLoading) {
@@ -72,6 +82,9 @@ const Footer = () => {
     if (!isProcessLoading) processLoadedLayers(itemIds[sliderValue]);
   }, [isProcessLoading]);
 
+  /**
+   * Loads saved playback speed from localStorage on mount.
+   */
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -92,6 +105,9 @@ const Footer = () => {
     }
   }, []);
 
+  /**
+   * Saves playback speed to localStorage whenever it changes.
+   */
   useEffect(() => {
     if (speedInitialized && typeof window !== 'undefined') {
       try {
@@ -103,14 +119,25 @@ const Footer = () => {
     }
   }, [speed, speedInitialized]);
 
+  /**
+   * Handles play/pause toggle.
+   */
   const handlePlayPause = () => {
     if (timeStamps.length === 0) return;
     setIsPlaying((prev) => !prev);
   };
+
+  /**
+   * Changes the playback speed to the selected value.
+   * @param newSpeed - The new speed multiplier.
+   */
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
   };
 
+  /**
+   * Initiates dragging behavior on the slider.
+   */
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     handleSliderMove(e);
@@ -124,14 +151,17 @@ const Footer = () => {
     }
   };
 
-  // Set global slider value when mouse up from sliding timeline
+  /**
+   * Ends dragging behavior and updates actual slider value.
+   *  Set global slider value when mouse up from sliding timeline
+   */
   const handleMouseUp = () => {
     isDraggingRef.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  
+
     const finalValue = pendingSliderRef.current;
-  
+
     setSliderValue(finalValue);
     const map = mapRef.current as Map;
     if (timeStamps.length > 0) {
@@ -140,6 +170,9 @@ const Footer = () => {
     }
   };
 
+  /**
+   * Manages autoplay loop using setInterval.
+   */
   useEffect(() => {
     const map = mapRef.current as Map;
 
@@ -159,7 +192,10 @@ const Footer = () => {
     return () => clearInterval(intervalRef.current!);
   }, [isPlaying, speed, sliderValue, timeStamps]);
 
-  // Change temp slider value to lessen load on backend calls
+  /**
+   * Handles the dragging of the slider and updates pending value.
+   * Change temp slider value to lessen load on backend calls
+   */
   const handleSliderMove = (e: MouseEvent | React.MouseEvent) => {
     if (sliderRef.current && timeStamps.length > 0) {
       const rect = sliderRef.current.getBoundingClientRect();
@@ -171,12 +207,15 @@ const Footer = () => {
           timeStamps.length - 1,
         ),
       );
-  
+
       setPendingSliderValue(newValue);
       pendingSliderRef.current = newValue;
     }
   };
 
+  /**
+   * Stops the playback and resets to the first timestamp.
+   */
   const handleStopPress = () => {
     const map = mapRef.current as Map;
     setIsPlaying(false);
@@ -185,6 +224,12 @@ const Footer = () => {
     changeLayer(map, false, timeStamps[0]);
   };
 
+  /**
+   * Formats an ISO timestamp into readable date and time (UTC).
+   *
+   * @param timestamp - ISO timestamp string
+   * @returns JSX element displaying formatted date and time
+   */
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
 
@@ -208,6 +253,9 @@ const Footer = () => {
     );
   };
 
+  /**
+   * Handles spacebar keyboard shortcut for toggling playback.
+   */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
@@ -223,6 +271,7 @@ const Footer = () => {
 
   /**
    * This fetches and loads the stac items if they exist in the items table
+   * Initializes timestamps and item IDs on component mount.
    */
   const initializeTimestampIfItemsPresent = async () => {
     const timestampsResponse = await fetchTimestamps();
@@ -247,7 +296,9 @@ const Footer = () => {
     }
   };
 
-  // Handle slider value changes
+  /**
+   * Reacts to slider value change by reloading layers and updating map.
+   */
   useEffect(() => {
     const currentTimestamp = timeStamps[sliderValue];
 

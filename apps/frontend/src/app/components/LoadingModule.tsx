@@ -2,6 +2,9 @@ import '../styles/LoadingModule.css';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
 
+/**
+ * Props for the LoadingModule component.
+ */
 interface LoadingModuleProps {
   datasetBeingLoaded: string | undefined;
   progress: number; // Progress percentage
@@ -9,6 +12,14 @@ interface LoadingModuleProps {
   errorMessage?: string; // Error message to display on failure
 }
 
+/**
+ * Displays a loading progress bar with an optional error message.
+ * Used during dataset loading to indicate current progress or failure.
+ *
+ * @component
+ * @param {LoadingModuleProps} props - Component props
+ * @returns {JSX.Element | null} The rendered loading module or null if hidden
+ */
 const LoadingModule: React.FC<LoadingModuleProps> = ({ datasetBeingLoaded, progress, isVisible, errorMessage }) => {
   const { t } = useTranslation();
   if (!isVisible) return null;

@@ -12,15 +12,31 @@ const terrainImage = '/assets/Terrain_layer.png';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+/**
+ * Sidebar component used to switch between map base layers (default, topographical, satellite).
+ * The panel can be collapsed/expanded and is disabled when offline for non-default layers.
+ *
+ * @component
+ * @returns {JSX.Element} Sidebar for selecting map layers
+ */
 const Sidebar = () => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const { setLayer, isOnline } = useMapLayerContext();
 
+  /**
+   * Toggles the collapsed state of the sidebar.
+   */
   const toggleCollapse = () => {
     setIsCollapsed((prev) => !prev);
   };
 
+  /**
+   * Handles user request to switch base map layers.
+   * Only allows non-default layers if the app is online.
+   *
+   * @param {string} layerName - The name of the layer to activate.
+   */
   const handleLayerChange = (layerName: string) => {
     if(!isOnline && layerName != 'default'){
       toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
@@ -31,6 +47,9 @@ const Sidebar = () => {
     setLayer(layerName);
   };
 
+  /**
+   * Automatically switches back to the default layer if the app goes offline.
+   */
   useEffect(() => {
     if(!isOnline)
       handleLayerChange('default');

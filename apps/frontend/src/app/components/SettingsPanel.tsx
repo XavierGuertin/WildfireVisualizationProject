@@ -32,6 +32,18 @@ import { LuPalette } from 'react-icons/lu';
 
 const MySwal = withReactContent(Swal);
 
+/**
+ * SettingsPanel component provides global configuration controls including:
+ * - API endpoint management
+ * - Language switching
+ * - Online/offline toggle
+ * - Reset/factory reset options
+ * - Layer style customization
+ *
+ * @component
+ * @param {Function} refreshDatasets - Function to refresh dataset list
+ * @param {Function} setMetadataVisible - Function to toggle metadata panel visibility
+ */
 const SettingsPanel: React.FC<{
   refreshDatasets: () => void;
   setMetadataVisible: (visible: boolean) => void;
@@ -132,6 +144,13 @@ const SettingsPanel: React.FC<{
     }));
   };
 
+  /**
+   * Verifies and saves a new API endpoint, fetches collections from it,
+   * resets previous data, updates config, and triggers a refresh.
+   *
+   * @param endpointUrl - URL to validate and save
+   * @returns boolean - success or failure of operation
+   */
   const handleSaveAndFetchEndpoint = async (
     endpointUrl: string,
   ): Promise<boolean> => {
@@ -183,12 +202,21 @@ const SettingsPanel: React.FC<{
     }
   };
 
+  /**
+   * Handles language change and stores selected language in localStorage.
+   *
+   * @param language - The selected language key (e.g., 'en', 'fr')
+   */
   const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
     localStorage.setItem('language', language);
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
+  /**
+   * Resets key application settings (language, speed, slider) to defaults.
+   * Triggers map layer style reset and toast notification.
+   */
   const handleReset = async () => {
     MySwal.fire({
       title: t('reset'),
@@ -219,6 +247,10 @@ const SettingsPanel: React.FC<{
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
+  /**
+   * Performs a full factory reset by clearing all collections, localStorage,
+   * and config settings. Triggers prompt for a new API endpoint after reset.
+   */
   const handleFactoryReset = async () => {
     if (!isOnline) {
       toast.error(`${t('disabled')} - ${t('no_internet_access')}`, {
@@ -260,6 +292,11 @@ const SettingsPanel: React.FC<{
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
+  /**
+   * Toggles between online and offline mode and persists to config.
+   *
+   * @param onlineMode - true for online, false for offline
+   */
   const handleSelectOnlineMode = async (onlineMode: boolean) => {
     setIsOnline(onlineMode);
 
@@ -274,6 +311,10 @@ const SettingsPanel: React.FC<{
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
+  /**
+   * Completely resets the app’s local state, config, and storage keys.
+   * Clears all collections, styles, and map layers.
+   */
   const resetConfig = async () => {
     try {
       handleResetLayerStyle(true);
@@ -313,6 +354,10 @@ const SettingsPanel: React.FC<{
     }
   };
 
+  /**
+   * Prompts the user to input and save a valid API endpoint.
+   * Repeats until a valid endpoint is provided or user cancels.
+   */
   const promptForEndpoint = async (
     refreshDatasets: () => void,
     t: any,
@@ -433,7 +478,10 @@ const SettingsPanel: React.FC<{
       : 'rgb(0,0,0)';
   };
 
-  // Update itemLayer and dataLayer style
+  /**
+   * Applies user-selected color, opacity, and stroke settings to map layers.
+   * Update itemLayer and dataLayer style
+   */
   const handleUpdateLayerStyle = () => {
     if (!mapRef.current) return;
 
@@ -458,7 +506,13 @@ const SettingsPanel: React.FC<{
     }
   };
 
-  // Reset itemLayer and dataLayer style
+
+  /**
+   * Resets item or data layer styles to default values.
+   * Can reset both layers if `resetBoth` is true.
+   *
+   * @param resetBoth - Optional. If true, resets both layer styles.
+   */
   const handleResetLayerStyle = (resetBoth = false) => {
     if (!mapRef.current) return;
 
