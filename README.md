@@ -14,7 +14,7 @@
 
 ## [Release 2](https://drive.google.com/file/d/1EwC_pmEvNcNeKkw6HzDpERxLRwDPYCPv/view?usp=sharing)
 
-## [Release 3](link-here)
+## [Release 3](https://drive.google.com/file/d/1Y2OU3Ql9QxUUYYapv8CttsNoKHVjcoPO/view?usp=sharing)
 
 </details>
 
@@ -69,21 +69,21 @@ The Wildfire Visualization Platform is an innovative tool designed to provide hi
 
 ---
 
-| File path with clickable GitHub link                                                                                                                   | Purpose                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| [layout.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/layout.tsx)                                  | Foundation for our UI, source of all components.                              |
-| [MapView.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/MapView.tsx)                     | Component for rendering the map, serves as the background of our app.         |
-| [AvailableDatasets.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/AvailableDatasets.tsx) | Adding filters to sort by name, date, recently added, and recently updated.   |
-| [Sidebar.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/Sidebar.tsx)                     | Alternate between map layers (default, topographical, satellite)              |
-| [Footer.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/Footer.tsx)                       | Wildfire visualization controls to change speed of event display progression. |
+| File path with clickable GitHub link                                                                                                                                                   | Purpose                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [docker-compose.yml](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/docker-compose.yml)                                                                        | Backbone of application, contains all configurations for services and resource allocations. |
+| [MapContext.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/context/MapContext.tsx)                                                  | Glue for the frontend, contains all the shared attributes across all components.            |
+| [MapView.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend/src/app/components/MapView.tsx)                                                     | Component for rendering the map, serves as the background of our app.                       |
+| [DataService.java](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/backend/src/main/java/com/example/backend/service/DataService.java)                     | Fetches information from external API, and applies application logic.                       |
+| [StacRepository.java](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/backend/src/main/java/wildfire/visualization/backend/repository/StacRepository.java) | Communicates with the database, inserting and deleting entries.                             |
 
-| Test file path with clickable GitHub link                                                                                | Purpose                            |
-| ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| [app.cy.tsx](https://github.com/XavierGuertin/WildfireVisualizationProject/blob/dev/apps/frontend-e2e/src/e2e/app.cy.ts) | Example of an e2e test for "Views" |
-| Fetching Data                                                                                                            |                                    |
-| Parsing Data in DTO                                                                                                      |                                    |
-| Displaying Metadata                                                                                                      |                                    |
-| Event Control Test                                                                                                       |                                    |
+| Test file path with clickable GitHub link                                                                                                | Purpose                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [loads](apps\frontend-e2e\src\e2e\available_datasets.cy.ts)                                                                              | End to end test ensuring proper loading of available datasets                                                                       |
+| [loads](apps\frontend-e2e\src\e2e\metadata.cy.ts)                                                                                        | End to end test ensuring proper loading of metadata values from the selected dataset                                                |
+| [runs properly when sped up](apps\frontend-e2e\src\e2e\simulation.cy.ts)                                                                 | End to end test that ensure the wildfire simulation runs properly, even when sped up                                                |
+| [registerGeoTIFF_shouldReturnTrue_onSuccess](apps\backend\src\test\java\wildfire\visualization\backend\service\GeoTIFFServiceTests.java) | Unit test ensuring proper functionality when registering a GeoTIFF (file responsible for loading weather assets)                    |
+| [processGeoTIFF_shouldReturnTrue_onSuccess](apps\backend\src\test\java\wildfire\visualization\backend\service\GeoTIFFServiceTests.java)  | Unit test ensuring proper functionality when processing a GeoTIFF (downloading and storing in GeoServer and saving layer URL in DB) |
 
 </details>
 
