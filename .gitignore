@@ -151,9 +151,16 @@ storybook-static/
 yarn.lock
 .pnpm-debug.log
 
-# Geoserver artifacts (if applicable)
-geoserver-data/
-geoserver-cache/
+# Geoserver artifacts
+apps/geoserver_data/workspaces/Default/wildfire_timestamp*
+apps/geoserver_data/gwc-layers/*.xml
+!LayerInfoImpl-72972593_1948a67d39b_-7ffb.xml
+
+# Ignore asset files
+*.tif
+
+# TileServer files
+*.mbtiles
 
 # Custom - Ignore generated files (starts with "generated")
 generated*
