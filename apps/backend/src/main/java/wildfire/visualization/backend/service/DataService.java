@@ -1,5 +1,6 @@
 package wildfire.visualization.backend.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +37,9 @@ import wildfire.visualization.backend.repository.StacRepository;
 @Service
 public class DataService {
   private static final Logger logger = LoggerFactory.getLogger(DataService.class);
+
+  private static final String KEY_PROGRESS = "progress";
+  private static final String LOG_NO_BBOX = "No bbox";
 
   @Autowired
   private StacRepository stacRepository;
@@ -90,8 +94,8 @@ public class DataService {
     ResponseEntity<Map<String, Object>> response = fetchData(collectionId);
     Map<String, Object> responseBody = response.getBody();
 
-    if (responseBody != null && responseBody.containsKey("progress")) {
-      int progress = ((Number) responseBody.get("progress")).intValue();
+    if (responseBody != null && responseBody.containsKey(KEY_PROGRESS)) {
+      ((Number) responseBody.get(KEY_PROGRESS)).intValue(); // Extract progress value from response body (not used)
     } else {
       logger.error("Progress not found in response body for collection: {}", collectionId);
       fetchProgress.get(collectionId).set(-1); // Set error state
@@ -220,7 +224,7 @@ public class DataService {
    */
   public List<Map<String, Object>> getCollections(double[] bbox) {
     logger.debug("Fetching collections from database with bbox: {}",
-        bbox != null ? Arrays.toString(bbox) : "No bbox");
+        bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections from repository
@@ -269,15 +273,16 @@ public class DataService {
    * This method queries collections ordered by their name (`id` field) and
    * restructures the response for client consumption.
    *
-   * @param bbox         An optional bounding box filter (minX, minY, maxX, maxY). If
-   *                     null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
   public List<Map<String, Object>> getCollectionsByName(double[] bbox, String sortDirection) {
     logger.debug("Fetching collections from database sorted by name ({}) with bbox: {}",
-      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
+        sortDirection, bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections sorted by name (id) from repository
@@ -287,13 +292,13 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-        .map(collection -> Map.of(
-          "key", collection.get("key"),
-          "id", collection.get("id"),
-          "title", collection.get("title") == null ? "" : collection.get("title"),
-          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-        ))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "title", collection.get("title") == null ? "" : collection.get("title"),
+              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+          ))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Name: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by name", e);
@@ -308,15 +313,16 @@ public class DataService {
    * date and
    * restructures the response for client consumption.
    *
-   * @param bbox An optional bounding box filter (minX, minY, maxX, maxY). If
-   *             null, no filter is applied.
+   * @param bbox          An optional bounding box filter (minX, minY, maxX,
+   *                      maxY). If
+   *                      null, no filter is applied.
    * @param sortDirection The direction to sort ("asc" or "desc").
    * @return A list of collections, each containing keys: `key`, `id`, and `bbox`.
    * @throws DataException If an error occurs while fetching collections.
    */
   public List<Map<String, Object>> getCollectionsByDate(double[] bbox, String sortDirection) {
     logger.debug("Fetching collections from database sorted by date ({}) with bbox: {}",
-      sortDirection, bbox != null ? Arrays.toString(bbox) : "No bbox");
+        sortDirection, bbox != null ? Arrays.toString(bbox) : LOG_NO_BBOX);
 
     try {
       // Fetch collections sorted by date from repository
@@ -326,13 +332,13 @@ public class DataService {
 
       // Transform collections into a structured format
       return collections.stream()
-        .map(collection -> Map.of(
-          "key", collection.get("key"),
-          "id", collection.get("id"),
-          "title", collection.get("title") == null ? "" : collection.get("title"),
-          "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
-        ))
-        .collect(Collectors.toList());
+          .map(collection -> Map.of(
+              "key", collection.get("key"),
+              "id", collection.get("id"),
+              "title", collection.get("title") == null ? "" : collection.get("title"),
+              "bbox", collection.getOrDefault("bbox", "[]") // Default empty bbox if null
+          ))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("Error fetching collections by Date: {}", e.getMessage(), e);
       throw new DataException("Failed to fetch collections by date", e);
@@ -384,6 +390,144 @@ public class DataService {
   }
 
   /**
+   * Retrieves the configuration settings by invoking the config controller.
+   * If the configuration settings cannot be retrieved or are null, this method
+   * throws a {@link DataException}.
+   *
+   * @return a map containing the configuration settings.
+   * @throws DataException if the configuration settings cannot be retrieved.
+   */
+  private Map<String, Object> getConfigOrThrow() {
+    ResponseEntity<Map<String, Object>> responseEntity = configController.getConfig();
+    Map<String, Object> config = responseEntity.getBody();
+    if (config == null) {
+      throw new DataException("Failed to retrieve configuration settings");
+    }
+    return config;
+  }
+
+  /**
+   * Retrieves metadata for the specified collection ID from the STAC repository.
+   * If no metadata is found, a {@link DataException} is thrown.
+   *
+   * @param collectionId the ID of the collection for which metadata is to be
+   *                     retrieved
+   * @return a list of metadata maps, where each map contains key-value pairs
+   *         representing metadata attributes
+   * @throws DataException if no metadata is found for the specified collection ID
+   */
+  private List<Map<String, Object>> getMetadataOrThrow(String collectionId) {
+    List<Map<String, Object>> metadata = stacRepository.queryCollectionMetaData(collectionId);
+    if (metadata.isEmpty()) {
+      throw new DataException("No metadata found for collection: " + collectionId);
+    }
+    return metadata;
+  }
+
+  /**
+   * Validates the provided start and end dates for a given collection.
+   * Ensures that neither the start nor the end date is null.
+   *
+   * @param start        The start date to validate. Must not be null.
+   * @param end          The end date to validate. Must not be null.
+   * @param collectionId The identifier of the collection being validated.
+   * @throws DataException If either the start or end date is null.
+   */
+  private void validateDates(LocalDateTime start, LocalDateTime end, String collectionId) {
+    if (start == null || end == null) {
+      throw new DataException("Failed to extract temporal extent for " + collectionId);
+    }
+  }
+
+  /**
+   * Processes a list of items by associating them with a collection ID, checking
+   * if they exist
+   * in the repository, and inserting them if they do not already exist.
+   *
+   * @param collectionId       The ID of the collection to associate with the
+   *                           items.
+   * @param items              A list of items represented as maps of key-value
+   *                           pairs.
+   * @param insertedItems      A list to store the IDs of items that were
+   *                           successfully inserted.
+   * @param insertedTimestamps A list to store the extracted ISO timestamps of
+   *                           inserted items.
+   * @return The number of items successfully inserted into the repository.
+   * @throws JsonProcessingException If an error occurs while converting an item
+   *                                 to JSON format.
+   */
+  private int processItems(String collectionId, List<Map<String, Object>> items, List<String> insertedItems,
+      List<String> insertedTimestamps) throws JsonProcessingException {
+    int count = 0;
+    for (Map<String, Object> item : items) {
+      item.put("collection_id", collectionId);
+      String id = (String) item.get("id");
+
+      if (!stacRepository.checkCollectionExists(id)) {
+        String itemJson = objectMapper.writeValueAsString(item);
+        stacRepository.insertItem(itemJson);
+        insertedItems.add(id);
+        insertedTimestamps.add(UtilHelper.extractTimestampISO(id));
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Computes the progress percentage based on the provided parameters.
+   *
+   * @param itemCount    The total number of items to be processed. If null or
+   *                     less than or equal to zero,
+   *                     the progress will be computed using the provided items,
+   *                     end, and start parameters.
+   * @param totalFetched The number of items that have been fetched or processed
+   *                     so far.
+   * @param items        A list of maps representing the items being processed.
+   *                     Used to compute progress
+   *                     if itemCount is null or invalid.
+   * @param end          The end time of the processing period. Used in
+   *                     conjunction with the start time
+   *                     to compute progress when itemCount is not provided.
+   * @param start        The start time of the processing period. Used in
+   *                     conjunction with the end time
+   *                     to compute progress when itemCount is not provided.
+   * @return The progress percentage as an integer value between 0 and 100.
+   */
+  private int computeProgress(Integer itemCount, int totalFetched, List<Map<String, Object>> items,
+      LocalDateTime end, LocalDateTime start) {
+    if (itemCount != null && itemCount > 0) {
+      return (int) Math.floor(((double) totalFetched / itemCount) * 100);
+    } else {
+      return (int) Math.floor(UtilHelper.computeProgressFromItems(items, end, start));
+    }
+  }
+
+  /**
+   * Builds a response body by populating the provided map with the specified
+   * data.
+   *
+   * @param body         The map to populate with response data.
+   * @param collectionId The identifier of the collection being processed.
+   * @param totalFetched The total number of items fetched so far.
+   * @param progress     The progress percentage of the current operation.
+   * @param items        The list of items that were inserted.
+   * @param timestamps   The list of timestamps corresponding to the inserted
+   *                     items.
+   * @param nextPage     The token or identifier for the next page of results, if
+   *                     applicable.
+   */
+  private void buildResponseBody(Map<String, Object> body, String collectionId, int totalFetched, int progress,
+      List<String> items, List<String> timestamps, String nextPage) {
+    body.put("collectionId", collectionId);
+    body.put("totalFetched", totalFetched);
+    body.put(KEY_PROGRESS, progress);
+    body.put("insertedItems", items);
+    body.put("insertedTimestamps", timestamps);
+    body.put("nextPage", nextPage);
+  }
+
+  /**
    * Method responsible for fetching and saving items from a given collection
    *
    * @param collectionId String object representing the id of the collection
@@ -396,19 +540,10 @@ public class DataService {
     int progress = 0;
 
     try {
-      ResponseEntity<Map<String, Object>> responseEntity = configController.getConfig();
-      Map<String, Object> config = responseEntity.getBody();
-      if (config == null) {
-        throw new DataException("Failed to retrieve configuration settings");
-      }
-
-      assert config != null;
+      Map<String, Object> config = getConfigOrThrow();
 
       // Fetch collection metadata from the database
-      List<Map<String, Object>> collectionMetadata = stacRepository.queryCollectionMetaData(collectionId);
-      if (collectionMetadata.isEmpty()) {
-        throw new DataException("No metadata found for collection: " + collectionId);
-      }
+      List<Map<String, Object>> collectionMetadata = getMetadataOrThrow(collectionId);
 
       // Extract item count from metadata (if available)
       Integer itemCount = (Integer) collectionMetadata.get(0).get("item_count"); // May be missing
@@ -416,9 +551,8 @@ public class DataService {
       // Extract start & end dates (for time-based progress if needed)
       LocalDateTime startDate = UtilHelper.extractTemporalStartFromDB(collectionMetadata);
       LocalDateTime endDate = UtilHelper.extractTemporalEndFromDB(collectionMetadata);
-      if (startDate == null || endDate == null) {
-        throw new DataException("Failed to extract temporal extent for " + collectionId);
-      }
+
+      validateDates(startDate, endDate, collectionId);
 
       // Base items endpoint
       String endpointUrl = config.get("endpoint").toString() + "/" + collectionId + "/items";
@@ -437,27 +571,10 @@ public class DataService {
         if (items == null || items.isEmpty())
           break;
 
-        for (Map<String, Object> item : items) {
-          item.put("collection_id", collectionId);
-          String id = (String) item.get("id");
-
-          if (!stacRepository.checkCollectionExists(id)) {
-            String itemJson = objectMapper.writeValueAsString(item);
-            stacRepository.insertItem(itemJson);
-            insertedItems.add(id);
-            insertedTimestamps.add(UtilHelper.extractTimestampISO(id)); // Convert ID to timestamp
-            totalFetched++;
-          }
-        }
+        totalFetched += processItems(collectionId, items, insertedItems, insertedTimestamps);
 
         // Determine progress calculation method
-        if (itemCount != null && itemCount > 0) {
-          // Use `item_count` if available
-          progress = (int) Math.floor(((double) totalFetched / itemCount) * 100);
-        } else {
-          // Use timestamp-based progress if `item_count` is missing
-          progress = (int) Math.floor(UtilHelper.computeProgressFromItems(items, endDate, startDate));
-        }
+        progress = computeProgress(itemCount, totalFetched, items, endDate, startDate);
 
         // Update progress in the database
         fetchProgress.put(collectionId, new AtomicInteger(progress));
@@ -469,12 +586,8 @@ public class DataService {
       fetchProgress.put(collectionId, new AtomicInteger(100));
 
       // Construct API response body
-      responseBody.put("collectionId", collectionId);
-      responseBody.put("totalFetched", totalFetched);
-      responseBody.put("progress", progress);
-      responseBody.put("insertedItems", insertedItems);
-      responseBody.put("insertedTimestamps", insertedTimestamps);
-      responseBody.put("nextPage", nextUrl);
+      buildResponseBody(responseBody, collectionId, totalFetched, progress, insertedItems,
+          insertedTimestamps, nextUrl);
 
       return ResponseEntity.ok(responseBody);
 
@@ -496,6 +609,7 @@ public class DataService {
 
   /**
    * This method fetches order list of item ids
+   * 
    * @return returns the list of item ids sorted by timestamp
    */
   public List<String> getItemsIdsOrderedByTimestamp() {
@@ -627,7 +741,8 @@ public class DataService {
   /**
    * Method responsible for registering all assets for a specific item.
    * <p>
-   * This fetches the item from the database and registers its GeoTIFF assets one by one.
+   * This fetches the item from the database and registers its GeoTIFF assets one
+   * by one.
    * This is intended to be used when refreshing/re-registering existing assets.
    *
    * @param itemId ID of the item to process
@@ -659,7 +774,7 @@ public class DataService {
         return false;
       }
 
-      for (Iterator<String> it = assets.fieldNames(); it.hasNext(); ) {
+      for (Iterator<String> it = assets.fieldNames(); it.hasNext();) {
         String assetKey = it.next();
 
         boolean success = geoTIFFService.registerGeoTIFF(itemId, assetKey);
@@ -679,10 +794,124 @@ public class DataService {
   }
 
   /**
-   * Method responsible for processing all assets for all items in a given collection.
+   * Extracts the content as a string from the given content object. The method
+   * handles
+   * different types of objects and converts them to a string representation.
+   *
+   * @param contentObj   The content object to extract the string from. It can be
+   *                     of type
+   *                     {@code PGobject}, {@code String}, or any other object.
+   * @param itemId       The ID of the item associated with the content. Used for
+   *                     logging purposes.
+   * @param collectionId The ID of the collection associated with the content.
+   *                     Used for logging purposes.
+   * @return The string representation of the content object if it is not null. If
+   *         the content
+   *         object is null, returns {@code null}. Logs warnings for unexpected
+   *         types or null values.
+   */
+  private String extractContentAsString(Object contentObj, String itemId, String collectionId) {
+    if (contentObj instanceof PGobject) {
+      return ((PGobject) contentObj).getValue();
+    } else if (contentObj instanceof String) {
+      return (String) contentObj;
+    } else if (contentObj != null) {
+      logger.warn("Unexpected type for content column: {}", contentObj.getClass());
+      return contentObj.toString();
+    } else {
+      logger.warn("Null content column for item {} in collection {}", itemId, collectionId);
+      return null;
+    }
+  }
+
+  /**
+   * Processes the assets associated with a specific item and collection.
+   * Iterates through the assets provided in the JSON node, validates their value
+   * ranges,
+   * and attempts to process each asset using the GeoTIFF service.
+   *
+   * @param itemId     The ID of the item to which the assets belong.
+   * @param collId     The ID of the collection to which the item belongs.
+   * @param assetsNode A JSON node containing the assets to be processed. Each
+   *                   asset is expected
+   *                   to have an "href" field for the resource location and a
+   *                   "value_range" field
+   *                   specifying the minimum and maximum values as an array.
+   *
+   *                   Logs warnings for invalid or missing value ranges, as well
+   *                   as for failed asset processing attempts.
+   */
+  private void processAssetsForItem(String itemId, String collId, JsonNode assetsNode) {
+    Iterator<String> fieldNames = assetsNode.fieldNames();
+    while (fieldNames.hasNext()) {
+      String assetKey = fieldNames.next();
+      JsonNode asset = assetsNode.get(assetKey);
+      String href = asset.get("href").asText();
+
+      JsonNode valueRange = asset.get("value_range");
+      if (valueRange == null || !valueRange.isArray() || valueRange.size() < 2) {
+        logger.warn("Invalid or missing value_range for asset {} of item {}", assetKey, itemId);
+        continue;
+      }
+
+      int min = valueRange.get(0).asInt();
+      int max = valueRange.get(1).asInt();
+
+      boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max);
+      if (!success) {
+        logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
+      }
+    }
+  }
+
+  /**
+   * Processes each item in the provided list of results, extracting content,
+   * processing assets, and updating progress.
+   *
+   * @param results      A list of maps where each map represents an item with its
+   *                     properties.
+   * @param collectionId The ID of the collection to which the items belong.
+   * @param progressKey  A key used to track and update the progress of the
+   *                     processing.
+   * @throws IOException If an error occurs during content extraction or JSON
+   *                     parsing.
+   */
+  private void processEachItem(List<Map<String, Object>> results, String collectionId, String progressKey)
+      throws IOException {
+    int totalItems = results.size();
+    int count = 0;
+
+    for (Map<String, Object> row : results) {
+      String itemId = (String) row.get("id");
+      String collId = (String) row.get("collection");
+
+      String contentStr = extractContentAsString(row.get("content"), itemId, collectionId);
+      if (contentStr == null)
+        continue;
+
+      JsonNode assetsNode = objectMapper.readTree(contentStr).get("assets");
+      if (assetsNode == null || assetsNode.isEmpty()) {
+        logger.info("No assets found for item {}", itemId);
+        continue;
+      }
+
+      processAssetsForItem(itemId, collId, assetsNode);
+
+      count++;
+      int progress = (int) (((double) count / totalItems) * 100);
+      fetchProgress.get(progressKey).set(progress);
+      logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
+    }
+  }
+
+  /**
+   * Method responsible for processing all assets for all items in a given
+   * collection.
    * <p>
-   * This fetches all items from the collection and processes their assets one by one.
-   * Layers are reset before processing begins, but data is preserved if unregistering fails.
+   * This fetches all items from the collection and processes their assets one by
+   * one.
+   * Layers are reset before processing begins, but data is preserved if
+   * unregistering fails.
    *
    * @param collectionId ID of the collection
    */
@@ -697,65 +926,7 @@ public class DataService {
         logger.warn("No items returned from getAllItems for collection {}", collectionId);
       }
 
-      int totalItems = results.size();
-      logger.info("Processing {} items in collection: {}", totalItems, collectionId);
-
-      int count = 0;
-      for (Map<String, Object> row : results) {
-        String itemId = (String) row.get("id");
-        String collId = (String) row.get("collection");
-        String contentStr = null;
-        Object contentObj = row.get("content");
-        if (contentObj instanceof PGobject) {
-          contentStr = ((PGobject) contentObj).getValue();
-        } else if (contentObj instanceof String) {
-          // If the driver already gave you a string, just cast it
-          contentStr = (String) contentObj;
-        } else if (contentObj != null) {
-          // Fallback: you can do contentObj.toString(), or throw an error
-          logger.warn("Unexpected type for content column: {}", contentObj.getClass());
-          contentStr = contentObj.toString();
-        } else {
-          // Handle null
-          logger.warn("Null content column for item in collection {}", collectionId);
-          continue;
-        }
-
-        // Now parse that as JSON
-        JsonNode contentNode = objectMapper.readTree(contentStr);
-        JsonNode assetsNode = contentNode.get("assets");
-
-        if (assetsNode == null || assetsNode.isEmpty()) {
-          logger.info("No assets found for item {}", itemId);
-          continue;
-        }
-
-        Iterator<String> fieldNames = assetsNode.fieldNames();
-        while (fieldNames.hasNext()) {
-          String assetKey = fieldNames.next();
-          JsonNode asset = assetsNode.get(assetKey);
-          String href = asset.get("href").asText();
-
-          JsonNode valueRange = asset.get("value_range");
-          if (valueRange == null || !valueRange.isArray() || valueRange.size() < 2) {
-            logger.warn("Invalid or missing value_range for asset {} of item {}", assetKey, itemId);
-            continue;
-          }
-
-          int min = valueRange.get(0).asInt();
-          int max = valueRange.get(1).asInt();
-
-          boolean success = geoTIFFService.processGeoTIFF(itemId, collId, assetKey, href, min, max);
-          if (!success) {
-            logger.warn("Failed to register asset {} for item {}", assetKey, itemId);
-          }
-        }
-
-        count++;
-        int progress = (int) (((double) count / totalItems) * 100);
-        fetchProgress.get(collectionProgressKey).set(progress);
-        logger.info("Processed item {}/{}: {}", count, totalItems, itemId);
-      }
+      processEachItem(results, collectionId, collectionProgressKey);
 
       logger.info("Finished registering all assets in collection {}", collectionId);
       fetchProgress.get(collectionProgressKey).set(100);
@@ -765,7 +936,6 @@ public class DataService {
     }
   }
 
-
   /**
    * Overloaded method to reset item assets with full reset as default.
    */
@@ -774,11 +944,14 @@ public class DataService {
   }
 
   /**
-   * Method responsible for unregistering all registered asset layers from GeoServer.
+   * Method responsible for unregistering all registered asset layers from
+   * GeoServer.
    * Also updates their registration status in the database.
-   * If all layers are successfully unregistered, clears the entire Assets and Items tables.
+   * If all layers are successfully unregistered, clears the entire Assets and
+   * Items tables.
    *
-   * @param fullReset Whether to fully clear the Assets and Items tables after unregistering
+   * @param fullReset Whether to fully clear the Assets and Items tables after
+   *                  unregistering
    * @return true if the full reset succeeded, false otherwise
    */
   public boolean itemAssetsReset(boolean fullReset) {
@@ -814,8 +987,8 @@ public class DataService {
    */
   public boolean tryItemAssetsResetOnce(boolean fullReset) {
     List<Map<String, Object>> assetsToProcess = fullReset
-      ? stacRepository.getItemsWithAssets()
-      : stacRepository.getLoadedLayers();
+        ? stacRepository.getItemsWithAssets()
+        : stacRepository.getLoadedLayers();
 
     boolean allUnregisteredSuccessfully = true;
 

@@ -23,6 +23,7 @@ public class StacRepository {
   private static final Logger logger = LoggerFactory.getLogger(StacRepository.class);
   private static final String FETCHING_ALL_COLLECTIONS = "Fetching all collections";
   private static final String FETCHING_WITH_BBOX = "Fetching collections with bbox: ";
+  private static final String QUERY_RETURNED_RESULTS = "Query returned {} results";
 
   private final JdbcTemplate jdbcTemplate;
 
@@ -121,7 +122,7 @@ public class StacRepository {
     try {
       String sql = "SELECT * FROM pgstac.collections WHERE id = ?";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, collectionId);
-      logger.debug("Query returned {} results", results.size());
+      logger.debug(QUERY_RETURNED_RESULTS, results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error querying collection: {}", e.getMessage(), e);
@@ -376,7 +377,8 @@ public class StacRepository {
           "    }'::jsonb" +
           ")";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+
+      logger.debug(QUERY_RETURNED_RESULTS, results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching items: {}", e.getMessage(), e);
@@ -416,7 +418,7 @@ public class StacRepository {
     try {
       String sql = "SELECT pgstac.get_item('" + id + "');";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      logger.debug(QUERY_RETURNED_RESULTS, results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching item: {}", e.getMessage(), e);
@@ -439,7 +441,7 @@ public class StacRepository {
     try {
       String sql = "SELECT pgstac.get_item('" + id + "', '" + collection + "');";
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
-      logger.debug("Query returned {} results", results.size());
+      logger.debug(QUERY_RETURNED_RESULTS, results.size());
       return results;
     } catch (DataAccessException e) {
       logger.error("Error fetching item: {}", e.getMessage(), e);
