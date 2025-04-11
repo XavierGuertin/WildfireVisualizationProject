@@ -25,6 +25,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { changeLayer } from './MapView';
 import { Map } from 'ol';
 import { getConfig } from '../services/configApi';
+import { useQuery } from 'react-query';
 
 export interface DatasetEntry {
   key: number;
@@ -53,11 +54,11 @@ interface AvailableDatasetsProps {
 }
 
 const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
-  onDatasetClick,
-  refreshKey,
-  currentBbox = [],
-  onResetBbox,
-}) => {
+                                                               onDatasetClick,
+                                                               refreshKey,
+                                                               currentBbox = [],
+                                                               onResetBbox,
+                                                             }) => {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [datasets, setDatasets] = useState<DatasetEntry[]>([]);
@@ -65,7 +66,6 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { mapRef, loadedDataset, setLoadedDataset, setIsCollectionsLoaded } =
     useMapLayerContext();
   const hasInitialized = useRef(false);
@@ -95,66 +95,79 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
   };
 
   /**
-   * Fetches dataset collections based on the selected filter and bounding box.
-   * Uses debounce to limit frequent API calls.
+   * Fetch datasets function for React Query
    */
-  const fetchDatasets = debounce(async () => {
-    setIsLoading(true);
-    try {
-      let response;
-      const params = {
-        bbox:
-          isToggled && currentBbox
-            ? (currentBbox as [number, number, number, number])
-            : undefined,
-        sortDirection,
-      };
+  const fetchDatasetsQuery = async () => {
+    const params = {
+      bbox:
+        isToggled && currentBbox
+          ? (currentBbox as [number, number, number, number])
+          : undefined,
+      sortDirection,
+    };
 
-      if (activeFilter === 'Name') {
-        response = await fetchCollectionsFromEndpointByName(
-          params.bbox,
-          params.sortDirection,
-        );
-      } else if (activeFilter === 'Date') {
-        response = await fetchCollectionsFromEndpointByDate(
-          params.bbox,
-          params.sortDirection,
-        );
-      } else {
-        response = await returnListOfCollectionsFromEndpoint(params.bbox);
-      }
+    let response;
+    if (activeFilter === 'Name') {
+      response = await fetchCollectionsFromEndpointByName(
+        params.bbox,
+        params.sortDirection,
+      );
+    } else if (activeFilter === 'Date') {
+      response = await fetchCollectionsFromEndpointByDate(
+        params.bbox,
+        params.sortDirection,
+      );
+    } else {
+      response = await returnListOfCollectionsFromEndpoint(params.bbox);
+    }
 
-      if (!Array.isArray(response)) {
-        console.error('Invalid response:', response.error || response);
-        setFetchError(getTranslatedErrorMessageKey(response.error || ''));
-        setDatasets([]);
-        return;
-      }
+    if (!Array.isArray(response)) {
+      throw new Error(response.error || 'Invalid response');
+    }
 
-      const config = await getConfig();
-      if (config?.loadedDataset) {
-        setLoadedDataset({
-          id: config.loadedDataset.id || '',
-          title: config.loadedDataset.title || '',
-        });
-      } else {
-        setLoadedDataset({ id: '', title: '' });
-      }
-      setDatasets(response);
-      {
-        response.length !== 0
-          ? setIsCollectionsLoaded(true)
-          : setIsCollectionsLoaded(false);
-      }
+    const config = await getConfig();
+    if (config?.loadedDataset) {
+      setLoadedDataset({
+        id: config.loadedDataset.id || '',
+        title: config.loadedDataset.title || '',
+      });
+    } else {
+      setLoadedDataset({ id: '', title: '' });
+    }
+
+    return response;
+  };
+  /**
+   * Add state to track sort direction
+   */
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  /**
+   * React Query hook for fetching datasets
+   */
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['datasets', activeFilter, sortDirection, isToggled, currentBbox?.join(',')],
+    queryFn: fetchDatasetsQuery,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!refreshKey || activeFilter !== '' || isToggled,
+  });
+
+  /**
+   * Update datasets state when query data changes
+   */
+  useEffect(() => {
+    if (data) {
+      setDatasets(data);
+      setIsCollectionsLoaded(data.length !== 0);
       setFetchError(null);
-    } catch (error) {
+    }
+    if (error) {
       console.error('Error fetching datasets:', error);
       setDatasets([]);
       setFetchError('Failed to load datasets.');
-    } finally {
-      setIsLoading(false);
     }
-  }, 300);
+  }, [data, error]);
 
   /**
    * Fetches datasets when the refresh key or filter changes.
@@ -164,37 +177,7 @@ const AvailableDatasets: React.FC<AvailableDatasetsProps> = ({
     if (selectedDatasetId !== null) {
       setSelectedDataset(selectedDatasetId);
     }
-    fetchDatasets();
-    return () => fetchDatasets.cancel();
-  }, [refreshKey, activeFilter]);
-
-  /**
-   * Fetches datasets when toggling filtering by map view.
-   */
-  useEffect(() => {
-    if (isToggled) {
-      fetchDatasets();
-    }
-  }, [isToggled, currentBbox.join(',')]);
-
-  /**
-   * Fetches datasets when toggling filtering by map view.
-   */
-  useEffect(() => {
-    if (!isToggled) {
-      onResetBbox();
-      fetchDatasets();
-    }
-  }, [isToggled]);
-
-  /**
-   * Add state to track sort direction
-   */
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  useEffect(() => {
-    fetchDatasets();
-  }, [activeFilter, sortDirection]);
+  }, [refreshKey]);
 
   /**
    * Handles changes to the dataset sorting filter.

@@ -29,6 +29,7 @@ import { useMapLayerContext } from '../context/MapContext';
 import { getConfig, saveConfig } from '../services/configApi';
 import { updateLayerStyle } from './MapView';
 import { LuPalette } from 'react-icons/lu';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 const MySwal = withReactContent(Swal);
 
@@ -74,6 +75,71 @@ const SettingsPanel: React.FC<{
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Fetch config query function
+  const fetchConfigQuery = async () => {
+    const config = await getConfig();
+    if (config.error) {
+      throw new Error('Error fetching config');
+    }
+    return config;
+  };
+
+  // React Query hook for fetching config
+  const { data: configData } = useQuery({
+    queryKey: ['config'],
+    queryFn: fetchConfigQuery,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Mutation for saving and fetching endpoint
+  const saveAndFetchEndpointMutation = useMutation({
+    mutationFn: async (endpointUrl: string) => {
+      if (!isValidUrl(endpointUrl)) {
+        throw new Error('invalid_url');
+      }
+
+      // Check if the URL retrieves collections
+      const verificationMessage = await verifyIfEndpointHasCollections(endpointUrl);
+      if (verificationMessage !== 'Collections found') {
+        throw new Error('no_collections_found');
+      }
+
+      // Reset collections before fetching new ones
+      await resetCollections();
+      await resetItems();
+      await resetItemAssets();
+      setSelectedAssetLayers([]);
+
+      const message = await fetchCollectionsFromEndpoint(endpointUrl);
+      if (message !== 'Collections fetched and saved successfully') {
+        throw new Error('error_fetching_collections');
+      }
+
+      // Save the new endpoint to config file
+      const config = await getConfig();
+      if (config.error) {
+        throw new Error('error_fetching_config_file');
+      }
+
+      config.endpoint = endpointUrl;
+      config.loadedDataset = { id: '', title: '' };
+      await saveConfig(config);
+
+      return true;
+    },
+    onSuccess: () => {
+      toast.success(t('collections_fetched_saved'));
+      refreshDatasets();
+      queryClient.invalidateQueries({ queryKey: ['config'] });
+      setDropdownState({ activeButton: null, isOpen: false });
+    },
+    onError: (error: Error) => {
+      toast.error(t(error.message));
+    },
+  });
 
   // Initialize language from local storage and handle toast messages
   useEffect(() => {
@@ -97,27 +163,27 @@ const SettingsPanel: React.FC<{
     }
   }, [i18n, t, languageInitialized]);
 
+  // Handle config data updates
   useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
+    if (configData) {
+      if (configData.endpoint) {
+        setNewApiEndpoint(configData.endpoint);
       }
-      if (config.language && config.language !== i18n.language) {
-        i18n.changeLanguage(config.language);
+      if (configData.language && configData.language !== i18n.language) {
+        i18n.changeLanguage(configData.language);
       }
       setLanguageInitialized(true);
 
-      if (config.onlineMode != undefined) {
-        setIsOnline(config.onlineMode);
+      if (configData.onlineMode != undefined) {
+        setIsOnline(configData.onlineMode);
       }
 
       // Check if endpoint is "No endpoint saved" and prompt user to enter a new one
       if (
-        config.endpoint === 'No endpoint saved' ||
-        config.endpoint === undefined
+        configData.endpoint === 'No endpoint saved' ||
+        configData.endpoint === undefined
       ) {
-        await promptForEndpoint(
+        promptForEndpoint(
           refreshDatasets,
           t,
           MySwal,
@@ -126,18 +192,11 @@ const SettingsPanel: React.FC<{
           saveConfig,
         );
       }
-    };
-    fetchConfig();
-  }, [i18n]);
+    }
+  }, [configData, i18n]);
 
   // Toggles dropdown state
-  const toggleDropdown = async (buttonName: string) => {
-    if (buttonName === 'settings') {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
-      }
-    }
+  const toggleDropdown = (buttonName: string) => {
     setDropdownState((prevState) => ({
       activeButton: prevState.activeButton === buttonName ? null : buttonName,
       isOpen: prevState.activeButton !== buttonName,
@@ -283,6 +342,7 @@ const SettingsPanel: React.FC<{
             saveConfig,
           );
           setMetadataVisible(false); // Hide metadata container
+          queryClient.invalidateQueries({ queryKey: ['config'] });
         } catch (error: any) {
           toast.error(error.message);
         }
@@ -308,6 +368,7 @@ const SettingsPanel: React.FC<{
     }
     config.onlineMode = onlineMode;
     await saveConfig(config);
+    queryClient.invalidateQueries({ queryKey: ['config'] });
     setDropdownState({ activeButton: null, isOpen: false });
   };
 
@@ -414,16 +475,6 @@ const SettingsPanel: React.FC<{
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [dropdownState.isOpen]);
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await getConfig();
-      if (config.endpoint) {
-        setNewApiEndpoint(config.endpoint);
-      }
-    };
-    fetchConfig();
-  }, [dropdownState.activeButton === 'settings']);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(newApiEndpoint);
@@ -572,10 +623,22 @@ const SettingsPanel: React.FC<{
                   type="text"
                   placeholder={t('enter_new_api_endpoint')}
                   value={newApiEndpoint}
-                  disabled
+                  onChange={(e) => setNewApiEndpoint(e.target.value)}
+                  disabled={saveAndFetchEndpointMutation.isLoading}
                 />
                 <button onClick={copyToClipboard} aria-label="copy">
                   <IoCopyOutline size={24} />
+                </button>
+                <button
+                  onClick={() => handleSaveAndFetchEndpoint(newApiEndpoint)}
+                  disabled={saveAndFetchEndpointMutation.isLoading}
+                  aria-label="save"
+                >
+                  {saveAndFetchEndpointMutation.isLoading ? (
+                    <span>Loading...</span>
+                  ) : (
+                    <IoCheckmark size={24} />
+                  )}
                 </button>
               </div>
             </div>

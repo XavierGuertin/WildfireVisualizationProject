@@ -313,8 +313,8 @@ const Footer = () => {
   }, [sliderValue, timeStamps]);
 
   const currentValue = isDraggingRef.current
-  ? pendingSliderValue
-  : sliderValue;
+    ? pendingSliderValue
+    : sliderValue;
 
   return (
     <div className="footerContainer" data-testid="footer-container">
@@ -381,12 +381,12 @@ const Footer = () => {
                     left: `${
                       timeStamps.length > 1
                         ? Math.min(
-                            96,
-                            Math.max(
-                              4,
-                              (currentValue / (timeStamps.length - 1)) * 92 + 4,
-                            ),
-                          )
+                          96,
+                          Math.max(
+                            4,
+                            (currentValue / (timeStamps.length - 1)) * 92 + 4,
+                          ),
+                        )
                         : 4
                     }%`,
                   }}

@@ -43,15 +43,15 @@ interface MapMetaDataProps {
  * collapsible/resizable UI, and integration with global map context.
  */
 const MapMetaData: React.FC<MapMetaDataProps> = ({
-  id = '',
-  name = '',
-  description = '',
-  format = '',
-  processes = '',
-  datasetSource = '',
-  visible,
-  refreshDatasets,
-}) => {
+                                                   id = '',
+                                                   name = '',
+                                                   description = '',
+                                                   format = '',
+                                                   processes = '',
+                                                   datasetSource = '',
+                                                   visible,
+                                                   refreshDatasets,
+                                                 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [width, setWidth] = useState(350);
@@ -148,8 +148,8 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-    }
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 

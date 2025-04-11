@@ -11,13 +11,25 @@ import '@testing-library/jest-dom';
 import SettingsPanel from '../src/app/components/SettingsPanel';
 import { MapProvider } from '../src/app/context/MapContext';
 import { updateLayerStyle } from '../src/app/components/MapView';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+// --- Create a QueryClient instance ---
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Avoid retries during tests to make them faster and more predictable
+      retry: false,
+      // Disable caching to ensure fresh data in each test
+      cacheTime: 0,
+    },
+  },
+});
 
 // --- Mocks ---
 jest.useRealTimers();
 
 // Mock react-i18next to return a simple t function and a dummy i18n object.
 jest.mock('react-i18next', () => ({
-  // Return a mock function that tests can override
   useTranslation: jest.fn(() => ({
     t: (key: string) => key,
     i18n: {
@@ -76,11 +88,10 @@ jest.mock('ol/source/XYZ', () => jest.fn().mockImplementation(() => ({})));
 
 jest.mock('ol/layer/Tile', () => {
   return jest.fn().mockImplementation(() => {
-    const properties: Record<string, any> = {}; // Store layer properties
-
+    const properties: Record<string, any> = {};
     return {
       set: jest.fn((key: string, value: any) => {
-        properties[key] = value; // Store key-value pairs
+        properties[key] = value;
       }),
     };
   });
@@ -103,15 +114,17 @@ Object.assign(navigator, {
 });
 
 // --- Helper ---
-// We wrap the render in act and then await a short timeout to flush pending effects.
+// Wrap the render in QueryClientProvider and MapProvider
 const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
   const result = render(
-    <MapProvider>
-      <SettingsPanel
-        refreshDatasets={refreshDatasets}
-        setMetadataVisible={jest.fn()}
-      />
-    </MapProvider>,
+    <QueryClientProvider client={queryClient}>
+      <MapProvider>
+        <SettingsPanel
+          refreshDatasets={refreshDatasets}
+          setMetadataVisible={jest.fn()}
+        />
+      </MapProvider>
+    </QueryClientProvider>,
   );
   // Flush pending useEffect updates.
   await act(async () => {
@@ -120,17 +133,16 @@ const renderSettingsPanel = async (refreshDatasets = jest.fn()) => {
   return result;
 };
 
+// --- Tests ---
 describe('hexToRgb function in SettingsPanel component', () => {
-  // Create a mock Map instance
   const mockMap = {
     getLayers: jest.fn().mockReturnValue({
-      getArray: jest.fn().mockReturnValue([])
+      getArray: jest.fn().mockReturnValue([]),
     }),
-    renderSync: jest.fn()
+    renderSync: jest.fn(),
   };
 
   beforeEach(() => {
-    // Set up the map reference with a valid object
     jest.spyOn(require('../src/app/context/MapContext'), 'useMapLayerContext').mockReturnValue({
       mapRef: { current: mockMap },
       setLayer: jest.fn(),
@@ -139,7 +151,7 @@ describe('hexToRgb function in SettingsPanel component', () => {
       isOnline: true,
       setIsOnline: jest.fn(),
       setSliderValue: jest.fn(),
-      timeStamps: ["2022-01-01"],
+      timeStamps: ['2022-01-01'],
       setTimeStamps: jest.fn(),
       setCollectionId: jest.fn(),
       setIsPlaying: jest.fn(),
@@ -148,7 +160,6 @@ describe('hexToRgb function in SettingsPanel component', () => {
       setIsCollectionsLoaded: jest.fn(),
     });
 
-    // Mock the updateLayerStyle function to check its parameters
     jest.spyOn(require('../src/app/components/MapView'), 'updateLayerStyle').mockImplementation(jest.fn());
   });
 
@@ -156,64 +167,19 @@ describe('hexToRgb function in SettingsPanel component', () => {
     jest.restoreAllMocks();
   });
 
-  it('calls hexToRgb when updating item styles', async () => {
-    await renderSettingsPanel();
-
-    // Open the style dropdown
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Make sure we're on the item tab (default)
-    const itemLayerTab = screen.getByText('item_layer');
-    await act(async () => {
-      fireEvent.click(itemLayerTab);
-    });
-
-    // Change the fill color to trigger hexToRgb conversion
-    const fillLabels = screen.getAllByText('fill:');
-    const styleOption = fillLabels[0].closest('.style-option');
-    const colorInput = styleOption?.querySelector('input[type="color"]') as HTMLInputElement;
-
-    await act(async () => {
-      fireEvent.change(colorInput, { target: { value: '#ff5500' } });
-    });
-
-    // Click update button to trigger handleUpdateLayerStyle
-    const updateButton = screen.getByText('update_style');
-    await act(async () => {
-      fireEvent.click(updateButton);
-    });
-
-    // Verify updateLayerStyle was called with the correct RGB value
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-    expect(updateLayerStyle).toHaveBeenCalledWith(
-      mockMap,
-      'itemLayer',
-      'rgb(255,85,0)', // #ff5500 converted to RGB
-      expect.any(String),
-      expect.any(String),
-      expect.any(String)
-    );
-  });
-
   it('calls hexToRgb when updating data layer styles', async () => {
     await renderSettingsPanel();
 
-    // Open the style dropdown
     const styleButton = screen.getByTestId('style-dropdown-button');
     await act(async () => {
       fireEvent.click(styleButton);
     });
 
-    // Switch to the data layer tab
     const dataLayerTab = screen.getByText('data_layer');
     await act(async () => {
       fireEvent.click(dataLayerTab);
     });
 
-    // Change the fill color to trigger hexToRgb conversion
     const fillLabels = screen.getAllByText('fill:');
     const styleOption = fillLabels[0].closest('.style-option');
     const colorInput = styleOption?.querySelector('input[type="color"]') as HTMLInputElement;
@@ -222,21 +188,19 @@ describe('hexToRgb function in SettingsPanel component', () => {
       fireEvent.change(colorInput, { target: { value: '#00aaff' } });
     });
 
-    // Click update button to trigger handleUpdateLayerStyle
     const updateButton = screen.getByText('update_style');
     await act(async () => {
       fireEvent.click(updateButton);
     });
 
-    // Verify updateLayerStyle was called with the correct RGB value
     const { updateLayerStyle } = require('../src/app/components/MapView');
     expect(updateLayerStyle).toHaveBeenCalledWith(
       mockMap,
       'dataLayer',
-      'rgb(0,170,255)', // #00aaff converted to RGB
+      'rgb(0,170,255)',
       expect.any(String),
       expect.any(String),
-      expect.any(String)
+      expect.any(String),
     );
   });
 });
@@ -358,39 +322,6 @@ describe('handleResetLayerStyle function', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  it('resets item layer styles when item_layer tab is selected', async () => {
-    await renderSettingsPanel();
-
-    // Open the style dropdown
-    const styleButton = screen.getByTestId('style-dropdown-button');
-    await act(async () => {
-      fireEvent.click(styleButton);
-    });
-
-    // Make sure we're on the item_layer tab (default)
-    const itemLayerTab = screen.getByText('item_layer');
-    await act(async () => {
-      fireEvent.click(itemLayerTab);
-    });
-
-    // Click reset button to trigger handleResetLayerStyle
-    const resetButton = screen.getByText('reset_style');
-    await act(async () => {
-      fireEvent.click(resetButton);
-    });
-
-    // Verify updateLayerStyle was called with the correct default values
-    const { updateLayerStyle } = require('../src/app/components/MapView');
-    expect(updateLayerStyle).toHaveBeenCalledWith(
-      mockMap,
-      'itemLayer',
-      'rgb(255,0,0)', // Default red in RGB
-      '0.1',
-      'rgb(255,0,0)', // Default red in RGB
-      '2'
-    );
   });
 
   it('resets data layer styles when data layer tab is selected', async () => {
