@@ -51,6 +51,7 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
   datasetSource = '',
   visible,
   refreshDatasets,
+  onClose,
 }) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -363,18 +364,20 @@ const MapMetaData: React.FC<MapMetaDataProps> = ({
       style={{ width: `${width}px` }}
       data-testid="metadata-container"
     >
-      <div className="header" onClick={toggleCollapse} data-testid="name-div">
-        {name || t('unknown_name')}
-        <span className="collapse-icon">
+      <button className="header-button" onClick={toggleCollapse} data-testid="name-div">
+        <div className="header">
+          {name || t('unknown_name')}
+          <span className="collapse-icon">
           <RiCollapseDiagonalFill size={20} />
-        </span>
-      </div>
+          </span>
+        </div>
+      </button>
       <div className="content">
         {[
           {
             label: t('description'),
             value: description,
-            testId: 'dataset-description',
+            testId: 'dataset-description'
           },
           { label: t('format'), value: format, testId: 'dataset-format' },
           {
